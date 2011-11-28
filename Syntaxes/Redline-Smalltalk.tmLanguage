@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>fileTypes</key>
+	<array>
+		<string>st</string>
+	</array>
+	<key>foldingStartMarker</key>
+	<string>/\*\*|\{\s*$</string>
+	<key>foldingStopMarker</key>
+	<string>\*\*/|^\s*\}</string>
+	<key>keyEquivalent</key>
+	<string>^~S</string>
+	<key>name</key>
+	<string>Redline-Smalltalk</string>
+	<key>patterns</key>
+	<array>
+		<dict>
+			<key>match</key>
+			<string>\b(nil|true|false)\b</string>
+			<key>name</key>
+			<string>constant.language.smalltalk</string>
+		</dict>
+		<dict>
+			<key>begin</key>
+			<string>"</string>
+			<key>end</key>
+			<string>"</string>
+			<key>name</key>
+			<string>comment.smalltalk</string>
+		</dict>
+		<dict>
+			<key>begin</key>
+			<string>'</string>
+			<key>end</key>
+			<string>'</string>
+			<key>name</key>
+			<string>string.smalltalk</string>
+		</dict>
+	</array>
+	<key>scopeName</key>
+	<string>source.redline-smalltalk</string>
+	<key>uuid</key>
+	<string>5A1A0593-A1B9-4DE5-9EDC-6C14D22BEA84</string>
+</dict>
+</plist>
