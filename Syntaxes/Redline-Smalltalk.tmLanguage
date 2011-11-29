@@ -31,6 +31,23 @@
 			<string>comment.smalltalk</string>
 		</dict>
 		<dict>
+			<key>captures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>entity.other.inherited-class.smalltalk</string>
+				</dict>
+				<key>2</key>
+				<dict>
+					<key>name</key>
+					<string>entity.name.type.class.smalltalk</string>
+				</dict>
+			</dict>
+			<key>match</key>
+			<string>^\s*(\w+)\s+&lt;\s+(#\w+)\s*$</string>
+		</dict>
+		<dict>
 			<key>begin</key>
 			<string>'</string>
 			<key>end</key>
