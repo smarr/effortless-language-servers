@@ -17,6 +17,27 @@
 	<key>patterns</key>
 	<array>
 		<dict>
+			<key>begin</key>
+			<string>\[</string>
+			<key>end</key>
+			<string>\|</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>captures</key>
+					<dict>
+						<key>1</key>
+						<dict>
+							<key>name</key>
+							<string>variable.parameter.block.smalltalk</string>
+						</dict>
+					</dict>
+					<key>match</key>
+					<string>\:(\w+)</string>
+				</dict>
+			</array>
+		</dict>
+		<dict>
 			<key>match</key>
 			<string>\b(nil|true|false)\b</string>
 			<key>name</key>
