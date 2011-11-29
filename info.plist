@@ -4,6 +4,11 @@
 <dict>
 	<key>name</key>
 	<string>Redline-Smalltalk</string>
+	<key>ordering</key>
+	<array>
+		<string>5A1A0593-A1B9-4DE5-9EDC-6C14D22BEA84</string>
+		<string>5C6539F8-9722-4679-B0FF-169905619CB0</string>
+	</array>
 	<key>uuid</key>
 	<string>25772E62-040D-4F90-AB61-5F6CAEDABAEC</string>
 </dict>
