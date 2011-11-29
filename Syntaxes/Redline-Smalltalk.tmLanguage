@@ -73,6 +73,18 @@
 			<key>name</key>
 			<string>variable.language.smalltalk</string>
 		</dict>
+		<dict>
+			<key>captures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>variable.other.smalltalk</string>
+				</dict>
+			</dict>
+			<key>match</key>
+			<string>\|\s*(([\w\d]+\s*)+)\s*\|</string>
+		</dict>
 	</array>
 	<key>scopeName</key>
 	<string>source.redline-smalltalk</string>
