@@ -67,6 +67,12 @@
 			<key>name</key>
 			<string>string.smalltalk</string>
 		</dict>
+		<dict>
+			<key>match</key>
+			<string>\b(self)\b</string>
+			<key>name</key>
+			<string>variable.language.smalltalk</string>
+		</dict>
 	</array>
 	<key>scopeName</key>
 	<string>source.redline-smalltalk</string>
