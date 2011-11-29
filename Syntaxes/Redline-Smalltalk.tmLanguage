@@ -91,7 +91,7 @@
 				<key>1</key>
 				<dict>
 					<key>name</key>
-					<string>variable.other.smalltalk</string>
+					<string>variable.other.local.smalltalk</string>
 				</dict>
 			</dict>
 			<key>match</key>
