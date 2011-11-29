@@ -31,28 +31,56 @@
 			<string>comment.smalltalk</string>
 		</dict>
 		<dict>
-			<key>captures</key>
-			<dict>
-				<key>1</key>
+			<key>begin</key>
+			<string>^\+\s</string>
+			<key>end</key>
+			<string>$</string>
+			<key>patterns</key>
+			<array>
 				<dict>
-					<key>name</key>
-					<string>entity.name.function.class.smalltalk</string>
+					<key>captures</key>
+					<dict>
+						<key>2</key>
+						<dict>
+							<key>name</key>
+							<string>entity.name.function.class.smalltalk</string>
+						</dict>
+						<key>3</key>
+						<dict>
+							<key>name</key>
+							<string>variable.parameter.method.smalltalk</string>
+						</dict>
+					</dict>
+					<key>match</key>
+					<string>((\w+:?)(\s*\w+)?)</string>
 				</dict>
-			</dict>
-			<key>match</key>
-			<string>^\+\s([\w:]+)\s*$</string>
+			</array>
 		</dict>
 		<dict>
-			<key>captures</key>
-			<dict>
-				<key>1</key>
+			<key>begin</key>
+			<string>^\-\s</string>
+			<key>end</key>
+			<string>$</string>
+			<key>patterns</key>
+			<array>
 				<dict>
-					<key>name</key>
-					<string>entity.name.function.instance.smalltalk</string>
+					<key>captures</key>
+					<dict>
+						<key>2</key>
+						<dict>
+							<key>name</key>
+							<string>entity.name.function.instance.smalltalk</string>
+						</dict>
+						<key>3</key>
+						<dict>
+							<key>name</key>
+							<string>variable.parameter.method.smalltalk</string>
+						</dict>
+					</dict>
+					<key>match</key>
+					<string>((\w+:?)(\s*\w+)?)</string>
 				</dict>
-			</dict>
-			<key>match</key>
-			<string>^\-\s([\w:]+)\s*$</string>
+			</array>
 		</dict>
 		<dict>
 			<key>captures</key>
