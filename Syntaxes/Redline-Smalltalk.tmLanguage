@@ -31,16 +31,28 @@
 			<string>comment.smalltalk</string>
 		</dict>
 		<dict>
+			<key>captures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>entity.name.function.class.smalltalk</string>
+				</dict>
+			</dict>
 			<key>match</key>
 			<string>^\+\s([\w:]+)\s*$</string>
-			<key>name</key>
-			<string>entity.name.function.class.smalltalk</string>
 		</dict>
 		<dict>
+			<key>captures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>entity.name.function.instance.smalltalk</string>
+				</dict>
+			</dict>
 			<key>match</key>
 			<string>^\-\s([\w:]+)\s*$</string>
-			<key>name</key>
-			<string>entity.name.function.instance.smalltalk</string>
 		</dict>
 		<dict>
 			<key>captures</key>
