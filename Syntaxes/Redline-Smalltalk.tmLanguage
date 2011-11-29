@@ -131,6 +131,13 @@
 			<key>name</key>
 			<string>comment.smalltalk</string>
 		</dict>
+		<key>constant</key>
+		<dict>
+			<key>match</key>
+			<string>\b(nil|true|false)\b</string>
+			<key>name</key>
+			<string>constant.language.smalltalk</string>
+		</dict>
 		<key>language_elements</key>
 		<dict>
 			<key>patterns</key>
