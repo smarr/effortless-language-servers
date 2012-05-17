@@ -5,7 +5,7 @@
 	<key>name</key>
 	<string>Comments</string>
 	<key>scope</key>
-	<string>source.redline-smalltalk</string>
+	<string>source.SOM-smalltalk</string>
 	<key>settings</key>
 	<dict>
 		<key>shellVariables</key>
@@ -25,6 +25,6 @@
 		</array>
 	</dict>
 	<key>uuid</key>
-	<string>1B8BC87A-EA4A-4A0A-AF5A-0BF71D838C0B</string>
+	<string>d6a927db-81e0-4532-a10f-f12cb05fc5fc</string>
 </dict>
 </plist>

@@ -4,7 +4,7 @@
 <dict>
 	<key>fileTypes</key>
 	<array>
-		<string>st</string>
+		<string>som</string>
 	</array>
 	<key>foldingStartMarker</key>
 	<string>/\*\*|\{\s*$</string>
@@ -13,7 +13,7 @@
 	<key>keyEquivalent</key>
 	<string>^~S</string>
 	<key>name</key>
-	<string>Redline-Smalltalk</string>
+	<string>SOM-Smalltalk</string>
 	<key>patterns</key>
 	<array>
 		<dict>
@@ -199,8 +199,8 @@
 		</dict>
 	</dict>
 	<key>scopeName</key>
-	<string>source.redline-smalltalk</string>
+	<string>source.SOM-smalltalk</string>
 	<key>uuid</key>
-	<string>5A1A0593-A1B9-4DE5-9EDC-6C14D22BEA84</string>
+	<string>2fb9a222-0a36-4f7d-a3a4-58c523cd7437</string>
 </dict>
 </plist>

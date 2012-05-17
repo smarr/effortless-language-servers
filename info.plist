@@ -3,14 +3,14 @@
 <plist version="1.0">
 <dict>
 	<key>name</key>
-	<string>Redline-Smalltalk</string>
+	<string>SOM-Smalltalk</string>
 	<key>ordering</key>
 	<array>
-		<string>5A1A0593-A1B9-4DE5-9EDC-6C14D22BEA84</string>
-		<string>B997E40D-66DD-4058-A31C-F23ED7DD8C9A</string>
-		<string>5C6539F8-9722-4679-B0FF-169905619CB0</string>
+		<string>2fb9a222-0a36-4f7d-a3a4-58c523cd7437</string>
+		<string>528b4346-4545-425a-ba38-a1e65fe56dfd</string>
+		<string>8546d147-4a95-40cf-8f10-4db35201bfcd</string>
 	</array>
 	<key>uuid</key>
-	<string>25772E62-040D-4F90-AB61-5F6CAEDABAEC</string>
+	<string>e7565537-524a-43ff-8d37-c058dfee290c</string>
 </dict>
 </plist>

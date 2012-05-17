@@ -5,7 +5,7 @@
 	<key>name</key>
 	<string>SmartTypingPairs</string>
 	<key>scope</key>
-	<string>source.redline-smalltalk</string>
+	<string>source.SOM-smalltalk</string>
 	<key>settings</key>
 	<dict>
 		<key>smartTypingPairs</key>
@@ -33,6 +33,6 @@
 		</array>
 	</dict>
 	<key>uuid</key>
-	<string>B997E40D-66DD-4058-A31C-F23ED7DD8C9A</string>
+	<string>528b4346-4545-425a-ba38-a1e65fe56dfd</string>
 </dict>
 </plist>

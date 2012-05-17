@@ -5,7 +5,7 @@
 	<key>name</key>
 	<string>Indentation</string>
 	<key>scope</key>
-	<string>source.redline-smalltalk</string>
+	<string>source.SOM-smalltalk</string>
 	<key>settings</key>
 	<dict>
 		<key>decreaseIndentPattern</key>
@@ -14,6 +14,6 @@
 		<string>^-|\+\s.*$|^.*\[[^\]]*$</string>
 	</dict>
 	<key>uuid</key>
-	<string>5C6539F8-9722-4679-B0FF-169905619CB0</string>
+	<string>8546d147-4a95-40cf-8f10-4db35201bfcd</string>
 </dict>
 </plist>
