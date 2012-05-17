@@ -72,7 +72,7 @@
 		<key>class</key>
 		<dict>
 			<key>begin</key>
-			<string>^\s*(\w+)\s+&lt;\s+(#\w+)</string>
+			<string>^\s*(\w+)\s+=\s+(\w*)</string>
 			<key>beginCaptures</key>
 			<dict>
 				<key>1</key>
@@ -134,7 +134,7 @@
 		<key>constant</key>
 		<dict>
 			<key>match</key>
-			<string>\b(nil|true|false)\b</string>
+			<string>\b(nil|true|false|primitive)\b</string>
 			<key>name</key>
 			<string>constant.language.smalltalk</string>
 		</dict>
