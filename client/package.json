@@ -1,10 +1,10 @@
 {
 	"name": "language-client-example",
-	"description": "VSCode part of a language server",
-	"author": "Microsoft Corporation",
+	"description": "VSCode pluging for the Truffle language server",
+	"author": "Stefan Marr",
 	"license": "MIT",
 	"version": "0.0.1",
-	"publisher": "vscode",
+	"publisher": "smarr",
 	"engines": {
 		"vscode": "^0.10.10"
 	},
@@ -12,10 +12,15 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onLanguage:plaintext"
+		"onLanguage:SOM"
 	],
 	"main": "./out/src/extension",
 	"contributes": {
+		"languages": [{
+			"id" : "SOM",
+			"extensions" : [ ".som" ],
+			"aliases": [ "SOMns", "som" ]
+		}],
 		"configuration": {
 			"type": "object",
 			"title": "Example configuration",
@@ -39,6 +44,6 @@
 		"vscode": "^0.11.0"
 	},
 	"dependencies": {
-		"vscode-languageclient": "^2.2.1"
+		"vscode-languageclient": "^2.3.0"
 	}
 }
