@@ -1,5 +1,6 @@
 package lsp;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -11,6 +12,8 @@ import io.typefox.lsapi.Command;
 import io.typefox.lsapi.CompletionItem;
 import io.typefox.lsapi.CompletionList;
 import io.typefox.lsapi.CompletionOptionsImpl;
+import io.typefox.lsapi.Diagnostic;
+import io.typefox.lsapi.DiagnosticImpl;
 import io.typefox.lsapi.DidChangeConfigurationParams;
 import io.typefox.lsapi.DidChangeTextDocumentParams;
 import io.typefox.lsapi.DidChangeWatchedFilesParams;
@@ -28,7 +31,10 @@ import io.typefox.lsapi.InitializeResult;
 import io.typefox.lsapi.InitializeResultImpl;
 import io.typefox.lsapi.Location;
 import io.typefox.lsapi.MessageParams;
+import io.typefox.lsapi.PositionImpl;
 import io.typefox.lsapi.PublishDiagnosticsParams;
+import io.typefox.lsapi.PublishDiagnosticsParamsImpl;
+import io.typefox.lsapi.RangeImpl;
 import io.typefox.lsapi.ReferenceParams;
 import io.typefox.lsapi.RenameParams;
 import io.typefox.lsapi.ServerCapabilities;
@@ -36,9 +42,9 @@ import io.typefox.lsapi.ServerCapabilitiesImpl;
 import io.typefox.lsapi.ShowMessageRequestParams;
 import io.typefox.lsapi.SignatureHelp;
 import io.typefox.lsapi.SymbolInformation;
+import io.typefox.lsapi.TextDocumentContentChangeEvent;
 import io.typefox.lsapi.TextDocumentPositionParams;
 import io.typefox.lsapi.TextEdit;
-import io.typefox.lsapi.VersionedTextDocumentIdentifier;
 import io.typefox.lsapi.WorkspaceEdit;
 import io.typefox.lsapi.WorkspaceSymbolParams;
 import io.typefox.lsapi.services.LanguageServer;
@@ -50,6 +56,8 @@ public class TruffleLanguageServer implements LanguageServer, WorkspaceService,
 		WindowService, TextDocumentService {
 
   private InitializeParams params;
+
+  private Consumer<PublishDiagnosticsParams> publishDiagnostics;
 
 	@Override
 	public CompletableFuture<InitializeResult> initialize(
@@ -237,11 +245,46 @@ public class TruffleLanguageServer implements LanguageServer, WorkspaceService,
 
 	@Override
 	public void didChange(final DidChangeTextDocumentParams params) {
-		validateTextDocument(params.getTextDocument());
+		validateTextDocument(params.getTextDocument().getUri(),
+		    params.getContentChanges());
 	}
 
-	private void validateTextDocument(final VersionedTextDocumentIdentifier textDocument) {
-    // TODO
+	private void validateTextDocument(final String documentUri,
+	    final List<? extends TextDocumentContentChangeEvent> list) {
+	  ArrayList<DiagnosticImpl> diagnostics = new ArrayList<>();
+
+	  TextDocumentContentChangeEvent e = list.iterator().next();
+
+	  String[] lines = e.getText().split("\n");
+
+	  int i = 0;
+	  for (String l : lines) {
+	    int idx = l.indexOf("typescript");
+	    if (idx >= 0) {
+	      DiagnosticImpl d = new DiagnosticImpl();
+	      d.setSeverity(Diagnostic.SEVERITY_WARNING);
+	      RangeImpl r = new RangeImpl();
+	      PositionImpl pos = new PositionImpl();
+	      pos.setLine(i);
+	      pos.setCharacter(idx);
+	      r.setStart(pos);
+	      pos = new PositionImpl();
+	      pos.setLine(i);
+	      pos.setCharacter(idx + "typescript".length());
+	      r.setEnd(pos);
+	      d.setRange(r);
+	      d.setMessage("typescript should be spelled TypeScript");
+	      d.setSource("ex");
+
+	      diagnostics.add(d);
+	    }
+	    i += 1;
+	  }
+
+	  PublishDiagnosticsParamsImpl result = new PublishDiagnosticsParamsImpl();
+	  result.setDiagnostics(diagnostics);
+	  result.setUri(documentUri);
+	  publishDiagnostics.accept(result);
   }
 
   @Override
@@ -257,10 +300,8 @@ public class TruffleLanguageServer implements LanguageServer, WorkspaceService,
 	}
 
 	@Override
-	public void onPublishDiagnostics(
-			final Consumer<PublishDiagnosticsParams> callback) {
-		// TODO Auto-generated method stub
-
+	public void onPublishDiagnostics(final Consumer<PublishDiagnosticsParams> callback) {
+		this.publishDiagnostics = callback;
 	}
 
 	@Override
