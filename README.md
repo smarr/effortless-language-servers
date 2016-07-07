@@ -12,7 +12,9 @@ example](https://github.com/Microsoft/vscode-languageserver-node-example).
 To use/develop the VS Code extension, do the following:
 
 ```bash
-cd client
+cd server
+ant deploy  # builds and deploys the server. ant is needed, and python, etc.
+cd ../client
 npm install .
 code .  # requires the VS Code shell command
 ```
