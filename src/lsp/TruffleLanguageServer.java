@@ -131,8 +131,14 @@ public class TruffleLanguageServer implements LanguageServer,	TextDocumentServic
 	@Override
 	public CompletableFuture<DocumentHighlight> documentHighlight(
 			final TextDocumentPositionParams position) {
-		// TODO Auto-generated method stub
-		return null;
+	  // TODO: this is wrong, it should be something entierly different.
+	  // this feature is about marking the occurrences of a selected element
+	  // like a variable, where it is used.
+	  // so, this should actually return multiple results.
+	  // The spec is currently broken for that.
+	  DocumentHighlight result = SomAdapter.getHighlight(position.getTextDocument().getUri(),
+	      position.getPosition().getLine() + 1, position.getPosition().getCharacter() + 1);
+	  return CompletableFuture.completedFuture(result);
 	}
 
 	@Override
