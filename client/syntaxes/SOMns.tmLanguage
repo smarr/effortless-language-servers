@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>fileTypes</key>
+	<array>
+		<string>som</string>
+	</array>
+	<key>name</key>
+	<string>SOMns</string>
+	<key>patterns</key>
+	<array>
+		<dict>
+			<key>include</key><string>#multilinecomment</string>
+		</dict>
+		<dict>
+			<key>match</key>
+			<string>\b(nil|true|false)\b</string>
+			<key>name</key>
+			<string>constant.language</string>
+		</dict>
+		<dict>
+			<key>match</key>
+			<string>\b(self|super|outer)\b</string>
+			<key>name</key>
+			<string>variable.language</string>
+		</dict>
+		<dict>
+			<key>begin</key>
+			<string>'</string>
+			<key>end</key>
+			<string>'</string>
+			<key>name</key>
+			<string>string.quoted.single</string>
+		</dict>
+		<dict>
+			<key>match</key>
+			<string>\b(\d+(\.\d+)?)\b</string>
+			<key>name</key>
+			<string>constant.numeric</string>
+		</dict>
+		<dict>
+			<key>match</key>
+			<string>\b#\w+</string>
+			<key>name</key>
+			<string>constant.character.symbol</string>
+		</dict>
+	</array>
+
+	<key>repository</key>
+	<dict>
+		<key>multilinecomment</key>
+		<dict>
+			<key>begin</key> <string>\(\*</string>
+			<key>contentName</key>  <string>comment</string>
+			<key>end</key>   <string>\*\)</string>
+			<key>name</key>  <string>comment</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key> <string>#multilinecomment</string>
+					<key>name</key>    <string>comment</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
+	<key>scopeName</key> <string>text.som</string>
+	<key>uuid</key>      <string>3791d52d-e561-4fb3-bb65-9c6b84ea333d</string>
+</dict>
+</plist>

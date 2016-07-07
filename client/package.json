@@ -21,6 +21,11 @@
 			"extensions" : [ ".som" ],
 			"aliases": [ "SOMns", "som" ]
 		}],
+		"grammars": [{
+			"language": "SOM",
+			"scopeName": "text.som",
+			"path" : "./syntaxes/SOMns.tmLanguage"
+		}],
 		"configuration": {
 			"type": "object",
 			"title": "Example configuration",
