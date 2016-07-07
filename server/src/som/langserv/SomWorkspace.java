@@ -1,4 +1,4 @@
-package lsp;
+package som.langserv;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;

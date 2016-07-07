@@ -1,4 +1,4 @@
-package lsp;
+package som.langserv;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;

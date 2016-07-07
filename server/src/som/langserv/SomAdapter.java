@@ -1,4 +1,4 @@
-package lsp;
+package som.langserv;
 
 import java.io.StringReader;
 import java.net.URI;

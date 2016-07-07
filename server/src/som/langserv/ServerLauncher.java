@@ -1,4 +1,4 @@
-package lsp;
+package som.langserv;
 
 import java.io.FileWriter;
 import java.io.IOException;
