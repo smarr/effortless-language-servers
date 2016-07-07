@@ -1,5 +1,6 @@
 package lsp;
 
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -12,7 +13,6 @@ import io.typefox.lsapi.Command;
 import io.typefox.lsapi.CompletionItem;
 import io.typefox.lsapi.CompletionList;
 import io.typefox.lsapi.CompletionOptionsImpl;
-import io.typefox.lsapi.Diagnostic;
 import io.typefox.lsapi.DiagnosticImpl;
 import io.typefox.lsapi.DidChangeConfigurationParams;
 import io.typefox.lsapi.DidChangeTextDocumentParams;
@@ -31,10 +31,8 @@ import io.typefox.lsapi.InitializeResult;
 import io.typefox.lsapi.InitializeResultImpl;
 import io.typefox.lsapi.Location;
 import io.typefox.lsapi.MessageParams;
-import io.typefox.lsapi.PositionImpl;
 import io.typefox.lsapi.PublishDiagnosticsParams;
 import io.typefox.lsapi.PublishDiagnosticsParamsImpl;
-import io.typefox.lsapi.RangeImpl;
 import io.typefox.lsapi.ReferenceParams;
 import io.typefox.lsapi.RenameParams;
 import io.typefox.lsapi.ServerCapabilities;
@@ -239,7 +237,8 @@ public class TruffleLanguageServer implements LanguageServer, WorkspaceService,
 
 	@Override
 	public void didOpen(final DidOpenTextDocumentParams params) {
-		// TODO Auto-generated method stub
+	  validateTextDocument(params.getTextDocument().getUri(),
+	      params.getTextDocument().getText());
 
 	}
 
@@ -251,41 +250,28 @@ public class TruffleLanguageServer implements LanguageServer, WorkspaceService,
 
 	private void validateTextDocument(final String documentUri,
 	    final List<? extends TextDocumentContentChangeEvent> list) {
-	  ArrayList<DiagnosticImpl> diagnostics = new ArrayList<>();
-
 	  TextDocumentContentChangeEvent e = list.iterator().next();
 
-	  String[] lines = e.getText().split("\n");
+	  validateTextDocument(documentUri, e.getText());
+	}
 
-	  int i = 0;
-	  for (String l : lines) {
-	    int idx = l.indexOf("typescript");
-	    if (idx >= 0) {
-	      DiagnosticImpl d = new DiagnosticImpl();
-	      d.setSeverity(Diagnostic.SEVERITY_WARNING);
-	      RangeImpl r = new RangeImpl();
-	      PositionImpl pos = new PositionImpl();
-	      pos.setLine(i);
-	      pos.setCharacter(idx);
-	      r.setStart(pos);
-	      pos = new PositionImpl();
-	      pos.setLine(i);
-	      pos.setCharacter(idx + "typescript".length());
-	      r.setEnd(pos);
-	      d.setRange(r);
-	      d.setMessage("typescript should be spelled TypeScript");
-	      d.setSource("ex");
+	private void validateTextDocument(final String documentUri, final String text) {
+	  try {
+      ArrayList<DiagnosticImpl> diagnostics = SomAdapter.parse(text, documentUri);
+      reportDiagnostics(diagnostics, documentUri);
+    } catch (URISyntaxException ex) {
+      ex.printStackTrace(ServerLauncher.errWriter());
+    }
+	}
 
-	      diagnostics.add(d);
-	    }
-	    i += 1;
+	private void reportDiagnostics(final ArrayList<DiagnosticImpl> diagnostics, final String documentUri) {
+	  if (diagnostics != null) {
+      PublishDiagnosticsParamsImpl result = new PublishDiagnosticsParamsImpl();
+      result.setDiagnostics(diagnostics);
+      result.setUri(documentUri);
+      publishDiagnostics.accept(result);
 	  }
-
-	  PublishDiagnosticsParamsImpl result = new PublishDiagnosticsParamsImpl();
-	  result.setDiagnostics(diagnostics);
-	  result.setUri(documentUri);
-	  publishDiagnostics.accept(result);
-  }
+	}
 
   @Override
 	public void didClose(final DidCloseTextDocumentParams params) {

@@ -1,6 +1,7 @@
 package lsp;
 
-import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.concurrent.ExecutionException;
 
@@ -8,22 +9,45 @@ import io.typefox.lsapi.services.json.LoggingJsonAdapter;
 
 public class ServerLauncher {
 
-	public static void main(final String[] args) {
+  private static PrintWriter err;
+  private static PrintWriter msg;
+
+  static {
+    try {
+      FileWriter fw = new FileWriter("/Users/smarr/Projects/SOM/lsp-test/truffle-lang-server/err.log", true);
+      err = new PrintWriter(fw, true);
+      fw = new FileWriter("/Users/smarr/Projects/SOM/lsp-test/truffle-lang-server/msg.log", true);
+      msg = new PrintWriter(fw, true);
+    } catch (IOException e) { }
+
+    Thread.setDefaultUncaughtExceptionHandler(
+        (final Thread t, final Throwable e) -> e.printStackTrace(err));
+  }
+
+  public static void logErr(final String msg) {
+    err.println(msg);
+  }
+
+  public static PrintWriter errWriter() {
+    return err;
+  }
+
+  public static void main(final String[] args) {
+    SomAdapter.initializePolyglot();
+
 	  TruffleLanguageServer tls = new TruffleLanguageServer();
+
 	  LoggingJsonAdapter adapter = new LoggingJsonAdapter(tls);
 
-	  try {
-      adapter.setMessageLog(new PrintWriter("/Users/smarr/Projects/SOM/lsp-test/truffle-lang-server/msg.log"));
-      adapter.setErrorLog(new PrintWriter("/Users/smarr/Projects/SOM/lsp-test/truffle-lang-server/err.log"));
-    } catch (FileNotFoundException e1) { }
+    adapter.setMessageLog(msg);
+    adapter.setErrorLog(err);
 
 		adapter.connect(System.in, System.out);
 
 		try {
       adapter.join();
     } catch (InterruptedException | ExecutionException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      e.printStackTrace(err);
     }
 	}
 }
