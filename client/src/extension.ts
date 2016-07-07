@@ -10,9 +10,18 @@ import { workspace, Disposable, ExtensionContext } from 'vscode';
 import { LanguageClient, LanguageClientOptions, SettingMonitor, ServerOptions, TransportKind } from 'vscode-languageclient';
 
 export function activate(context: ExtensionContext) {
+	let javaClasspass = [context.asAbsolutePath('out/server/gson-2.7.jar'),
+						 context.asAbsolutePath('out/server/guava-19.0.jar'),
+						 context.asAbsolutePath('out/server/org.eclipse.xtend.lib-2.10.0.jar'),
+						 context.asAbsolutePath('out/server/org.eclipse.xtext.xbase.lib-2.10.0.jar'),
+						 context.asAbsolutePath('out/server/som-language-server.jar'),
+						 context.asAbsolutePath('out/server/som.jar'),
+						 context.asAbsolutePath('out/server/truffle-api.jar'),
+						 context.asAbsolutePath('out/server/truffle-debug.jar')]
 
 	let serverOptions: ServerOptions = {
-		command: '/Users/smarr/Projects/SOM/lsp-test/truffle-lang-server/run.sh'
+		command: 'java',
+		args: ['-cp', javaClasspass.join(':'), 'lsp.ServerLauncher']
 	}
 
 	let clientOptions: LanguageClientOptions = {
