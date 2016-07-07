@@ -1,0 +1,10 @@
+language: java
+jdk:
+  - oraclejdk8
+sudo: false
+env:
+  - TASK=build-server
+  # - TASK=checkstyle
+script:
+  - if [ "$TASK" = "build-server" ];      then cd server; ant deploy; fi
+  # - if [ "$TASK" = "checkstyle" ]; then ant checkstyle-jar && ant checkstyle; fi
