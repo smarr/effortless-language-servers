@@ -11,37 +11,16 @@ import { LanguageClient, LanguageClientOptions, SettingMonitor, ServerOptions, T
 
 export function activate(context: ExtensionContext) {
 
-
-// SM: I don't really get yet how thsi works
-
-	// The server is implemented in node
-	let serverModule = context.asAbsolutePath(path.join('server', 'proxy.js')); // path.join('server', 'server.js')
-	// The debug options for the server
-	let options = { execArgv: ['/Users/smarr/Projects/SOM/lsp-test/truffle-lang-server/run.sh',  // the java process launcher
-								// "--nolazy", "--debug=6004"
-								] };
-	
-	// If the extension is launched in debug mode then the debug server options are used
-	// Otherwise the run options are used
 	let serverOptions: ServerOptions = {
-		run:   { module: serverModule, transport: TransportKind.ipc },  //, options: options
-		debug: { module: serverModule, transport: TransportKind.ipc }   //, options: options
+		command: '/Users/smarr/Projects/SOM/lsp-test/truffle-lang-server/run.sh'
 	}
-	
-	// Options to control the language client
+
 	let clientOptions: LanguageClientOptions = {
-		// Register the server for plain text documents
-		documentSelector: ['SOM'],
-		synchronize: {
-			// Synchronize the setting section 'languageServerExample' to the server
-			configurationSection: 'languageServerExample',
-			// Notify the server about file changes to '.clientrc files contain in the workspace
-			fileEvents: workspace.createFileSystemWatcher('**/.clientrc')
-		}
+		documentSelector: ['SOM']
 	}
 	
 	// Create the language client and start the client.
-	let disposable = new LanguageClient('Truffle Language Server', serverOptions, clientOptions).start();
+	let disposable = new LanguageClient('SOMns Language Server', serverOptions, clientOptions).start();
 	
 	// Push the disposable to the context's subscriptions so that the 
 	// client can be deactivated on extension deactivation
