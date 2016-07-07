@@ -14,9 +14,9 @@ public class ServerLauncher {
 
   static {
     try {
-      FileWriter fw = new FileWriter("/Users/smarr/Projects/SOM/lsp-test/truffle-lang-server/err.log", true);
+      FileWriter fw = new FileWriter("som-language-server-err.log", true);
       err = new PrintWriter(fw, true);
-      fw = new FileWriter("/Users/smarr/Projects/SOM/lsp-test/truffle-lang-server/msg.log", true);
+      fw = new FileWriter("som-language-server-msg.log", true);
       msg = new PrintWriter(fw, true);
     } catch (IOException e) { }
 
