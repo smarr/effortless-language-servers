@@ -33,18 +33,16 @@ public class ServerLauncher {
   }
 
   public static void main(final String[] args) {
-    SomAdapter.initializePolyglot();
+    SomLanguageServer tls = new SomLanguageServer();
 
-	  SomLanguageServer tls = new SomLanguageServer();
-
-	  LoggingJsonAdapter adapter = new LoggingJsonAdapter(tls);
+    LoggingJsonAdapter adapter = new LoggingJsonAdapter(tls);
 
     adapter.setMessageLog(msg);
     adapter.setErrorLog(err);
 
-		adapter.connect(System.in, System.out);
+    adapter.connect(System.in, System.out);
 
-		try {
+    try {
       adapter.join();
     } catch (InterruptedException | ExecutionException e) {
       e.printStackTrace(err);

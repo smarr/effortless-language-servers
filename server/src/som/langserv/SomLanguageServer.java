@@ -49,6 +49,7 @@ public class SomLanguageServer implements LanguageServer,	TextDocumentService {
   private Consumer<PublishDiagnosticsParams> publishDiagnostics;
   private final SomWorkspace workspace = new SomWorkspace();
   private final SomWindow    window    = new SomWindow();
+  private final SomAdapter   som       = new SomAdapter();
 
 	@Override
 	public CompletableFuture<InitializeResult> initialize(
@@ -136,7 +137,7 @@ public class SomLanguageServer implements LanguageServer,	TextDocumentService {
 	  // like a variable, where it is used.
 	  // so, this should actually return multiple results.
 	  // The spec is currently broken for that.
-	  DocumentHighlight result = SomAdapter.getHighlight(position.getTextDocument().getUri(),
+	  DocumentHighlight result = som.getHighlight(position.getTextDocument().getUri(),
 	      position.getPosition().getLine() + 1, position.getPosition().getCharacter() + 1);
 	  return CompletableFuture.completedFuture(result);
 	}
@@ -216,7 +217,7 @@ public class SomLanguageServer implements LanguageServer,	TextDocumentService {
 
 	private void validateTextDocument(final String documentUri, final String text) {
 	  try {
-      ArrayList<DiagnosticImpl> diagnostics = SomAdapter.parse(text, documentUri);
+      ArrayList<DiagnosticImpl> diagnostics = som.parse(text, documentUri);
       reportDiagnostics(diagnostics, documentUri);
     } catch (URISyntaxException ex) {
       ex.printStackTrace(ServerLauncher.errWriter());

@@ -26,13 +26,20 @@ import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.Parser;
 import som.compiler.Parser.ParseError;
 import som.interpreter.SomLanguage;
+import tools.dym.profiles.StructuralProbe;
 import tools.highlight.Highlight;
 import tools.highlight.Tags;
 import tools.highlight.Tags.LiteralTag;
 
 public class SomAdapter {
 
-  public static void initializePolyglot() {
+  private final StructuralProbe structuralProbe = new StructuralProbe();
+
+  public SomAdapter() {
+    initializePolyglot();
+  }
+
+  private void initializePolyglot() {
     String[] args = new String[0];
     Builder builder = PolyglotEngine.newBuilder();
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
@@ -41,7 +48,7 @@ public class SomAdapter {
     engine.getInstruments().get(Highlight.ID).setEnabled(true);
   }
 
-  public static ArrayList<DiagnosticImpl> parse(final String text, final String sourceUri)
+  public ArrayList<DiagnosticImpl> parse(final String text, final String sourceUri)
       throws URISyntaxException {
     URI uri = new URI(sourceUri);
     Source source = Source.newBuilder(text).
@@ -51,7 +58,7 @@ public class SomAdapter {
     StringReader reader = new StringReader(text);
     int fileSize = text.length();
 
-    Parser p = new Parser(reader, fileSize, source);
+    Parser p = new Parser(reader, fileSize, source, structuralProbe);
 
     try {
       p.moduleDeclaration();
@@ -63,7 +70,7 @@ public class SomAdapter {
     return new ArrayList<>();
   }
 
-  private static ArrayList<DiagnosticImpl> toDiagnostics(final ParseError e) {
+  private ArrayList<DiagnosticImpl> toDiagnostics(final ParseError e) {
     ArrayList<DiagnosticImpl> diagnostics = new ArrayList<>();
 
     DiagnosticImpl d = new DiagnosticImpl();
@@ -105,7 +112,7 @@ public class SomAdapter {
   }
 
   @SuppressWarnings("unchecked")
-  public static DocumentHighlight getHighlight(final String documentUri,
+  public DocumentHighlight getHighlight(final String documentUri,
       final int line, final int character) {
     // TODO: this is wrong, it should be something entierly different.
     // this feature is about marking the occurrences of a selected element
