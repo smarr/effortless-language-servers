@@ -1,4 +1,4 @@
-<project name="som" basedir="." default="compile">
+<project name="som-language-server" default="compile">
 
     <property name="src.dir"     value="src"/>
     <property name="lib.dir"     value="libs" />
@@ -14,35 +14,44 @@
     <property name="build.dir"   value="bin"/>
     <property name="classes.dir" value="${build.dir}"/>
 
-    <path id="project.classpath">
-        <pathelement location="${classes.dir}" />
+    <path id="jar.classpath">
         <pathelement location="${lib.dir}/gson-${gson.version}.jar" />
         <pathelement location="${lib.dir}/guava-${guava.version}.jar" />
         <pathelement location="${lib.dir}/org.eclipse.xtext.xbase.lib-${xbase.lib.version}.jar" />
         <pathelement location="${lib.dir}/org.eclipse.xtend.lib-${xtend.lib.version}.jar" />
+        <pathelement location="${lib.dir}/SOMns/libs/truffle/mxbuild/dists/truffle-api.jar" />
+        <pathelement location="${lib.dir}/SOMns/libs/truffle/mxbuild/dists/truffle-debug.jar" />
+        <pathelement location="${lib.dir}/SOMns/build/som.jar" />
+    </path>
+
+    <path id="project.classpath">
+        <path refid="jar.classpath" />
+        <pathelement location="${classes.dir}" />
         <pathelement location="io.typefox.lsapi"/>
         <pathelement location="io.typefox.lsapi.services"/>
-        
-        <pathelement location="${lib.dir}/SOMns/build/classes/" />
-        <pathelement location="${lib.dir}/SOMns/libs/truffle/mxbuild/dists/truffle-api.jar" />
     </path>
 
     <target name="clean" description="Remove build directories and generated code">
         <delete dir="${build.dir}"/>
     </target>
-    
-    
+
     <target name="check-somns-available">
         <available file="libs/SOMns/.git" property="somns.present"/>
     </target>
-    <target name="somns" depends="check-somns-available"
+    <target name="somns-submodule" depends="check-somns-available"
             unless="somns.present">
-      <exec executable="git">
-        <arg value="submodule" />
-        <arg value="update" />
-        <arg value="--init" />
+        <exec executable="git">
+          <arg value="submodule" />
+          <arg value="update" />
+          <arg value="--init" />
+        </exec>
+    </target>
+
+    <target name="somns" depends="somns-submodule">
+      <!-- <subant buildpath="libs/SOMns" target="jar" failonerror="true" /> -->
+      <exec executable="ant" dir="${lib.dir}/SOMns">
+          <arg value="jar"/>
       </exec>
-      <subant buildpath="libs/SOMns" target="jar" failonerror="true" />
     </target>
     
     <target name="libs" depends="somns">
@@ -92,7 +101,13 @@
         <jar destfile="som-language-server.jar" basedir="${classes.dir}"></jar>
     </target>
     
-    <target name="cp" description="Get Classpath">
-        <echo>${toString:project.classpath}</echo>
+    <target name="deploy" depends="jar" description="Deploy Language Server files to client">
+        <mkdir dir="../client/out/server"/>
+        <copy todir="../client/out/server" flatten="true">
+          <path>
+            <pathelement path="som-language-server.jar"/>
+            <path refid="jar.classpath" />
+          </path>
+        </copy>
     </target>
 </project>
