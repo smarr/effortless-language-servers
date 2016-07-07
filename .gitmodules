@@ -1,0 +1,3 @@
+[submodule "server/libs/SOMns"]
+	path = server/libs/SOMns
+	url = https://github.com/smarr/SOMns.git

@@ -1,0 +1,98 @@
+<project name="som" basedir="." default="compile">
+
+    <property name="src.dir"     value="src"/>
+    <property name="lib.dir"     value="libs" />
+
+    <property name="mvn.repo"    value="https://repo1.maven.org/maven2" />
+
+    <property name="checkstyle.version" value="7.0" />
+    <property name="gson.version"       value="2.7" />
+    <property name="guava.version"      value="19.0" />
+    <property name="xbase.lib.version"  value="2.10.0" />
+    <property name="xtend.lib.version"  value="2.10.0" />
+
+    <property name="build.dir"   value="bin"/>
+    <property name="classes.dir" value="${build.dir}"/>
+
+    <path id="project.classpath">
+        <pathelement location="${classes.dir}" />
+        <pathelement location="${lib.dir}/gson-${gson.version}.jar" />
+        <pathelement location="${lib.dir}/guava-${guava.version}.jar" />
+        <pathelement location="${lib.dir}/org.eclipse.xtext.xbase.lib-${xbase.lib.version}.jar" />
+        <pathelement location="${lib.dir}/org.eclipse.xtend.lib-${xtend.lib.version}.jar" />
+        <pathelement location="io.typefox.lsapi"/>
+        <pathelement location="io.typefox.lsapi.services"/>
+        
+        <pathelement location="${lib.dir}/SOMns/build/classes/" />
+        <pathelement location="${lib.dir}/SOMns/libs/truffle/mxbuild/dists/truffle-api.jar" />
+    </path>
+
+    <target name="clean" description="Remove build directories and generated code">
+        <delete dir="${build.dir}"/>
+    </target>
+    
+    
+    <target name="check-somns-available">
+        <available file="libs/SOMns/.git" property="somns.present"/>
+    </target>
+    <target name="somns" depends="check-somns-available"
+            unless="somns.present">
+      <exec executable="git">
+        <arg value="submodule" />
+        <arg value="update" />
+        <arg value="--init" />
+      </exec>
+      <subant buildpath="libs/SOMns" target="jar" failonerror="true" />
+    </target>
+    
+    <target name="libs" depends="somns">
+        <get src="${mvn.repo}/com/google/code/gson/gson/${gson.version}/gson-${gson.version}.jar"
+            usetimestamp="true"
+            dest="${lib.dir}/gson-${gson.version}.jar" />
+        <get src="${mvn.repo}/com/google/guava/guava/${guava.version}/guava-${guava.version}.jar"
+            usetimestamp="true"
+            dest="${lib.dir}/guava-${guava.version}.jar" />
+        <get src="${mvn.repo}/org/eclipse/xtext/org.eclipse.xtext.xbase.lib/${xbase.lib.version}/org.eclipse.xtext.xbase.lib-${xbase.lib.version}.jar"
+            usetimestamp="true"
+            dest="${lib.dir}/org.eclipse.xtext.xbase.lib-${xbase.lib.version}.jar" />
+        <get src="${mvn.repo}/org/eclipse/xtend/org.eclipse.xtend.lib/${xtend.lib.version}/org.eclipse.xtend.lib-${xtend.lib.version}.jar"
+            usetimestamp="true"
+            dest="${lib.dir}/org.eclipse.xtend.lib-${xtend.lib.version}.jar" />
+    </target>
+
+    <target name="checkstyle-jar">
+        <get src="http://tenet.dl.sourceforge.net/project/checkstyle/checkstyle/${checkstyle.version}/checkstyle-${checkstyle.version}-all.jar"
+            usetimestamp="true"
+            dest="${lib.dir}/checkstyle-${checkstyle.version}-all.jar" />
+    </target>
+    
+    <target name="checkstyle" depends="checkstyle-jar" description="Check Code with Checkstyle">
+        <taskdef resource="com/puppycrawl/tools/checkstyle/ant/checkstyle-ant-task.properties" classpath="${lib.dir}/checkstyle-${checkstyle.version}-all.jar" />
+        <checkstyle config=".checkstyle_checks.xml">
+          <fileset dir="src" includes="**/*.java"/>
+          <formatter type="plain"/>
+        </checkstyle>
+    </target>
+
+    <target name="compile" depends="libs" description="Compile TruffleSOM">
+        <mkdir dir="${build.dir}"/>
+        <mkdir dir="${classes.dir}" />
+
+        <javac includeantruntime="false" destdir="${classes.dir}" debug="true">
+          <src path="${src.dir}" />
+          <src path="io.typefox.lsapi" />
+          <src path="io.typefox.lsapi.services" />
+          <classpath refid="project.classpath" />
+          <compilerarg line="-XDignore.symbol.file" />
+          <compilerarg line="-Xlint:all" />
+        </javac>
+    </target>
+
+    <target name="jar" depends="compile" description="Package as JAR">
+        <jar destfile="som-language-server.jar" basedir="${classes.dir}"></jar>
+    </target>
+    
+    <target name="cp" description="Get Classpath">
+        <echo>${toString:project.classpath}</echo>
+    </target>
+</project>

@@ -1,2 +1,4 @@
 client/node_modules
 client/out
+server/bin
+server/libs/*.jar
