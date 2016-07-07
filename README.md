@@ -6,3 +6,15 @@ a SOMns language server providing IDE capabilities.
 
 This is somewhat liberally derived from the [VS Code
 example](https://github.com/Microsoft/vscode-languageserver-node-example).
+
+# Usage
+
+To use/develop the VS Code extension, do the following:
+
+```bash
+cd client
+npm install .
+code .  # requires the VS Code shell command
+```
+
+Now, you can run the extension from the debug menu.
