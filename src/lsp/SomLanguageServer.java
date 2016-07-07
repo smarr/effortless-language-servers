@@ -44,7 +44,7 @@ import io.typefox.lsapi.services.TextDocumentService;
 import io.typefox.lsapi.services.WindowService;
 import io.typefox.lsapi.services.WorkspaceService;
 
-public class TruffleLanguageServer implements LanguageServer,	TextDocumentService {
+public class SomLanguageServer implements LanguageServer,	TextDocumentService {
 
   private Consumer<PublishDiagnosticsParams> publishDiagnostics;
   private final SomWorkspace workspace = new SomWorkspace();

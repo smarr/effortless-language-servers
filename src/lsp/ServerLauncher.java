@@ -35,7 +35,7 @@ public class ServerLauncher {
   public static void main(final String[] args) {
     SomAdapter.initializePolyglot();
 
-	  TruffleLanguageServer tls = new TruffleLanguageServer();
+	  SomLanguageServer tls = new SomLanguageServer();
 
 	  LoggingJsonAdapter adapter = new LoggingJsonAdapter(tls);
 
