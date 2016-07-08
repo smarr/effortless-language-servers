@@ -4,11 +4,6 @@
 	<classpathentry kind="src" path="io.typefox.lsapi.services"/>
 	<classpathentry kind="src" path="io.typefox.lsapi"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="src" path="src_gen">
-		<attributes>
-			<attribute name="optional" value="true"/>
-		</attributes>
-	</classpathentry>
 	<classpathentry kind="lib" path="libs/gson-2.7.jar"/>
 	<classpathentry kind="lib" path="libs/guava-19.0.jar"/>
 	<classpathentry kind="lib" path="libs/org.eclipse.xtend.lib-2.10.0.jar"/>
