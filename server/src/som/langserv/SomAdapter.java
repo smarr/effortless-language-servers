@@ -64,7 +64,9 @@ public class SomAdapter {
   }
 
   private StructuralProbe getProbe(final String documentUri) {
-    return structuralProbes.computeIfAbsent(documentUri, k -> new StructuralProbe());
+    synchronized (structuralProbes) {
+      return structuralProbes.computeIfAbsent(documentUri, k -> new StructuralProbe());
+    }
   }
 
   public ArrayList<DiagnosticImpl> parse(final String text, final String sourceUri)
@@ -78,8 +80,12 @@ public class SomAdapter {
     try {
       // clean out old structural data
       StructuralProbe newProbe = new StructuralProbe();
-      structuralProbes.put(sourceUri, newProbe);
-      SourcecodeCompiler.compileModule(source, newProbe);
+      synchronized (structuralProbes) {
+        structuralProbes.put(sourceUri, newProbe);
+      }
+      synchronized (newProbe) {
+        SourcecodeCompiler.compileModule(source, newProbe);
+      }
     } catch (ParseError e) {
       return toDiagnostics(e);
     } catch (MixinDefinitionError e) {
@@ -164,7 +170,6 @@ public class SomAdapter {
       return highlight;
     }
 
-
     DocumentHighlightImpl highlight = new DocumentHighlightImpl();
     highlight.setKind(DocumentHighlight.KIND_TEXT);
     RangeImpl range = new RangeImpl();
@@ -192,20 +197,22 @@ public class SomAdapter {
     StructuralProbe probe = getProbe(documentUri);
     ArrayList<SymbolInformationImpl> results = new ArrayList<>();
 
-    Set<MixinDefinition> classes = probe.getClasses();
-    for (MixinDefinition m : classes) {
-      if (m.getSourceSection().getSource().getURI().toString().equals(documentUri)) {
-        results.add(getSymbolInfo(m));
+    synchronized (probe) {
+      Set<MixinDefinition> classes = probe.getClasses();
+      for (MixinDefinition m : classes) {
+        if (m.getSourceSection().getSource().getURI().toString().equals(documentUri)) {
+          results.add(getSymbolInfo(m));
+        }
+      }
+
+      Set<SInvokable> methods = probe.getMethods();
+      for (SInvokable m : methods) {
+        assert m.getHolder() != null;
+        if (m.getSourceSection().getSource().getURI().toString().equals(documentUri)) {
+          results.add(getSymbolInfo(m));
+        }
       }
     }
-
-    Set<SInvokable> methods = probe.getMethods();
-    for (SInvokable m : methods) {
-      if (m.getSourceSection().getSource().getURI().toString().equals(documentUri)) {
-        results.add(getSymbolInfo(m));
-      }
-    }
-
     return results;
   }
 
@@ -213,6 +220,7 @@ public class SomAdapter {
     SymbolInformationImpl sym = new SymbolInformationImpl();
     sym.setName(m.getSignature().toString());
     sym.setKind(SymbolInformation.KIND_METHOD);
+    assert null != m.getSourceSection();
     sym.setLocation(getLocation(m.getSourceSection()));
     sym.setContainer(m.getHolder().getName().getString());
     return sym;
