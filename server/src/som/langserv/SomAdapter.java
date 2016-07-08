@@ -29,9 +29,11 @@ import som.VMOptions;
 import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.MixinDefinition;
+import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Parser.ParseError;
 import som.compiler.SourcecodeCompiler;
 import som.interpreter.SomLanguage;
+import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vmobjects.SInvokable;
 import tools.dym.profiles.StructuralProbe;
 import tools.highlight.Highlight;
@@ -224,10 +226,35 @@ public class SomAdapter {
     return sym;
   }
 
+  private static void addSymbolInfo(final MixinDefinition m,
+      final ArrayList<SymbolInformationImpl> results) {
+    results.add(getSymbolInfo(m));
+    for (Dispatchable d : m.getInstanceDispatchables().values()) {
+      // needs to be exact test to avoid duplicate info
+      if (d.getClass() == SlotDefinition.class) {
+        results.add(getSymbolInfo((SlotDefinition) d, m));
+      }
+    }
+  }
+
+  private static SymbolInformationImpl getSymbolInfo(final SlotDefinition d,
+      final MixinDefinition m) {
+    SymbolInformationImpl sym = new SymbolInformationImpl();
+    sym.setName(d.getName().getString());
+    int kind = m.isModule() ? SymbolInformation.KIND_CONSTANT
+                            : SymbolInformation.KIND_PROPERTY;
+    sym.setKind(kind);
+    sym.setLocation(getLocation(d.getSourceSection()));
+    sym.setContainer(m.getName().getString());
+    return sym;
+  }
+
   private static SymbolInformationImpl getSymbolInfo(final MixinDefinition m) {
     SymbolInformationImpl sym = new SymbolInformationImpl();
     sym.setName(m.getName().getString());
-    sym.setKind(SymbolInformation.KIND_CLASS);
+    int kind = m.isModule() ? SymbolInformation.KIND_MODULE
+                            : SymbolInformation.KIND_CLASS;
+    sym.setKind(kind);
     sym.setLocation(getLocation(m.getSourceSection()));
 
     MixinDefinition outer = m.getOuter();
