@@ -24,6 +24,7 @@ import io.typefox.lsapi.PositionImpl;
 import io.typefox.lsapi.RangeImpl;
 import io.typefox.lsapi.SymbolInformation;
 import io.typefox.lsapi.SymbolInformationImpl;
+import som.VM;
 import som.VMOptions;
 import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.MixinBuilder.MixinDefinitionError;
@@ -47,12 +48,19 @@ public class SomAdapter {
   }
 
   private void initializePolyglot() {
-    String[] args = new String[0];
+    String coreLib = System.getProperty("som.langserv.core-lib");
+
+    String[] args = new String[] {"--kernel", coreLib + "/Kernel.som",
+                                  "--platform", coreLib + "/Platform.som"};
     Builder builder = PolyglotEngine.newBuilder();
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
     VMOptions vmOptions = new VMOptions(args);
     PolyglotEngine engine = builder.build();
-    engine.getInstruments().get(Highlight.ID).setEnabled(true);
+    VM.setEngine(engine);
+    engine.getInstruments().values().forEach(i -> i.setEnabled(false));
+
+    // Trigger object system initialization
+    engine.getLanguages().get(SomLanguage.MIME_TYPE).getGlobalObject();
   }
 
   private StructuralProbe getProbe(final String documentUri) {
