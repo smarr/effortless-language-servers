@@ -200,17 +200,15 @@ public class SomAdapter {
     synchronized (probe) {
       Set<MixinDefinition> classes = probe.getClasses();
       for (MixinDefinition m : classes) {
-        if (m.getSourceSection().getSource().getURI().toString().equals(documentUri)) {
-          results.add(getSymbolInfo(m));
-        }
+        assert m.getSourceSection().getSource().getURI().toString().equals(documentUri);
+        addSymbolInfo(m, results);
       }
 
       Set<SInvokable> methods = probe.getMethods();
       for (SInvokable m : methods) {
         assert m.getHolder() != null;
-        if (m.getSourceSection().getSource().getURI().toString().equals(documentUri)) {
-          results.add(getSymbolInfo(m));
-        }
+        assert m.getSourceSection().getSource().getURI().toString().equals(documentUri);
+        results.add(getSymbolInfo(m));
       }
     }
     return results;
