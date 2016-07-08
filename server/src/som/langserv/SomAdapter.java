@@ -1,9 +1,10 @@
 package som.langserv;
 
-import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -18,14 +19,19 @@ import io.typefox.lsapi.Diagnostic;
 import io.typefox.lsapi.DiagnosticImpl;
 import io.typefox.lsapi.DocumentHighlight;
 import io.typefox.lsapi.DocumentHighlightImpl;
+import io.typefox.lsapi.LocationImpl;
 import io.typefox.lsapi.PositionImpl;
 import io.typefox.lsapi.RangeImpl;
+import io.typefox.lsapi.SymbolInformation;
+import io.typefox.lsapi.SymbolInformationImpl;
 import som.VMOptions;
 import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.MixinBuilder.MixinDefinitionError;
-import som.compiler.Parser;
+import som.compiler.MixinDefinition;
 import som.compiler.Parser.ParseError;
+import som.compiler.SourcecodeCompiler;
 import som.interpreter.SomLanguage;
+import som.vmobjects.SInvokable;
 import tools.dym.profiles.StructuralProbe;
 import tools.highlight.Highlight;
 import tools.highlight.Tags;
@@ -33,7 +39,8 @@ import tools.highlight.Tags.LiteralTag;
 
 public class SomAdapter {
 
-  private final StructuralProbe structuralProbe = new StructuralProbe();
+  private final Map<String, StructuralProbe> structuralProbes = new HashMap<>();
+
 
   public SomAdapter() {
     initializePolyglot();
@@ -48,6 +55,10 @@ public class SomAdapter {
     engine.getInstruments().get(Highlight.ID).setEnabled(true);
   }
 
+  private StructuralProbe getProbe(final String documentUri) {
+    return structuralProbes.computeIfAbsent(documentUri, k -> new StructuralProbe());
+  }
+
   public ArrayList<DiagnosticImpl> parse(final String text, final String sourceUri)
       throws URISyntaxException {
     URI uri = new URI(sourceUri);
@@ -55,13 +66,12 @@ public class SomAdapter {
         name(uri.getPath()).
         mimeType(SomLanguage.MIME_TYPE).
         uri(uri).build();
-    StringReader reader = new StringReader(text);
-    int fileSize = text.length();
-
-    Parser p = new Parser(reader, fileSize, source, structuralProbe);
 
     try {
-      p.moduleDeclaration();
+      // clean out old structural data
+      StructuralProbe newProbe = new StructuralProbe();
+      structuralProbes.put(sourceUri, newProbe);
+      SourcecodeCompiler.compileModule(source, newProbe);
     } catch (ParseError e) {
       return toDiagnostics(e);
     } catch (MixinDefinitionError e) {
@@ -142,11 +152,7 @@ public class SomAdapter {
       }
       DocumentHighlightImpl highlight = new DocumentHighlightImpl();
       highlight.setKind(kind);
-      RangeImpl range = new RangeImpl();
-      range.setStart(pos(line, character));
-      range.setEnd(pos(e.getKey().getEndLine(), e.getKey().getEndColumn() + 1));
-
-      highlight.setRange(range);
+      highlight.setRange(getRange(e.getKey()));
       return highlight;
     }
 
@@ -158,5 +164,62 @@ public class SomAdapter {
     range.setEnd(pos(line, character + 1));
     highlight.setRange(range);
     return highlight;
+  }
+
+  private static RangeImpl getRange(final SourceSection ss) {
+    RangeImpl range = new RangeImpl();
+    range.setStart(pos(ss.getStartLine(), ss.getStartColumn()));
+    range.setEnd(pos(ss.getEndLine(), ss.getEndColumn() + 1));
+    return range;
+  }
+
+  private static LocationImpl getLocation(final SourceSection ss) {
+    LocationImpl loc = new LocationImpl();
+    loc.setUri(ss.getSource().getURI().toString());
+    loc.setRange(getRange(ss));
+    return loc;
+  }
+
+  public List<? extends SymbolInformation> getSymbolInfo(final String documentUri) {
+    StructuralProbe probe = getProbe(documentUri);
+    ArrayList<SymbolInformationImpl> results = new ArrayList<>();
+
+    Set<MixinDefinition> classes = probe.getClasses();
+    for (MixinDefinition m : classes) {
+      if (m.getSourceSection().getSource().getURI().toString().equals(documentUri)) {
+        results.add(getSymbolInfo(m));
+      }
+    }
+
+    Set<SInvokable> methods = probe.getMethods();
+    for (SInvokable m : methods) {
+      if (m.getSourceSection().getSource().getURI().toString().equals(documentUri)) {
+        results.add(getSymbolInfo(m));
+      }
+    }
+
+    return results;
+  }
+
+  private static SymbolInformationImpl getSymbolInfo(final SInvokable m) {
+    SymbolInformationImpl sym = new SymbolInformationImpl();
+    sym.setName(m.getSignature().toString());
+    sym.setKind(SymbolInformation.KIND_METHOD);
+    sym.setLocation(getLocation(m.getSourceSection()));
+    sym.setContainer(m.getHolder().getName().getString());
+    return sym;
+  }
+
+  private static SymbolInformationImpl getSymbolInfo(final MixinDefinition m) {
+    SymbolInformationImpl sym = new SymbolInformationImpl();
+    sym.setName(m.getName().getString());
+    sym.setKind(SymbolInformation.KIND_CLASS);
+    sym.setLocation(getLocation(m.getSourceSection()));
+
+    MixinDefinition outer = m.getOuter();
+    if (outer != null) {
+      sym.setContainer(outer.getName().getString());
+    }
+    return sym;
   }
 }
