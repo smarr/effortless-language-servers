@@ -44,6 +44,7 @@ public class SomAdapter {
 
   private final Map<String, StructuralProbe> structuralProbes = new HashMap<>();
 
+  private final SomCompiler compiler = new SomCompiler();
 
   public SomAdapter() {
     initializePolyglot();
@@ -86,7 +87,7 @@ public class SomAdapter {
         structuralProbes.put(sourceUri, newProbe);
       }
       synchronized (newProbe) {
-        SourcecodeCompiler.compileModule(source, newProbe);
+        compiler.compileModule(source, newProbe);
       }
     } catch (ParseError e) {
       return toDiagnostics(e);
@@ -262,5 +263,15 @@ public class SomAdapter {
       sym.setContainer(outer.getName().getString());
     }
     return sym;
+  }
+
+  private static final class SomCompiler extends SourcecodeCompiler {
+    @Override
+    public MixinDefinition compileModule(final Source source,
+        final StructuralProbe structuralProbe) throws ParseError, MixinDefinitionError {
+      SomParser parser = new SomParser(source.getReader(), source.getLength(),
+          source, (SomStructures) structuralProbe);
+      return compile(parser, source);
+    }
   }
 }
