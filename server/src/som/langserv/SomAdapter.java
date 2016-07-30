@@ -19,6 +19,7 @@ import io.typefox.lsapi.Diagnostic;
 import io.typefox.lsapi.DiagnosticImpl;
 import io.typefox.lsapi.DocumentHighlight;
 import io.typefox.lsapi.DocumentHighlightImpl;
+import io.typefox.lsapi.Location;
 import io.typefox.lsapi.LocationImpl;
 import io.typefox.lsapi.PositionImpl;
 import io.typefox.lsapi.RangeImpl;
@@ -33,8 +34,11 @@ import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Parser.ParseError;
 import som.compiler.SourcecodeCompiler;
 import som.interpreter.SomLanguage;
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.MessageSendNode.AbstractUninitializedMessageSendNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SSymbol;
 import tools.highlight.Highlight;
 import tools.highlight.Tags;
 import tools.highlight.Tags.LiteralTag;
@@ -188,7 +192,7 @@ public class SomAdapter {
     return range;
   }
 
-  private static LocationImpl getLocation(final SourceSection ss) {
+  public static LocationImpl getLocation(final SourceSection ss) {
     LocationImpl loc = new LocationImpl();
     loc.setUri(ss.getSource().getURI().toString());
     loc.setRange(getRange(ss));
@@ -265,6 +269,24 @@ public class SomAdapter {
       sym.setContainer(outer.getName().getString());
     }
     return sym;
+  }
+
+  public List<? extends Location> getDefinitions(final String docUri,
+      final int line, final int character) {
+    ArrayList<LocationImpl> result = new ArrayList<>();
+    SomStructures probe = getProbe(docUri);
+    if (probe == null) { return result; }
+
+    ExpressionNode node = probe.getElementAt(line + 1, character); // +1 to get to one based index
+    if (node == null) { return result; }
+
+    if (node instanceof AbstractUninitializedMessageSendNode) {
+      SSymbol name = ((AbstractUninitializedMessageSendNode) node).getSelector();
+      for (SomStructures s : structuralProbes.values()) {
+        s.getDefinitionsFor(name, result);
+      }
+    }
+    return result;
   }
 
   private static final class SomCompiler extends SourcecodeCompiler {

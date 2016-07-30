@@ -59,6 +59,7 @@ public class SomLanguageServer implements LanguageServer,	TextDocumentService {
 
 	  cap.setTextDocumentSync(ServerCapabilities.SYNC_FULL);
 	  cap.setDocumentSymbolProvider(true);
+	  cap.setDefinitionProvider(true);
 	  result.setCapabilities(cap);
 	  return CompletableFuture.completedFuture(result);
 	}
@@ -119,8 +120,10 @@ public class SomLanguageServer implements LanguageServer,	TextDocumentService {
 	@Override
 	public CompletableFuture<List<? extends Location>> definition(
 			final TextDocumentPositionParams position) {
-		// TODO Auto-generated method stub
-		return null;
+	  List<? extends Location> result = som.getDefinitions(
+	      position.getTextDocument().getUri(), position.getPosition().getLine(),
+	      position.getPosition().getCharacter());
+	  return CompletableFuture.completedFuture(result);
 	}
 
 	@Override
