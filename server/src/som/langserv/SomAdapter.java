@@ -35,15 +35,14 @@ import som.compiler.SourcecodeCompiler;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vmobjects.SInvokable;
-import tools.dym.profiles.StructuralProbe;
 import tools.highlight.Highlight;
 import tools.highlight.Tags;
 import tools.highlight.Tags.LiteralTag;
+import tools.language.StructuralProbe;
 
 public class SomAdapter {
 
-  private final Map<String, StructuralProbe> structuralProbes = new HashMap<>();
-
+  private final Map<String, SomStructures> structuralProbes = new HashMap<>();
   private final SomCompiler compiler = new SomCompiler();
 
   public SomAdapter() {
@@ -66,9 +65,9 @@ public class SomAdapter {
     engine.getLanguages().get(SomLanguage.MIME_TYPE).getGlobalObject();
   }
 
-  private StructuralProbe getProbe(final String documentUri) {
+  private SomStructures getProbe(final String documentUri) {
     synchronized (structuralProbes) {
-      return structuralProbes.computeIfAbsent(documentUri, k -> new StructuralProbe());
+      return structuralProbes.get(documentUri);
     }
   }
 
@@ -82,7 +81,7 @@ public class SomAdapter {
 
     try {
       // clean out old structural data
-      StructuralProbe newProbe = new StructuralProbe();
+      SomStructures newProbe = new SomStructures(source);
       synchronized (structuralProbes) {
         structuralProbes.put(sourceUri, newProbe);
       }
@@ -197,8 +196,11 @@ public class SomAdapter {
   }
 
   public List<? extends SymbolInformation> getSymbolInfo(final String documentUri) {
-    StructuralProbe probe = getProbe(documentUri);
+    SomStructures probe = getProbe(documentUri);
     ArrayList<SymbolInformationImpl> results = new ArrayList<>();
+    if (probe == null) {
+      return results;
+    }
 
     synchronized (probe) {
       Set<MixinDefinition> classes = probe.getClasses();
