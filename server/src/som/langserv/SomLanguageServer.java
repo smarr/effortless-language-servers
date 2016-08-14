@@ -49,7 +49,7 @@ public class SomLanguageServer implements LanguageServer,	TextDocumentService {
   private Consumer<PublishDiagnosticsParams> publishDiagnostics;
   private final SomWorkspace workspace = new SomWorkspace();
   private final SomWindow    window    = new SomWindow();
-  private final SomAdapter   som       = new SomAdapter();
+  private final SomAdapter   som       = new SomAdapter(window);
 
 	@Override
 	public CompletableFuture<InitializeResult> initialize(

@@ -46,10 +46,13 @@ import tools.language.StructuralProbe;
 
 public class SomAdapter {
 
+  private final SomWindow window;
+
   private final Map<String, SomStructures> structuralProbes = new HashMap<>();
   private final SomCompiler compiler = new SomCompiler();
 
-  public SomAdapter() {
+  public SomAdapter(final SomWindow window) {
+    this.window = window;
     initializePolyglot();
   }
 
