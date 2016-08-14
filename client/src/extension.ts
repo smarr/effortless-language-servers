@@ -4,13 +4,15 @@
  * ------------------------------------------------------------------------------------------ */
 'use strict';
 
-import * as path from 'path';
+import { Socket } from 'net';
 
-import { workspace, Disposable, ExtensionContext } from 'vscode';
-import { LanguageClient, LanguageClientOptions, SettingMonitor, ServerOptions, TransportKind } from 'vscode-languageclient';
+import { workspace, Disposable, ExtensionContext, commands, window } from 'vscode';
+import { LanguageClient, LanguageClientOptions, SettingMonitor, ServerOptions, TransportKind, StreamInfo } from 'vscode-languageclient';
 
-export function activate(context: ExtensionContext) {
-	let javaClasspass = [context.asAbsolutePath('out/server/gson-2.7.jar'),
+const port = 8123;  // TODO: make configurable
+
+function getServerOptionsForStdIoVersion(context: ExtensionContext) {
+	const javaClasspass = [context.asAbsolutePath('out/server/gson-2.7.jar'),
 						 context.asAbsolutePath('out/server/guava-19.0.jar'),
 						 context.asAbsolutePath('out/server/org.eclipse.xtend.lib-2.10.0.jar'),
 						 context.asAbsolutePath('out/server/org.eclipse.xtext.xbase.lib-2.10.0.jar'),
@@ -18,11 +20,41 @@ export function activate(context: ExtensionContext) {
 						 context.asAbsolutePath('out/server/som.jar'),
 						 context.asAbsolutePath('out/server/truffle-api.jar'),
 						 context.asAbsolutePath('out/server/truffle-debug.jar')]
+	const javaCmd = 'java';
+	const javaArgs = ['-cp', javaClasspass.join(':'), 'som.langserv.ServerLauncher'];
+	const args = ['-Dls.port=', port].concat(javaArgs);
 
-	let serverOptions: ServerOptions = {
-		command: 'java',
-		args: ['-cp', javaClasspass.join(':'), 'lsp.ServerLauncher']
+	const serverOptions: ServerOptions = {
+		run:   { command: javaCmd, args: javaArgs },
+		debug: { command: '/Users/smarr/Projects/SOM/SOMns-vscode/server/run.sh' }
 	}
+}
+
+export function activate(context: ExtensionContext) {
+
+	function createLSPServer() : Promise<StreamInfo> {
+		return new Promise((resolve, reject) => {
+			const clientSocket = new Socket();
+			clientSocket.once('error', (e) => {
+				window.showErrorMessage("Connection to SOM server on port " + port +
+					" failed. Please try after starting the server. Error: " + JSON.stringify(e));
+				reject(e);
+			});
+			clientSocket.connect(port, null, () => {
+				resolve({
+					reader: clientSocket,
+					writer: clientSocket
+				});
+			});
+
+			// TODO: for production use, start the server
+			// Start the child java process
+			// import { execFile } from 'child_process';
+			// ChildProcess.execFile(javaExecutablePath, args, options);
+		});
+	}
+
+	const serverOptions = createLSPServer;
 
 	let clientOptions: LanguageClientOptions = {
 		documentSelector: ['SOM']
