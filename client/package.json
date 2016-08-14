@@ -9,7 +9,7 @@
 		"vscode": "^1.2.1"
 	},
 	"categories": [
-		"Other"
+		"Debuggers", "Languages"
 	],
 	"repository": {
 		"type": "git",
@@ -32,6 +32,72 @@
 			"language": "SOM",
 			"scopeName": "text.som",
 			"path" : "./syntaxes/SOMns.tmLanguage"
+		}],
+		"breakpoints": [ { "language": "SOM" } ],
+		"debuggers": [ {
+			"type": "som",
+			"label": "SOMns",
+			"enableBreakpointsFor": { "languageIds": [ "SOM" ] },
+
+			"program": "./out/src/debugger.js",
+			"runtime": "node",
+			
+			"configurationAttributes": {
+				"launch" : {
+					"required" : [ "program", "cwd" ],
+					"properties" : {
+						"program" : {
+							"type" : "string",
+							"description" : "Path to the main program"
+						},
+						"cwd" : {
+							"type" : "string",
+							"description" : "Workding directory",
+							"default" : "${workspaceRoot}"
+						},
+						"stopOnEntry" : {
+							"type" : "boolean",
+							"description" : "Automatically stop after launch",
+							"default" : false
+						},
+						"runtime" : {
+							"type" : "string",
+							"description" : "Path to the SOMns interpreter",
+							"default" : "/Users/smarr/Projects/SOM/SOMns/som"
+						},
+						"runtimeArgs" : {
+							"type" : "array",
+							"description" : "Optional interpreter arguments",
+							"items" : { "type" : "string" },
+							"default" : []
+						}
+					}
+				},
+				"attach" : {
+					"required" : [ "port" ],
+					"properties" : {
+						"port" : {
+							"type" : "number",
+							"description" : "Debugger port of the interpreter",
+							"default" : 7977
+						}
+					}
+				}
+			},
+			"initialConfigurations": [
+				{ "name"    : "Launch SOM program",
+				  "type"    : "som",
+				  "request" : "launch",
+				  "program" : "${workspaceRoot}/Application.som",
+					"cwd"     : "${workspaceRoot}",
+				  "stopOnEntry" : false
+				},
+				{ "name"    : "Attach to SOM program",
+				  "type"    : "som",
+				  "request" : "attach",
+				  "port"    : 7977
+				}
+			]
 		}]
 	},	
 	"scripts": {
