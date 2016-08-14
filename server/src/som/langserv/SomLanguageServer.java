@@ -136,7 +136,7 @@ public class SomLanguageServer implements LanguageServer,	TextDocumentService {
 	@Override
 	public CompletableFuture<DocumentHighlight> documentHighlight(
 			final TextDocumentPositionParams position) {
-	  // TODO: this is wrong, it should be something entierly different.
+	  // TODO: this is wrong, it should be something entirely different.
 	  // this feature is about marking the occurrences of a selected element
 	  // like a variable, where it is used.
 	  // so, this should actually return multiple results.
