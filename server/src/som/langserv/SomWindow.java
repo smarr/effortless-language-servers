@@ -9,18 +9,40 @@ import io.typefox.lsapi.services.WindowService;
 
 public class SomWindow implements WindowService {
 
+  private Consumer<MessageParams> showCallback;
+  private Consumer<MessageParams> logCallback;
+  private Consumer<ShowMessageRequestParams> showRequestCallback;
+
   @Override
   public void onShowMessage(final Consumer<MessageParams> callback) {
-    // TODO Auto-generated method stub
+    this.showCallback = callback;
   }
 
   @Override
   public void onShowMessageRequest(final Consumer<ShowMessageRequestParams> callback) {
-    // TODO Auto-generated method stub
+    this.showRequestCallback = callback;
   }
 
   @Override
   public void onLogMessage(final Consumer<MessageParams> callback) {
-    // TODO Auto-generated method stub
+    this.logCallback = callback;
+  }
+
+  public void show(final MessageParams msg) {
+    if (showCallback == null) {
+      ServerLauncher.logErr("[SomWindow] showCallback == null on show(.)");
+      return;
+    }
+
+    showCallback.accept(msg);
+  }
+
+  public void log(final MessageParams msg) {
+    if (logCallback == null) {
+      ServerLauncher.logErr("[SomWindow] logCallback == null on log(.)");
+      return;
+    }
+
+    logCallback.accept(msg);
   }
 }
