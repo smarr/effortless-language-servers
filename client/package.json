@@ -11,6 +11,13 @@
 	"categories": [
 		"Other"
 	],
+	"repository": {
+		"type": "git",
+		"url":  "https://github.com/smarr/SOMns-vscode.git"
+	},
+	"bugs": {
+		"url": "https://github.com/smarr/SOMns-vscode/issues"
+	},
 	"activationEvents": [
 		"onLanguage:SOM"
 	],
