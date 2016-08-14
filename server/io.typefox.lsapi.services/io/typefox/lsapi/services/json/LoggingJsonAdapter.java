@@ -1,29 +1,35 @@
 package io.typefox.lsapi.services.json;
 
+import java.io.PrintWriter;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import org.eclipse.xtend.lib.annotations.AccessorType;
+import org.eclipse.xtend.lib.annotations.Accessors;
+import org.eclipse.xtext.xbase.lib.Procedures.Procedure2;
+
 import io.typefox.lsapi.Message;
 import io.typefox.lsapi.NotificationMessage;
 import io.typefox.lsapi.RequestMessage;
 import io.typefox.lsapi.ResponseMessage;
 import io.typefox.lsapi.services.LanguageServer;
-import io.typefox.lsapi.services.json.LanguageServerProtocol;
-import io.typefox.lsapi.services.json.LanguageServerToJsonAdapter;
-import java.io.PrintWriter;
-import org.eclipse.xtend.lib.annotations.AccessorType;
-import org.eclipse.xtend.lib.annotations.Accessors;
-import org.eclipse.xtext.xbase.lib.Procedures.Procedure2;
 
 @SuppressWarnings("all")
 public class LoggingJsonAdapter extends LanguageServerToJsonAdapter {
   @Accessors(AccessorType.PUBLIC_SETTER)
   private PrintWriter errorLog;
-  
+
   @Accessors(AccessorType.PUBLIC_SETTER)
   private PrintWriter messageLog;
-  
+
   public LoggingJsonAdapter(final LanguageServer server) {
-    super(server);
+    super(server, new MessageJsonHandler(), Executors.newCachedThreadPool());
+  }
+
+  public LoggingJsonAdapter(final LanguageServer server, final ExecutorService executorService) {
+    super(server, new MessageJsonHandler(), executorService);
     LanguageServerProtocol _protocol = this.getProtocol();
-    final Procedure2<String, Throwable> _function = (String message, Throwable throwable) -> {
+    final Procedure2<String, Throwable> _function = (final String message, final Throwable throwable) -> {
       if ((this.errorLog != null)) {
         if ((throwable != null)) {
           throwable.printStackTrace(this.errorLog);
@@ -37,7 +43,7 @@ public class LoggingJsonAdapter extends LanguageServerToJsonAdapter {
     };
     _protocol.addErrorListener(_function);
     LanguageServerProtocol _protocol_1 = this.getProtocol();
-    final Procedure2<Message, String> _function_1 = (Message message, String json) -> {
+    final Procedure2<Message, String> _function_1 = (final Message message, final String json) -> {
       if ((this.messageLog != null)) {
         boolean _matched = false;
         if (message instanceof RequestMessage) {
@@ -55,7 +61,7 @@ public class LoggingJsonAdapter extends LanguageServerToJsonAdapter {
     };
     _protocol_1.addIncomingMessageListener(_function_1);
     LanguageServerProtocol _protocol_2 = this.getProtocol();
-    final Procedure2<Message, String> _function_2 = (Message message, String json) -> {
+    final Procedure2<Message, String> _function_2 = (final Message message, final String json) -> {
       if ((this.messageLog != null)) {
         boolean _matched = false;
         if (message instanceof ResponseMessage) {
@@ -73,11 +79,11 @@ public class LoggingJsonAdapter extends LanguageServerToJsonAdapter {
     };
     _protocol_2.addOutgoingMessageListener(_function_2);
   }
-  
+
   public void setErrorLog(final PrintWriter errorLog) {
     this.errorLog = errorLog;
   }
-  
+
   public void setMessageLog(final PrintWriter messageLog) {
     this.messageLog = messageLog;
   }
