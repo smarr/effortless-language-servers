@@ -55,6 +55,9 @@ public class SomAdapter {
 
   private void initializePolyglot() {
     String coreLib = System.getProperty("som.langserv.core-lib");
+    if (coreLib == null) {
+      throw new IllegalArgumentException("The som.langserv.core-lib system property needs to be set. For instance: -Dsom.langserv.core-lib=/SOMns/core-lib");
+    }
 
     String[] args = new String[] {"--kernel", coreLib + "/Kernel.som",
                                   "--platform", coreLib + "/Platform.som"};
