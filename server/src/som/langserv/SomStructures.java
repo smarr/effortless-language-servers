@@ -7,6 +7,8 @@ import java.util.Set;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import io.typefox.lsapi.CompletionItem;
+import io.typefox.lsapi.CompletionItemImpl;
 import io.typefox.lsapi.LocationImpl;
 import som.compiler.MixinDefinition;
 import som.interpreter.nodes.ExpressionNode;
@@ -42,6 +44,44 @@ public class SomStructures extends StructuralProbe {
     for (SInvokable m : methods) {
       if (m.getSignature() == name) {
         results.add(SomAdapter.getLocation(m.getSourceSection()));
+      }
+    }
+  }
+
+  private static boolean fuzzyMatches(final SSymbol symbol, final SSymbol query) {
+    if (query == symbol) {
+      return true;
+    }
+
+    if (query.getNumberOfSignatureArguments() > 1 && query.getNumberOfSignatureArguments() == symbol.getNumberOfSignatureArguments()) {
+      return true;
+    }
+
+    return fuzzyMatches(symbol.getString().toLowerCase(), query.getString().toLowerCase());
+  }
+
+  private static boolean fuzzyMatches(final String string, final String query) {
+    // trivial case
+    if (query.equals(string)) {
+      return true;
+    }
+
+    // simple prefix
+    if (string.startsWith(query)) {
+      return true;
+    }
+
+    // TODO: camel case matching etc...
+    return false;
+  }
+
+  public void getCompletions(final SSymbol name, final ArrayList<CompletionItemImpl> results) {
+    for (SInvokable m : methods) {
+      if (fuzzyMatches(m.getSignature(), name)) {
+        CompletionItemImpl item = new CompletionItemImpl();
+        item.setKind(CompletionItem.KIND_METHOD);
+        item.setLabel(m.getSignature().getString());
+        results.add(item);
       }
     }
   }

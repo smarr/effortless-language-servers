@@ -15,12 +15,17 @@ import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.vm.PolyglotEngine;
 import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
 
+import io.typefox.lsapi.CompletionItemImpl;
+import io.typefox.lsapi.CompletionList;
+import io.typefox.lsapi.CompletionListImpl;
 import io.typefox.lsapi.Diagnostic;
 import io.typefox.lsapi.DiagnosticImpl;
 import io.typefox.lsapi.DocumentHighlight;
 import io.typefox.lsapi.DocumentHighlightImpl;
 import io.typefox.lsapi.Location;
 import io.typefox.lsapi.LocationImpl;
+import io.typefox.lsapi.MessageParams;
+import io.typefox.lsapi.MessageParamsImpl;
 import io.typefox.lsapi.PositionImpl;
 import io.typefox.lsapi.RangeImpl;
 import io.typefox.lsapi.SymbolInformation;
@@ -291,7 +296,42 @@ public class SomAdapter {
       for (SomStructures s : structuralProbes.values()) {
         s.getDefinitionsFor(name, result);
       }
+    } else {
+      reportError("GET DEFINITION, unsupported node: " + node.getClass().getSimpleName());
     }
+    return result;
+  }
+
+  private void reportError(final String msgStr) {
+    MessageParamsImpl msg = new MessageParamsImpl();
+    msg.setType(MessageParams.TYPE_LOG);
+    msg.setMessage(msgStr);
+    window.show(msg);
+    ServerLauncher.logErr(msgStr);
+  }
+
+  public CompletionList getCompletions(final String docUri, final int line, final int character) {
+    CompletionListImpl result = new CompletionListImpl();
+    result.setIncomplete(true);
+
+    SomStructures probe = getProbe(docUri);
+    if (probe == null) { return result; }
+
+    // TODO: this expects that this can be parsed without issues...
+    ExpressionNode node = probe.getElementAt(line + 1, Math.max(character - 1, 0)); // +1 to get to one based index, - 1 to get back into the element
+    if (node == null) { return result; }
+
+    if (node instanceof AbstractUninitializedMessageSendNode) {
+      ArrayList<CompletionItemImpl> completion = new ArrayList<>();
+      SSymbol name = ((AbstractUninitializedMessageSendNode) node).getSelector();
+      for (SomStructures s : structuralProbes.values()) {
+        s.getCompletions(name, completion);
+      }
+      result.setItems(completion);
+    } else {
+      reportError("GET COMPLETIONS, unsupported node: " + node.getClass().getSimpleName());
+    }
+
     return result;
   }
 

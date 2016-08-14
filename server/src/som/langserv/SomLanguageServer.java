@@ -12,6 +12,7 @@ import io.typefox.lsapi.CodeLensParams;
 import io.typefox.lsapi.Command;
 import io.typefox.lsapi.CompletionItem;
 import io.typefox.lsapi.CompletionList;
+import io.typefox.lsapi.CompletionOptionsImpl;
 import io.typefox.lsapi.DiagnosticImpl;
 import io.typefox.lsapi.DidChangeTextDocumentParams;
 import io.typefox.lsapi.DidCloseTextDocumentParams;
@@ -60,6 +61,16 @@ public class SomLanguageServer implements LanguageServer,	TextDocumentService {
 	  cap.setTextDocumentSync(ServerCapabilities.SYNC_FULL);
 	  cap.setDocumentSymbolProvider(true);
 	  cap.setDefinitionProvider(true);
+
+	  CompletionOptionsImpl completion = new CompletionOptionsImpl();
+	  List<String> autoComplTrigger = new ArrayList<>();
+	  autoComplTrigger.add("#"); // Smalltalk symbols
+	  autoComplTrigger.add(":"); // end of keywords, to complete arguments
+	  autoComplTrigger.add("="); // right-hand side of assignments
+	  completion.setTriggerCharacters(autoComplTrigger);
+	  completion.setResolveProvider(false); // TODO: look into that
+
+	  cap.setCompletionProvider(completion);
 	  result.setCapabilities(cap);
 	  return CompletableFuture.completedFuture(result);
 	}
@@ -93,8 +104,10 @@ public class SomLanguageServer implements LanguageServer,	TextDocumentService {
 	@Override
 	public CompletableFuture<CompletionList> completion(
 			final TextDocumentPositionParams position) {
-		// TODO Auto-generated method stub
-		return null;
+	  CompletionList result = som.getCompletions(
+        position.getTextDocument().getUri(), position.getPosition().getLine(),
+        position.getPosition().getCharacter());
+    return CompletableFuture.completedFuture(result);
 	}
 
 	@Override
