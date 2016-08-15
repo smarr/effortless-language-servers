@@ -23,6 +23,18 @@
 			"sourceMaps": true,
 			"outDir": "${workspaceRoot}/out/test",
 			"preLaunchTask": "npm"
+		},
+		{
+			"name": "Run Debugger as Server",
+			"type": "node",
+			"request": "launch",
+			"runtimeArgs": [ "--nolazy" ],
+			"program": "${workspaceRoot}/src/debugger.ts",
+			"stopOnEntry": false,
+			"args": [ "--server=4711" ],
+			"sourceMaps": true,
+			"outDir": "${workspaceRoot}/out",
+			"cwd": "${workspaceRoot}"
 		}
 	]
 }
