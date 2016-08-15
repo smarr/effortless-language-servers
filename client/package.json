@@ -1,6 +1,7 @@
 {
 	"name": "somns-language-client",
-	"description": "VSCode pluging for the Truffle language server",
+	"description": "VSCode pluging for SOMns",
+	"readme": "This plugin provides support for language server features as well as the debugger.",
 	"author": "Stefan Marr",
 	"license": "MIT",
 	"version": "0.0.1",
