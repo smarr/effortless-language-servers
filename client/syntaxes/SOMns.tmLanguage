@@ -45,6 +45,12 @@
 			<key>name</key>
 			<string>constant.character.symbol</string>
 		</dict>
+		<dict>
+			<key>match</key>
+			<string>&lt;-:</string>
+			<key>name</key>
+			<string>keyword.operator.asyncsend</string>
+		</dict>
 	</array>
 
 	<key>repository</key>
