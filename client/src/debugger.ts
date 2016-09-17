@@ -1,7 +1,7 @@
 "use strict";
 
-import { DebugSession, InitializedEvent, BreakpointEvent, StoppedEvent }
-  from 'vscode-debugadapter';
+import { BreakpointEvent, DebugSession, Handles, InitializedEvent, Scope,
+  Source, StackFrame, StoppedEvent, Thread, Variable } from 'vscode-debugadapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import * as WebSocket from 'ws';
 
@@ -48,6 +48,16 @@ namespace WebDebugger {
       this.line = line;
     }
   }
+
+  export interface WDSource {
+    id:   string;
+    name: string;
+    uri:  string;
+    sourceText?: string;
+    mimeType?:   string;
+
+    vsSource?: Source;
+  }
 }
 
 interface BreakpointPair {
@@ -58,8 +68,12 @@ interface BreakpointPair {
 class SomDebugSession extends DebugSession {
   private socket: WebSocket;
   private breakpoints: BreakpointPair[];
-  private nextBreakpointId : number;
-  private bufferedBreakpoints : WebDebugger.Breakpoint[];
+  private nextBreakpointId: number;
+  private bufferedBreakpoints: WebDebugger.Breakpoint[];
+  private sources: WebDebugger.WDSource[];
+
+  private lastSuspendEvent;
+  private varHandles : Handles<string>;
 
   public constructor() {
     super();
@@ -67,8 +81,13 @@ class SomDebugSession extends DebugSession {
     this.socket = null;
 
     this.breakpoints = [];
-    this.bufferedBreakpoints = [];
     this.nextBreakpointId = 0;
+    this.bufferedBreakpoints = [];
+
+    this.sources = [];
+
+    this.lastSuspendEvent = null;
+    this.varHandles = new Handles<string>();
 
     // Truffle source sections use 1-based indexes
     this.setDebuggerColumnsStartAt1(true);
@@ -90,7 +109,8 @@ class SomDebugSession extends DebugSession {
     this.sendResponse(response);
   }
 
-  protected launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): void {
+  protected launchRequest(response: DebugProtocol.LaunchResponse,
+      args: LaunchRequestArguments): void {
     // TODO
   }
 
@@ -102,7 +122,7 @@ class SomDebugSession extends DebugSession {
       this.sendInitialBreakpoints();
     });
 
-    this.socket.onmessage = this.onWDMessage;
+    this.socket.onmessage = this.onWDMessage.bind(this);
     
     this.sendResponse(response);
 
@@ -111,13 +131,36 @@ class SomDebugSession extends DebugSession {
     // - implement stepping 
   }
 
+  private onWDMessage(event): void {
+    const data = JSON.parse(event.data);
+    
+    switch (data.type) {
+      case "source":
+        this.onSource(data);
+        break;
+      case "suspendEvent":
+        this.onSuspendEvent(data);
+        break;
+    }
+  }
+
+  private onSource(data): void {
+    for (let id in data.sources) {
+      console.log("onSource id", id);
+      this.sources[id] = data.sources[id];
+    }
+  }
+
+  private onSuspendEvent(data): void {
+    this.sendEvent(new StoppedEvent("breakpoint", 1));
+    this.lastSuspendEvent = data;
+  }
+
   private sendInitialBreakpoints() : void {
-    console.log("sendInitialBreakpoints: " + JSON.stringify(this.bufferedBreakpoints));
     const updatedBreakpoints = [];
     const initialBreakpoints = [];
     
     for (const id in this.bufferedBreakpoints) {
-      console.log("sendInitialBreakpoints id: " + id);
       const vsBp = this.breakpoints[id].vs;
       vsBp.verified = true;
       updatedBreakpoints.push(vsBp);
@@ -126,7 +169,6 @@ class SomDebugSession extends DebugSession {
     const msg = JSON.stringify({
         action: "initialBreakpoints", breakpoints: initialBreakpoints});
     this.socket.send(msg);
-    console.log("Sent initialBreakpoints message: " + msg);
     
     for (const vsBp of updatedBreakpoints) {
       this.sendEvent(new BreakpointEvent('Connection Established', vsBp));
@@ -135,8 +177,6 @@ class SomDebugSession extends DebugSession {
 
   protected setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse,
       args: DebugProtocol.SetBreakpointsArguments): void {
-    console.log("setBreakPointsRequest: " + JSON.stringify(args));
-
     const connected = this.socket != null;
     const uri = "file:" + args.source.path;
     const breakpoints = [];
@@ -169,15 +209,103 @@ class SomDebugSession extends DebugSession {
   private sendBreakpoint(bp: WebDebugger.Breakpoint, bpId: number,
       connected: boolean): void {
     if (connected) {
-      console.log("sendBreakpoint: " + JSON.stringify(bp));
       this.socket.send(JSON.stringify({
         action: "updateBreakpoint",
         breakpoint: bp
       }));
     } else {
-      console.log("Buffer breakpoint: " + JSON.stringify(bp));
       this.bufferedBreakpoints[bpId] = bp;
     }
+  }
+
+  protected threadsRequest(response: DebugProtocol.ThreadsResponse): void {
+    // TODO: add some form of support for actors. not sure yet what would be
+    //       useful. A list of actors isn't very useful for fine-grained ones
+    response.body = {
+      threads: [ new Thread(1, "thread 1") ]
+    };
+    this.sendResponse(response);
+  }
+
+  protected stackTraceRequest(response: DebugProtocol.StackTraceResponse,
+      args: DebugProtocol.StackTraceArguments): void {
+    const startFrame = (args.startFrame != null) ? args.startFrame : 0;
+    const numFrames  = (args.levels != null) ? args.levels : 0;
+    const endFrame   = Math.min(startFrame + numFrames, this.lastSuspendEvent.stack.length);
+
+    const stackFrames = [];
+    for (let i = startFrame; i < endFrame; i += 1) {
+      const frame = this.lastSuspendEvent.stack[i];
+
+      console.log("stackTraceRequest this.sources: ", this.sources);
+      console.log("stackTraceRequest ss: ", frame.sourceSection);
+      console.log("stackTraceRequest sourceId: ", frame.sourceSection.sourceId);
+      let s = this.sources[frame.sourceSection.sourceId];
+      let source;
+      if (s) {
+        console.log("stackTraceRequest: ", s);
+        if (s.vsSource) {
+          source = s.vsSource;
+        } else {
+          console.log("stackTraceRequest s.uri", s.uri);
+          source = new Source(s.name, s.uri.substring("file:".length), parseInt(s.id));
+        }
+      } else {
+        source = null;
+      }
+
+      stackFrames.push(new StackFrame(i, frame.methodName, source,
+        frame.sourceSection.line, frame.sourceSection.column));
+    }
+
+    response.body = {
+      stackFrames: stackFrames,
+      totalFrames: this.lastSuspendEvent.stack.length
+    };
+    this.sendResponse(response);
+  }
+
+  protected scopesRequest(response: DebugProtocol.ScopesResponse,
+      args: DebugProtocol.ScopesArguments): void {
+    const frameRef = args.frameId;
+    const scopes = [
+      new Scope("Local",   this.varHandles.create("local_" + frameRef),   false),
+      new Scope("Closure", this.varHandles.create("closure_" + frameRef), false),
+      new Scope("Outer",   this.varHandles.create("outer_" + frameRef),   true)
+    ];
+    response.body = {
+      scopes : scopes
+    };
+    this.sendResponse(response);
+  }
+
+  protected variablesRequest(response: DebugProtocol.VariablesResponse,
+      args: DebugProtocol.VariablesArguments): void {
+    const ref = this.varHandles.get(args.variablesReference).split("_");
+    const id = parseInt(ref[1]);
+    const variables = [];
+
+    switch (ref[0]) {
+      case "local":
+        const frame = this.lastSuspendEvent.topFrame;
+        if (id == 0) { // we only got the data for the top frame
+          for (let aI in frame.arguments) {
+            const v = new Variable(aI, frame.arguments[aI]);
+            variables.push(v);
+          }
+
+          for (let sI in frame.slots) {
+            const v = new Variable(sI, frame.slots[sI]);
+            variables.push(v);
+          }
+        }
+        break;
+    }
+    
+    response.body = {
+      variables: variables
+    };
+    this.sendResponse(response);
   }
 }
 
