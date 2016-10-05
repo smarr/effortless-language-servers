@@ -44,7 +44,9 @@ typings.json -> ../client/typings.json
 
 ## Use, and Start Language Server
 
-For using the plugin, it can be linked into the VS Code extension directory:
+For using the plugin, it can be linked into the VS Code extension directory.
+Please replace `$pathToCheckout` in the following with the actual path to your
+checkout:
 
 ```bash
 cd ~/.vscode/extensions
