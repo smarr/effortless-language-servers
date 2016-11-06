@@ -41,6 +41,13 @@ typings -> ../client/typings
 typings.json -> ../client/typings.json
 ```
 
+To debug the server easily, it can be started independently before using VS Code:
+
+```bash
+cd /$pathToCheckout/SOMns-vscode/server
+./run.sh # executes the server, the console will show all communication
+```
+
 
 ## Use, and Start Language Server
 
@@ -51,14 +58,6 @@ checkout:
 ```bash
 cd ~/.vscode/extensions
 ln -s /$pathToCheckout/SOMns-vscode/client SOMns-vscode
-```
-
-Currently, the language server is not ready for general use, so, it is meant to
-be debugged easily. Therefore, it is started separately:
-
-```bash
-cd /$pathToCheckout/SOMns-vscode/server
-./run.sh # executes the server, the console will show all communication
 ```
 
 Now, one can open a `.som` file in VS Code, and should get parse errors, bits of
