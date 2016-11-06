@@ -21,6 +21,7 @@
         <pathelement location="${lib.dir}/org.eclipse.xtend.lib-${xtend.lib.version}.jar" />
         <pathelement location="${lib.dir}/SOMns/libs/truffle/mxbuild/dists/truffle-api.jar" />
         <pathelement location="${lib.dir}/SOMns/libs/truffle/mxbuild/dists/truffle-debug.jar" />
+        <pathelement location="${lib.dir}/SOMns/libs/somns-deps.jar" />
         <pathelement location="${lib.dir}/SOMns/build/som.jar" />
     </path>
 
@@ -109,6 +110,9 @@
             <pathelement path="som-language-server.jar"/>
             <path refid="jar.classpath" />
           </path>
+        </copy>
+        <copy todir="../client/out/server/core-lib">
+          <fileset dir="${lib.dir}/SOMns/core-lib"/>
         </copy>
     </target>
 </project>
