@@ -4,7 +4,8 @@ jdk:
 sudo: false
 env:
   - TASK=build-server
-  # - TASK=checkstyle
+  - TASK=build-client
 script:
   - if [ "$TASK" = "build-server" ];      then cd server; ant deploy; fi
+  - if [ "$TASK" = "build-client" ];      then nvm install 6 && cd client && npm install . && node ./node_modules/vscode/bin/compile; fi
   # - if [ "$TASK" = "checkstyle" ]; then ant checkstyle-jar && ant checkstyle; fi
