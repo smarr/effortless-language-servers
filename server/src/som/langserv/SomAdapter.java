@@ -6,9 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
@@ -21,7 +19,6 @@ import io.typefox.lsapi.CompletionListImpl;
 import io.typefox.lsapi.Diagnostic;
 import io.typefox.lsapi.DiagnosticImpl;
 import io.typefox.lsapi.DocumentHighlight;
-import io.typefox.lsapi.DocumentHighlightImpl;
 import io.typefox.lsapi.Location;
 import io.typefox.lsapi.LocationImpl;
 import io.typefox.lsapi.MessageParams;
@@ -32,7 +29,6 @@ import io.typefox.lsapi.SymbolInformation;
 import io.typefox.lsapi.SymbolInformationImpl;
 import som.VM;
 import som.VMOptions;
-import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
@@ -44,9 +40,7 @@ import som.interpreter.nodes.MessageSendNode.AbstractUninitializedMessageSendNod
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
-import tools.highlight.Highlight;
-import tools.highlight.Tags;
-import tools.highlight.Tags.LiteralTag;
+import tools.SourceCoordinate;
 import tools.language.StructuralProbe;
 
 public class SomAdapter {
@@ -71,6 +65,7 @@ public class SomAdapter {
                                   "--platform", coreLib + "/Platform.som"};
     Builder builder = PolyglotEngine.newBuilder();
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
+    builder.config(SomLanguage.MIME_TYPE, SomLanguage.AVOID_EXIT, true);
     VMOptions vmOptions = new VMOptions(args);
     PolyglotEngine engine = builder.build();
     VM.setEngine(engine);
@@ -163,37 +158,38 @@ public class SomAdapter {
 
     // XXX: the code here doesn't make any sense for what it is supposed to do
 
-    Map<SourceSection, Set<Class<? extends Tags>>> sections = Highlight.
-        getSourceSections();
-    SourceSection[] all = sections.entrySet().stream().map(e -> e.getKey()).toArray(size -> new SourceSection[size]);
-
-    Stream<Entry<SourceSection, Set<Class<? extends Tags>>>> filtered = sections.
-        entrySet().stream().filter(
-            (final Entry<SourceSection, Set<Class<? extends Tags>>> e) -> in(e.getKey(), line, character));
-
-    @SuppressWarnings("rawtypes")
-    Entry[] matching = filtered.toArray(size -> new Entry[size]);
-
-    for (Entry<SourceSection, Set<Class<? extends Tags>>> e : matching) {
-      int kind;
-      if (e.getValue().contains(LiteralTag.class)) {
-        kind = DocumentHighlight.KIND_READ;
-      } else {
-        kind = DocumentHighlight.KIND_TEXT;
-      }
-      DocumentHighlightImpl highlight = new DocumentHighlightImpl();
-      highlight.setKind(kind);
-      highlight.setRange(getRange(e.getKey()));
-      return highlight;
-    }
-
-    DocumentHighlightImpl highlight = new DocumentHighlightImpl();
-    highlight.setKind(DocumentHighlight.KIND_TEXT);
-    RangeImpl range = new RangeImpl();
-    range.setStart(pos(line, character));
-    range.setEnd(pos(line, character + 1));
-    highlight.setRange(range);
-    return highlight;
+//    Map<SourceSection, Set<Class<? extends Tags>>> sections = Highlight.
+//        getSourceSections();
+//    SourceSection[] all = sections.entrySet().stream().map(e -> e.getKey()).toArray(size -> new SourceSection[size]);
+//
+//    Stream<Entry<SourceSection, Set<Class<? extends Tags>>>> filtered = sections.
+//        entrySet().stream().filter(
+//            (final Entry<SourceSection, Set<Class<? extends Tags>>> e) -> in(e.getKey(), line, character));
+//
+//    @SuppressWarnings("rawtypes")
+//    Entry[] matching = filtered.toArray(size -> new Entry[size]);
+//
+//    for (Entry<SourceSection, Set<Class<? extends Tags>>> e : matching) {
+//      int kind;
+//      if (e.getValue().contains(LiteralTag.class)) {
+//        kind = DocumentHighlight.KIND_READ;
+//      } else {
+//        kind = DocumentHighlight.KIND_TEXT;
+//      }
+//      DocumentHighlightImpl highlight = new DocumentHighlightImpl();
+//      highlight.setKind(kind);
+//      highlight.setRange(getRange(e.getKey()));
+//      return highlight;
+//    }
+//
+//    DocumentHighlightImpl highlight = new DocumentHighlightImpl();
+//    highlight.setKind(DocumentHighlight.KIND_TEXT);
+//    RangeImpl range = new RangeImpl();
+//    range.setStart(pos(line, character));
+//    range.setEnd(pos(line, character + 1));
+//    highlight.setRange(range);
+//    return highlight;
+    return null;
   }
 
   private static RangeImpl getRange(final SourceSection ss) {

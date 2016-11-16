@@ -7,12 +7,12 @@ import java.util.Deque;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.MethodBuilder;
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.Parser;
 import som.interpreter.nodes.ExpressionNode;
 import som.vmobjects.SSymbol;
+import tools.SourceCoordinate;
 
 
 /**
