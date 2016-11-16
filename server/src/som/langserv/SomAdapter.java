@@ -116,7 +116,7 @@ public class SomAdapter {
 
     RangeImpl r = new RangeImpl();
     r.setStart(pos(coord.startLine, coord.startColumn));
-    r.setEnd(pos(coord.startLine, coord.startColumn + 2)); // TODO: better upper limit /IntMax??
+    r.setEnd(pos(coord.startLine, Integer.MAX_VALUE));
     d.setRange(r);
     d.setMessage(e.getMessage());
     d.setSource("Parser");
