@@ -6,7 +6,6 @@
     <property name="mvn.repo"    value="https://repo1.maven.org/maven2" />
 
     <property name="checkstyle.version" value="7.0" />
-    <property name="gson.version"       value="2.7" />
     <property name="guava.version"      value="19.0" />
     <property name="xbase.lib.version"  value="2.10.0" />
     <property name="xtend.lib.version"  value="2.10.0" />
@@ -15,7 +14,6 @@
     <property name="classes.dir" value="${build.dir}"/>
 
     <path id="jar.classpath">
-        <pathelement location="${lib.dir}/gson-${gson.version}.jar" />
         <pathelement location="${lib.dir}/guava-${guava.version}.jar" />
         <pathelement location="${lib.dir}/org.eclipse.xtext.xbase.lib-${xbase.lib.version}.jar" />
         <pathelement location="${lib.dir}/org.eclipse.xtend.lib-${xtend.lib.version}.jar" />
@@ -57,9 +55,6 @@
     </target>
     
     <target name="libs" depends="somns">
-        <get src="${mvn.repo}/com/google/code/gson/gson/${gson.version}/gson-${gson.version}.jar"
-            usetimestamp="true"
-            dest="${lib.dir}/gson-${gson.version}.jar" />
         <get src="${mvn.repo}/com/google/guava/guava/${guava.version}/guava-${guava.version}.jar"
             usetimestamp="true"
             dest="${lib.dir}/guava-${guava.version}.jar" />
