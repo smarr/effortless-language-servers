@@ -236,7 +236,9 @@ public class SomAdapter {
     sym.setKind(SymbolInformation.KIND_METHOD);
     assert null != m.getSourceSection();
     sym.setLocation(getLocation(m.getSourceSection()));
-    sym.setContainer(m.getHolder().getName().getString());
+    if (m.getHolder() != null) {
+      sym.setContainer(m.getHolder().getName().getString());
+    }
     return sym;
   }
 
