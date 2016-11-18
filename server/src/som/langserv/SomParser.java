@@ -25,7 +25,7 @@ public class SomParser extends Parser {
   private final Deque<SourceSection> sourceSections;
 
   public SomParser(final Reader reader, final long fileSize, final Source source,
-      final SomStructures structuralProbe) {
+      final SomStructures structuralProbe) throws ParseError {
     super(reader, fileSize, source, structuralProbe);
 //    assert structuralProbe != null : "Needed for this extended parser.";
     this.struturalProbe = structuralProbe;
