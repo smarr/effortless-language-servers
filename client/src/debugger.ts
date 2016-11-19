@@ -1,5 +1,6 @@
 "use strict";
 
+import { spawn } from 'child_process';
 import { BreakpointEvent, DebugSession, Handles, InitializedEvent, Scope,
   Source as VSSource, StackFrame, StoppedEvent, Thread, Variable, OutputEvent,
   TerminatedEvent } from 'vscode-debugadapter';
@@ -13,6 +14,9 @@ import { BreakpointData, Source as WDSource, Respond, SuspendEventMessage,
 export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
   /** Path to the main program */
   program: string;
+
+  /** Arguments to the main program */
+  args?: string[];
 
   /** Workding directory */
   cwd: string;
@@ -83,7 +87,34 @@ class SomDebugSession extends DebugSession {
 
   protected launchRequest(response: DebugProtocol.LaunchResponse,
       args: LaunchRequestArguments): void {
-    // TODO
+    const options = {cwd: args.cwd};
+    let somArgs = ['-G', '-wd', args.program];
+    if (args.runtimeArgs) {
+      somArgs = args.runtimeArgs.concat(somArgs);
+    }
+    if (args.args) {
+      somArgs = somArgs.concat(args.args);
+    }
+    const cmdStr = args.runtime + ' ' + somArgs.join(' ');
+    this.sendEvent(new OutputEvent(`cmd: ${cmdStr}`, 'console'));
+
+    const somProc = spawn(args.runtime, somArgs, options);
+    let connecting = false;
+
+    somProc.stdout.on('data', (data) => {
+      const str = data.toString();
+      this.sendEvent(new OutputEvent(str, 'stdout'));   
+      if (str.includes("Started HTTP Server") && !connecting) {
+        this.connectDebugger(response, 7977);
+      }
+    });
+    somProc.stderr.on('data', (data) => {
+      const str = data.toString();
+      this.sendEvent(new OutputEvent(str, 'stderr'));
+    });
+    somProc.on('close', code => {
+      this.sendEvent(new TerminatedEvent());
+    })
   }
 
   protected attachRequest(response: DebugProtocol.AttachResponse,
