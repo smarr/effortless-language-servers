@@ -1,9 +1,14 @@
 "use strict";
 
 import { BreakpointEvent, DebugSession, Handles, InitializedEvent, Scope,
-  Source, StackFrame, StoppedEvent, Thread, Variable } from 'vscode-debugadapter';
+  Source as VSSource, StackFrame, StoppedEvent, Thread, Variable, OutputEvent,
+  TerminatedEvent } from 'vscode-debugadapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import * as WebSocket from 'ws';
+
+import { BreakpointData, Source as WDSource, Respond, SuspendEventMessage,
+  InitialBreakpointsResponds, SourceMessage, IdMap,
+  createLineBreakpointData } from './messages';
 
 export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
   /** Path to the main program */
@@ -27,52 +32,19 @@ export interface AttachRequestArguments extends DebugProtocol.AttachRequestArgum
   port: number
 }
 
-namespace WebDebugger {
-  export class Breakpoint {
-    public type:      string;
-    public sourceUri: string;
-    public enabled:   boolean;
-
-    constructor(type: string, uri: string, enabled: boolean) {
-      this.type      = type;
-      this.sourceUri = uri;
-      this.enabled   = enabled;
-    }
-  }
-
-  export class LineBreakpoint extends Breakpoint {
-    public line: number;
-
-    constructor(uri: string, enabled: boolean, line: number) {
-      super("lineBreakpoint", uri, enabled);
-      this.line = line;
-    }
-  }
-
-  export interface WDSource {
-    id:   string;
-    name: string;
-    uri:  string;
-    sourceText?: string;
-    mimeType?:   string;
-
-    vsSource?: Source;
-  }
-}
-
 interface BreakpointPair {
-  vs: DebugProtocol.Breakpoint;
-  som: WebDebugger.Breakpoint;
+  vs:  DebugProtocol.Breakpoint;
+  som: BreakpointData;
 }
 
 class SomDebugSession extends DebugSession {
   private socket: WebSocket;
   private breakpoints: BreakpointPair[];
   private nextBreakpointId: number;
-  private bufferedBreakpoints: WebDebugger.Breakpoint[];
-  private sources: WebDebugger.WDSource[];
+  private bufferedBreakpoints: BreakpointData[];
+  private sources: IdMap<WDSource>;
 
-  private lastSuspendEvent;
+  private lastSuspendEvent: SuspendEventMessage;
   private varHandles : Handles<string>;
 
   public constructor() {
@@ -84,7 +56,7 @@ class SomDebugSession extends DebugSession {
     this.nextBreakpointId = 0;
     this.bufferedBreakpoints = [];
 
-    this.sources = [];
+    this.sources = {};
 
     this.lastSuspendEvent = null;
     this.varHandles = new Handles<string>();
@@ -116,7 +88,11 @@ class SomDebugSession extends DebugSession {
 
   protected attachRequest(response: DebugProtocol.AttachResponse,
       args: AttachRequestArguments): void {
-    this.socket = new WebSocket('ws://localhost:' + args.port);
+    this.connectDebugger(response, args.port);
+  }
+
+  private connectDebugger(response: DebugProtocol.Response, port: number): void {
+    this.socket = new WebSocket('ws://localhost:' + port);
 
     this.socket.on('open', () => {
       this.sendInitialBreakpoints();
@@ -144,14 +120,13 @@ class SomDebugSession extends DebugSession {
     }
   }
 
-  private onSource(data): void {
-    for (let id in data.sources) {
-      console.log("onSource id", id);
-      this.sources[id] = data.sources[id];
+  private onSource(data: SourceMessage): void {
+    for (let source of data.sources) {
+      this.sources[source.uri] = source;
     }
   }
 
-  private onSuspendEvent(data): void {
+  private onSuspendEvent(data: SuspendEventMessage): void {
     this.sendEvent(new StoppedEvent("breakpoint", 1));
     this.lastSuspendEvent = data;
   }
@@ -166,9 +141,10 @@ class SomDebugSession extends DebugSession {
       updatedBreakpoints.push(vsBp);
       initialBreakpoints.push(this.bufferedBreakpoints[id]);
     }
-    const msg = JSON.stringify({
-        action: "initialBreakpoints", breakpoints: initialBreakpoints});
-    this.socket.send(msg);
+    this.bufferedBreakpoints.length = 0;
+    const msg: InitialBreakpointsResponds = {
+        action: "initialBreakpoints", breakpoints: initialBreakpoints};
+    this.send(msg);
     
     for (const vsBp of updatedBreakpoints) {
       this.sendEvent(new BreakpointEvent('Connection Established', vsBp));
@@ -178,13 +154,14 @@ class SomDebugSession extends DebugSession {
   protected setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse,
       args: DebugProtocol.SetBreakpointsArguments): void {
     const connected = this.socket != null;
-    const uri = "file:" + args.source.path;
+    const uri = 'file:' + args.source.path;
     const breakpoints = [];
     response.body = {breakpoints: breakpoints};
 
     for (let bp of args.breakpoints) {
       const bpId = this.getNextBpId();
-      const lineBp = new WebDebugger.LineBreakpoint(uri, true, bp.line);
+      const lineBp = createLineBreakpointData(uri, bp.line);
+      lineBp.enabled = true;
       this.sendBreakpoint(lineBp, bpId, connected);
       
       const vsBp = {
@@ -206,13 +183,17 @@ class SomDebugSession extends DebugSession {
     return id;
   }
 
-  private sendBreakpoint(bp: WebDebugger.Breakpoint, bpId: number,
+  private send(respond: Respond) {
+    this.socket.send(JSON.stringify(respond));
+  }
+
+  private sendBreakpoint(bp: BreakpointData, bpId: number,
       connected: boolean): void {
     if (connected) {
-      this.socket.send(JSON.stringify({
+      this.send({
         action: "updateBreakpoint",
         breakpoint: bp
-      }));
+      });
     } else {
       this.bufferedBreakpoints[bpId] = bp;
     }
@@ -239,23 +220,17 @@ class SomDebugSession extends DebugSession {
 
       console.log("stackTraceRequest this.sources: ", this.sources);
       console.log("stackTraceRequest ss: ", frame.sourceSection);
-      console.log("stackTraceRequest sourceId: ", frame.sourceSection.sourceId);
-      let s = this.sources[frame.sourceSection.sourceId];
+      const sourceUri = frame.sourceSection.uri;
+      const s = this.sources[sourceUri];
       let source;
       if (s) {
-        console.log("stackTraceRequest: ", s);
-        if (s.vsSource) {
-          source = s.vsSource;
-        } else {
-          console.log("stackTraceRequest s.uri", s.uri);
-          source = new Source(s.name, s.uri.substring("file:".length), parseInt(s.id));
-        }
+        source = new VSSource(s.name, s.uri.substring("file:".length)); //, parseInt(s.id) TODO: remove comment
       } else {
-        source = null;
+        source = new VSSource('vmMirror', null, undefined, 'internal module');
       }
 
       stackFrames.push(new StackFrame(i, frame.methodName, source,
-        frame.sourceSection.line, frame.sourceSection.column));
+        frame.sourceSection.startLine, frame.sourceSection.startColumn));
     }
 
     response.body = {
