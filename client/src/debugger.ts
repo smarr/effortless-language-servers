@@ -8,7 +8,8 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import * as WebSocket from 'ws';
 
 import { BreakpointData, Source as WDSource, Respond, SuspendEventMessage,
-  InitialBreakpointsResponds, SourceMessage, IdMap,
+  InitialBreakpointsResponds, SourceMessage, IdMap, StoppedMessage,
+  StackTraceResponse, StackTraceRequest,
   createLineBreakpointData } from './messages';
 
 export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
@@ -48,7 +49,10 @@ class SomDebugSession extends DebugSession {
   private bufferedBreakpoints: BreakpointData[];
   private sources: IdMap<WDSource>;
 
-  private lastSuspendEvent: SuspendEventMessage;
+  private nextRequestId: number;
+  private requests: IdMap<any>;
+
+  private stoppedActivities: Thread[];
   private varHandles : Handles<string>;
 
   public constructor() {
@@ -62,7 +66,10 @@ class SomDebugSession extends DebugSession {
 
     this.sources = {};
 
-    this.lastSuspendEvent = null;
+    this.nextRequestId = 0;
+    this.requests = {};
+
+    this.stoppedActivities = [];
     this.varHandles = new Handles<string>();
 
     // Truffle source sections use 1-based indexes
@@ -145,8 +152,14 @@ class SomDebugSession extends DebugSession {
       case "source":
         this.onSource(data);
         break;
-      case "suspendEvent":
-        this.onSuspendEvent(data);
+      case "StackTraceResponse":
+        console.assert(this.requests[data.requestId]);
+        const response = this.requests[data.requestId];
+        delete this.requests[data.requestId];
+        this.onProgramStackTraceResponse(data, response);
+        break;
+      case "StoppedEvent":
+        this.onStoppedEvent(data);
         break;
     }
   }
@@ -157,9 +170,10 @@ class SomDebugSession extends DebugSession {
     }
   }
 
-  private onSuspendEvent(data: SuspendEventMessage): void {
-    this.sendEvent(new StoppedEvent("breakpoint", 1));
-    this.lastSuspendEvent = data;
+  private onStoppedEvent(data: StoppedMessage): void {
+    this.sendEvent(new StoppedEvent(data.reason, data.activityId, data.text));
+    this.stoppedActivities[data.activityId] = new Thread(data.activityId,
+      data.activityType + " " + data.activityId);
   }
 
   private sendInitialBreakpoints() : void {
@@ -174,7 +188,8 @@ class SomDebugSession extends DebugSession {
     }
     this.bufferedBreakpoints.length = 0;
     const msg: InitialBreakpointsResponds = {
-        action: "initialBreakpoints", breakpoints: initialBreakpoints};
+        action: "initialBreakpoints", breakpoints: initialBreakpoints,
+        debuggerProtocol: true};
     this.send(msg);
     
     for (const vsBp of updatedBreakpoints) {
@@ -233,42 +248,53 @@ class SomDebugSession extends DebugSession {
   protected threadsRequest(response: DebugProtocol.ThreadsResponse): void {
     // TODO: add some form of support for actors. not sure yet what would be
     //       useful. A list of actors isn't very useful for fine-grained ones
-    response.body = {
-      threads: [ new Thread(1, "thread 1") ]
-    };
+    response.body = { threads: this.stoppedActivities };
     this.sendResponse(response);
+  }
+
+  private vsSourceFromUri(uri: string): VSSource {
+    const s = this.sources[uri];
+    let source;
+    if (s) {
+      source = new VSSource(s.name, s.uri.substring("file:".length));
+    } else {
+      source = new VSSource('vmMirror', null, undefined, 'internal module');
+    }
+    return source;
+  }
+
+  private onProgramStackTraceResponse(data: StackTraceResponse,
+      ideResponse: DebugProtocol.StackTraceResponse) {
+    const frames = [];
+    for (let frame of data.stackFrames) {
+      if (frame.sourceUri) {
+        frames.push(new StackFrame(frame.id, frame.name,
+          this.vsSourceFromUri(frame.sourceUri), frame.line, frame.column));
+      } else {
+        frames.push(new StackFrame(frame.id, frame.name))
+      }
+    }
+
+    ideResponse.body = {
+      stackFrames: frames,
+      totalFrames: data.totalFrames
+    };
+    this.sendResponse(ideResponse);
   }
 
   protected stackTraceRequest(response: DebugProtocol.StackTraceResponse,
       args: DebugProtocol.StackTraceArguments): void {
-    const startFrame = (args.startFrame != null) ? args.startFrame : 0;
-    const numFrames  = (args.levels != null) ? args.levels : 0;
-    const endFrame   = Math.min(startFrame + numFrames, this.lastSuspendEvent.stack.length);
+    const request: StackTraceRequest = {
+      action: "StackTraceRequest",
+      activityId: args.threadId,
+      startFrame: args.startFrame,
+      levels:     args.levels,
+      requestId:  this.nextRequestId};
+    
+    this.requests[this.nextRequestId] = response;
+    this.nextRequestId += 1;
 
-    const stackFrames = [];
-    for (let i = startFrame; i < endFrame; i += 1) {
-      const frame = this.lastSuspendEvent.stack[i];
-
-      console.log("stackTraceRequest this.sources: ", this.sources);
-      console.log("stackTraceRequest ss: ", frame.sourceSection);
-      const sourceUri = frame.sourceSection.uri;
-      const s = this.sources[sourceUri];
-      let source;
-      if (s) {
-        source = new VSSource(s.name, s.uri.substring("file:".length)); //, parseInt(s.id) TODO: remove comment
-      } else {
-        source = new VSSource('vmMirror', null, undefined, 'internal module');
-      }
-
-      stackFrames.push(new StackFrame(i, frame.methodName, source,
-        frame.sourceSection.startLine, frame.sourceSection.startColumn));
-    }
-
-    response.body = {
-      stackFrames: stackFrames,
-      totalFrames: this.lastSuspendEvent.stack.length
-    };
-    this.sendResponse(response);
+    this.send(request);
   }
 
   protected scopesRequest(response: DebugProtocol.ScopesResponse,
