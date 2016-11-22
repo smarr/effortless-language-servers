@@ -1,6 +1,6 @@
 "use strict";
 
-import { spawn } from 'child_process';
+import { spawn, ChildProcess } from 'child_process';
 import { BreakpointEvent, DebugSession, Handles, InitializedEvent, Scope,
   Source as VSSource, StackFrame, StoppedEvent, Thread, Variable, OutputEvent,
   TerminatedEvent } from 'vscode-debugadapter';
@@ -44,6 +44,8 @@ interface BreakpointPair {
 
 class SomDebugSession extends DebugSession {
   private socket: WebSocket;
+  private somProc: ChildProcess;
+
   private breakpoints: BreakpointPair[];
   private nextBreakpointId: number;
   private bufferedBreakpoints: BreakpointData[];
@@ -105,21 +107,21 @@ class SomDebugSession extends DebugSession {
     const cmdStr = args.runtime + ' ' + somArgs.join(' ');
     this.sendEvent(new OutputEvent(`cmd: ${cmdStr}`, 'console'));
 
-    const somProc = spawn(args.runtime, somArgs, options);
+    this.somProc = spawn(args.runtime, somArgs, options);
     let connecting = false;
 
-    somProc.stdout.on('data', (data) => {
+    this.somProc.stdout.on('data', (data) => {
       const str = data.toString();
       this.sendEvent(new OutputEvent(str, 'stdout'));   
       if (str.includes("Started HTTP Server") && !connecting) {
         this.connectDebugger(response, 7977);
       }
     });
-    somProc.stderr.on('data', (data) => {
+    this.somProc.stderr.on('data', (data) => {
       const str = data.toString();
       this.sendEvent(new OutputEvent(str, 'stderr'));
     });
-    somProc.on('close', code => {
+    this.somProc.on('close', code => {
       this.sendEvent(new TerminatedEvent());
     })
   }
@@ -127,6 +129,12 @@ class SomDebugSession extends DebugSession {
   protected attachRequest(response: DebugProtocol.AttachResponse,
       args: AttachRequestArguments): void {
     this.connectDebugger(response, args.port);
+  }
+
+  protected disconnectRequest(response: DebugProtocol.DisconnectResponse,
+    args: DebugProtocol.DisconnectArguments): void {
+    this.somProc.kill();
+    this.sendResponse(response);
   }
 
   private connectDebugger(response: DebugProtocol.Response, port: number): void {
