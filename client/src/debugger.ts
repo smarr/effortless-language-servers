@@ -363,6 +363,23 @@ class SomDebugSession extends DebugSession {
     response.body = { variables: data.variables };
     this.sendResponse(response);
   }
+
+  private sendStep(stepType: StepType, response, args) {
+    const step: StepMessage = {action: stepType, suspendEvent: "se-" + args.threadId};
+    this.send(step);
+    response.body = {allThreadsContinued: false};
+    this.sendResponse(response);
+  }
+
+  protected continueRequest(response: DebugProtocol.ContinueResponse,
+      args: DebugProtocol.ContinueArguments): void {
+    this.sendStep("resume", response, args);
+  }
+
+  protected stepInRequest(response: DebugProtocol.StepInResponse,
+      args: DebugProtocol.StepInArguments): void {
+    this.sendStep("stepInto", response, args);
+  }
 }
 
 DebugSession.run(SomDebugSession);
