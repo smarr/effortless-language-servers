@@ -9,7 +9,8 @@ import * as WebSocket from 'ws';
 
 import { BreakpointData, Source as WDSource, Respond, SuspendEventMessage,
   InitialBreakpointsResponds, SourceMessage, IdMap, StoppedMessage,
-  StackTraceResponse, StackTraceRequest,
+  StackTraceResponse, StackTraceRequest, ScopesRequest, ScopesResponse,
+  StepMessage, StepType, VariablesRequest, VariablesResponse,
   createLineBreakpointData } from './messages';
 
 export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
@@ -160,12 +161,26 @@ class SomDebugSession extends DebugSession {
       case "source":
         this.onSource(data);
         break;
-      case "StackTraceResponse":
+      case "StackTraceResponse": {
         console.assert(this.requests[data.requestId]);
         const response = this.requests[data.requestId];
         delete this.requests[data.requestId];
         this.onProgramStackTraceResponse(data, response);
         break;
+      }
+      case "ScopesResponse": {
+        console.assert(this.requests[data.requestId]);
+        const response = this.requests[data.requestId];
+        delete this.requests[data.requestId];
+        this.onProgramScopesResponse(data, response);
+        break;
+      }
+      case "VariablesResponse": {
+        console.assert(this.requests[data.requestId]);
+        const response = this.requests[data.requestId];
+        delete this.requests[data.requestId];
+        this.onProgramVariablesResponse(data, response);
+      }
       case "StoppedEvent":
         this.onStoppedEvent(data);
         break;
@@ -307,44 +322,45 @@ class SomDebugSession extends DebugSession {
 
   protected scopesRequest(response: DebugProtocol.ScopesResponse,
       args: DebugProtocol.ScopesArguments): void {
-    const frameRef = args.frameId;
-    const scopes = [
-      new Scope("Local",   this.varHandles.create("local_" + frameRef),   false),
-      new Scope("Closure", this.varHandles.create("closure_" + frameRef), false),
-      new Scope("Outer",   this.varHandles.create("outer_" + frameRef),   true)
-    ];
-    response.body = {
-      scopes : scopes
-    };
+    const request: ScopesRequest = {
+      action: "ScopesRequest",
+      frameId: args.frameId,
+      requestId:  this.nextRequestId};
+    
+    this.requests[this.nextRequestId] = response;
+    this.nextRequestId += 1;
+
+    this.send(request);
+  }
+
+  protected onProgramScopesResponse(data: ScopesResponse,
+    response: DebugProtocol.ScopesResponse): void {
+    
+    const scopes = [];
+    for (const scope of data.scopes) {
+      scopes.push(new Scope(scope.name, scope.variablesReference, scope.expensive));
+    }
+    response.body = { scopes: scopes };
     this.sendResponse(response);
   }
 
   protected variablesRequest(response: DebugProtocol.VariablesResponse,
       args: DebugProtocol.VariablesArguments): void {
-    const ref = this.varHandles.get(args.variablesReference).split("_");
-    const id = parseInt(ref[1]);
-    const variables = [];
-
-    switch (ref[0]) {
-      case "local":
-        const frame = this.lastSuspendEvent.topFrame;
-        if (id == 0) { // we only got the data for the top frame
-          for (let aI in frame.arguments) {
-            const v = new Variable(aI, frame.arguments[aI]);
-            variables.push(v);
-          }
-
-          for (let sI in frame.slots) {
-            const v = new Variable(sI, frame.slots[sI]);
-            variables.push(v);
-          }
-        }
-        break;
+    const request: VariablesRequest = {
+      action: "VariablesRequest",
+      requestId: this.nextRequestId,
+      variablesReference: args.variablesReference
     }
     
-    response.body = {
-      variables: variables
-    };
+    this.requests[this.nextRequestId] = response;
+    this.nextRequestId += 1;
+
+    this.send(request);
+  }
+
+  protected onProgramVariablesResponse(data: VariablesResponse,
+    response: DebugProtocol.VariablesResponse): void {
+    response.body = { variables: data.variables };
     this.sendResponse(response);
   }
 }
