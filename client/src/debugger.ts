@@ -371,6 +371,11 @@ class SomDebugSession extends DebugSession {
     this.sendResponse(response);
   }
 
+  protected nextRequest(response: DebugProtocol.NextResponse,
+      args: DebugProtocol.NextArguments): void {
+    this.sendStep("stepInto", response, args);
+  }
+
   protected continueRequest(response: DebugProtocol.ContinueResponse,
       args: DebugProtocol.ContinueArguments): void {
     this.sendStep("resume", response, args);
@@ -380,6 +385,16 @@ class SomDebugSession extends DebugSession {
       args: DebugProtocol.StepInArguments): void {
     this.sendStep("stepInto", response, args);
   }
+
+  protected stepOutRequest(response: DebugProtocol.StepOutResponse,
+      args: DebugProtocol.StepOutArguments): void {
+    this.sendStep("return", response, args);
+  }
+
+  protected pauseRequest(response: DebugProtocol.PauseResponse,
+      args: DebugProtocol.PauseArguments): void {
+    this.sendStep("stop", response, args);
+  }    
 }
 
 DebugSession.run(SomDebugSession);
