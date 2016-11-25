@@ -29,6 +29,7 @@ import io.typefox.lsapi.SymbolInformation;
 import io.typefox.lsapi.SymbolInformationImpl;
 import som.VM;
 import som.VMOptions;
+import som.compiler.MethodBuilder.MethodDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
@@ -101,7 +102,9 @@ public class SomAdapter {
     } catch (ParseError e) {
       return toDiagnostics(e);
     } catch (MixinDefinitionError e) {
-      // TODO
+      return toDiagnostics(e);
+    } catch (MethodDefinitionError e) {
+      return toDiagnostics(e);
     }
     return new ArrayList<>();
   }
@@ -119,6 +122,32 @@ public class SomAdapter {
     r.setEnd(pos(coord.startLine, Integer.MAX_VALUE));
     d.setRange(r);
     d.setMessage(e.getMessage());
+    d.setSource("Parser");
+
+    diagnostics.add(d);
+    return diagnostics;
+  }
+
+  private ArrayList<DiagnosticImpl> toDiagnostics(final MixinDefinitionError e) {
+    return createDiagnostic(e.getSourceSection(), e.getMessage());
+  }
+
+  private ArrayList<DiagnosticImpl> toDiagnostics(final MethodDefinitionError e) {
+    return createDiagnostic(e.getSourceSection(), e.getMessage());
+  }
+
+  private ArrayList<DiagnosticImpl> createDiagnostic(final SourceSection source,
+      final String msg) {
+    ArrayList<DiagnosticImpl> diagnostics = new ArrayList<>();
+
+    DiagnosticImpl d = new DiagnosticImpl();
+    d.setSeverity(Diagnostic.SEVERITY_ERROR);
+
+    RangeImpl r = new RangeImpl();
+    r.setStart(pos(source.getStartLine(), source.getStartColumn()));
+    r.setEnd(pos(source.getEndLine(), source.getEndColumn()));
+    d.setRange(r);
+    d.setMessage(msg);
     d.setSource("Parser");
 
     diagnostics.add(d);
@@ -336,7 +365,7 @@ public class SomAdapter {
   private static final class SomCompiler extends SourcecodeCompiler {
     @Override
     public MixinDefinition compileModule(final Source source,
-        final StructuralProbe structuralProbe) throws ParseError, MixinDefinitionError {
+        final StructuralProbe structuralProbe) throws ParseError, MixinDefinitionError, MethodDefinitionError {
       SomParser parser = new SomParser(source.getReader(), source.getLength(),
           source, (SomStructures) structuralProbe);
       return compile(parser, source);
