@@ -29,11 +29,11 @@ import io.typefox.lsapi.SymbolInformation;
 import io.typefox.lsapi.SymbolInformationImpl;
 import som.VM;
 import som.VMOptions;
-import som.compiler.MethodBuilder.MethodDefinitionError;
-import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Parser.ParseError;
+import som.compiler.ProgramDefinitionError;
+import som.compiler.ProgramDefinitionError.SemanticDefinitionError;
 import som.compiler.SourcecodeCompiler;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
@@ -101,10 +101,10 @@ public class SomAdapter {
       }
     } catch (ParseError e) {
       return toDiagnostics(e);
-    } catch (MixinDefinitionError e) {
+    } catch (SemanticDefinitionError e) {
       return toDiagnostics(e);
-    } catch (MethodDefinitionError e) {
-      return toDiagnostics(e);
+    } catch (ProgramDefinitionError e) {
+      throw new RuntimeException("Not yet supported error", e);
     }
     return new ArrayList<>();
   }
@@ -128,17 +128,9 @@ public class SomAdapter {
     return diagnostics;
   }
 
-  private ArrayList<DiagnosticImpl> toDiagnostics(final MixinDefinitionError e) {
-    return createDiagnostic(e.getSourceSection(), e.getMessage());
-  }
-
-  private ArrayList<DiagnosticImpl> toDiagnostics(final MethodDefinitionError e) {
-    return createDiagnostic(e.getSourceSection(), e.getMessage());
-  }
-
-  private ArrayList<DiagnosticImpl> createDiagnostic(final SourceSection source,
-      final String msg) {
+  private ArrayList<DiagnosticImpl> toDiagnostics(final SemanticDefinitionError e) {
     ArrayList<DiagnosticImpl> diagnostics = new ArrayList<>();
+    SourceSection source = e.getSourceSection();
 
     DiagnosticImpl d = new DiagnosticImpl();
     d.setSeverity(Diagnostic.SEVERITY_ERROR);
@@ -147,7 +139,7 @@ public class SomAdapter {
     r.setStart(pos(source.getStartLine(), source.getStartColumn()));
     r.setEnd(pos(source.getEndLine(), source.getEndColumn()));
     d.setRange(r);
-    d.setMessage(msg);
+    d.setMessage(e.getMessage());
     d.setSource("Parser");
 
     diagnostics.add(d);
@@ -365,7 +357,7 @@ public class SomAdapter {
   private static final class SomCompiler extends SourcecodeCompiler {
     @Override
     public MixinDefinition compileModule(final Source source,
-        final StructuralProbe structuralProbe) throws ParseError, MixinDefinitionError, MethodDefinitionError {
+        final StructuralProbe structuralProbe) throws ProgramDefinitionError {
       SomParser parser = new SomParser(source.getReader(), source.getLength(),
           source, (SomStructures) structuralProbe);
       return compile(parser, source);

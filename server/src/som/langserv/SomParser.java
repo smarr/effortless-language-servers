@@ -8,9 +8,8 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.MethodBuilder;
-import som.compiler.MethodBuilder.MethodDefinitionError;
-import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.Parser;
+import som.compiler.ProgramDefinitionError;
 import som.interpreter.nodes.ExpressionNode;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
@@ -46,7 +45,7 @@ public class SomParser extends Parser {
   @Override
   protected ExpressionNode binaryMessage(final MethodBuilder builder,
       final ExpressionNode receiver, final boolean eventualSend,
-      final SourceSection sendOperator) throws ParseError, MixinDefinitionError, MethodDefinitionError {
+      final SourceSection sendOperator) throws ProgramDefinitionError {
     int stackHeight = sourceSections.size();
     ExpressionNode result = super.binaryMessage(
         builder, receiver, eventualSend, sendOperator);
@@ -58,7 +57,7 @@ public class SomParser extends Parser {
   @Override
   protected ExpressionNode keywordMessage(final MethodBuilder builder,
       final ExpressionNode receiver, final boolean explicitRcvr,
-      final boolean eventualSend, final SourceSection sendOperator) throws ParseError, MixinDefinitionError, MethodDefinitionError {
+      final boolean eventualSend, final SourceSection sendOperator) throws ProgramDefinitionError {
     int stackHeight = sourceSections.size();
     ExpressionNode result = super.keywordMessage(
         builder, receiver, explicitRcvr, eventualSend, sendOperator);
@@ -100,8 +99,7 @@ public class SomParser extends Parser {
   }
 
   @Override
-  protected ExpressionNode assignments(final MethodBuilder builder)
-      throws ParseError, MixinDefinitionError, MethodDefinitionError {
+  protected ExpressionNode assignments(final MethodBuilder builder) throws ProgramDefinitionError {
     int stackHeight = sourceSections.size();
     ExpressionNode result = super.assignments(builder);
     struturalProbe.reportAssignment(result, sourceSections.removeLast());
