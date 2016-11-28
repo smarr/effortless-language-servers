@@ -373,7 +373,7 @@ class SomDebugSession extends DebugSession {
 
   protected nextRequest(response: DebugProtocol.NextResponse,
       args: DebugProtocol.NextArguments): void {
-    this.sendStep("stepInto", response, args);
+    this.sendStep("stepOver", response, args);
   }
 
   protected continueRequest(response: DebugProtocol.ContinueResponse,
