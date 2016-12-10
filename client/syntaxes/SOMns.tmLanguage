@@ -673,8 +673,6 @@
 			<string>\b(\w+)\b</string>
 		</dict>
 	</dict>
-	<key>scope</key>
-	<string>source.som</string>
 	<key>scopeName</key>
 	<string>source.som</string>
 	<key>uuid</key>
