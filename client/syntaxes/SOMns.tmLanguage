@@ -451,6 +451,10 @@
 					<key>include</key>
 					<string>#exps</string>
 				</dict>
+				<dict>
+					<key>include</key>
+					<string>#slotDecls</string>
+				</dict>
 			</array>
 		</dict>
 		<key>module</key>
