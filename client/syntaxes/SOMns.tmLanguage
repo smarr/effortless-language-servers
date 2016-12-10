@@ -12,49 +12,7 @@
 	<array>
 		<dict>
 			<key>include</key>
-			<string>#multilinecomment</string>
-		</dict>
-		<dict>
-			<key>include</key>
-			<string>#compilationUnit</string>
-		</dict>
-		<dict>
-			<key>match</key>
-			<string>\b(nil|true|false)\b</string>
-			<key>name</key>
-			<string>constant.language</string>
-		</dict>
-		<dict>
-			<key>match</key>
-			<string>\b(self|super|outer)\b</string>
-			<key>name</key>
-			<string>variable.language</string>
-		</dict>
-		<dict>
-			<key>begin</key>
-			<string>'</string>
-			<key>end</key>
-			<string>'</string>
-			<key>name</key>
-			<string>string.quoted.single</string>
-		</dict>
-		<dict>
-			<key>match</key>
-			<string>\b(\d+(\.\d+)?)\b</string>
-			<key>name</key>
-			<string>constant.numeric</string>
-		</dict>
-		<dict>
-			<key>match</key>
-			<string>\b#\w+</string>
-			<key>name</key>
-			<string>constant.character.symbol</string>
-		</dict>
-		<dict>
-			<key>match</key>
-			<string>&lt;-:</string>
-			<key>name</key>
-			<string>keyword.operator.asyncsend</string>
+			<string>#module</string>
 		</dict>
 	</array>
 	<key>repository</key>
@@ -72,6 +30,13 @@
 			<key>match</key>
 			<string>\b(public|private|protected)\b</string>
 		</dict>
+		<key>assignmentOperator</key>
+		<dict>
+			<key>match</key>
+			<string>(?&lt;!:):=</string>
+			<key>name</key>
+			<string>keyword.operator.assignment.som</string>
+		</dict>
 		<key>binaryMsgPattern</key>
 		<dict>
 			<key>patterns</key>
@@ -86,10 +51,15 @@
 				</dict>
 			</array>
 		</dict>
-		<key>classBody</key>
+		<key>binarySelector</key>
+		<dict>
+			<key>match</key>
+			<string>[+/\\*~&lt;&gt;=@%|&amp;?!,-]+</string>
+		</dict>
+		<key>blockExp</key>
 		<dict>
 			<key>begin</key>
-			<string>\(</string>
+			<string>\[</string>
 			<key>beginCaptures</key>
 			<dict>
 				<key>0</key>
@@ -99,7 +69,51 @@
 				</dict>
 			</dict>
 			<key>end</key>
-			<string>(?=\))</string>
+			<string>\]</string>
+			<key>endCaptures</key>
+			<dict>
+				<key>0</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.section.block.end.som</string>
+				</dict>
+			</dict>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#exps</string>
+				</dict>
+			</array>
+		</dict>
+		<key>category</key>
+		<dict>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#string</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#methodDecl</string>
+				</dict>
+			</array>
+		</dict>
+		<key>classDefBlock</key>
+		<dict>
+			<key>begin</key>
+			<string>\((?=[^*])</string>
+			<key>beginCaptures</key>
+			<dict>
+				<key>0</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.section.block.begin.som</string>
+				</dict>
+			</dict>
+			<key>end</key>
+			<string>\)</string>
 			<key>endCaptures</key>
 			<dict>
 				<key>0</key>
@@ -109,41 +123,37 @@
 				</dict>
 			</dict>
 			<key>name</key>
-			<string>meta.definition.class.body.som</string>
+			<string>class-definition-block</string>
 			<key>patterns</key>
 			<array>
 				<dict>
 					<key>include</key>
-					<string>#instanceInitializer</string>
+					<string>#multilinecomment</string>
 				</dict>
 				<dict>
 					<key>include</key>
-					<string>#sideDecl</string>
+					<string>#classHeader</string>
 				</dict>
 				<dict>
 					<key>include</key>
-					<string>#classSideDecl</string>
+					<string>#slotDecls</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#classDecl</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#category</string>
 				</dict>
 			</array>
 		</dict>
-		<key>classCategory</key>
-		<dict>
-			<key>name</key>
-			<string>classCategory</string>
-			<key>patterns</key>
-			<array>
-				<dict>
-					<key>include</key>
-					<string>#string</string>
-				</dict>
-			</array>
-		</dict>
-		<key>classDecl</key>
+		<key>classHeader</key>
 		<dict>
 			<key>begin</key>
 			<string>(?=\w?[\w\s]*(?:class)\s+\w+\s*)</string>
 			<key>end</key>
-			<string>\)</string>
+			<string>(?=\()</string>
 			<key>endCaptures</key>
 			<dict>
 				<key>0</key>
@@ -231,53 +241,14 @@
 						</dict>
 					</array>
 				</dict>
-				<dict>
-					<key>include</key>
-					<string>#classBody</string>
-				</dict>
 			</array>
 		</dict>
-		<key>colon</key>
+		<key>constants</key>
 		<dict>
 			<key>match</key>
-			<string>:</string>
+			<string>\b(nil|true|false)\b</string>
 			<key>name</key>
-			<string>colon</string>
-		</dict>
-		<key>comma</key>
-		<dict>
-			<key>match</key>
-			<string>,</string>
-			<key>name</key>
-			<string>comma</string>
-		</dict>
-		<key>compilationUnit</key>
-		<dict>
-			<key>patterns</key>
-			<array>
-				<dict>
-					<key>include</key>
-					<string>#classCategory</string>
-				</dict>
-				<dict>
-					<key>include</key>
-					<string>#classDecl</string>
-				</dict>
-			</array>
-		</dict>
-		<key>dot</key>
-		<dict>
-			<key>match</key>
-			<string>\.</string>
-			<key>name</key>
-			<string>dot</string>
-		</dict>
-		<key>equalSign</key>
-		<dict>
-			<key>match</key>
-			<string>=</string>
-			<key>name</key>
-			<string>equalSign</string>
+			<string>constant.language.som</string>
 		</dict>
 		<key>eventualSendOperator</key>
 		<dict>
@@ -286,22 +257,51 @@
 			<key>name</key>
 			<string>keyword.operator.asyncsend</string>
 		</dict>
-		<key>id</key>
+		<key>exps</key>
 		<dict>
 			<key>name</key>
-			<string></string>
-		</dict>
-		<key>instanceInitializer</key>
-		<dict>
+			<string>meta.expressions.som</string>
 			<key>patterns</key>
 			<array>
+				<dict>
+					<key>include</key>
+					<string>#parentheticalExp</string>
+				</dict>
 				<dict>
 					<key>include</key>
 					<string>#multilinecomment</string>
 				</dict>
 				<dict>
 					<key>include</key>
-					<string>#slotDecls</string>
+					<string>#blockExp</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#eventualSendOperator</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#string</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#constants</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#numbers</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#returnOp</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#selfSuperOuter</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#assignmentOperator</string>
 				</dict>
 			</array>
 		</dict>
@@ -350,6 +350,131 @@
 				</dict>
 			</array>
 		</dict>
+		<key>methodDecl</key>
+		<dict>
+			<key>begin</key>
+			<string>(public|private|protected)?\s+(?:(\w+)|([+\/\\*~&lt;&gt;=@%|&amp;?!,-]+\s+(\w+))|(?:\s*(\w+:)\s*(\w+))(?:\s*(\w+:)\s*(\w+))?(?:\s*(\w+:)\s*(\w+))?(?:\s*(\w+:)\s*(\w+))?(?:\s*(\w+:)\s*(\w+))?)\s*(=)\s*(\()</string>
+			<key>beginCaptures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>keyword.modifier.som</string>
+				</dict>
+				<key>10</key>
+				<dict>
+					<key>name</key>
+					<string>variable.language.som</string>
+				</dict>
+				<key>11</key>
+				<dict>
+					<key>name</key>
+					<string>entity.name.function.som</string>
+				</dict>
+				<key>12</key>
+				<dict>
+					<key>name</key>
+					<string>variable.language.som</string>
+				</dict>
+				<key>13</key>
+				<dict>
+					<key>name</key>
+					<string>entity.name.function.som</string>
+				</dict>
+				<key>14</key>
+				<dict>
+					<key>name</key>
+					<string>variable.language.som</string>
+				</dict>
+				<key>15</key>
+				<dict>
+					<key>name</key>
+					<string>storage.modifier.define-function.som</string>
+				</dict>
+				<key>16</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.section.block.begin.som</string>
+				</dict>
+				<key>2</key>
+				<dict>
+					<key>name</key>
+					<string>entity.name.function.som</string>
+				</dict>
+				<key>3</key>
+				<dict>
+					<key>name</key>
+					<string>entity.name.function.som</string>
+				</dict>
+				<key>4</key>
+				<dict>
+					<key>name</key>
+					<string>variable.language.som</string>
+				</dict>
+				<key>5</key>
+				<dict>
+					<key>name</key>
+					<string>entity.name.function.som</string>
+				</dict>
+				<key>6</key>
+				<dict>
+					<key>name</key>
+					<string>variable.language.som</string>
+				</dict>
+				<key>7</key>
+				<dict>
+					<key>name</key>
+					<string>entity.name.function.som</string>
+				</dict>
+				<key>8</key>
+				<dict>
+					<key>name</key>
+					<string>variable.language.som</string>
+				</dict>
+				<key>9</key>
+				<dict>
+					<key>name</key>
+					<string>entity.name.function.som</string>
+				</dict>
+			</dict>
+			<key>end</key>
+			<string>\)</string>
+			<key>endCaptures</key>
+			<dict>
+				<key>0</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.section.block.end.som</string>
+				</dict>
+			</dict>
+			<key>name</key>
+			<string>meta.function.declaration.som</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#exps</string>
+				</dict>
+			</array>
+		</dict>
+		<key>module</key>
+		<dict>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#classHeader</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#classDefBlock</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#multilinecomment</string>
+				</dict>
+			</array>
+		</dict>
 		<key>multilinecomment</key>
 		<dict>
 			<key>begin</key>
@@ -369,6 +494,57 @@
 					<string>comment</string>
 				</dict>
 			</array>
+		</dict>
+		<key>numbers</key>
+		<dict>
+			<key>match</key>
+			<string>\b(\d+(\.\d+)?)\b</string>
+			<key>name</key>
+			<string>constant.numeric.som</string>
+		</dict>
+		<key>parentheticalExp</key>
+		<dict>
+			<key>begin</key>
+			<string>\((?=[^*])</string>
+			<key>beginCaptures</key>
+			<dict>
+				<key>0</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.section.block.begin.som</string>
+				</dict>
+			</dict>
+			<key>end</key>
+			<string>\)</string>
+			<key>endCaptures</key>
+			<dict>
+				<key>0</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.section.block.end.som</string>
+				</dict>
+			</dict>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#exps</string>
+				</dict>
+			</array>
+		</dict>
+		<key>returnOp</key>
+		<dict>
+			<key>match</key>
+			<string>\^</string>
+			<key>name</key>
+			<string>keyword.control.som</string>
+		</dict>
+		<key>selfSuperOuter</key>
+		<dict>
+			<key>match</key>
+			<string>\b(self|super|outer)\b</string>
+			<key>name</key>
+			<string>variable.language.som</string>
 		</dict>
 		<key>slotDecl</key>
 		<dict>
@@ -432,7 +608,7 @@
 						</dict>
 					</dict>
 					<key>match</key>
-					<string>\b(public|private|protected)\b\s+(\w+)\b</string>
+					<string>\b((?:public|private|protected)\b)?\s+(\w+)\b</string>
 				</dict>
 				<dict>
 					<key>begin</key>
@@ -455,6 +631,13 @@
 							<string>punctuation.terminator.som</string>
 						</dict>
 					</dict>
+					<key>patterns</key>
+					<array>
+						<dict>
+							<key>include</key>
+							<string>#exps</string>
+						</dict>
+					</array>
 				</dict>
 			</array>
 		</dict>
@@ -476,6 +659,11 @@
 					<string>#unarySelector</string>
 				</dict>
 			</array>
+		</dict>
+		<key>unarySelector</key>
+		<dict>
+			<key>match</key>
+			<string>\b(\w+)\b</string>
 		</dict>
 	</dict>
 	<key>scopeName</key>
