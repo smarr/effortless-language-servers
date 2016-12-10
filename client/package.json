@@ -27,7 +27,8 @@
 		"languages": [{
 			"id" : "SOM",
 			"extensions" : [ ".som" ],
-			"aliases": [ "SOMns", "som" ]
+			"aliases": [ "SOMns", "som" ],
+			"configuration": "./language-configuration.json"
 		}],
 		"grammars": [{
 			"language": "SOM",
