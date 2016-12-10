@@ -86,20 +86,6 @@
 				</dict>
 			</array>
 		</dict>
-		<key>category</key>
-		<dict>
-			<key>patterns</key>
-			<array>
-				<dict>
-					<key>include</key>
-					<string>#string</string>
-				</dict>
-				<dict>
-					<key>include</key>
-					<string>#methodDecl</string>
-				</dict>
-			</array>
-		</dict>
 		<key>classDefBlock</key>
 		<dict>
 			<key>begin</key>
@@ -144,7 +130,15 @@
 				</dict>
 				<dict>
 					<key>include</key>
+					<string>#string</string>
+				</dict>
+				<dict>
+					<key>include</key>
 					<string>#category</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#methodDecl</string>
 				</dict>
 			</array>
 		</dict>
