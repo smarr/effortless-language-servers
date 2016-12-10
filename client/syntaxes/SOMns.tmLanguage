@@ -189,16 +189,66 @@
 							<key>name</key>
 							<string>entity.name.function.som</string>
 						</dict>
+						<key>10</key>
+						<dict>
+							<key>name</key>
+							<string>variable.language.som</string>
+						</dict>
+						<key>11</key>
+						<dict>
+							<key>name</key>
+							<string>entity.name.function.som</string>
+						</dict>
+						<key>12</key>
+						<dict>
+							<key>name</key>
+							<string>variable.language.som</string>
+						</dict>
 						<key>2</key>
 						<dict>
 							<key>name</key>
 							<string>variable.language.som</string>
 						</dict>
+						<key>3</key>
+						<dict>
+							<key>name</key>
+							<string>entity.name.function.som</string>
+						</dict>
+						<key>4</key>
+						<dict>
+							<key>name</key>
+							<string>variable.language.som</string>
+						</dict>
+						<key>5</key>
+						<dict>
+							<key>name</key>
+							<string>entity.name.function.som</string>
+						</dict>
+						<key>6</key>
+						<dict>
+							<key>name</key>
+							<string>variable.language.som</string>
+						</dict>
+						<key>7</key>
+						<dict>
+							<key>name</key>
+							<string>entity.name.function.som</string>
+						</dict>
+						<key>8</key>
+						<dict>
+							<key>name</key>
+							<string>variable.language.som</string>
+						</dict>
+						<key>9</key>
+						<dict>
+							<key>name</key>
+							<string>entity.name.function.som</string>
+						</dict>
 					</dict>
 					<key>end</key>
 					<string>(?==)</string>
 					<key>match</key>
-					<string>\b(\w+(?::)?)\s+(\w+)</string>
+					<string>(\w+:)\s*(\w+)(?:\s+(\w+:)\s*(\w+))?(?:\s+(\w+:)\s*(\w+))?(?:\s+(\w+:)\s*(\w+))?(?:\s+(\w+:)\s*(\w+))?(?:\s+(\w+:)\s*(\w+))?</string>
 					<key>name</key>
 					<string>meta.messagePattern</string>
 				</dict>
