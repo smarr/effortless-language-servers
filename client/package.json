@@ -31,7 +31,7 @@
 		}],
 		"grammars": [{
 			"language": "SOM",
-			"scopeName": "text.som",
+			"scopeName": "source.som",
 			"path" : "./syntaxes/SOMns.tmLanguage"
 		}],
 		"breakpoints": [ { "language": "SOM" } ],

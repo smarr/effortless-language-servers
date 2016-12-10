@@ -677,8 +677,10 @@
 			<string>\b(\w+)\b</string>
 		</dict>
 	</dict>
+	<key>scope</key>
+	<string>source.som</string>
 	<key>scopeName</key>
-	<string>text.som</string>
+	<string>source.som</string>
 	<key>uuid</key>
 	<string>3791d52d-e561-4fb3-bb65-9c6b84ea333d</string>
 </dict>
