@@ -608,7 +608,7 @@
 						</dict>
 					</dict>
 					<key>match</key>
-					<string>\b((?:public|private|protected)\b)?\s+(\w+)\b</string>
+					<string>\b((?:public|private|protected)\b\s+)?(\w+)\b</string>
 				</dict>
 				<dict>
 					<key>begin</key>
