@@ -55,6 +55,8 @@
 		<dict>
 			<key>match</key>
 			<string>[+/\\*~&lt;&gt;=@%|&amp;?!,-]+</string>
+			<key>name</key>
+			<string>keyword.operator.binary.som</string>
 		</dict>
 		<key>blockExp</key>
 		<dict>
@@ -143,6 +145,10 @@
 				<dict>
 					<key>include</key>
 					<string>#methodDecl</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#classSideColon</string>
 				</dict>
 			</array>
 		</dict>
@@ -283,6 +289,19 @@
 				</dict>
 			</array>
 		</dict>
+		<key>classSideColon</key>
+		<dict>
+			<key>captures</key>
+			<dict>
+				<key>0</key>
+				<dict>
+					<key>name</key>
+					<string>storage.modifier.class-side.som</string>
+				</dict>
+			</dict>
+			<key>match</key>
+			<string>(?&lt;=\))\s*(:)\s*(?=\()</string>
+		</dict>
 		<key>constants</key>
 		<dict>
 			<key>match</key>
@@ -346,6 +365,10 @@
 				<dict>
 					<key>include</key>
 					<string>#symbol</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#binarySelector</string>
 				</dict>
 			</array>
 		</dict>
@@ -520,6 +543,10 @@
 				<dict>
 					<key>include</key>
 					<string>#multilinecomment</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#classSideColon</string>
 				</dict>
 			</array>
 		</dict>
