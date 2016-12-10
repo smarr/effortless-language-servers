@@ -303,6 +303,10 @@
 					<key>include</key>
 					<string>#assignmentOperator</string>
 				</dict>
+				<dict>
+					<key>include</key>
+					<string>#symbol</string>
+				</dict>
 			</array>
 		</dict>
 		<key>keyword</key>
@@ -649,6 +653,13 @@
 			<string>'</string>
 			<key>name</key>
 			<string>string.quoted.single</string>
+		</dict>
+		<key>symbol</key>
+		<dict>
+			<key>match</key>
+			<string>\b#\w+</string>
+			<key>name</key>
+			<string>constant.character.symbol</string>
 		</dict>
 		<key>unaryMsgPattern</key>
 		<dict>
