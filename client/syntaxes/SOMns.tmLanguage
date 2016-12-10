@@ -122,6 +122,10 @@
 				</dict>
 				<dict>
 					<key>include</key>
+					<string>#classDefBlock</string>
+				</dict>
+				<dict>
+					<key>include</key>
 					<string>#slotDecls</string>
 				</dict>
 				<dict>
