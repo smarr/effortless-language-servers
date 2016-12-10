@@ -149,7 +149,7 @@
 		<key>classHeader</key>
 		<dict>
 			<key>begin</key>
-			<string>(?=\w?[\w\s]*(?:class)\s+\w+\s*)</string>
+			<string>(?=(?:\w+\s+)?(?:class)\s+\w+\s*)</string>
 			<key>end</key>
 			<string>(?=\()</string>
 			<key>name</key>
