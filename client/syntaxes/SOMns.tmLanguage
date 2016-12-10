@@ -172,7 +172,7 @@
 						<key>1</key>
 						<dict>
 							<key>name</key>
-							<string>storage.modifier.som</string>
+							<string>storage.modifier.class.som</string>
 						</dict>
 						<key>2</key>
 						<dict>
@@ -314,7 +314,7 @@
 			<key>match</key>
 			<string>&lt;-:</string>
 			<key>name</key>
-			<string>keyword.operator.asyncsend</string>
+			<string>keyword.operator.asyncsend.som</string>
 		</dict>
 		<key>exps</key>
 		<dict>
