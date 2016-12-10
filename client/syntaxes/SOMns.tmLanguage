@@ -653,7 +653,7 @@
 		<key>symbol</key>
 		<dict>
 			<key>match</key>
-			<string>\b#\w+</string>
+			<string>#\w+\b</string>
 			<key>name</key>
 			<string>constant.character.symbol</string>
 		</dict>
