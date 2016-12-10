@@ -154,14 +154,6 @@
 			<string>(?=\w?[\w\s]*(?:class)\s+\w+\s*)</string>
 			<key>end</key>
 			<string>(?=\()</string>
-			<key>endCaptures</key>
-			<dict>
-				<key>0</key>
-				<dict>
-					<key>name</key>
-					<string>punctuation.section.class.end.som</string>
-				</dict>
-			</dict>
 			<key>name</key>
 			<string>meta.class.som</string>
 			<key>patterns</key>
