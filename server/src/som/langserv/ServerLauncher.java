@@ -29,8 +29,8 @@ public class ServerLauncher {
         msg = new PrintWriter(fw, true);
       } catch (IOException e) { }
     } else {
-      err = new PrintWriter(System.err);
-      msg = new PrintWriter(System.out);
+      err = new PrintWriter(System.err, true);
+      msg = new PrintWriter(System.out, true);
     }
 
     Thread.setDefaultUncaughtExceptionHandler(
@@ -76,7 +76,6 @@ public class ServerLauncher {
       while (acceptConnections) {
         try {
           msg.println("[SOMns LS] Server started and waiting on " + SERVER_PORT);
-          msg.flush();
           Socket client = serverSocket.accept();
           executor.submit(new LangServerConnection(client, tls));
         } catch (IOException e) {
