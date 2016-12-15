@@ -57,7 +57,7 @@
 
 			"configurationAttributes": {
 				"launch" : {
-					"required" : [ "program", "cwd" ],
+					"required" : [ "program", "cwd", "runtime" ],
 					"properties" : {
 						"program" : {
 							"type" : "string",
@@ -103,6 +103,7 @@
 				  "request" : "launch",
 				  "program" : "${workspaceRoot}/Application.som",
 					"cwd"     : "${workspaceRoot}",
+					"runtime" : "PLEASE ENTER PATH TO `som` launcher",
 				  "stopOnEntry" : false
 				},
 				{ "name"    : "Attach to SOM program",
