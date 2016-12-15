@@ -229,8 +229,7 @@ class SomDebugSession extends DebugSession {
 
     for (let bp of args.breakpoints) {
       const bpId = this.getNextBpId();
-      const lineBp = createLineBreakpointData(uri, bp.line);
-      lineBp.enabled = true;
+      const lineBp = createLineBreakpointData(uri, bp.line, true);
       this.sendBreakpoint(lineBp, bpId, connected);
       
       const vsBp = {
