@@ -30,7 +30,7 @@ function getServerOptions(context: ExtensionContext): ServerOptions {
 		somLib,
 		'som.langserv.ServerLauncher'];
 
-	if (EnableExtensionDebugging || true) {
+	if (EnableExtensionDebugging) {
 		javaArgs = ['-ea', '-esa',
 								'-Xdebug',
 								'-Xrunjdwp:transport=dt_socket,quiet=y,server=y,suspend=n,address=8000'
