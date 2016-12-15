@@ -23,7 +23,7 @@
 		"onLanguage:SOM"
 	],
 	"main": "./out/src/extension",
-	"icon": "./resources/logo.png",
+	"icon": "resources/logo.png",
 	"contributes": {
 		"languages": [{
 			"id" : "SOM",

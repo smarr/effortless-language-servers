@@ -2,8 +2,15 @@
 typings/**
 out/test/**
 test/**
+server/**
 src/**
 **/*.map
 .gitignore
+.gitmodules
+.travis.yml
+notes.md
+test.som
 tsconfig.json
 vsc-extension-quickstart.md
+TODO.md
+*.sh
