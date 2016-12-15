@@ -80,3 +80,5 @@ The server can also be started from the command line:
 cd /$pathToCheckout/SOMns-vscode/server
 ./run.sh # executes the server, the console will show all communication
 ```
+
+[SOMns]: https://github.com/smarr/SOMns
