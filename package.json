@@ -1,7 +1,7 @@
 {
-	"name": "somns",
-	"description": "VSCode pluging for SOMns",
-	"readme": "This plugin provides support for language server features as well as the debugger.",
+	"name": "SOMns",
+	"description": "Support for the SOMns Research Language",
+	"readme": "This plugin provides support for syntax highlighting, parse errors, code navigation, and debugging of SOMns programs.",
 	"author": "Stefan Marr",
 	"license": "MIT",
 	"version": "0.0.1",
