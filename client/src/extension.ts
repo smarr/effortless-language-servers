@@ -55,6 +55,9 @@ function startLanguageServer(context: ExtensionContext,
 			connectToLanguageServer(resolve, reject);
 		}
 	});
+	lsProc.stderr.on('data', data => {
+		window.showErrorMessage('LS stderr: ' + data.toString());
+	});
 	lsProc.on('exit', code => {
 		reject('SOMns language server stopped. Exit code: ' + code);
 	});
@@ -101,4 +104,12 @@ export function activate(context: ExtensionContext) {
 	// Push the disposable to the context's subscriptions so that the
 	// client can be deactivated on extension deactivation
 	context.subscriptions.push(disposable);
+
+	let disposable1 = commands.registerTextEditorCommand('myTestExt.sayHelloCommand',
+	    editor => { editor });
+	let disposable2 = commands.registerCommand('myTestExt.sayHelloAltCommand',
+		  (args) => { args });
+
+	// see: https://github.com/Microsoft/vscode-extension-samples/blob/37a9a2f413686d1a8f029accdbf969a568f07344/previewhtml-sample/src/extension.ts
+	// context.subscriptions.push(disposable, registr) ??
 }
