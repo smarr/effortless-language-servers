@@ -2,10 +2,9 @@ language: java
 jdk:
   - oraclejdk8
 sudo: false
-env:
-  - TASK=build-server
-  - TASK=build-client
+before_install:
+  - nvm install 6
 script:
-  - if [ "$TASK" = "build-server" ];      then cd server; ant deploy; fi
-  - if [ "$TASK" = "build-client" ];      then nvm install 6 && cd client && npm install . && node ./node_modules/vscode/bin/compile; fi
+  - npm install .
+  - npm run compile
   # - if [ "$TASK" = "checkstyle" ]; then ant checkstyle-jar && ant checkstyle; fi

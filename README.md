@@ -12,11 +12,8 @@ example](https://github.com/Microsoft/vscode-languageserver-node-example).
 To build the VS Code extension, do the following:
 
 ```bash
-cd server
-ant deploy  # builds and deploys the server. ant is needed, and python, etc.
-cd ../client
 npm install .
-node ./node_modules/vscode/bin/compile # to build the client, might give an error
+npm run compile
 ```
 
 ## Develop

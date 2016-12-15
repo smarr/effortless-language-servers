@@ -112,10 +112,13 @@
 				}
 			]
 		}]
-	},	
+	},
 	"scripts": {
-		"vscode:prepublish": "node ./node_modules/vscode/bin/compile",
-		"compile":           "node ./node_modules/vscode/bin/compile -watch -p ./",
+		"compile:server":    "cd server && ant deploy",
+		"compile:ext":       "node ./node_modules/vscode/bin/compile",
+		"vscode:prepublish": "npm run compile:server && npm run compile:ext",
+		"watch":             "node ./node_modules/vscode/bin/compile -watch -p ./",
+		"compile":           "npm run vscode:prepublish",
 		"postinstall":       "node ./node_modules/vscode/bin/install"
 	},
 	"devDependencies": {

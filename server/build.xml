@@ -99,14 +99,14 @@
     </target>
     
     <target name="deploy" depends="jar" description="Deploy Language Server files to client">
-        <mkdir dir="../client/out/server"/>
-        <copy todir="../client/out/server" flatten="true">
+        <mkdir dir="../out/server"/>
+        <copy todir="../out/server" flatten="true">
           <path>
             <pathelement path="som-language-server.jar"/>
             <path refid="jar.classpath" />
           </path>
         </copy>
-        <copy todir="../client/out/server/core-lib">
+        <copy todir="../out/server/core-lib">
           <fileset dir="${lib.dir}/SOMns/core-lib"/>
         </copy>
     </target>
