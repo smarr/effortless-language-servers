@@ -18,6 +18,7 @@ public class ServerLauncher {
   private static PrintWriter msg;
   private static boolean acceptConnections = true;
   private static final ExecutorService executor = Executors.newCachedThreadPool();
+  private static final int SERVER_PORT = 8123;
 
   static {
     if (logToFile) {
@@ -71,16 +72,20 @@ public class ServerLauncher {
   public static void main(final String[] args) {
     SomLanguageServer tls = new SomLanguageServer();
 
-    try (ServerSocket serverSocket = new ServerSocket(8123)) {
+    try (ServerSocket serverSocket = new ServerSocket(SERVER_PORT)) {
       while (acceptConnections) {
         try {
+          msg.println("[SOMns LS] Server started and waiting on " + SERVER_PORT);
+          msg.flush();
           Socket client = serverSocket.accept();
           executor.submit(new LangServerConnection(client, tls));
         } catch (IOException e) {
+          err.println("[SOMns LS] Error while connecting to client.");
           e.printStackTrace(err);
         }
       }
     } catch (IOException e) {
+      err.println("[SOMns LS] Failed to open port: " + SERVER_PORT);
       e.printStackTrace(err);
     }
   }
