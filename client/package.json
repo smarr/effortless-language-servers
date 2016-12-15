@@ -36,6 +36,16 @@
 			"path" : "./syntaxes/SOMns.tmLanguage"
 		}],
 		"breakpoints": [ { "language": "SOM" } ],
+		"configuration": {
+			"title": "SOMns configuration",
+			"properties": {
+				"somns.debugMode" : {
+					"type" : "boolean",
+					"default" : false,
+					"description": "Enables debug mode for the extension, language server, and debug adapter. This is only used to develop the SOMns extension."
+				}
+			}
+		},
 		"debuggers": [ {
 			"type": "som",
 			"label": "SOMns",
@@ -43,7 +53,7 @@
 
 			"program": "./out/src/debugger.js",
 			"runtime": "node",
-			
+
 			"configurationAttributes": {
 				"launch" : {
 					"required" : [ "program", "cwd" ],
