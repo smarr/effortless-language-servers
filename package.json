@@ -20,23 +20,23 @@
 		"url": "https://github.com/smarr/SOMns-vscode/issues"
 	},
 	"activationEvents": [
-		"onLanguage:SOM"
+		"onLanguage:SOMns"
 	],
 	"main": "./out/src/extension",
 	"icon": "resources/logo.png",
 	"contributes": {
 		"languages": [{
-			"id" : "SOM",
+			"id" : "SOMns",
 			"extensions" : [ ".som" ],
-			"aliases": [ "SOMns", "som" ],
+			"aliases": [ "SOMns" ],
 			"configuration": "./language-configuration.json"
 		}],
 		"grammars": [{
-			"language": "SOM",
+			"language": "SOMns",
 			"scopeName": "source.som",
 			"path" : "./syntaxes/SOMns.tmLanguage"
 		}],
-		"breakpoints": [ { "language": "SOM" } ],
+		"breakpoints": [ { "language": "SOMns" } ],
 		"configuration": {
 			"title": "SOMns configuration",
 			"properties": {
@@ -48,9 +48,9 @@
 			}
 		},
 		"debuggers": [ {
-			"type": "som",
+			"type": "SOMns",
 			"label": "SOMns",
-			"enableBreakpointsFor": { "languageIds": [ "SOM" ] },
+			"enableBreakpointsFor": { "languageIds": [ "SOMns" ] },
 
 			"program": "./out/src/debugger.js",
 			"runtime": "node",
@@ -99,14 +99,14 @@
 			},
 			"initialConfigurations": [
 				{ "name"    : "Launch SOM program",
-				  "type"    : "som",
+				  "type"    : "SOMns",
 				  "request" : "launch",
 				  "program" : "${workspaceRoot}/Application.som",
 					"cwd"     : "${workspaceRoot}",
 				  "stopOnEntry" : false
 				},
 				{ "name"    : "Attach to SOM program",
-				  "type"    : "som",
+				  "type"    : "SOMns",
 				  "request" : "attach",
 				  "port"    : 7977
 				}
