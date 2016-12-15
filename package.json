@@ -5,7 +5,7 @@
 	"author": "Stefan Marr",
 	"license": "MIT",
 	"version": "0.0.1",
-	"publisher": "smarr",
+	"publisher": "MetaConcProject",
 	"engines": {
 		"vscode": "^1.2.1"
 	},
