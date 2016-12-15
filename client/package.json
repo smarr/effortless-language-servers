@@ -1,5 +1,5 @@
 {
-	"name": "somns-language-client",
+	"name": "somns",
 	"description": "VSCode pluging for SOMns",
 	"readme": "This plugin provides support for language server features as well as the debugger.",
 	"author": "Stefan Marr",
