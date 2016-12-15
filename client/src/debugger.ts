@@ -113,7 +113,7 @@ class SomDebugSession extends DebugSession {
 
     this.somProc.stdout.on('data', (data) => {
       const str = data.toString();
-      this.sendEvent(new OutputEvent(str, 'stdout'));   
+      this.sendEvent(new OutputEvent(str, 'stdout'));
       if (str.includes("Started HTTP Server") && !connecting) {
         this.connectDebugger(response, 7977);
       }
@@ -146,12 +146,12 @@ class SomDebugSession extends DebugSession {
     });
 
     this.socket.onmessage = this.onWDMessage.bind(this);
-    
+
     this.sendResponse(response);
 
     // TODO:
     // - implement setting breakpoints
-    // - implement stepping 
+    // - implement stepping
   }
 
   private onWDMessage(event): void {
@@ -202,7 +202,7 @@ class SomDebugSession extends DebugSession {
   private sendInitialBreakpoints() : void {
     const updatedBreakpoints = [];
     const initialBreakpoints = [];
-    
+
     for (const id in this.bufferedBreakpoints) {
       const vsBp = this.breakpoints[id].vs;
       vsBp.verified = true;
@@ -214,7 +214,7 @@ class SomDebugSession extends DebugSession {
         action: "initialBreakpoints", breakpoints: initialBreakpoints,
         debuggerProtocol: true};
     this.send(msg);
-    
+
     for (const vsBp of updatedBreakpoints) {
       this.sendEvent(new BreakpointEvent('Connection Established', vsBp));
     }
@@ -231,7 +231,7 @@ class SomDebugSession extends DebugSession {
       const bpId = this.getNextBpId();
       const lineBp = createLineBreakpointData(uri, bp.line, true);
       this.sendBreakpoint(lineBp, bpId, connected);
-      
+
       const vsBp = {
         id:       bpId,
         verified: connected,
@@ -312,7 +312,7 @@ class SomDebugSession extends DebugSession {
       startFrame: args.startFrame,
       levels:     args.levels,
       requestId:  this.nextRequestId};
-    
+
     this.requests[this.nextRequestId] = response;
     this.nextRequestId += 1;
 
@@ -325,7 +325,7 @@ class SomDebugSession extends DebugSession {
       action: "ScopesRequest",
       frameId: args.frameId,
       requestId:  this.nextRequestId};
-    
+
     this.requests[this.nextRequestId] = response;
     this.nextRequestId += 1;
 
@@ -334,7 +334,7 @@ class SomDebugSession extends DebugSession {
 
   protected onProgramScopesResponse(data: ScopesResponse,
     response: DebugProtocol.ScopesResponse): void {
-    
+
     const scopes = [];
     for (const scope of data.scopes) {
       scopes.push(new Scope(scope.name, scope.variablesReference, scope.expensive));
@@ -350,7 +350,7 @@ class SomDebugSession extends DebugSession {
       requestId: this.nextRequestId,
       variablesReference: args.variablesReference
     }
-    
+
     this.requests[this.nextRequestId] = response;
     this.nextRequestId += 1;
 
@@ -393,7 +393,7 @@ class SomDebugSession extends DebugSession {
   protected pauseRequest(response: DebugProtocol.PauseResponse,
       args: DebugProtocol.PauseArguments): void {
     this.sendStep("stop", response, args);
-  }    
+  }
 }
 
 DebugSession.run(SomDebugSession);
