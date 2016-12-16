@@ -73,9 +73,9 @@ public class ServerLauncher {
     SomLanguageServer tls = new SomLanguageServer();
 
     try (ServerSocket serverSocket = new ServerSocket(SERVER_PORT)) {
+      msg.println("[SOMns LS] Server started and waiting on " + SERVER_PORT);
       while (acceptConnections) {
         try {
-          msg.println("[SOMns LS] Server started and waiting on " + SERVER_PORT);
           Socket client = serverSocket.accept();
           executor.submit(new LangServerConnection(client, tls));
         } catch (IOException e) {
