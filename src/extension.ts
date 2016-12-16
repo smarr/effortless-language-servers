@@ -95,7 +95,7 @@ export function activate(context: ExtensionContext) {
 	}
 
 	let clientOptions: LanguageClientOptions = {
-		documentSelector: ['SOM']
+		documentSelector: ['SOMns']
 	}
 
 	// Create the language client and start the client.
