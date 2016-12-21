@@ -116,6 +116,14 @@
 			<array>
 				<dict>
 					<key>include</key>
+					<string>#accessModifier</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#keywordSegment</string>
+				</dict>
+				<dict>
+					<key>include</key>
 					<string>#multilinecomment</string>
 				</dict>
 				<dict>
@@ -167,6 +175,10 @@
 					<string>#accessModifier</string>
 				</dict>
 				<dict>
+					<key>include</key>
+					<string>#keywordSegment</string>
+				</dict>
+				<dict>
 					<key>captures</key>
 					<dict>
 						<key>1</key>
@@ -184,77 +196,6 @@
 					<string>(class)\s+(\w+)</string>
 					<key>name</key>
 					<string>meta.class.identifier.som</string>
-				</dict>
-				<dict>
-					<key>beginCaptures</key>
-					<dict>
-						<key>1</key>
-						<dict>
-							<key>name</key>
-							<string>entity.name.function.som</string>
-						</dict>
-						<key>10</key>
-						<dict>
-							<key>name</key>
-							<string>variable.language.som</string>
-						</dict>
-						<key>11</key>
-						<dict>
-							<key>name</key>
-							<string>entity.name.function.som</string>
-						</dict>
-						<key>12</key>
-						<dict>
-							<key>name</key>
-							<string>variable.language.som</string>
-						</dict>
-						<key>2</key>
-						<dict>
-							<key>name</key>
-							<string>variable.language.som</string>
-						</dict>
-						<key>3</key>
-						<dict>
-							<key>name</key>
-							<string>entity.name.function.som</string>
-						</dict>
-						<key>4</key>
-						<dict>
-							<key>name</key>
-							<string>variable.language.som</string>
-						</dict>
-						<key>5</key>
-						<dict>
-							<key>name</key>
-							<string>entity.name.function.som</string>
-						</dict>
-						<key>6</key>
-						<dict>
-							<key>name</key>
-							<string>variable.language.som</string>
-						</dict>
-						<key>7</key>
-						<dict>
-							<key>name</key>
-							<string>entity.name.function.som</string>
-						</dict>
-						<key>8</key>
-						<dict>
-							<key>name</key>
-							<string>variable.language.som</string>
-						</dict>
-						<key>9</key>
-						<dict>
-							<key>name</key>
-							<string>entity.name.function.som</string>
-						</dict>
-					</dict>
-					<key>end</key>
-					<string>(?==)</string>
-					<key>match</key>
-					<string>(\w+:)\s*(\w+)(?:\s+(\w+:)\s*(\w+))?(?:\s+(\w+:)\s*(\w+))?(?:\s+(\w+:)\s*(\w+))?(?:\s+(\w+:)\s*(\w+))?(?:\s+(\w+:)\s*(\w+))?</string>
-					<key>name</key>
-					<string>meta.messagePattern</string>
 				</dict>
 				<dict>
 					<key>begin</key>
@@ -399,6 +340,24 @@
 				</dict>
 			</array>
 		</dict>
+		<key>keywordSegment</key>
+		<dict>
+			<key>captures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>entity.name.function.som</string>
+				</dict>
+				<key>2</key>
+				<dict>
+					<key>name</key>
+					<string>variable.language.som</string>
+				</dict>
+			</dict>
+			<key>match</key>
+			<string>(\b\w+:)\s*(\w+\b)</string>
+		</dict>
 		<key>messagePattern</key>
 		<dict>
 			<key>patterns</key>
@@ -420,48 +379,13 @@
 		<key>methodDecl</key>
 		<dict>
 			<key>begin</key>
-			<string>(public|private|protected)?\s+(?:(\w+)|([+\/\\*~&lt;&gt;=@%|&amp;?!,-]+\s+(\w+))|(?:\s*(\w+:)\s*(\w+))(?:\s*(\w+:)\s*(\w+))?(?:\s*(\w+:)\s*(\w+))?(?:\s*(\w+:)\s*(\w+))?(?:\s*(\w+:)\s*(\w+))?)\s*(=)\s*(\()</string>
+			<string>(?:(\w+)|([+\/\\*~&lt;&gt;=@%|&amp;?!,-]+)\s+(\w+)|(?:\s*(\w+:)\s*(\w+)))\s*(=)\s*(\()</string>
 			<key>beginCaptures</key>
 			<dict>
 				<key>1</key>
 				<dict>
 					<key>name</key>
-					<string>keyword.modifier.som</string>
-				</dict>
-				<key>10</key>
-				<dict>
-					<key>name</key>
-					<string>variable.language.som</string>
-				</dict>
-				<key>11</key>
-				<dict>
-					<key>name</key>
 					<string>entity.name.function.som</string>
-				</dict>
-				<key>12</key>
-				<dict>
-					<key>name</key>
-					<string>variable.language.som</string>
-				</dict>
-				<key>13</key>
-				<dict>
-					<key>name</key>
-					<string>entity.name.function.som</string>
-				</dict>
-				<key>14</key>
-				<dict>
-					<key>name</key>
-					<string>variable.language.som</string>
-				</dict>
-				<key>15</key>
-				<dict>
-					<key>name</key>
-					<string>storage.modifier.define-function.som</string>
-				</dict>
-				<key>16</key>
-				<dict>
-					<key>name</key>
-					<string>punctuation.definition.block.begin.som</string>
 				</dict>
 				<key>2</key>
 				<dict>
@@ -471,37 +395,27 @@
 				<key>3</key>
 				<dict>
 					<key>name</key>
-					<string>entity.name.function.som</string>
+					<string>variable.language.som</string>
 				</dict>
 				<key>4</key>
 				<dict>
 					<key>name</key>
-					<string>variable.language.som</string>
+					<string>entity.name.function.som</string>
 				</dict>
 				<key>5</key>
 				<dict>
 					<key>name</key>
-					<string>entity.name.function.som</string>
+					<string>variable.language.som</string>
 				</dict>
 				<key>6</key>
 				<dict>
 					<key>name</key>
-					<string>variable.language.som</string>
+					<string>storage.modifier.define-function.som</string>
 				</dict>
 				<key>7</key>
 				<dict>
 					<key>name</key>
-					<string>entity.name.function.som</string>
-				</dict>
-				<key>8</key>
-				<dict>
-					<key>name</key>
-					<string>variable.language.som</string>
-				</dict>
-				<key>9</key>
-				<dict>
-					<key>name</key>
-					<string>entity.name.function.som</string>
+					<string>punctuation.definition.block.begin.som</string>
 				</dict>
 			</dict>
 			<key>end</key>
@@ -669,21 +583,20 @@
 			<key>patterns</key>
 			<array>
 				<dict>
+					<key>include</key>
+					<string>#accessModifier</string>
+				</dict>
+				<dict>
 					<key>captures</key>
 					<dict>
 						<key>1</key>
-						<dict>
-							<key>name</key>
-							<string>keyword.modifier.som</string>
-						</dict>
-						<key>2</key>
 						<dict>
 							<key>name</key>
 							<string>variable.language.som</string>
 						</dict>
 					</dict>
 					<key>match</key>
-					<string>\b((?:public|private|protected)\b\s+)?(\w+)\b</string>
+					<string>\b(\w+)\b</string>
 				</dict>
 				<dict>
 					<key>begin</key>

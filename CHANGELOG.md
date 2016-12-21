@@ -6,6 +6,7 @@
 
  - fix document selector so that language server is actually used
  - report assignments to method arguments as errors
+ - improve highlighting for class and method definitions
 
 ## [0.1.0] - 2016-12-15
 
