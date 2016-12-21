@@ -576,6 +576,10 @@
 					<key>include</key>
 					<string>#slotDef</string>
 				</dict>
+				<dict>
+					<key>include</key>
+					<string>#multilinecomment</string>
+				</dict>
 			</array>
 		</dict>
 		<key>slotDef</key>
