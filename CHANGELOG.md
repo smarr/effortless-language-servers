@@ -8,6 +8,7 @@
    - info on local variables and arguments
    - improved comment parsing (support for adjacent comments)
    - improved String display of values in debugger
+ - fix issue that prevented breakpoints from being disabled
 
 ## [0.1.1] - 2016-12-16
 

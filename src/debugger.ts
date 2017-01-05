@@ -47,9 +47,9 @@ class SomDebugSession extends DebugSession {
   private socket: WebSocket;
   private somProc: ChildProcess;
 
-  private breakpoints: BreakpointPair[];
+  private breakpoints: IdMap<IdMap<BreakpointPair>>;
   private nextBreakpointId: number;
-  private bufferedBreakpoints: BreakpointData[];
+  private bufferedBreakpoints: BreakpointPair[];
   private sources: IdMap<WDSource>;
 
   private nextRequestId: number;
@@ -63,7 +63,7 @@ class SomDebugSession extends DebugSession {
 
     this.socket = null;
 
-    this.breakpoints = [];
+    this.breakpoints = {};
     this.nextBreakpointId = 0;
     this.bufferedBreakpoints = [];
 
@@ -148,15 +148,11 @@ class SomDebugSession extends DebugSession {
     this.socket.onmessage = this.onWDMessage.bind(this);
 
     this.sendResponse(response);
-
-    // TODO:
-    // - implement setting breakpoints
-    // - implement stepping
   }
 
   private onWDMessage(event): void {
     const data = JSON.parse(event.data);
-    
+
     switch (data.type) {
       case "source":
         this.onSource(data);
@@ -203,11 +199,10 @@ class SomDebugSession extends DebugSession {
     const updatedBreakpoints = [];
     const initialBreakpoints = [];
 
-    for (const id in this.bufferedBreakpoints) {
-      const vsBp = this.breakpoints[id].vs;
-      vsBp.verified = true;
-      updatedBreakpoints.push(vsBp);
-      initialBreakpoints.push(this.bufferedBreakpoints[id]);
+    for (const bpP of this.bufferedBreakpoints) {
+      bpP.vs.verified = true;
+      updatedBreakpoints.push(bpP.vs);
+      initialBreakpoints.push(bpP.som);
     }
     this.bufferedBreakpoints.length = 0;
     const msg: InitialBreakpointsResponds = {
@@ -227,20 +222,43 @@ class SomDebugSession extends DebugSession {
     const breakpoints = [];
     response.body = {breakpoints: breakpoints};
 
+    // the `args` contain the latest list of line breakpoints for a uri
+    // this means, we need to figure out which breakpoints were added, and which
+    // were removed
+
+    if (!this.breakpoints[uri]) { this.breakpoints[uri] = {}; }
+    const currentBPs = this.breakpoints[uri];
+    const removedBPs = Object.assign({}, currentBPs);
+
     for (let bp of args.breakpoints) {
-      const bpId = this.getNextBpId();
-      const lineBp = createLineBreakpointData(uri, bp.line, true);
-      this.sendBreakpoint(lineBp, bpId, connected);
-
-      const vsBp = {
-        id:       bpId,
-        verified: connected,
-        source:   args.source,
-        line:     bp.line
+      if (currentBPs[bp.line]) {
+        // already exists, so, it is unchanged and not the removed list
+        delete removedBPs[bp.line];
+      } else {
+        const lineBp = createLineBreakpointData(uri, bp.line, true);
+        const vsBp = {
+          id:       this.getNextBpId(),
+          verified: connected,
+          source:   args.source,
+          line:     bp.line
+        }
+        const bpP = {vs: vsBp, som: lineBp};
+        currentBPs[bp.line] = bpP;
+        this.sendBreakpoint(currentBPs[bp.line], connected);
       }
-      this.breakpoints[vsBp.id] = {vs: vsBp, som: lineBp};
+    }
 
-      breakpoints.push(vsBp);
+    // have not seen these breakpoint sin args.breakpoints, so they got disabled
+    for (let line in removedBPs) {
+      const bpP = removedBPs[line];
+      bpP.som.enabled = false;
+      this.sendBreakpoint(bpP, connected);
+    }
+
+    // that's the current list of bps, which we return to the IDE
+    for (let line in currentBPs) {
+      const bpP = currentBPs[line];
+      breakpoints.push(bpP.vs);
     }
     this.sendResponse(response);
   }
@@ -255,15 +273,14 @@ class SomDebugSession extends DebugSession {
     this.socket.send(JSON.stringify(respond));
   }
 
-  private sendBreakpoint(bp: BreakpointData, bpId: number,
-      connected: boolean): void {
+  private sendBreakpoint(bpP: BreakpointPair, connected: boolean): void {
     if (connected) {
       this.send({
         action: "updateBreakpoint",
-        breakpoint: bp
+        breakpoint: bpP.som
       });
     } else {
-      this.bufferedBreakpoints[bpId] = bp;
+      this.bufferedBreakpoints.push(bpP);
     }
   }
 
