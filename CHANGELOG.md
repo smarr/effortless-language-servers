@@ -1,7 +1,9 @@
 # Change Log
 
 ## [Unreleased]
- 
+
+## [0.2.0] - 2017-01-05
+
  - updated SOMns
    - added support for multithreading
    - simplified AST inlining
@@ -26,7 +28,8 @@
  - improve first debug experience
  - publish extension on the [VS Code marketplace][SOMns-vscode]
 
-[Unreleased]:   https://github.com/smarr/SOMns-vscode/compare/v0.1.1...HEAD
+[Unreleased]:   https://github.com/smarr/SOMns-vscode/compare/v0.2.0...HEAD
+[0.2.0]:        https://github.com/smarr/SOMns-vscode/compare/v0.1.1...v0.2.0
 [0.1.1]:        https://github.com/smarr/SOMns-vscode/compare/v0.1.0...v0.1.1
 [0.1.0]:        https://github.com/smarr/SOMns-vscode/compare/8f7ae145280f3c0c2a5a264f6d6b3315589765c3...v0.1.0
 [SOMns-vscode]: https://marketplace.visualstudio.com/items?itemName=MetaConcProject.SOMns
