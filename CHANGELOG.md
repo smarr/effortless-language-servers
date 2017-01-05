@@ -1,6 +1,12 @@
 # Change Log
 
 ## [Unreleased]
+ 
+ - updated SOMns
+   - added support for multithreading
+   - simplified AST inlining
+   - info on local variables and arguments
+   - improved comment parsing (support for adjacent comments)
 
 ## [0.1.1] - 2016-12-16
 
