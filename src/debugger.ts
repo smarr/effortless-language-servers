@@ -271,7 +271,9 @@ class SomDebugSession extends DebugSession {
   }
 
   private send(respond: Respond) {
-    this.socket.send(JSON.stringify(respond));
+    if (this.socket) {
+      this.socket.send(JSON.stringify(respond));
+    }
   }
 
   private sendBreakpoint(bpP: BreakpointPair, connected: boolean): void {
