@@ -7,7 +7,7 @@ import { BreakpointEvent, DebugSession, Handles, InitializedEvent, Scope,
 import { DebugProtocol } from 'vscode-debugprotocol';
 import * as WebSocket from 'ws';
 
-import { BreakpointData, Source as WDSource, Respond, SuspendEventMessage,
+import { BreakpointData, Source as WDSource, Respond,
   InitialBreakpointsResponds, SourceMessage, IdMap, StoppedMessage,
   StackTraceResponse, StackTraceRequest, ScopesRequest, ScopesResponse,
   StepMessage, StepType, VariablesRequest, VariablesResponse, ThreadsResponse,
@@ -207,8 +207,7 @@ class SomDebugSession extends DebugSession {
     }
     this.bufferedBreakpoints.length = 0;
     const msg: InitialBreakpointsResponds = {
-        action: "initialBreakpoints", breakpoints: initialBreakpoints,
-        debuggerProtocol: true};
+        action: "initialBreakpoints", breakpoints: initialBreakpoints};
     this.send(msg);
 
     for (const vsBp of updatedBreakpoints) {
@@ -390,7 +389,7 @@ class SomDebugSession extends DebugSession {
   }
 
   private sendStep(stepType: StepType, response, args) {
-    const step: StepMessage = {action: stepType, suspendEvent: "se-" + args.threadId};
+    const step: StepMessage = {action: stepType, activityId: args.threadId};
     this.send(step);
     response.body = {allThreadsContinued: false};
     this.sendResponse(response);
