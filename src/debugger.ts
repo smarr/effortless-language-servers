@@ -2,7 +2,7 @@
 
 import { spawn, ChildProcess } from 'child_process';
 import { BreakpointEvent, DebugSession, Handles, InitializedEvent, Scope,
-  Source as VSSource, StackFrame, StoppedEvent, Thread, Variable, OutputEvent,
+  Source as VSSource, StackFrame, StoppedEvent, Variable, OutputEvent,
   TerminatedEvent } from 'vscode-debugadapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import * as WebSocket from 'ws';
@@ -10,7 +10,7 @@ import * as WebSocket from 'ws';
 import { BreakpointData, Source as WDSource, Respond, SuspendEventMessage,
   InitialBreakpointsResponds, SourceMessage, IdMap, StoppedMessage,
   StackTraceResponse, StackTraceRequest, ScopesRequest, ScopesResponse,
-  StepMessage, StepType, VariablesRequest, VariablesResponse,
+  StepMessage, StepType, VariablesRequest, VariablesResponse, ThreadsResponse,
   createLineBreakpointData } from './messages';
 
 export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
@@ -55,7 +55,6 @@ class SomDebugSession extends DebugSession {
   private nextRequestId: number;
   private requests: IdMap<any>;
 
-  private stoppedActivities: Thread[];
   private varHandles : Handles<string>;
 
   public constructor() {
@@ -72,7 +71,6 @@ class SomDebugSession extends DebugSession {
     this.nextRequestId = 0;
     this.requests = {};
 
-    this.stoppedActivities = [];
     this.varHandles = new Handles<string>();
 
     // Truffle source sections use 1-based indexes
@@ -180,6 +178,11 @@ class SomDebugSession extends DebugSession {
       case "StoppedEvent":
         this.onStoppedEvent(data);
         break;
+      case "ThreadsResponse":
+        const response = this.requests[data.requestId];
+        delete this.requests[data.requestId];
+        this.onThreadsResponse(data, response);
+        break;
     }
   }
 
@@ -191,8 +194,6 @@ class SomDebugSession extends DebugSession {
 
   private onStoppedEvent(data: StoppedMessage): void {
     this.sendEvent(new StoppedEvent(data.reason, data.activityId, data.text));
-    this.stoppedActivities[data.activityId] = new Thread(data.activityId,
-      data.activityType + " " + data.activityId);
   }
 
   private sendInitialBreakpoints() : void {
@@ -285,10 +286,16 @@ class SomDebugSession extends DebugSession {
   }
 
   protected threadsRequest(response: DebugProtocol.ThreadsResponse): void {
-    // TODO: add some form of support for actors. not sure yet what would be
-    //       useful. A list of actors isn't very useful for fine-grained ones
-    response.body = { threads: this.stoppedActivities };
-    this.sendResponse(response);
+    this.requests[this.nextRequestId] = response;
+    this.send({action: "ThreadsRequest", requestId: this.nextRequestId});
+    this.nextRequestId += 1;
+  }
+
+  private onThreadsResponse(data: ThreadsResponse,
+      ideResponse: DebugProtocol.ThreadsResponse) {
+    ideResponse.body = { threads: data.threads };
+    console.log(data.threads);
+    this.sendResponse(ideResponse);
   }
 
   private vsSourceFromUri(uri: string): VSSource {
