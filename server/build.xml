@@ -2,10 +2,12 @@
 
     <property name="src.dir"     value="src"/>
     <property name="lib.dir"     value="libs" />
+    <property name="truffle.dir" value="${lib.dir}/SOMns/libs/truffle/truffle" />
+    <property name="truffle.build" value="${truffle.dir}/mxbuild/dists" />
 
     <property name="mvn.repo"    value="https://repo1.maven.org/maven2" />
 
-    <property name="checkstyle.version" value="7.0" />
+    <property name="checkstyle.version" value="7.6.1" />
     <property name="guava.version"      value="19.0" />
     <property name="xbase.lib.version"  value="2.10.0" />
     <property name="xtend.lib.version"  value="2.10.0" />
@@ -17,8 +19,8 @@
         <pathelement location="${lib.dir}/guava-${guava.version}.jar" />
         <pathelement location="${lib.dir}/org.eclipse.xtext.xbase.lib-${xbase.lib.version}.jar" />
         <pathelement location="${lib.dir}/org.eclipse.xtend.lib-${xtend.lib.version}.jar" />
-        <pathelement location="${lib.dir}/SOMns/libs/truffle/mxbuild/dists/truffle-api.jar" />
-        <pathelement location="${lib.dir}/SOMns/libs/truffle/mxbuild/dists/truffle-debug.jar" />
+        <pathelement location="${truffle.build}/truffle-api.jar" />
+        <pathelement location="${truffle.build}/truffle-debug.jar" />
         <pathelement location="${lib.dir}/SOMns/libs/somns-deps.jar" />
         <pathelement location="${lib.dir}/SOMns/build/som.jar" />
     </path>
