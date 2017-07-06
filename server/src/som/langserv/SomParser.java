@@ -1,6 +1,5 @@
 package som.langserv;
 
-import java.io.Reader;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
@@ -10,6 +9,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.compiler.MethodBuilder;
 import som.compiler.Parser;
 import som.compiler.ProgramDefinitionError;
+import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
@@ -24,9 +24,9 @@ public class SomParser extends Parser {
   private SomStructures struturalProbe;
   private final Deque<SourceSection> sourceSections;
 
-  public SomParser(final Reader reader, final long fileSize, final Source source,
-      final SomStructures structuralProbe) throws ParseError {
-    super(reader, fileSize, source, structuralProbe);
+  public SomParser(final String content, final long fileSize, final Source source,
+      final SomStructures structuralProbe, final SomLanguage lang) throws ParseError {
+    super(content, fileSize, source, structuralProbe, lang);
 //    assert structuralProbe != null : "Needed for this extended parser.";
     this.struturalProbe = structuralProbe;
     sourceSections = new ArrayDeque<>();

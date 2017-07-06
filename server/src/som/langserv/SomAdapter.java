@@ -49,14 +49,15 @@ public class SomAdapter {
   private final SomWindow window;
 
   private final Map<String, SomStructures> structuralProbes = new HashMap<>();
-  private final SomCompiler compiler = new SomCompiler();
+  private final SomCompiler compiler;
 
   public SomAdapter(final SomWindow window) {
     this.window = window;
-    initializePolyglot();
+    VM vm = initializePolyglot();
+    this.compiler = new SomCompiler(vm.getLanguage());
   }
 
-  private void initializePolyglot() {
+  private VM initializePolyglot() {
     String coreLib = System.getProperty("som.langserv.core-lib");
     if (coreLib == null) {
       throw new IllegalArgumentException("The som.langserv.core-lib system property needs to be set. For instance: -Dsom.langserv.core-lib=/SOMns/core-lib");
@@ -64,16 +65,19 @@ public class SomAdapter {
 
     String[] args = new String[] {"--kernel", coreLib + "/Kernel.som",
                                   "--platform", coreLib + "/Platform.som"};
-    Builder builder = PolyglotEngine.newBuilder();
-    builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
-    builder.config(SomLanguage.MIME_TYPE, SomLanguage.AVOID_EXIT, true);
     VmOptions vmOptions = new VmOptions(args);
+    VM vm = new VM(vmOptions);
+    Builder builder = PolyglotEngine.newBuilder();
+    builder.config(SomLanguage.MIME_TYPE, SomLanguage.VM_OBJECT, vm);
+
+
     PolyglotEngine engine = builder.build();
-    VM.setEngine(engine);
-    engine.getInstruments().values().forEach(i -> i.setEnabled(false));
+    engine.getRuntime().getInstruments().values().forEach(i -> i.setEnabled(false));
 
     // Trigger object system initialization
     engine.getLanguages().get(SomLanguage.MIME_TYPE).getGlobalObject();
+
+    return vm;
   }
 
   private SomStructures getProbe(final String documentUri) {
@@ -355,11 +359,17 @@ public class SomAdapter {
   }
 
   private static final class SomCompiler extends SourcecodeCompiler {
+
+    public SomCompiler(final SomLanguage language) {
+      super(language);
+      assert language != null;
+    }
+
     @Override
     public MixinDefinition compileModule(final Source source,
         final StructuralProbe structuralProbe) throws ProgramDefinitionError {
-      SomParser parser = new SomParser(source.getReader(), source.getLength(),
-          source, (SomStructures) structuralProbe);
+      SomParser parser = new SomParser(source.getCode(), source.getLength(),
+          source, (SomStructures) structuralProbe, language);
       return compile(parser, source);
     }
   }
