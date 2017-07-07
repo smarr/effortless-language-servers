@@ -13,6 +13,8 @@ function getServerOptions(context: ExtensionContext): ServerOptions {
 	const javaCmd = '/usr/bin/java';
 	const bootCP = ['-Xbootclasspath/a',
 		context.asAbsolutePath('out/server/som.jar'),
+		context.asAbsolutePath('out/server/graal-sdk.jar'),
+		context.asAbsolutePath('out/server/word-api.jar'),
 		context.asAbsolutePath('out/server/truffle-api.jar'),
 		context.asAbsolutePath('out/server/truffle-debug.jar'),
 		context.asAbsolutePath('out/server/somns-deps.jar')]

@@ -4,6 +4,7 @@
     <property name="lib.dir"     value="libs" />
     <property name="truffle.dir" value="${lib.dir}/SOMns/libs/truffle/truffle" />
     <property name="truffle.build" value="${truffle.dir}/mxbuild/dists" />
+    <property name="sdk.build"   value="${lib.dir}/SOMns/libs/truffle/sdk/mxbuild/dists" />
 
     <property name="mvn.repo"    value="https://repo1.maven.org/maven2" />
 
@@ -19,6 +20,8 @@
         <pathelement location="${lib.dir}/guava-${guava.version}.jar" />
         <pathelement location="${lib.dir}/org.eclipse.xtext.xbase.lib-${xbase.lib.version}.jar" />
         <pathelement location="${lib.dir}/org.eclipse.xtend.lib-${xtend.lib.version}.jar" />
+        <pathelement location="${sdk.build}/graal-sdk.jar" />
+        <pathelement location="${sdk.build}/word-api.jar" />
         <pathelement location="${truffle.build}/truffle-api.jar" />
         <pathelement location="${truffle.build}/truffle-debug.jar" />
         <pathelement location="${lib.dir}/SOMns/libs/somns-deps.jar" />
