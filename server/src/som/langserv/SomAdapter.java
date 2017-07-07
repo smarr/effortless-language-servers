@@ -320,7 +320,9 @@ public class SomAdapter {
         s.getDefinitionsFor(name, result);
       }
     } else {
-      reportError("GET DEFINITION, unsupported node: " + node.getClass().getSimpleName());
+      if (ServerLauncher.DEBUG) {
+        reportError("GET DEFINITION, unsupported node: " + node.getClass().getSimpleName());
+      }
     }
     return result;
   }
@@ -352,7 +354,9 @@ public class SomAdapter {
       }
       result.setItems(completion);
     } else {
-      reportError("GET COMPLETIONS, unsupported node: " + node.getClass().getSimpleName());
+      if (ServerLauncher.DEBUG) {
+        reportError("GET COMPLETIONS, unsupported node: " + node.getClass().getSimpleName());
+      }
     }
 
     return result;

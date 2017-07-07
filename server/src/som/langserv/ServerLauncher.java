@@ -23,9 +23,12 @@ public class ServerLauncher {
   private static final int SERVER_PORT = 8123;
   private static final boolean TCP_CONNECTION;
 
+  public static final boolean DEBUG;
+
   static {
     String transport = System.getProperty("som.langserv.transport");
     TCP_CONNECTION = "tcp".equals(transport);
+    DEBUG = TCP_CONNECTION;
 
     if (logToFile) {
       try {
