@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="org.eclipse.lsp4j"/>
+	<classpathentry kind="src" path="org.eclipse.lsp4j-gen"/>
+	<classpathentry kind="src" path="org.eclipse.lsp4j.jsonrpc"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="libs/gson-2.7.jar"/>
 	<classpathentry kind="lib" path="libs/guava-19.0.jar"/>
