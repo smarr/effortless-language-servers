@@ -2,16 +2,16 @@ package som.langserv;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
-import io.typefox.lsapi.services.json.LoggingJsonAdapter;
+import org.eclipse.lsp4j.jsonrpc.Launcher;
+import org.eclipse.lsp4j.launch.LSPLauncher;
+import org.eclipse.lsp4j.services.LanguageClient;
+
 
 public class ServerLauncher {
 
@@ -19,15 +19,14 @@ public class ServerLauncher {
   private static PrintWriter err;
   private static PrintWriter msg;
   private static boolean acceptConnections = true;
-  private static final ExecutorService executor = Executors.newCachedThreadPool();
   private static final int SERVER_PORT = 8123;
   private static final boolean TCP_CONNECTION;
 
   public static final boolean DEBUG;
 
   static {
-    String transport = System.getProperty("som.langserv.transport");
-    TCP_CONNECTION = "tcp".equals(transport);
+    String transport = System.getProperty("som.langserv.transport", "");
+    TCP_CONNECTION = "tcp".equals(transport.toLowerCase());
     DEBUG = TCP_CONNECTION;
 
     if (logToFile) {
@@ -59,32 +58,6 @@ public class ServerLauncher {
     return err;
   }
 
-  private final static class LangServerConnection implements Runnable {
-    private final InputStream in;
-    private final OutputStream out;
-    private final SomLanguageServer langServer;
-
-    LangServerConnection(final InputStream in, final OutputStream out,
-        final SomLanguageServer langServer) {
-      this.in = in;
-      this.out = out;
-      this.langServer = langServer;
-    }
-
-    @Override
-    public void run() {
-      LoggingJsonAdapter adapter = new LoggingJsonAdapter(langServer, executor);
-
-      adapter.setMessageLog(msg);
-      adapter.setErrorLog(err);
-      try {
-        adapter.connect(in, out);
-        adapter.join();
-      } catch (InterruptedException | ExecutionException e) {
-        e.printStackTrace(err);
-      }
-    }
-  }
 
   public static void main(final String[] args) {
     SomLanguageServer tls = new SomLanguageServer();
@@ -95,7 +68,9 @@ public class ServerLauncher {
         while (acceptConnections) {
           try {
             Socket client = serverSocket.accept();
-            executor.submit(new LangServerConnection(client.getInputStream(), client.getOutputStream(), tls));
+            Launcher<LanguageClient> launcher =  LSPLauncher.createServerLauncher(tls, client.getInputStream(), client.getOutputStream());
+            tls.connect(launcher.getRemoteProxy());
+            launcher.startListening();
           } catch (IOException e) {
             err.println("[SOMns LS] Error while connecting to client.");
             e.printStackTrace(err);
@@ -107,8 +82,20 @@ public class ServerLauncher {
       }
     } else {
       msg.println("[SOMns LS] Server started using stdin/stdout");
-      LangServerConnection lsc = new LangServerConnection(System.in, System.out, tls);
-      lsc.run();
+      Launcher<LanguageClient> launcher =  LSPLauncher.createServerLauncher(tls, System.in, System.out);
+      tls.connect(launcher.getRemoteProxy());
+      Future<?> future = launcher.startListening();
+
+      while (true) {
+        try {
+          future.get();
+          return;
+        } catch (InterruptedException e) {
+        } catch (ExecutionException e) {
+          e.printStackTrace(err);
+          return;
+        }
+      }
     }
   }
 }

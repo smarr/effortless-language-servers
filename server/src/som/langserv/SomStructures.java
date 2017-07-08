@@ -4,12 +4,13 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.eclipse.lsp4j.CompletionItem;
+import org.eclipse.lsp4j.CompletionItemKind;
+import org.eclipse.lsp4j.Location;
+
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
-import io.typefox.lsapi.CompletionItem;
-import io.typefox.lsapi.CompletionItemImpl;
-import io.typefox.lsapi.LocationImpl;
 import som.compiler.MixinDefinition;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
@@ -34,7 +35,7 @@ public class SomStructures extends StructuralProbe {
   }
 
   public void getDefinitionsFor(final SSymbol name,
-      final ArrayList<LocationImpl> results) {
+      final ArrayList<Location> results) {
     for (MixinDefinition m : classes) {
       if (m.getName() == name) {
         results.add(SomAdapter.getLocation(m.getSourceSection()));
@@ -75,11 +76,11 @@ public class SomStructures extends StructuralProbe {
     return false;
   }
 
-  public void getCompletions(final SSymbol name, final ArrayList<CompletionItemImpl> results) {
+  public void getCompletions(final SSymbol name, final ArrayList<CompletionItem> results) {
     for (SInvokable m : methods) {
       if (fuzzyMatches(m.getSignature(), name)) {
-        CompletionItemImpl item = new CompletionItemImpl();
-        item.setKind(CompletionItem.KIND_METHOD);
+        CompletionItem item = new CompletionItem();
+        item.setKind(CompletionItemKind.Method);
         item.setLabel(m.getSignature().getString());
         results.add(item);
       }

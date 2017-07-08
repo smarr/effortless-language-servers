@@ -4,65 +4,65 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 
-import io.typefox.lsapi.CodeActionParams;
-import io.typefox.lsapi.CodeLens;
-import io.typefox.lsapi.CodeLensParams;
-import io.typefox.lsapi.Command;
-import io.typefox.lsapi.CompletionItem;
-import io.typefox.lsapi.CompletionList;
-import io.typefox.lsapi.CompletionOptionsImpl;
-import io.typefox.lsapi.DiagnosticImpl;
-import io.typefox.lsapi.DidChangeTextDocumentParams;
-import io.typefox.lsapi.DidCloseTextDocumentParams;
-import io.typefox.lsapi.DidOpenTextDocumentParams;
-import io.typefox.lsapi.DidSaveTextDocumentParams;
-import io.typefox.lsapi.DocumentFormattingParams;
-import io.typefox.lsapi.DocumentHighlight;
-import io.typefox.lsapi.DocumentOnTypeFormattingParams;
-import io.typefox.lsapi.DocumentRangeFormattingParams;
-import io.typefox.lsapi.DocumentSymbolParams;
-import io.typefox.lsapi.Hover;
-import io.typefox.lsapi.InitializeParams;
-import io.typefox.lsapi.InitializeResult;
-import io.typefox.lsapi.InitializeResultImpl;
-import io.typefox.lsapi.Location;
-import io.typefox.lsapi.PublishDiagnosticsParams;
-import io.typefox.lsapi.PublishDiagnosticsParamsImpl;
-import io.typefox.lsapi.ReferenceParams;
-import io.typefox.lsapi.RenameParams;
-import io.typefox.lsapi.ServerCapabilities;
-import io.typefox.lsapi.ServerCapabilitiesImpl;
-import io.typefox.lsapi.SignatureHelp;
-import io.typefox.lsapi.SymbolInformation;
-import io.typefox.lsapi.TextDocumentContentChangeEvent;
-import io.typefox.lsapi.TextDocumentPositionParams;
-import io.typefox.lsapi.TextEdit;
-import io.typefox.lsapi.WorkspaceEdit;
-import io.typefox.lsapi.services.LanguageServer;
-import io.typefox.lsapi.services.TextDocumentService;
-import io.typefox.lsapi.services.WindowService;
-import io.typefox.lsapi.services.WorkspaceService;
+import org.eclipse.lsp4j.CodeActionParams;
+import org.eclipse.lsp4j.CodeLens;
+import org.eclipse.lsp4j.CodeLensParams;
+import org.eclipse.lsp4j.Command;
+import org.eclipse.lsp4j.CompletionItem;
+import org.eclipse.lsp4j.CompletionList;
+import org.eclipse.lsp4j.CompletionOptions;
+import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DidChangeTextDocumentParams;
+import org.eclipse.lsp4j.DidCloseTextDocumentParams;
+import org.eclipse.lsp4j.DidOpenTextDocumentParams;
+import org.eclipse.lsp4j.DidSaveTextDocumentParams;
+import org.eclipse.lsp4j.DocumentFormattingParams;
+import org.eclipse.lsp4j.DocumentHighlight;
+import org.eclipse.lsp4j.DocumentOnTypeFormattingParams;
+import org.eclipse.lsp4j.DocumentRangeFormattingParams;
+import org.eclipse.lsp4j.DocumentSymbolParams;
+import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.InitializeParams;
+import org.eclipse.lsp4j.InitializeResult;
+import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.PublishDiagnosticsParams;
+import org.eclipse.lsp4j.ReferenceParams;
+import org.eclipse.lsp4j.RenameParams;
+import org.eclipse.lsp4j.ServerCapabilities;
+import org.eclipse.lsp4j.SignatureHelp;
+import org.eclipse.lsp4j.SymbolInformation;
+import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
+import org.eclipse.lsp4j.TextDocumentPositionParams;
+import org.eclipse.lsp4j.TextDocumentSyncKind;
+import org.eclipse.lsp4j.TextEdit;
+import org.eclipse.lsp4j.WorkspaceEdit;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.eclipse.lsp4j.services.LanguageClient;
+import org.eclipse.lsp4j.services.LanguageClientAware;
+import org.eclipse.lsp4j.services.LanguageServer;
+import org.eclipse.lsp4j.services.TextDocumentService;
+import org.eclipse.lsp4j.services.WorkspaceService;
 
-public class SomLanguageServer implements LanguageServer,	TextDocumentService {
 
-  private Consumer<PublishDiagnosticsParams> publishDiagnostics;
+public class SomLanguageServer implements LanguageServer,	TextDocumentService,
+    LanguageClientAware {
+
   private final SomWorkspace workspace = new SomWorkspace();
-  private final SomWindow    window    = new SomWindow();
-  private final SomAdapter   som       = new SomAdapter(window);
+  private final SomAdapter   som       = new SomAdapter();
+  private LanguageClient client;
 
 	@Override
 	public CompletableFuture<InitializeResult> initialize(
 			final InitializeParams params) {
-	  InitializeResultImpl result = new InitializeResultImpl();
-	  ServerCapabilitiesImpl cap  = new ServerCapabilitiesImpl();
+	  InitializeResult result = new InitializeResult();
+	  ServerCapabilities cap  = new ServerCapabilities();
 
-	  cap.setTextDocumentSync(ServerCapabilities.SYNC_FULL);
+	  cap.setTextDocumentSync(TextDocumentSyncKind.Full);
 	  cap.setDocumentSymbolProvider(true);
 	  cap.setDefinitionProvider(true);
 
-	  CompletionOptionsImpl completion = new CompletionOptionsImpl();
+	  CompletionOptions completion = new CompletionOptions();
 	  List<String> autoComplTrigger = new ArrayList<>();
 	  autoComplTrigger.add("#"); // Smalltalk symbols
 	  autoComplTrigger.add(":"); // end of keywords, to complete arguments
@@ -76,8 +76,9 @@ public class SomLanguageServer implements LanguageServer,	TextDocumentService {
 	}
 
 	@Override
-	public void shutdown() {
+	public CompletableFuture<Object> shutdown() {
 	  // NOOP for the moment
+	  return CompletableFuture.completedFuture(null);
 	}
 
 	@Override
@@ -97,17 +98,12 @@ public class SomLanguageServer implements LanguageServer,	TextDocumentService {
 	}
 
 	@Override
-	public WindowService getWindowService() {
-    return window;
-	}
-
-	@Override
-	public CompletableFuture<CompletionList> completion(
+	public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(
 			final TextDocumentPositionParams position) {
 	  CompletionList result = som.getCompletions(
         position.getTextDocument().getUri(), position.getPosition().getLine(),
         position.getPosition().getCharacter());
-    return CompletableFuture.completedFuture(result);
+    return CompletableFuture.completedFuture(Either.forRight(result));
 	}
 
 	@Override
@@ -147,7 +143,7 @@ public class SomLanguageServer implements LanguageServer,	TextDocumentService {
 	}
 
 	@Override
-	public CompletableFuture<DocumentHighlight> documentHighlight(
+	public CompletableFuture<List<? extends DocumentHighlight>> documentHighlight(
 			final TextDocumentPositionParams position) {
 	  // TODO: this is wrong, it should be something entirely different.
 	  // this feature is about marking the occurrences of a selected element
@@ -156,7 +152,9 @@ public class SomLanguageServer implements LanguageServer,	TextDocumentService {
 	  // The spec is currently broken for that.
 	  DocumentHighlight result = som.getHighlight(position.getTextDocument().getUri(),
 	      position.getPosition().getLine() + 1, position.getPosition().getCharacter() + 1);
-	  return CompletableFuture.completedFuture(result);
+	  ArrayList<DocumentHighlight> list = new ArrayList<>(1);
+	  list.add(result);
+	  return CompletableFuture.completedFuture(list);
 	}
 
 	@Override
@@ -234,19 +232,19 @@ public class SomLanguageServer implements LanguageServer,	TextDocumentService {
 
 	private void validateTextDocument(final String documentUri, final String text) {
 	  try {
-      ArrayList<DiagnosticImpl> diagnostics = som.parse(text, documentUri);
+      ArrayList<Diagnostic> diagnostics = som.parse(text, documentUri);
       reportDiagnostics(diagnostics, documentUri);
     } catch (URISyntaxException ex) {
       ex.printStackTrace(ServerLauncher.errWriter());
     }
 	}
 
-	private void reportDiagnostics(final ArrayList<DiagnosticImpl> diagnostics, final String documentUri) {
+	private void reportDiagnostics(final ArrayList<Diagnostic> diagnostics, final String documentUri) {
 	  if (diagnostics != null) {
-      PublishDiagnosticsParamsImpl result = new PublishDiagnosticsParamsImpl();
+      PublishDiagnosticsParams result = new PublishDiagnosticsParams();
       result.setDiagnostics(diagnostics);
       result.setUri(documentUri);
-      publishDiagnostics.accept(result);
+      client.publishDiagnostics(result);
 	  }
 	}
 
@@ -260,8 +258,9 @@ public class SomLanguageServer implements LanguageServer,	TextDocumentService {
 		// TODO Auto-generated method stub
 	}
 
-	@Override
-	public void onPublishDiagnostics(final Consumer<PublishDiagnosticsParams> callback) {
-		this.publishDiagnostics = callback;
-	}
+  @Override
+  public void connect(final LanguageClient client) {
+    this.som.connect(client);
+    this.client = client;
+  }
 }

@@ -8,25 +8,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.lsp4j.CompletionItem;
+import org.eclipse.lsp4j.CompletionList;
+import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.eclipse.lsp4j.DocumentHighlight;
+import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.MessageParams;
+import org.eclipse.lsp4j.MessageType;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SymbolInformation;
+import org.eclipse.lsp4j.SymbolKind;
+import org.eclipse.lsp4j.services.LanguageClient;
+
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.vm.PolyglotEngine;
 import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
 
-import io.typefox.lsapi.CompletionItemImpl;
-import io.typefox.lsapi.CompletionList;
-import io.typefox.lsapi.CompletionListImpl;
-import io.typefox.lsapi.Diagnostic;
-import io.typefox.lsapi.DiagnosticImpl;
-import io.typefox.lsapi.DocumentHighlight;
-import io.typefox.lsapi.Location;
-import io.typefox.lsapi.LocationImpl;
-import io.typefox.lsapi.MessageParams;
-import io.typefox.lsapi.MessageParamsImpl;
-import io.typefox.lsapi.PositionImpl;
-import io.typefox.lsapi.RangeImpl;
-import io.typefox.lsapi.SymbolInformation;
-import io.typefox.lsapi.SymbolInformationImpl;
 import som.VM;
 import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
@@ -46,15 +46,18 @@ import tools.language.StructuralProbe;
 
 public class SomAdapter {
 
-  private final SomWindow window;
-
   private final Map<String, SomStructures> structuralProbes = new HashMap<>();
   private final SomCompiler compiler;
 
-  public SomAdapter(final SomWindow window) {
-    this.window = window;
+  private LanguageClient client;
+
+  public SomAdapter() {
     VM vm = initializePolyglot();
     this.compiler = new SomCompiler(vm.getLanguage());
+  }
+
+  public void connect(final LanguageClient client) {
+    this.client = client;
   }
 
   private VM initializePolyglot() {
@@ -86,7 +89,7 @@ public class SomAdapter {
     }
   }
 
-  public ArrayList<DiagnosticImpl> parse(final String text, final String sourceUri)
+  public ArrayList<Diagnostic> parse(final String text, final String sourceUri)
       throws URISyntaxException {
     URI uri = new URI(sourceUri);
     Source source = Source.newBuilder(text).
@@ -113,15 +116,15 @@ public class SomAdapter {
     return new ArrayList<>();
   }
 
-  private ArrayList<DiagnosticImpl> toDiagnostics(final ParseError e) {
-    ArrayList<DiagnosticImpl> diagnostics = new ArrayList<>();
+  private ArrayList<Diagnostic> toDiagnostics(final ParseError e) {
+    ArrayList<Diagnostic> diagnostics = new ArrayList<>();
 
-    DiagnosticImpl d = new DiagnosticImpl();
-    d.setSeverity(Diagnostic.SEVERITY_ERROR);
+    Diagnostic d = new Diagnostic();
+    d.setSeverity(DiagnosticSeverity.Error);
 
     SourceCoordinate coord = e.getSourceCoordinate();
 
-    RangeImpl r = new RangeImpl();
+    Range r = new Range();
     r.setStart(pos(coord.startLine, coord.startColumn));
     r.setEnd(pos(coord.startLine, Integer.MAX_VALUE));
     d.setRange(r);
@@ -132,14 +135,14 @@ public class SomAdapter {
     return diagnostics;
   }
 
-  private ArrayList<DiagnosticImpl> toDiagnostics(final SemanticDefinitionError e) {
-    ArrayList<DiagnosticImpl> diagnostics = new ArrayList<>();
+  private ArrayList<Diagnostic> toDiagnostics(final SemanticDefinitionError e) {
+    ArrayList<Diagnostic> diagnostics = new ArrayList<>();
     SourceSection source = e.getSourceSection();
 
-    DiagnosticImpl d = new DiagnosticImpl();
-    d.setSeverity(Diagnostic.SEVERITY_ERROR);
+    Diagnostic d = new Diagnostic();
+    d.setSeverity(DiagnosticSeverity.Error);
 
-    RangeImpl r = new RangeImpl();
+    Range r = new Range();
     r.setStart(pos(source.getStartLine(), source.getStartColumn()));
     r.setEnd(pos(source.getEndLine(), source.getEndColumn()));
     d.setRange(r);
@@ -150,8 +153,8 @@ public class SomAdapter {
     return diagnostics;
   }
 
-  private static PositionImpl pos(final int startLine, final int startChar) {
-    PositionImpl pos = new PositionImpl();
+  private static Position pos(final int startLine, final int startChar) {
+    Position pos = new Position();
     pos.setLine(startLine - 1);
     pos.setCharacter(startChar - 1);
     return pos;
@@ -217,15 +220,15 @@ public class SomAdapter {
     return null;
   }
 
-  private static RangeImpl getRange(final SourceSection ss) {
-    RangeImpl range = new RangeImpl();
+  private static Range getRange(final SourceSection ss) {
+    Range range = new Range();
     range.setStart(pos(ss.getStartLine(), ss.getStartColumn()));
     range.setEnd(pos(ss.getEndLine(), ss.getEndColumn() + 1));
     return range;
   }
 
-  public static LocationImpl getLocation(final SourceSection ss) {
-    LocationImpl loc = new LocationImpl();
+  public static Location getLocation(final SourceSection ss) {
+    Location loc = new Location();
     loc.setUri(ss.getSource().getURI().toString());
     loc.setRange(getRange(ss));
     return loc;
@@ -233,7 +236,7 @@ public class SomAdapter {
 
   public List<? extends SymbolInformation> getSymbolInfo(final String documentUri) {
     SomStructures probe = getProbe(documentUri);
-    ArrayList<SymbolInformationImpl> results = new ArrayList<>();
+    ArrayList<SymbolInformation> results = new ArrayList<>();
     if (probe == null) {
       return results;
     }
@@ -255,20 +258,20 @@ public class SomAdapter {
     return results;
   }
 
-  private static SymbolInformationImpl getSymbolInfo(final SInvokable m) {
-    SymbolInformationImpl sym = new SymbolInformationImpl();
+  private static SymbolInformation getSymbolInfo(final SInvokable m) {
+    SymbolInformation sym = new SymbolInformation();
     sym.setName(m.getSignature().toString());
-    sym.setKind(SymbolInformation.KIND_METHOD);
+    sym.setKind(SymbolKind.Method);
     assert null != m.getSourceSection();
     sym.setLocation(getLocation(m.getSourceSection()));
     if (m.getHolder() != null) {
-      sym.setContainer(m.getHolder().getName().getString());
+      sym.setContainerName(m.getHolder().getName().getString());
     }
     return sym;
   }
 
   private static void addSymbolInfo(final MixinDefinition m,
-      final ArrayList<SymbolInformationImpl> results) {
+      final ArrayList<SymbolInformation> results) {
     results.add(getSymbolInfo(m));
     for (Dispatchable d : m.getInstanceDispatchables().values()) {
       // needs to be exact test to avoid duplicate info
@@ -278,36 +281,36 @@ public class SomAdapter {
     }
   }
 
-  private static SymbolInformationImpl getSymbolInfo(final SlotDefinition d,
+  private static SymbolInformation getSymbolInfo(final SlotDefinition d,
       final MixinDefinition m) {
-    SymbolInformationImpl sym = new SymbolInformationImpl();
+    SymbolInformation sym = new SymbolInformation();
     sym.setName(d.getName().getString());
-    int kind = m.isModule() ? SymbolInformation.KIND_CONSTANT
-                            : SymbolInformation.KIND_PROPERTY;
+    SymbolKind kind = m.isModule() ? SymbolKind.Constant
+                                   : SymbolKind.Property;
     sym.setKind(kind);
     sym.setLocation(getLocation(d.getSourceSection()));
-    sym.setContainer(m.getName().getString());
+    sym.setContainerName(m.getName().getString());
     return sym;
   }
 
-  private static SymbolInformationImpl getSymbolInfo(final MixinDefinition m) {
-    SymbolInformationImpl sym = new SymbolInformationImpl();
+  private static SymbolInformation getSymbolInfo(final MixinDefinition m) {
+    SymbolInformation sym = new SymbolInformation();
     sym.setName(m.getName().getString());
-    int kind = m.isModule() ? SymbolInformation.KIND_MODULE
-                            : SymbolInformation.KIND_CLASS;
+    SymbolKind kind = m.isModule() ? SymbolKind.Module
+                                   : SymbolKind.Class;
     sym.setKind(kind);
     sym.setLocation(getLocation(m.getSourceSection()));
 
     MixinDefinition outer = m.getOuter();
     if (outer != null) {
-      sym.setContainer(outer.getName().getString());
+      sym.setContainerName(outer.getName().getString());
     }
     return sym;
   }
 
   public List<? extends Location> getDefinitions(final String docUri,
       final int line, final int character) {
-    ArrayList<LocationImpl> result = new ArrayList<>();
+    ArrayList<Location> result = new ArrayList<>();
     SomStructures probe = getProbe(docUri);
     if (probe == null) { return result; }
 
@@ -328,16 +331,18 @@ public class SomAdapter {
   }
 
   private void reportError(final String msgStr) {
-    MessageParamsImpl msg = new MessageParamsImpl();
-    msg.setType(MessageParams.TYPE_LOG);
+    MessageParams msg = new MessageParams();
+    msg.setType(MessageType.Log);
     msg.setMessage(msgStr);
-    window.show(msg);
+
+    client.logMessage(msg);
+
     ServerLauncher.logErr(msgStr);
   }
 
   public CompletionList getCompletions(final String docUri, final int line, final int character) {
-    CompletionListImpl result = new CompletionListImpl();
-    result.setIncomplete(true);
+    CompletionList result = new CompletionList();
+    result.setIsIncomplete(true);
 
     SomStructures probe = getProbe(docUri);
     if (probe == null) { return result; }
@@ -347,7 +352,7 @@ public class SomAdapter {
     if (node == null) { return result; }
 
     if (node instanceof AbstractUninitializedMessageSendNode) {
-      ArrayList<CompletionItemImpl> completion = new ArrayList<>();
+      ArrayList<CompletionItem> completion = new ArrayList<>();
       SSymbol name = ((AbstractUninitializedMessageSendNode) node).getSelector();
       for (SomStructures s : structuralProbes.values()) {
         s.getCompletions(name, completion);
