@@ -81,4 +81,18 @@ cd /$pathToCheckout/SOMns-vscode/server
 ./run.sh # executes the server, the console will show all communication
 ```
 
+## Debugging the Debugger Adapter
+
+To debug the Debugger Adapter, load the code in VS code, and select "Run Debugger as server" in the debugger menu.
+
+In the configuration of the VS Code instance with the SOM code, add a 
+configuration that executes a SOM program, and add the `debugServer` port
+as part of the configuration. This needs to be inside the config, i.e., for 
+instance next to the `"program"` setting.
+
+```
+  "debugServer": 4711,
+```
+
+
 [SOMns]: https://github.com/smarr/SOMns
