@@ -11,11 +11,11 @@ The extension provides support for:
 #### Screenshot of SOMns Syntax Highlighting
 
 
-![Screenshot of SOMns syntax highlighting](http://stefan-marr.de/downloads/vscode-somns-syntax-highlighting.png)
+![Screenshot of SOMns syntax highlighting](https://som-st.github.io/images/vscode-somns-syntax-highlighting.png)
 
 #### Screencast of debugging a SOMns Program
 
-![Screencast of SOMns debug session](http://stefan-marr.de/downloads/vscode-somns-debugger.gif)
+![Screencast of SOMns debug session](https://som-st.github.io/images/vscode-somns-debugger.gif)
 
 
 # Development Setup
