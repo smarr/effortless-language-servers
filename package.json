@@ -87,12 +87,17 @@
 					}
 				},
 				"attach" : {
-					"required" : [ "port" ],
+					"required" : [ "msgPort", "tracePort" ],
 					"properties" : {
-						"port" : {
+						"msgPort" : {
 							"type" : "number",
 							"description" : "Debugger port of the interpreter",
 							"default" : 7977
+						},
+						"tracePort" : {
+							"type" : "number",
+							"description" : "Port to receive  trace information",
+							"default" : 7978
 						}
 					}
 				}
@@ -109,7 +114,8 @@
 				{ "name"    : "Attach to SOM program",
 				  "type"    : "SOMns",
 				  "request" : "attach",
-				  "port"    : 7977
+				  "msgPort"   : 7977,
+					"tracePort" : 7978
 				}
 			]
 		}]

@@ -8,10 +8,12 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import * as WebSocket from 'ws';
 
 import { BreakpointData, Source as WDSource, Respond,
-  InitialBreakpointsResponds, SourceMessage, IdMap, StoppedMessage,
+  InitializeConnection, SourceMessage, IdMap, StoppedMessage,
   StackTraceResponse, StackTraceRequest, ScopesRequest, ScopesResponse,
-  StepMessage, StepType, VariablesRequest, VariablesResponse, ThreadsResponse,
-  createLineBreakpointData } from './messages';
+  StepMessage, VariablesRequest, VariablesResponse,
+  createLineBreakpointData,
+  InitializationResponse} from './messages';
+import { determinePorts } from "./launch-connector";
 
 export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
   /** Path to the main program */
@@ -20,7 +22,7 @@ export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArgum
   /** Arguments to the main program */
   args?: string[];
 
-  /** Workding directory */
+  /** Working directory */
   cwd: string;
 
   /** Automatically stop after launch */
@@ -35,7 +37,8 @@ export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArgum
 
 export interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments {
   /** Debugger port of the interpreter */
-  port: number
+  msgPort: number;
+  tracePort: number;
 }
 
 interface BreakpointPair {
@@ -57,6 +60,9 @@ class SomDebugSession extends DebugSession {
 
   private varHandles : Handles<string>;
 
+  private /* readonly */ activityTypes: string[];
+  private /* readonly */ knownActivities: Map<number, DebugProtocol.Thread>;
+
   public constructor() {
     super();
 
@@ -72,6 +78,9 @@ class SomDebugSession extends DebugSession {
     this.requests = {};
 
     this.varHandles = new Handles<string>();
+
+    this.activityTypes = [];
+    this.knownActivities = new Map();
 
     // Truffle source sections use 1-based indexes
     this.setDebuggerColumnsStartAt1(true);
@@ -107,13 +116,16 @@ class SomDebugSession extends DebugSession {
     this.sendEvent(new OutputEvent(`cmd: ${cmdStr}`, 'console'));
 
     this.somProc = spawn(args.runtime, somArgs, options);
+
     let connecting = false;
+    const ports = {msg: 0, trace: 0};
 
     this.somProc.stdout.on('data', (data) => {
       const str = data.toString();
       this.sendEvent(new OutputEvent(str, 'stdout'));
+      determinePorts(str, ports);
       if (str.includes("Started HTTP Server") && !connecting) {
-        this.connectDebugger(response, 7977);
+        this.connectDebugger(response, ports);
       }
     });
     this.somProc.stderr.on('data', (data) => {
@@ -127,7 +139,7 @@ class SomDebugSession extends DebugSession {
 
   protected attachRequest(response: DebugProtocol.AttachResponse,
       args: AttachRequestArguments): void {
-    this.connectDebugger(response, args.port);
+    this.connectDebugger(response, {msg: args.msgPort, trace: args.tracePort});
   }
 
   protected disconnectRequest(response: DebugProtocol.DisconnectResponse,
@@ -136,8 +148,9 @@ class SomDebugSession extends DebugSession {
     this.sendResponse(response);
   }
 
-  private connectDebugger(response: DebugProtocol.Response, port: number): void {
-    this.socket = new WebSocket('ws://localhost:' + port);
+  private connectDebugger(response: DebugProtocol.Response, ports: {msg: number, trace: number}): void {
+    this.socket = new WebSocket('ws://localhost:' + ports.msg);
+    new WebSocket('ws://localhost:' + ":" + ports.trace);
 
     this.socket.on('open', () => {
       this.sendInitialBreakpoints();
@@ -175,24 +188,39 @@ class SomDebugSession extends DebugSession {
         delete this.requests[data.requestId];
         this.onProgramVariablesResponse(data, response);
       }
-      case "StoppedEvent":
-        this.onStoppedEvent(data);
+      case "StoppedMessage":
+        this.onStoppedMessage(data);
         break;
-      case "ThreadsResponse":
-        const response = this.requests[data.requestId];
-        delete this.requests[data.requestId];
-        this.onThreadsResponse(data, response);
+      case "InitializationResponse":
+        this.initializeMetaData(data);
         break;
+      case "SymbolMessage":
+        // Not necessary to know symbols at the moment
+        break;
+      default:
+        this.sendEvent(new OutputEvent("[didn't understand msg] " + event.data, 'dbg-adapter'));
+    }
+  }
+
+  private initializeMetaData(data: InitializationResponse) {
+    for (const act of data.capabilities.activities) {
+      this.activityTypes[act.id] = act.label;
     }
   }
 
   private onSource(data: SourceMessage): void {
-    for (let source of data.sources) {
-      this.sources[source.uri] = source;
-    }
+    let source = data.source;
+    this.sources[source.uri] = source;
   }
 
-  private onStoppedEvent(data: StoppedMessage): void {
+  private onStoppedMessage(data: StoppedMessage): void {
+    const known = this.knownActivities.get(data.activityId) !== undefined;
+    if (!known) {
+      this.knownActivities.set(data.activityId,
+        { id: data.activityId,
+          name: this.activityTypes[data.activityType] + "-" + this.knownActivities.size });
+    }
+
     this.sendEvent(new StoppedEvent(data.reason, data.activityId, data.text));
   }
 
@@ -206,8 +234,8 @@ class SomDebugSession extends DebugSession {
       initialBreakpoints.push(bpP.som);
     }
     this.bufferedBreakpoints.length = 0;
-    const msg: InitialBreakpointsResponds = {
-        action: "initialBreakpoints", breakpoints: initialBreakpoints};
+    const msg: InitializeConnection = {
+        action: "InitializeConnection", breakpoints: initialBreakpoints};
     this.send(msg);
 
     for (const vsBp of updatedBreakpoints) {
@@ -287,16 +315,12 @@ class SomDebugSession extends DebugSession {
   }
 
   protected threadsRequest(response: DebugProtocol.ThreadsResponse): void {
-    this.requests[this.nextRequestId] = response;
-    this.send({action: "ThreadsRequest", requestId: this.nextRequestId});
-    this.nextRequestId += 1;
-  }
+    const threads = [];
+    this.knownActivities.forEach(v => threads.push(v));
 
-  private onThreadsResponse(data: ThreadsResponse,
-      ideResponse: DebugProtocol.ThreadsResponse) {
-    ideResponse.body = { threads: data.threads };
-    console.log(data.threads);
-    this.sendResponse(ideResponse);
+    response.body = { threads: threads };
+
+    this.sendResponse(response);
   }
 
   private vsSourceFromUri(uri: string): VSSource {
@@ -388,8 +412,9 @@ class SomDebugSession extends DebugSession {
     this.sendResponse(response);
   }
 
-  private sendStep(stepType: StepType, response, args) {
-    const step: StepMessage = {action: stepType, activityId: args.threadId};
+  private sendStep(stepType: string, response, args) {
+    const step: StepMessage = {
+      action: "StepMessage", activityId: args.threadId, step: stepType};
     this.send(step);
     response.body = {allThreadsContinued: false};
     this.sendResponse(response);
