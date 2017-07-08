@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+ - 
+
+## [0.4.0] - 2017-07-08
+
+ - support adaptations in SOMns' Kompos debugger protocol
+ - make LSP server more robust
+ - make sure LSP server can be used multiple times by using stdin/stdout normally
+ - update to latest VS Code
+
 ## [0.2.0] - 2017-01-05
 
  - updated SOMns
@@ -28,7 +37,8 @@
  - improve first debug experience
  - publish extension on the [VS Code marketplace][SOMns-vscode]
 
-[Unreleased]:   https://github.com/smarr/SOMns-vscode/compare/v0.2.0...HEAD
+[Unreleased]:   https://github.com/smarr/SOMns-vscode/compare/v0.4.0...HEAD
+[0.4.0]:        https://github.com/smarr/SOMns-vscode/compare/v0.2.0...v0.4.0
 [0.2.0]:        https://github.com/smarr/SOMns-vscode/compare/v0.1.1...v0.2.0
 [0.1.1]:        https://github.com/smarr/SOMns-vscode/compare/v0.1.0...v0.1.1
 [0.1.0]:        https://github.com/smarr/SOMns-vscode/compare/8f7ae145280f3c0c2a5a264f6d6b3315589765c3...v0.1.0
