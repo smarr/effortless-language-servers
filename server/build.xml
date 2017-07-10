@@ -91,8 +91,9 @@
 
         <javac includeantruntime="false" destdir="${classes.dir}" debug="true">
           <src path="${src.dir}" />
-          <src path="io.typefox.lsapi" />
-          <src path="io.typefox.lsapi.services" />
+          <src path="org.eclipse.lsp4j" />
+          <src path="org.eclipse.lsp4j-gen" />
+          <src path="org.eclipse.lsp4j.jsonrpc" />
           <classpath refid="project.classpath" />
           <compilerarg line="-XDignore.symbol.file" />
           <compilerarg line="-Xlint:all" />
