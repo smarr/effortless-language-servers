@@ -4,6 +4,13 @@
 
  - 
 
+## [0.4.1] - 2017-07-10
+
+ - fix broken plugin version 0.4, the version uploaded to the marketplace was
+   not able to run the debugger
+ - update LSP implementation for Java, moved to org.eclipse.lsp4j code base
+   (same project as before, but now an official Eclipse project)
+
 ## [0.4.0] - 2017-07-08
 
  - support adaptations in SOMns' Kompos debugger protocol
@@ -38,6 +45,7 @@
  - publish extension on the [VS Code marketplace][SOMns-vscode]
 
 [Unreleased]:   https://github.com/smarr/SOMns-vscode/compare/v0.4.0...HEAD
+[0.4.1]:        https://github.com/smarr/SOMns-vscode/compare/v0.4.0...v0.4.1
 [0.4.0]:        https://github.com/smarr/SOMns-vscode/compare/v0.2.0...v0.4.0
 [0.2.0]:        https://github.com/smarr/SOMns-vscode/compare/v0.1.1...v0.2.0
 [0.1.1]:        https://github.com/smarr/SOMns-vscode/compare/v0.1.0...v0.1.1
