@@ -4,7 +4,7 @@
 	"readme": "This plugin provides support for syntax highlighting, parse errors, code navigation, and debugging of SOMns programs.",
 	"author": "Stefan Marr",
 	"license": "MIT",
-	"version": "0.4.0",
+	"version": "0.4.1",
 	"publisher": "MetaConcProject",
 	"engines": {
 		"vscode": "^1.11.2"
