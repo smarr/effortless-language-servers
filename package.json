@@ -23,7 +23,7 @@
 	"activationEvents": [
 		"onLanguage:SOMns"
 	],
-	"main": "./out/src/extension",
+	"main": "./out/extension",
 	"icon": "resources/logo.png",
 	"contributes": {
 		"languages": [
@@ -69,7 +69,7 @@
 						"SOMns"
 					]
 				},
-				"program": "./out/src/debugger.js",
+				"program": "./out/debugger.js",
 				"runtime": "node",
 				"configurationAttributes": {
 					"launch": {
@@ -85,7 +85,7 @@
 							},
 							"cwd": {
 								"type": "string",
-								"description": "Workding directory",
+								"description": "Working directory",
 								"default": "${workspaceRoot}"
 							},
 							"stopOnEntry": {
