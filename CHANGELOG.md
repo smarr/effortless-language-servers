@@ -4,6 +4,10 @@
 
  - 
 
+## [0.5.1] - 2017-08-11
+
+ - fix extension of kernel and platform files
+
 ## [0.5.0] - 2017-08-11
 
  - update to SOMns 0.5 to support new syntax in the parser

@@ -66,8 +66,8 @@ public class SomAdapter {
       throw new IllegalArgumentException("The som.langserv.core-lib system property needs to be set. For instance: -Dsom.langserv.core-lib=/SOMns/core-lib");
     }
 
-    String[] args = new String[] {"--kernel", coreLib + "/Kernel.som",
-                                  "--platform", coreLib + "/Platform.som"};
+    String[] args = new String[] {"--kernel", coreLib + "/Kernel.ns",
+        "--platform", coreLib + "/Platform.ns"};
     VmOptions vmOptions = new VmOptions(args);
     VM vm = new VM(vmOptions);
     Builder builder = PolyglotEngine.newBuilder();
