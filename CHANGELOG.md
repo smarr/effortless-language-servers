@@ -4,6 +4,13 @@
 
  - 
 
+## [0.5.0] - 2017-08-11
+
+ - update to SOMns 0.5 to support new syntax in the parser
+   - syntax highlighting still needs to be added
+ - add support for braces of array literals and auto-closing
+ - change file extension to .ns
+
 ## [0.4.1] - 2017-07-10
 
  - fix broken plugin version 0.4, the version uploaded to the marketplace was
@@ -44,7 +51,8 @@
  - improve first debug experience
  - publish extension on the [VS Code marketplace][SOMns-vscode]
 
-[Unreleased]:   https://github.com/smarr/SOMns-vscode/compare/v0.4.0...HEAD
+[Unreleased]:   https://github.com/smarr/SOMns-vscode/compare/v0.5.0...HEAD
+[0.5.0]:        https://github.com/smarr/SOMns-vscode/compare/v0.4.1...v0.5.0
 [0.4.1]:        https://github.com/smarr/SOMns-vscode/compare/v0.4.0...v0.4.1
 [0.4.0]:        https://github.com/smarr/SOMns-vscode/compare/v0.2.0...v0.4.0
 [0.2.0]:        https://github.com/smarr/SOMns-vscode/compare/v0.1.1...v0.2.0
