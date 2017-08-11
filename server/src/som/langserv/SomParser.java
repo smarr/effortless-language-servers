@@ -35,6 +35,7 @@ public class SomParser extends Parser {
   @Override
   protected ExpressionNode unaryMessage(final ExpressionNode receiver,
       final boolean eventualSend, final SourceSection sendOperator) throws ParseError {
+    @SuppressWarnings("unused")
     int stackHeight = sourceSections.size();
     ExpressionNode result = super.unaryMessage(receiver, eventualSend, sendOperator);
     struturalProbe.reportCall(result, sourceSections.removeLast());
@@ -46,6 +47,7 @@ public class SomParser extends Parser {
   protected ExpressionNode binaryMessage(final MethodBuilder builder,
       final ExpressionNode receiver, final boolean eventualSend,
       final SourceSection sendOperator) throws ProgramDefinitionError {
+    @SuppressWarnings("unused")
     int stackHeight = sourceSections.size();
     ExpressionNode result = super.binaryMessage(
         builder, receiver, eventualSend, sendOperator);
@@ -99,18 +101,16 @@ public class SomParser extends Parser {
   }
 
   @Override
-  protected ExpressionNode assignments(final MethodBuilder builder) throws ProgramDefinitionError {
-    int stackHeight = sourceSections.size();
-    ExpressionNode result = super.assignments(builder);
+  protected ExpressionNode setterSends(final MethodBuilder builder) throws ProgramDefinitionError {
+    ExpressionNode result = super.setterSends(builder);
     struturalProbe.reportAssignment(result, sourceSections.removeLast());
-//    assert stackHeight == sourceSections.size();
     return result;
   }
 
   @Override
-  protected SSymbol assignment() throws ParseError {
+  protected String setterKeyword() throws ParseError {
     SourceCoordinate coord = getCoordinate();
-    SSymbol result = super.assignment();
+    String result = super.setterKeyword();
     sourceSections.addLast(getSource(coord));
     return result;
   }

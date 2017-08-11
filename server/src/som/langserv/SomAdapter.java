@@ -160,6 +160,7 @@ public class SomAdapter {
     return pos;
   }
 
+  @SuppressWarnings("unused")
   private static boolean in(final SourceSection s, final int line, final int character) {
     if (s.getStartLine() > line || s.getEndLine() < line) {
       return false;
@@ -175,7 +176,6 @@ public class SomAdapter {
     return true;
   }
 
-  @SuppressWarnings("unchecked")
   public DocumentHighlight getHighlight(final String documentUri,
       final int line, final int character) {
     // TODO: this is wrong, it should be something entierly different.
@@ -301,7 +301,7 @@ public class SomAdapter {
     sym.setKind(kind);
     sym.setLocation(getLocation(m.getSourceSection()));
 
-    MixinDefinition outer = m.getOuter();
+    MixinDefinition outer = m.getOuterMixinDefinition();
     if (outer != null) {
       sym.setContainerName(outer.getName().getString());
     }
