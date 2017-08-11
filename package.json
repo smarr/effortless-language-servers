@@ -30,7 +30,7 @@
 			{
 				"id": "SOMns",
 				"extensions": [
-					".som"
+					".ns"
 				],
 				"aliases": [
 					"SOMns"
@@ -41,7 +41,7 @@
 		"grammars": [
 			{
 				"language": "SOMns",
-				"scopeName": "source.som",
+				"scopeName": "source.somns",
 				"path": "./syntaxes/SOMns.tmLanguage"
 			}
 		],
@@ -132,7 +132,7 @@
 						"name": "Launch SOM program",
 						"type": "SOMns",
 						"request": "launch",
-						"program": "${workspaceRoot}/Application.som",
+						"program": "${workspaceRoot}/Application.ns",
 						"cwd": "${workspaceRoot}",
 						"runtime": "PLEASE ENTER PATH TO `som` launcher",
 						"stopOnEntry": false
