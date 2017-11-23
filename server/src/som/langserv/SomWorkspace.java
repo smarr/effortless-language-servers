@@ -21,7 +21,7 @@ public class SomWorkspace implements WorkspaceService {
   @Override
   public CompletableFuture<List<? extends SymbolInformation>> symbol(
       final WorkspaceSymbolParams params) {
-    List<? extends SymbolInformation> result = som.getAllSymbolInfo();
+    List<? extends SymbolInformation> result = som.getAllSymbolInfo(params.getQuery());
     return CompletableFuture.completedFuture(result);
   }
 

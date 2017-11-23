@@ -249,39 +249,60 @@ public class SomAdapter {
       return results;
     }
 
-    addAllSymbols(results, probe, documentUri);
+    addAllSymbols(results, null, probe, documentUri);
     return results;
   }
 
-  public List<? extends SymbolInformation> getAllSymbolInfo() {
+  public List<? extends SymbolInformation> getAllSymbolInfo(final String query) {
     Map<String, SomStructures> probesCopy = getProbes();
 
     ArrayList<SymbolInformation> results = new ArrayList<>();
 
     for (SomStructures probe : probesCopy.values()) {
-      addAllSymbols(results, probe, probe.getDocumentUri());
+      addAllSymbols(results, query, probe, probe.getDocumentUri());
     }
 
     return results;
   }
 
-  private void addAllSymbols(final ArrayList<SymbolInformation> results,
-      final SomStructures probe,
-      final String documentUri) {
+  private void addAllSymbols(final ArrayList<SymbolInformation> results, final String query,
+      final SomStructures probe, final String documentUri) {
     synchronized (probe) {
       Set<MixinDefinition> classes = probe.getClasses();
       for (MixinDefinition m : classes) {
         assert m.getSourceSection().getSource().getURI().toString().equals(documentUri);
-        addSymbolInfo(m, results);
+        addSymbolInfo(m, query, results);
       }
 
       Set<SInvokable> methods = probe.getMethods();
       for (SInvokable m : methods) {
         assert m.getHolder() != null;
         assert m.getSourceSection().getSource().getURI().toString().equals(documentUri);
-        results.add(getSymbolInfo(m));
+
+        if (matchQuery(query, m)) {
+          results.add(getSymbolInfo(m));
+        }
       }
     }
+  }
+
+  private static boolean matchQuery(final String query, final String symbol) {
+    if (query == null) {
+      return true;
+    }
+    return symbol.startsWith(query);
+  }
+
+  private static boolean matchQuery(final String query, final SInvokable m) {
+    return matchQuery(query, m.getSignature().getString());
+  }
+
+  private static boolean matchQuery(final String query, final MixinDefinition m) {
+    return matchQuery(query, m.getName().getString());
+  }
+
+  private static boolean matchQuery(final String query, final SlotDefinition s) {
+    return matchQuery(query, s.getName().getString());
   }
 
   private static SymbolInformation getSymbolInfo(final SInvokable m) {
@@ -296,13 +317,18 @@ public class SomAdapter {
     return sym;
   }
 
-  private static void addSymbolInfo(final MixinDefinition m,
+  private static void addSymbolInfo(final MixinDefinition m, final String query,
       final ArrayList<SymbolInformation> results) {
-    results.add(getSymbolInfo(m));
+    if (matchQuery(query, m)) {
+      results.add(getSymbolInfo(m));
+    }
+
     for (Dispatchable d : m.getInstanceDispatchables().values()) {
       // needs to be exact test to avoid duplicate info
       if (d.getClass() == SlotDefinition.class) {
-        results.add(getSymbolInfo((SlotDefinition) d, m));
+        if (matchQuery(query, (SlotDefinition) d)) {
+          results.add(getSymbolInfo((SlotDefinition) d, m));
+        }
       }
     }
   }
