@@ -15,11 +15,11 @@ import org.eclipse.lsp4j.services.LanguageClient;
 
 public class ServerLauncher {
 
-  private static boolean logToFile = false;
-  private static PrintWriter err;
-  private static PrintWriter msg;
-  private static boolean acceptConnections = true;
-  private static final int SERVER_PORT = 8123;
+  private static boolean       logToFile         = false;
+  private static PrintWriter   err;
+  private static PrintWriter   msg;
+  private static boolean       acceptConnections = true;
+  private static final int     SERVER_PORT       = 8123;
   private static final boolean TCP_CONNECTION;
 
   public static final boolean DEBUG;
@@ -31,11 +31,13 @@ public class ServerLauncher {
 
     if (logToFile) {
       try {
-        FileWriter fw = new FileWriter("/Users/smarr/Projects/SOM/SOMns-vscode/server/som-language-server-err.log", true);
+        FileWriter fw = new FileWriter(
+            "/Users/smarr/Projects/SOM/SOMns-vscode/server/som-language-server-err.log", true);
         err = new PrintWriter(fw, true);
-        fw = new FileWriter("/Users/smarr/Projects/SOM/SOMns-vscode/server/som-language-server-msg.log", true);
+        fw = new FileWriter(
+            "/Users/smarr/Projects/SOM/SOMns-vscode/server/som-language-server-msg.log", true);
         msg = new PrintWriter(fw, true);
-      } catch (IOException e) { }
+      } catch (IOException e) {}
     } else {
       err = new PrintWriter(System.err, true);
 
@@ -58,7 +60,6 @@ public class ServerLauncher {
     return err;
   }
 
-
   public static void main(final String[] args) {
     SomLanguageServer tls = new SomLanguageServer();
 
@@ -68,7 +69,8 @@ public class ServerLauncher {
         while (acceptConnections) {
           try {
             Socket client = serverSocket.accept();
-            Launcher<LanguageClient> launcher =  LSPLauncher.createServerLauncher(tls, client.getInputStream(), client.getOutputStream());
+            Launcher<LanguageClient> launcher = LSPLauncher.createServerLauncher(tls,
+                client.getInputStream(), client.getOutputStream());
             tls.connect(launcher.getRemoteProxy());
             launcher.startListening();
           } catch (IOException e) {
@@ -82,7 +84,8 @@ public class ServerLauncher {
       }
     } else {
       msg.println("[SOMns LS] Server started using stdin/stdout");
-      Launcher<LanguageClient> launcher =  LSPLauncher.createServerLauncher(tls, System.in, System.out);
+      Launcher<LanguageClient> launcher =
+          LSPLauncher.createServerLauncher(tls, System.in, System.out);
       tls.connect(launcher.getRemoteProxy());
       Future<?> future = launcher.startListening();
 
@@ -90,8 +93,7 @@ public class ServerLauncher {
         try {
           future.get();
           return;
-        } catch (InterruptedException e) {
-        } catch (ExecutionException e) {
+        } catch (InterruptedException e) {} catch (ExecutionException e) {
           e.printStackTrace(err);
           return;
         }

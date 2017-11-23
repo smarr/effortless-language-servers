@@ -22,13 +22,10 @@ public class SomWorkspace implements WorkspaceService {
   @Override
   public void didChangeConfiguration(final DidChangeConfigurationParams params) {
     // TODO Auto-generated method stub
-
   }
 
   @Override
   public void didChangeWatchedFiles(final DidChangeWatchedFilesParams params) {
     // TODO Auto-generated method stub
-
   }
-
 }

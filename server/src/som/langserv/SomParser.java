@@ -21,13 +21,13 @@ import tools.SourceCoordinate;
  */
 public class SomParser extends Parser {
 
-  private SomStructures struturalProbe;
+  private SomStructures              struturalProbe;
   private final Deque<SourceSection> sourceSections;
 
   public SomParser(final String content, final long fileSize, final Source source,
       final SomStructures structuralProbe, final SomLanguage lang) throws ParseError {
     super(content, fileSize, source, structuralProbe, lang);
-//    assert structuralProbe != null : "Needed for this extended parser.";
+    // assert structuralProbe != null : "Needed for this extended parser.";
     this.struturalProbe = structuralProbe;
     sourceSections = new ArrayDeque<>();
   }
@@ -39,7 +39,7 @@ public class SomParser extends Parser {
     int stackHeight = sourceSections.size();
     ExpressionNode result = super.unaryMessage(receiver, eventualSend, sendOperator);
     struturalProbe.reportCall(result, sourceSections.removeLast());
-//    assert stackHeight == sourceSections.size();
+    // assert stackHeight == sourceSections.size();
     return result;
   }
 
@@ -52,14 +52,15 @@ public class SomParser extends Parser {
     ExpressionNode result = super.binaryMessage(
         builder, receiver, eventualSend, sendOperator);
     struturalProbe.reportCall(result, sourceSections.removeLast());
-//    assert stackHeight == sourceSections.size();
+    // assert stackHeight == sourceSections.size();
     return result;
   }
 
   @Override
   protected ExpressionNode keywordMessage(final MethodBuilder builder,
       final ExpressionNode receiver, final boolean explicitRcvr,
-      final boolean eventualSend, final SourceSection sendOperator) throws ProgramDefinitionError {
+      final boolean eventualSend, final SourceSection sendOperator)
+      throws ProgramDefinitionError {
     int stackHeight = sourceSections.size();
     ExpressionNode result = super.keywordMessage(
         builder, receiver, explicitRcvr, eventualSend, sendOperator);
@@ -72,7 +73,7 @@ public class SomParser extends Parser {
     }
 
     struturalProbe.reportCall(result, sections);
-//    assert stackHeight == sourceSections.size();
+    // assert stackHeight == sourceSections.size();
     return result;
   }
 
@@ -101,7 +102,8 @@ public class SomParser extends Parser {
   }
 
   @Override
-  protected ExpressionNode setterSends(final MethodBuilder builder) throws ProgramDefinitionError {
+  protected ExpressionNode setterSends(final MethodBuilder builder)
+      throws ProgramDefinitionError {
     ExpressionNode result = super.setterSends(builder);
     struturalProbe.reportAssignment(result, sourceSections.removeLast());
     return result;

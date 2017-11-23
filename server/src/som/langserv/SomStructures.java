@@ -21,7 +21,7 @@ import tools.language.StructuralProbe;
 
 public class SomStructures extends StructuralProbe {
 
-  private final Source source;
+  private final Source           source;
   private final ExpressionNode[] map;
 
   public SomStructures(final Source source) {
@@ -54,7 +54,8 @@ public class SomStructures extends StructuralProbe {
       return true;
     }
 
-    if (query.getNumberOfSignatureArguments() > 1 && query.getNumberOfSignatureArguments() == symbol.getNumberOfSignatureArguments()) {
+    if (query.getNumberOfSignatureArguments() > 1
+        && query.getNumberOfSignatureArguments() == symbol.getNumberOfSignatureArguments()) {
       return true;
     }
 
@@ -143,16 +144,15 @@ public class SomStructures extends StructuralProbe {
 
   // REM:
   // how to continue with the support for the language server protocol?
-  // - subclass the parser, and actively report more info to the structural
-  //   probe subclass
+  // - subclass the parser, and actively report more info to the structural probe subclass
   // - main idea is that we do not want to reconstruct imprecise info
   // - instead, we have direct access to the info in the parser,
   // - however, we also need to link up the lexical info with the runtime
-  //   structures, and need to resolve them in a later step
+  // structures, and need to resolve them in a later step
   // - how to do later resolution:
-  //   - potentially with a future
-  //   - or another data structure, like a stack, to associate for instance
-  //     the class name with a class/mixin data structure
-  // - should take 'private' semantics into account and bind definition and
-  //   usage tightly together
+  // - potentially with a future
+  // - or another data structure, like a stack, to associate for instance
+  // the class name with a class/mixin data structure
+  // - should take 'private' semantics into account and bind definition and usage tightly
+  // together
 }

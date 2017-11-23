@@ -45,218 +45,216 @@ import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
 
 
-public class SomLanguageServer implements LanguageServer,	TextDocumentService,
+public class SomLanguageServer implements LanguageServer, TextDocumentService,
     LanguageClientAware {
 
   private final SomWorkspace workspace = new SomWorkspace();
   private final SomAdapter   som       = new SomAdapter();
-  private LanguageClient client;
+  private LanguageClient     client;
 
-	@Override
-	public CompletableFuture<InitializeResult> initialize(
-			final InitializeParams params) {
-	  InitializeResult result = new InitializeResult();
-	  ServerCapabilities cap  = new ServerCapabilities();
+  @Override
+  public CompletableFuture<InitializeResult> initialize(final InitializeParams params) {
+    InitializeResult result = new InitializeResult();
+    ServerCapabilities cap = new ServerCapabilities();
 
-	  cap.setTextDocumentSync(TextDocumentSyncKind.Full);
-	  cap.setDocumentSymbolProvider(true);
-	  cap.setDefinitionProvider(true);
+    cap.setTextDocumentSync(TextDocumentSyncKind.Full);
+    cap.setDocumentSymbolProvider(true);
+    cap.setDefinitionProvider(true);
 
-	  CompletionOptions completion = new CompletionOptions();
-	  List<String> autoComplTrigger = new ArrayList<>();
-	  autoComplTrigger.add("#"); // Smalltalk symbols
-	  autoComplTrigger.add(":"); // end of keywords, to complete arguments
-	  autoComplTrigger.add("="); // right-hand side of assignments
-	  completion.setTriggerCharacters(autoComplTrigger);
-	  completion.setResolveProvider(false); // TODO: look into that
+    CompletionOptions completion = new CompletionOptions();
+    List<String> autoComplTrigger = new ArrayList<>();
+    autoComplTrigger.add("#"); // Smalltalk symbols
+    autoComplTrigger.add(":"); // end of keywords, to complete arguments
+    autoComplTrigger.add("="); // right-hand side of assignments
+    completion.setTriggerCharacters(autoComplTrigger);
+    completion.setResolveProvider(false); // TODO: look into that
 
-	  cap.setCompletionProvider(completion);
-	  result.setCapabilities(cap);
-	  return CompletableFuture.completedFuture(result);
-	}
+    cap.setCompletionProvider(completion);
+    result.setCapabilities(cap);
+    return CompletableFuture.completedFuture(result);
+  }
 
-	@Override
-	public CompletableFuture<Object> shutdown() {
-	  // NOOP for the moment
-	  return CompletableFuture.completedFuture(null);
-	}
+  @Override
+  public CompletableFuture<Object> shutdown() {
+    // NOOP for the moment
+    return CompletableFuture.completedFuture(null);
+  }
 
-	@Override
-	public void exit() {
-	// NOOP for the moment
-	}
+  @Override
+  public void exit() {
+    // NOOP for the moment
+  }
 
-	@Override
-	public TextDocumentService getTextDocumentService() {
-	  // TODO: perhaps break this out into separate object
-		return this;
-	}
+  @Override
+  public TextDocumentService getTextDocumentService() {
+    // TODO: perhaps break this out into separate object
+    return this;
+  }
 
-	@Override
-	public WorkspaceService getWorkspaceService() {
+  @Override
+  public WorkspaceService getWorkspaceService() {
     return workspace;
-	}
+  }
 
-	@Override
-	public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(
-			final TextDocumentPositionParams position) {
-	  CompletionList result = som.getCompletions(
+  @Override
+  public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(
+      final TextDocumentPositionParams position) {
+    CompletionList result = som.getCompletions(
         position.getTextDocument().getUri(), position.getPosition().getLine(),
         position.getPosition().getCharacter());
     return CompletableFuture.completedFuture(Either.forRight(result));
-	}
+  }
 
-	@Override
-	public CompletableFuture<CompletionItem> resolveCompletionItem(
-			final CompletionItem unresolved) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+  @Override
+  public CompletableFuture<CompletionItem> resolveCompletionItem(
+      final CompletionItem unresolved) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
-	@Override
-	public CompletableFuture<Hover> hover(final TextDocumentPositionParams position) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+  @Override
+  public CompletableFuture<Hover> hover(final TextDocumentPositionParams position) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
-	@Override
-	public CompletableFuture<SignatureHelp> signatureHelp(
-			final TextDocumentPositionParams position) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+  @Override
+  public CompletableFuture<SignatureHelp> signatureHelp(
+      final TextDocumentPositionParams position) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
-	@Override
-	public CompletableFuture<List<? extends Location>> definition(
-			final TextDocumentPositionParams position) {
-	  List<? extends Location> result = som.getDefinitions(
-	      position.getTextDocument().getUri(), position.getPosition().getLine(),
-	      position.getPosition().getCharacter());
-	  return CompletableFuture.completedFuture(result);
-	}
+  @Override
+  public CompletableFuture<List<? extends Location>> definition(
+      final TextDocumentPositionParams position) {
+    List<? extends Location> result = som.getDefinitions(
+        position.getTextDocument().getUri(), position.getPosition().getLine(),
+        position.getPosition().getCharacter());
+    return CompletableFuture.completedFuture(result);
+  }
 
-	@Override
-	public CompletableFuture<List<? extends Location>> references(
-			final ReferenceParams params) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+  @Override
+  public CompletableFuture<List<? extends Location>> references(final ReferenceParams params) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
-	@Override
-	public CompletableFuture<List<? extends DocumentHighlight>> documentHighlight(
-			final TextDocumentPositionParams position) {
-	  // TODO: this is wrong, it should be something entirely different.
-	  // this feature is about marking the occurrences of a selected element
-	  // like a variable, where it is used.
-	  // so, this should actually return multiple results.
-	  // The spec is currently broken for that.
-	  DocumentHighlight result = som.getHighlight(position.getTextDocument().getUri(),
-	      position.getPosition().getLine() + 1, position.getPosition().getCharacter() + 1);
-	  ArrayList<DocumentHighlight> list = new ArrayList<>(1);
-	  list.add(result);
-	  return CompletableFuture.completedFuture(list);
-	}
+  @Override
+  public CompletableFuture<List<? extends DocumentHighlight>> documentHighlight(
+      final TextDocumentPositionParams position) {
+    // TODO: this is wrong, it should be something entirely different.
+    // this feature is about marking the occurrences of a selected element
+    // like a variable, where it is used.
+    // so, this should actually return multiple results.
+    // The spec is currently broken for that.
+    DocumentHighlight result = som.getHighlight(position.getTextDocument().getUri(),
+        position.getPosition().getLine() + 1, position.getPosition().getCharacter() + 1);
+    ArrayList<DocumentHighlight> list = new ArrayList<>(1);
+    list.add(result);
+    return CompletableFuture.completedFuture(list);
+  }
 
-	@Override
-	public CompletableFuture<List<? extends SymbolInformation>> documentSymbol(
-			final DocumentSymbolParams params) {
-		List<? extends SymbolInformation> result = som.getSymbolInfo(params.getTextDocument().getUri());
-		return CompletableFuture.completedFuture(result);
-	}
+  @Override
+  public CompletableFuture<List<? extends SymbolInformation>> documentSymbol(
+      final DocumentSymbolParams params) {
+    List<? extends SymbolInformation> result =
+        som.getSymbolInfo(params.getTextDocument().getUri());
+    return CompletableFuture.completedFuture(result);
+  }
 
-	@Override
-	public CompletableFuture<List<? extends Command>> codeAction(
-			final CodeActionParams params) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+  @Override
+  public CompletableFuture<List<? extends Command>> codeAction(final CodeActionParams params) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
-	@Override
-	public CompletableFuture<List<? extends CodeLens>> codeLens(
-			final CodeLensParams params) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+  @Override
+  public CompletableFuture<List<? extends CodeLens>> codeLens(final CodeLensParams params) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
-	@Override
-	public CompletableFuture<CodeLens> resolveCodeLens(final CodeLens unresolved) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+  @Override
+  public CompletableFuture<CodeLens> resolveCodeLens(final CodeLens unresolved) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
-	@Override
-	public CompletableFuture<List<? extends TextEdit>> formatting(
-			final DocumentFormattingParams params) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+  @Override
+  public CompletableFuture<List<? extends TextEdit>> formatting(
+      final DocumentFormattingParams params) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
-	@Override
-	public CompletableFuture<List<? extends TextEdit>> rangeFormatting(
-			final DocumentRangeFormattingParams params) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+  @Override
+  public CompletableFuture<List<? extends TextEdit>> rangeFormatting(
+      final DocumentRangeFormattingParams params) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
-	@Override
-	public CompletableFuture<List<? extends TextEdit>> onTypeFormatting(
-			final DocumentOnTypeFormattingParams params) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+  @Override
+  public CompletableFuture<List<? extends TextEdit>> onTypeFormatting(
+      final DocumentOnTypeFormattingParams params) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
-	@Override
-	public CompletableFuture<WorkspaceEdit> rename(final RenameParams params) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+  @Override
+  public CompletableFuture<WorkspaceEdit> rename(final RenameParams params) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
-	@Override
-	public void didOpen(final DidOpenTextDocumentParams params) {
-	  validateTextDocument(params.getTextDocument().getUri(),
-	      params.getTextDocument().getText());
-	}
+  @Override
+  public void didOpen(final DidOpenTextDocumentParams params) {
+    validateTextDocument(params.getTextDocument().getUri(),
+        params.getTextDocument().getText());
+  }
 
-	@Override
-	public void didChange(final DidChangeTextDocumentParams params) {
-		validateTextDocument(params.getTextDocument().getUri(),
-		    params.getContentChanges());
-	}
+  @Override
+  public void didChange(final DidChangeTextDocumentParams params) {
+    validateTextDocument(params.getTextDocument().getUri(),
+        params.getContentChanges());
+  }
 
-	private void validateTextDocument(final String documentUri,
-	    final List<? extends TextDocumentContentChangeEvent> list) {
-	  TextDocumentContentChangeEvent e = list.iterator().next();
+  private void validateTextDocument(final String documentUri,
+      final List<? extends TextDocumentContentChangeEvent> list) {
+    TextDocumentContentChangeEvent e = list.iterator().next();
 
-	  validateTextDocument(documentUri, e.getText());
-	}
+    validateTextDocument(documentUri, e.getText());
+  }
 
-	private void validateTextDocument(final String documentUri, final String text) {
-	  try {
+  private void validateTextDocument(final String documentUri, final String text) {
+    try {
       ArrayList<Diagnostic> diagnostics = som.parse(text, documentUri);
       reportDiagnostics(diagnostics, documentUri);
     } catch (URISyntaxException ex) {
       ex.printStackTrace(ServerLauncher.errWriter());
     }
-	}
+  }
 
-	private void reportDiagnostics(final ArrayList<Diagnostic> diagnostics, final String documentUri) {
-	  if (diagnostics != null) {
+  private void reportDiagnostics(final ArrayList<Diagnostic> diagnostics,
+      final String documentUri) {
+    if (diagnostics != null) {
       PublishDiagnosticsParams result = new PublishDiagnosticsParams();
       result.setDiagnostics(diagnostics);
       result.setUri(documentUri);
       client.publishDiagnostics(result);
-	  }
-	}
+    }
+  }
 
   @Override
-	public void didClose(final DidCloseTextDocumentParams params) {
-		// TODO Auto-generated method stub
-	}
+  public void didClose(final DidCloseTextDocumentParams params) {
+    // TODO Auto-generated method stub
+  }
 
-	@Override
-	public void didSave(final DidSaveTextDocumentParams params) {
-		// TODO Auto-generated method stub
-	}
+  @Override
+  public void didSave(final DidSaveTextDocumentParams params) {
+    // TODO Auto-generated method stub
+  }
 
   @Override
   public void connect(final LanguageClient client) {

@@ -44,10 +44,11 @@ import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
 import tools.language.StructuralProbe;
 
+
 public class SomAdapter {
 
   private final Map<String, SomStructures> structuralProbes = new HashMap<>();
-  private final SomCompiler compiler;
+  private final SomCompiler                compiler;
 
   private LanguageClient client;
 
@@ -63,7 +64,8 @@ public class SomAdapter {
   private VM initializePolyglot() {
     String coreLib = System.getProperty("som.langserv.core-lib");
     if (coreLib == null) {
-      throw new IllegalArgumentException("The som.langserv.core-lib system property needs to be set. For instance: -Dsom.langserv.core-lib=/SOMns/core-lib");
+      throw new IllegalArgumentException(
+          "The som.langserv.core-lib system property needs to be set. For instance: -Dsom.langserv.core-lib=/SOMns/core-lib");
     }
 
     String[] args = new String[] {"--kernel", coreLib + "/Kernel.ns",
@@ -72,7 +74,6 @@ public class SomAdapter {
     VM vm = new VM(vmOptions);
     Builder builder = PolyglotEngine.newBuilder();
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.VM_OBJECT, vm);
-
 
     PolyglotEngine engine = builder.build();
     engine.getRuntime().getInstruments().values().forEach(i -> i.setEnabled(false));
@@ -92,10 +93,8 @@ public class SomAdapter {
   public ArrayList<Diagnostic> parse(final String text, final String sourceUri)
       throws URISyntaxException {
     URI uri = new URI(sourceUri);
-    Source source = Source.newBuilder(text).
-        name(uri.getPath()).
-        mimeType(SomLanguage.MIME_TYPE).
-        uri(uri).build();
+    Source source = Source.newBuilder(text).name(uri.getPath()).mimeType(SomLanguage.MIME_TYPE)
+                          .uri(uri).build();
 
     try {
       // clean out old structural data
@@ -186,37 +185,39 @@ public class SomAdapter {
 
     // XXX: the code here doesn't make any sense for what it is supposed to do
 
-//    Map<SourceSection, Set<Class<? extends Tags>>> sections = Highlight.
-//        getSourceSections();
-//    SourceSection[] all = sections.entrySet().stream().map(e -> e.getKey()).toArray(size -> new SourceSection[size]);
-//
-//    Stream<Entry<SourceSection, Set<Class<? extends Tags>>>> filtered = sections.
-//        entrySet().stream().filter(
-//            (final Entry<SourceSection, Set<Class<? extends Tags>>> e) -> in(e.getKey(), line, character));
-//
-//    @SuppressWarnings("rawtypes")
-//    Entry[] matching = filtered.toArray(size -> new Entry[size]);
-//
-//    for (Entry<SourceSection, Set<Class<? extends Tags>>> e : matching) {
-//      int kind;
-//      if (e.getValue().contains(LiteralTag.class)) {
-//        kind = DocumentHighlight.KIND_READ;
-//      } else {
-//        kind = DocumentHighlight.KIND_TEXT;
-//      }
-//      DocumentHighlightImpl highlight = new DocumentHighlightImpl();
-//      highlight.setKind(kind);
-//      highlight.setRange(getRange(e.getKey()));
-//      return highlight;
-//    }
-//
-//    DocumentHighlightImpl highlight = new DocumentHighlightImpl();
-//    highlight.setKind(DocumentHighlight.KIND_TEXT);
-//    RangeImpl range = new RangeImpl();
-//    range.setStart(pos(line, character));
-//    range.setEnd(pos(line, character + 1));
-//    highlight.setRange(range);
-//    return highlight;
+    // Map<SourceSection, Set<Class<? extends Tags>>> sections = Highlight.
+    // getSourceSections();
+    // SourceSection[] all = sections.entrySet().stream().map(e -> e.getKey()).toArray(size ->
+    // new SourceSection[size]);
+    //
+    // Stream<Entry<SourceSection, Set<Class<? extends Tags>>>> filtered = sections.
+    // entrySet().stream().filter(
+    // (final Entry<SourceSection, Set<Class<? extends Tags>>> e) -> in(e.getKey(), line,
+    // character));
+    //
+    // @SuppressWarnings("rawtypes")
+    // Entry[] matching = filtered.toArray(size -> new Entry[size]);
+    //
+    // for (Entry<SourceSection, Set<Class<? extends Tags>>> e : matching) {
+    // int kind;
+    // if (e.getValue().contains(LiteralTag.class)) {
+    // kind = DocumentHighlight.KIND_READ;
+    // } else {
+    // kind = DocumentHighlight.KIND_TEXT;
+    // }
+    // DocumentHighlightImpl highlight = new DocumentHighlightImpl();
+    // highlight.setKind(kind);
+    // highlight.setRange(getRange(e.getKey()));
+    // return highlight;
+    // }
+    //
+    // DocumentHighlightImpl highlight = new DocumentHighlightImpl();
+    // highlight.setKind(DocumentHighlight.KIND_TEXT);
+    // RangeImpl range = new RangeImpl();
+    // range.setStart(pos(line, character));
+    // range.setEnd(pos(line, character + 1));
+    // highlight.setRange(range);
+    // return highlight;
     return null;
   }
 
@@ -286,7 +287,7 @@ public class SomAdapter {
     SymbolInformation sym = new SymbolInformation();
     sym.setName(d.getName().getString());
     SymbolKind kind = m.isModule() ? SymbolKind.Constant
-                                   : SymbolKind.Property;
+        : SymbolKind.Property;
     sym.setKind(kind);
     sym.setLocation(getLocation(d.getSourceSection()));
     sym.setContainerName(m.getName().getString());
@@ -297,7 +298,7 @@ public class SomAdapter {
     SymbolInformation sym = new SymbolInformation();
     sym.setName(m.getName().getString());
     SymbolKind kind = m.isModule() ? SymbolKind.Module
-                                   : SymbolKind.Class;
+        : SymbolKind.Class;
     sym.setKind(kind);
     sym.setLocation(getLocation(m.getSourceSection()));
 
@@ -312,10 +313,15 @@ public class SomAdapter {
       final int line, final int character) {
     ArrayList<Location> result = new ArrayList<>();
     SomStructures probe = getProbe(docUri);
-    if (probe == null) { return result; }
+    if (probe == null) {
+      return result;
+    }
 
-    ExpressionNode node = probe.getElementAt(line + 1, character); // +1 to get to one based index
-    if (node == null) { return result; }
+    ExpressionNode node = probe.getElementAt(line + 1, character); // +1 to get to one based
+                                                                   // index
+    if (node == null) {
+      return result;
+    }
 
     if (node instanceof AbstractUninitializedMessageSendNode) {
       SSymbol name = ((AbstractUninitializedMessageSendNode) node).getSelector();
@@ -340,16 +346,22 @@ public class SomAdapter {
     ServerLauncher.logErr(msgStr);
   }
 
-  public CompletionList getCompletions(final String docUri, final int line, final int character) {
+  public CompletionList getCompletions(final String docUri, final int line,
+      final int character) {
     CompletionList result = new CompletionList();
     result.setIsIncomplete(true);
 
     SomStructures probe = getProbe(docUri);
-    if (probe == null) { return result; }
+    if (probe == null) {
+      return result;
+    }
 
     // TODO: this expects that this can be parsed without issues...
-    ExpressionNode node = probe.getElementAt(line + 1, Math.max(character - 1, 0)); // +1 to get to one based index, - 1 to get back into the element
-    if (node == null) { return result; }
+    // +1 to get to one based index, - 1 to get back into the element
+    ExpressionNode node = probe.getElementAt(line + 1, Math.max(character - 1, 0));
+    if (node == null) {
+      return result;
+    }
 
     if (node instanceof AbstractUninitializedMessageSendNode) {
       ArrayList<CompletionItem> completion = new ArrayList<>();
@@ -377,7 +389,7 @@ public class SomAdapter {
     @Override
     public MixinDefinition compileModule(final Source source,
         final StructuralProbe structuralProbe) throws ProgramDefinitionError {
-      SomParser parser = new SomParser(source.getCode(), source.getLength(),
+      SomParser parser = new SomParser(source.getCharacters().toString(), source.getLength(),
           source, (SomStructures) structuralProbe, language);
       return compile(parser, source);
     }
