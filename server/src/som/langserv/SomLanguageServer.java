@@ -48,9 +48,14 @@ import org.eclipse.lsp4j.services.WorkspaceService;
 public class SomLanguageServer implements LanguageServer, TextDocumentService,
     LanguageClientAware {
 
-  private final SomWorkspace workspace = new SomWorkspace();
-  private final SomAdapter   som       = new SomAdapter();
+  private final SomWorkspace workspace;
+  private final SomAdapter   som;
   private LanguageClient     client;
+
+  public SomLanguageServer() {
+    som = new SomAdapter();
+    workspace = new SomWorkspace(som);
+  }
 
   @Override
   public CompletableFuture<InitializeResult> initialize(final InitializeParams params) {
@@ -59,6 +64,7 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
 
     cap.setTextDocumentSync(TextDocumentSyncKind.Full);
     cap.setDocumentSymbolProvider(true);
+    cap.setWorkspaceSymbolProvider(true);
     cap.setDefinitionProvider(true);
 
     CompletionOptions completion = new CompletionOptions();

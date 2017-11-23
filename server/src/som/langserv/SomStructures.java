@@ -29,6 +29,10 @@ public class SomStructures extends StructuralProbe {
     this.map = new ExpressionNode[source.getLength()];
   }
 
+  public String getDocumentUri() {
+    return source.getURI().toString();
+  }
+
   public ExpressionNode getElementAt(final int line, final int character) {
     int idx = source.getLineStartOffset(line) + character;
     return map[idx];

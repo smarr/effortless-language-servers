@@ -90,6 +90,13 @@ public class SomAdapter {
     }
   }
 
+  /** Create a copy to work on safely. */
+  private Map<String, SomStructures> getProbes() {
+    synchronized (structuralProbes) {
+      return new HashMap<>(structuralProbes);
+    }
+  }
+
   public ArrayList<Diagnostic> parse(final String text, final String sourceUri)
       throws URISyntaxException {
     URI uri = new URI(sourceUri);
@@ -242,6 +249,25 @@ public class SomAdapter {
       return results;
     }
 
+    addAllSymbols(results, probe, documentUri);
+    return results;
+  }
+
+  public List<? extends SymbolInformation> getAllSymbolInfo() {
+    Map<String, SomStructures> probesCopy = getProbes();
+
+    ArrayList<SymbolInformation> results = new ArrayList<>();
+
+    for (SomStructures probe : probesCopy.values()) {
+      addAllSymbols(results, probe, probe.getDocumentUri());
+    }
+
+    return results;
+  }
+
+  private void addAllSymbols(final ArrayList<SymbolInformation> results,
+      final SomStructures probe,
+      final String documentUri) {
     synchronized (probe) {
       Set<MixinDefinition> classes = probe.getClasses();
       for (MixinDefinition m : classes) {
@@ -256,7 +282,6 @@ public class SomAdapter {
         results.add(getSymbolInfo(m));
       }
     }
-    return results;
   }
 
   private static SymbolInformation getSymbolInfo(final SInvokable m) {

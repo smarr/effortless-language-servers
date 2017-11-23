@@ -12,11 +12,17 @@ import org.eclipse.lsp4j.services.WorkspaceService;
 
 public class SomWorkspace implements WorkspaceService {
 
+  private final SomAdapter som;
+
+  public SomWorkspace(final SomAdapter som) {
+    this.som = som;
+  }
+
   @Override
   public CompletableFuture<List<? extends SymbolInformation>> symbol(
       final WorkspaceSymbolParams params) {
-    // TODO Auto-generated method stub
-    return null;
+    List<? extends SymbolInformation> result = som.getAllSymbolInfo();
+    return CompletableFuture.completedFuture(result);
   }
 
   @Override
