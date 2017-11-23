@@ -1,5 +1,13 @@
+/**
+ * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ */
 package org.eclipse.lsp4j;
 
+import com.google.common.annotations.Beta;
 import org.eclipse.lsp4j.DidChangeConfigurationCapabilities;
 import org.eclipse.lsp4j.DidChangeWatchedFilesCapabilities;
 import org.eclipse.lsp4j.ExecuteCommandCapabilities;
@@ -43,6 +51,14 @@ public class WorkspaceClientCapabilities {
    * Capabilities specific to the `workspace/executeCommand` request.
    */
   private ExecuteCommandCapabilities executeCommand;
+  
+  /**
+   * Capabilities specific to the `workspace/didChangeWorkspaceFolders` notification.
+   * 
+   * This API is a <b>proposal</b> from LSP and may change.
+   */
+  @Beta
+  private Boolean workspaceFolders;
   
   /**
    * The client supports applying batch edits to the workspace by supporting
@@ -136,6 +152,25 @@ public class WorkspaceClientCapabilities {
     this.executeCommand = executeCommand;
   }
   
+  /**
+   * Capabilities specific to the `workspace/didChangeWorkspaceFolders` notification.
+   * 
+   * This API is a <b>proposal</b> from LSP and may change.
+   */
+  @Pure
+  public Boolean getWorkspaceFolders() {
+    return this.workspaceFolders;
+  }
+  
+  /**
+   * Capabilities specific to the `workspace/didChangeWorkspaceFolders` notification.
+   * 
+   * This API is a <b>proposal</b> from LSP and may change.
+   */
+  public void setWorkspaceFolders(final Boolean workspaceFolders) {
+    this.workspaceFolders = workspaceFolders;
+  }
+  
   @Override
   @Pure
   public String toString() {
@@ -146,6 +181,7 @@ public class WorkspaceClientCapabilities {
     b.add("didChangeWatchedFiles", this.didChangeWatchedFiles);
     b.add("symbol", this.symbol);
     b.add("executeCommand", this.executeCommand);
+    b.add("workspaceFolders", this.workspaceFolders);
     return b.toString();
   }
   
@@ -189,6 +225,11 @@ public class WorkspaceClientCapabilities {
         return false;
     } else if (!this.executeCommand.equals(other.executeCommand))
       return false;
+    if (this.workspaceFolders == null) {
+      if (other.workspaceFolders != null)
+        return false;
+    } else if (!this.workspaceFolders.equals(other.workspaceFolders))
+      return false;
     return true;
   }
   
@@ -203,6 +244,7 @@ public class WorkspaceClientCapabilities {
     result = prime * result + ((this.didChangeWatchedFiles== null) ? 0 : this.didChangeWatchedFiles.hashCode());
     result = prime * result + ((this.symbol== null) ? 0 : this.symbol.hashCode());
     result = prime * result + ((this.executeCommand== null) ? 0 : this.executeCommand.hashCode());
+    result = prime * result + ((this.workspaceFolders== null) ? 0 : this.workspaceFolders.hashCode());
     return result;
   }
 }

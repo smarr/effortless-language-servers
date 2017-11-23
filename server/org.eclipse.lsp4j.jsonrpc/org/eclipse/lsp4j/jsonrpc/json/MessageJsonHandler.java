@@ -11,11 +11,12 @@ import java.io.Reader;
 import java.io.Writer;
 import java.util.Collections;
 import java.util.Map;
+import java.util.function.Consumer;
 
-import org.eclipse.lsp4j.jsonrpc.json.adapters.CollectionTypeAdapterFactory;
-import org.eclipse.lsp4j.jsonrpc.json.adapters.EitherTypeAdapterFactory;
-import org.eclipse.lsp4j.jsonrpc.json.adapters.EnumTypeAdapterFactory;
-import org.eclipse.lsp4j.jsonrpc.json.adapters.MessageTypeAdapterFactory;
+import org.eclipse.lsp4j.jsonrpc.json.adapters.CollectionTypeAdapter;
+import org.eclipse.lsp4j.jsonrpc.json.adapters.EitherTypeAdapter;
+import org.eclipse.lsp4j.jsonrpc.json.adapters.EnumTypeAdapter;
+import org.eclipse.lsp4j.jsonrpc.json.adapters.MessageTypeAdapter;
 import org.eclipse.lsp4j.jsonrpc.messages.CancelParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Message;
 
@@ -40,13 +41,20 @@ public class MessageJsonHandler {
 		this.supportedMethods = supportedMethods;
 		this.gson = getDefaultGsonBuilder().create();
 	}
+	
+	public MessageJsonHandler(Map<String, JsonRpcMethod> supportedMethods, Consumer<GsonBuilder> configureGson) {
+		this.supportedMethods = supportedMethods;
+		GsonBuilder gsonBuilder = getDefaultGsonBuilder();
+		configureGson.accept(gsonBuilder);
+		this.gson = gsonBuilder.create();
+	}
     
 	public GsonBuilder getDefaultGsonBuilder() {
 	    return new GsonBuilder()
-	    	.registerTypeAdapterFactory(new CollectionTypeAdapterFactory())
-	    	.registerTypeAdapterFactory(new EitherTypeAdapterFactory())
-            .registerTypeAdapterFactory(new EnumTypeAdapterFactory())
-            .registerTypeAdapterFactory(new MessageTypeAdapterFactory(this));
+	    	.registerTypeAdapterFactory(new CollectionTypeAdapter.Factory())
+	    	.registerTypeAdapterFactory(new EitherTypeAdapter.Factory())
+            .registerTypeAdapterFactory(new EnumTypeAdapter.Factory())
+            .registerTypeAdapterFactory(new MessageTypeAdapter.Factory(this));
 	}
 	
 	public JsonRpcMethod getJsonRpcMethod(String name) {
@@ -91,12 +99,9 @@ public class MessageJsonHandler {
 	 */
 	public static String toString(Object object) {
 		if (toStringInstance == null) {
-			toStringInstance = new MessageJsonHandler(Collections.emptyMap()) {
-				@Override
-				public GsonBuilder getDefaultGsonBuilder() {
-					return super.getDefaultGsonBuilder().setPrettyPrinting();
-				}
-			};
+			toStringInstance = new MessageJsonHandler(Collections.emptyMap(), gsonBuilder -> {
+				gsonBuilder.setPrettyPrinting();
+			});
 		}
 		return toStringInstance.gson.toJson(object);
 	}

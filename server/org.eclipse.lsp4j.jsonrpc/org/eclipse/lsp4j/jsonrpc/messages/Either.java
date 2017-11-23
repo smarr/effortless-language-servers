@@ -15,11 +15,7 @@ import java.util.Collection;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
 
 /**
- * 
  * An either type maps union types in protocol specifications.
- *
- * @param <L>
- * @param <R>
  */
 public class Either<L, R> {
 
@@ -55,6 +51,25 @@ public class Either<L, R> {
 	public boolean isRight() {
 		return right != null;
 	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof Either<?, ?>) {
+			Either<?, ?> other = (Either<?, ?>) obj;
+			return this.left != null && other.left != null && this.left.equals(other.left)
+					|| this.right != null && other.right != null && this.right.equals(other.right);
+		}
+		return false;
+	}
+	
+	@Override
+	public int hashCode() {
+		if (this.left != null)
+			return this.left.hashCode();
+		if (this.right != null)
+			return this.right.hashCode();
+		return 0;
+	}
 
 	public String toString() {
 		StringBuilder builder = new StringBuilder("Either [").append(System.lineSeparator());
@@ -65,7 +80,10 @@ public class Either<L, R> {
 
 	/**
 	 * Return a left disjoint type if the given type is either.
+	 * 
+	 * @deprecated Use {@link org.eclipse.lsp4j.jsonrpc.json.adapters.TypeUtils#getElementTypes(Type, Class, Class)} instead
 	 */
+	@Deprecated
 	public static Type getLeftDisjointType(Type type) {
 		if (isEither(type)) {
 			if (type instanceof ParameterizedType) {
@@ -82,7 +100,10 @@ public class Either<L, R> {
 
 	/**
 	 * Return a right disjoint type if the given type is either.
+	 * 
+	 * @deprecated Use {@link org.eclipse.lsp4j.jsonrpc.json.adapters.TypeUtils#getElementTypes(Type, Class, Class)} instead
 	 */
+	@Deprecated
 	public static Type getRightDisjointType(Type type) {
 		if (isEither(type)) {
 			if (type instanceof ParameterizedType) {
@@ -96,14 +117,18 @@ public class Either<L, R> {
 		}
 		return null;
 	}
-
+	
 	/**
 	 * Return all disjoint types.
+	 * 
+	 * @deprecated Use {@link org.eclipse.lsp4j.jsonrpc.json.adapters.TypeUtils#getExpectedTypes(Type)} instead
 	 */
+	@Deprecated
 	public static Collection<Type> getAllDisjoinTypes(Type type) {
 		return collectDisjoinTypes(type, new ArrayList<>());
 	}
 
+	@Deprecated
 	protected static Collection<Type> collectDisjoinTypes(Type type, Collection<Type> types) {
 		if (isEither(type)) {
 			if (type instanceof ParameterizedType) {
@@ -117,6 +142,7 @@ public class Either<L, R> {
 		return types;
 	}
 
+	@Deprecated
 	protected static Collection<Type> collectDisjoinTypes(ParameterizedType type, Collection<Type> types) {
 		for (Type typeArgument : type.getActualTypeArguments()) {
 			collectDisjoinTypes(typeArgument, types);
@@ -124,6 +150,7 @@ public class Either<L, R> {
 		return types;
 	}
 
+	@Deprecated
 	protected static Collection<Type> collectDisjoinTypes(Class<?> type, Collection<Type> types) {
 		for (Type typeParameter : type.getTypeParameters()) {
 			collectDisjoinTypes(typeParameter, types);
@@ -133,7 +160,10 @@ public class Either<L, R> {
 
 	/**
 	 * Test whether the given type is Either.
+	 * 
+	 * @deprecated Use {@link org.eclipse.lsp4j.jsonrpc.json.adapters.TypeUtils#isEither(Type)} instead
 	 */
+	@Deprecated
 	public static boolean isEither(Type type) {
 		if (type instanceof ParameterizedType) {
 			return isEither((ParameterizedType) type);
@@ -146,14 +176,20 @@ public class Either<L, R> {
 
 	/**
 	 * Test whether the given type is Either.
+	 * 
+	 * @deprecated Use {@link org.eclipse.lsp4j.jsonrpc.json.adapters.TypeUtils#isEither(Type)} instead
 	 */
+	@Deprecated
 	public static boolean isEither(ParameterizedType type) {
 		return isEither(type.getRawType());
 	}
 
 	/**
 	 * Test whether the given class is Either.
+	 * 
+	 * @deprecated Use {@link org.eclipse.lsp4j.jsonrpc.json.adapters.TypeUtils#isEither(Type)} instead
 	 */
+	@Deprecated
 	public static boolean isEither(Class<?> cls) {
 		return Either.class.isAssignableFrom(cls);
 	}

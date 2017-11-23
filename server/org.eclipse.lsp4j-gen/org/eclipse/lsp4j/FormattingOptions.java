@@ -1,123 +1,166 @@
+/**
+ * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ */
 package org.eclipse.lsp4j;
 
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import org.eclipse.xtext.xbase.lib.Pure;
-import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
+import java.util.Set;
+import org.eclipse.lsp4j.jsonrpc.messages.Either3;
+import org.eclipse.xtext.xbase.lib.CollectionLiterals;
 
 /**
  * Value-object describing what options formatting should use.
  */
 @SuppressWarnings("all")
-public class FormattingOptions {
-  /**
-   * Size of a tab in spaces.
-   */
-  private int tabSize;
+public class FormattingOptions extends LinkedHashMap<String, Either3<String, Number, Boolean>> {
+  private final static String TAB_SIZE = "tabSize";
   
-  /**
-   * Prefer spaces over tabs.
-   */
-  private boolean insertSpaces;
-  
-  /**
-   * Signature for further properties.
-   */
-  private Map<String, String> properties;
+  private final static String INSERT_SPACES = "insertSpaces";
   
   public FormattingOptions() {
   }
   
+  public FormattingOptions(final int tabSize, final boolean insertSpaces) {
+    this.setTabSize(tabSize);
+    this.setInsertSpaces(insertSpaces);
+  }
+  
+  /**
+   * @deprecated See https://github.com/eclipse/lsp4j/issues/99
+   */
+  @Deprecated
   public FormattingOptions(final int tabSize, final boolean insertSpaces, final Map<String, String> properties) {
-    this.tabSize = tabSize;
-    this.insertSpaces = insertSpaces;
-    this.properties = properties;
+    this(tabSize, insertSpaces);
+    this.setProperties(properties);
+  }
+  
+  public String getString(final String key) {
+    Either3<String, Number, Boolean> _get = this.get(key);
+    String _first = null;
+    if (_get!=null) {
+      _first=_get.getFirst();
+    }
+    return _first;
+  }
+  
+  public void putString(final String key, final String value) {
+    this.put(key, Either3.<String, Number, Boolean>forFirst(value));
+  }
+  
+  public Number getNumber(final String key) {
+    Either3<String, Number, Boolean> _get = this.get(key);
+    Number _second = null;
+    if (_get!=null) {
+      _second=_get.getSecond();
+    }
+    return _second;
+  }
+  
+  public void putNumber(final String key, final Number value) {
+    this.put(key, Either3.<String, Number, Boolean>forSecond(value));
+  }
+  
+  public Boolean getBoolean(final String key) {
+    Either3<String, Number, Boolean> _get = this.get(key);
+    Boolean _third = null;
+    if (_get!=null) {
+      _third=_get.getThird();
+    }
+    return _third;
+  }
+  
+  public void putBoolean(final String key, final Boolean value) {
+    this.put(key, Either3.<String, Number, Boolean>forThird(value));
   }
   
   /**
    * Size of a tab in spaces.
    */
-  @Pure
   public int getTabSize() {
-    return this.tabSize;
+    final Number value = this.getNumber(FormattingOptions.TAB_SIZE);
+    if ((value != null)) {
+      return value.intValue();
+    } else {
+      return 0;
+    }
   }
   
-  /**
-   * Size of a tab in spaces.
-   */
   public void setTabSize(final int tabSize) {
-    this.tabSize = tabSize;
+    this.putNumber(FormattingOptions.TAB_SIZE, Integer.valueOf(tabSize));
   }
   
   /**
    * Prefer spaces over tabs.
    */
-  @Pure
   public boolean isInsertSpaces() {
-    return this.insertSpaces;
+    final Boolean value = this.getBoolean(FormattingOptions.INSERT_SPACES);
+    if ((value != null)) {
+      return (value).booleanValue();
+    } else {
+      return false;
+    }
   }
   
-  /**
-   * Prefer spaces over tabs.
-   */
   public void setInsertSpaces(final boolean insertSpaces) {
-    this.insertSpaces = insertSpaces;
+    this.putBoolean(FormattingOptions.INSERT_SPACES, Boolean.valueOf(insertSpaces));
   }
   
   /**
-   * Signature for further properties.
+   * @deprecated See https://github.com/eclipse/lsp4j/issues/99
    */
-  @Pure
+  @Deprecated
   public Map<String, String> getProperties() {
-    return this.properties;
+    final LinkedHashMap<String, String> properties = CollectionLiterals.<String, String>newLinkedHashMap();
+    Set<Map.Entry<String, Either3<String, Number, Boolean>>> _entrySet = this.entrySet();
+    for (final Map.Entry<String, Either3<String, Number, Boolean>> entry : _entrySet) {
+      {
+        Serializable _switchResult = null;
+        Either3<String, Number, Boolean> _value = entry.getValue();
+        final Either3<String, Number, Boolean> it = _value;
+        boolean _matched = false;
+        boolean _isFirst = it.isFirst();
+        if (_isFirst) {
+          _matched=true;
+          _switchResult = it.getFirst();
+        }
+        if (!_matched) {
+          boolean _isSecond = it.isSecond();
+          if (_isSecond) {
+            _matched=true;
+            _switchResult = it.getSecond();
+          }
+        }
+        if (!_matched) {
+          boolean _isThird = it.isThird();
+          if (_isThird) {
+            _matched=true;
+            _switchResult = it.getThird();
+          }
+        }
+        final Serializable value = _switchResult;
+        if ((value != null)) {
+          properties.put(entry.getKey(), value.toString());
+        }
+      }
+    }
+    return Collections.<String, String>unmodifiableMap(properties);
   }
   
   /**
-   * Signature for further properties.
+   * @deprecated See https://github.com/eclipse/lsp4j/issues/99
    */
+  @Deprecated
   public void setProperties(final Map<String, String> properties) {
-    this.properties = properties;
-  }
-  
-  @Override
-  @Pure
-  public String toString() {
-    ToStringBuilder b = new ToStringBuilder(this);
-    b.add("tabSize", this.tabSize);
-    b.add("insertSpaces", this.insertSpaces);
-    b.add("properties", this.properties);
-    return b.toString();
-  }
-  
-  @Override
-  @Pure
-  public boolean equals(final Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
-    FormattingOptions other = (FormattingOptions) obj;
-    if (other.tabSize != this.tabSize)
-      return false;
-    if (other.insertSpaces != this.insertSpaces)
-      return false;
-    if (this.properties == null) {
-      if (other.properties != null)
-        return false;
-    } else if (!this.properties.equals(other.properties))
-      return false;
-    return true;
-  }
-  
-  @Override
-  @Pure
-  public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + this.tabSize;
-    result = prime * result + (this.insertSpaces ? 1231 : 1237);
-    result = prime * result + ((this.properties== null) ? 0 : this.properties.hashCode());
-    return result;
+    Set<Map.Entry<String, String>> _entrySet = properties.entrySet();
+    for (final Map.Entry<String, String> entry : _entrySet) {
+      this.putString(entry.getKey(), entry.getValue());
+    }
   }
 }
