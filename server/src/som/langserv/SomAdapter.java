@@ -1,7 +1,11 @@
 package som.langserv;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,6 +57,8 @@ import tools.language.StructuralProbe;
 
 public class SomAdapter {
 
+  private final static String FILE_ENDING = ".ns";
+
   private final Map<String, SomStructures> structuralProbes = new HashMap<>();
   private final SomCompiler                compiler;
 
@@ -90,9 +96,38 @@ public class SomAdapter {
     return vm;
   }
 
+  public void loadWorkspace(final String uri) throws URISyntaxException {
+    URI workspaceUri = new URI(uri);
+    File workspace = new File(workspaceUri);
+    assert workspace.isDirectory();
+
+    new Thread(() -> loadFolder(workspace)).start();
+  }
+
+  private void loadFolder(final File folder) {
+    for (File f : folder.listFiles()) {
+      if (f.isDirectory()) {
+        loadFolder(f);
+      } else if (f.getName().endsWith(FILE_ENDING)) {
+        try {
+          byte[] content = Files.readAllBytes(f.toPath());
+          String str = new String(content, StandardCharsets.UTF_8);
+          parse(str, f.toURI().toString());
+        } catch (IOException | URISyntaxException e) {
+          // if loading fails, we don't do anything, just move on to the next file
+        }
+      }
+    }
+  }
+
   private SomStructures getProbe(final String documentUri) {
     synchronized (structuralProbes) {
-      return structuralProbes.get(documentUri);
+      try {
+        URI uri = new URI(documentUri).normalize();
+        return structuralProbes.get(uri.getPath());
+      } catch (URISyntaxException e) {
+        return null;
+      }
     }
   }
 
@@ -105,7 +140,7 @@ public class SomAdapter {
 
   public ArrayList<Diagnostic> parse(final String text, final String sourceUri)
       throws URISyntaxException {
-    URI uri = new URI(sourceUri);
+    URI uri = new URI(sourceUri).normalize();
     Source source = Source.newBuilder(text).name(uri.getPath()).mimeType(SomLanguage.MIME_TYPE)
                           .uri(uri).build();
 
@@ -113,7 +148,7 @@ public class SomAdapter {
       // clean out old structural data
       SomStructures newProbe = new SomStructures(source);
       synchronized (structuralProbes) {
-        structuralProbes.put(sourceUri, newProbe);
+        structuralProbes.put(uri.getPath(), newProbe);
       }
       synchronized (newProbe) {
         compiler.compileModule(source, newProbe);

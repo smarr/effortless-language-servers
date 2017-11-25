@@ -26,6 +26,8 @@ import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.MessageParams;
+import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.RenameParams;
@@ -77,7 +79,24 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
 
     cap.setCompletionProvider(completion);
     result.setCapabilities(cap);
+
+    loadWorkspace(params);
+
     return CompletableFuture.completedFuture(result);
+  }
+
+  private void loadWorkspace(final InitializeParams params) {
+    try {
+      som.loadWorkspace(params.getRootUri());
+    } catch (URISyntaxException e) {
+      MessageParams msg = new MessageParams();
+      msg.setType(MessageType.Error);
+      msg.setMessage("Workspace root URI invalid: " + params.getRootUri());
+
+      client.logMessage(msg);
+
+      ServerLauncher.logErr(msg.getMessage());
+    }
   }
 
   @Override
@@ -216,7 +235,7 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
 
   @Override
   public void didOpen(final DidOpenTextDocumentParams params) {
-    validateTextDocument(params.getTextDocument().getUri(),
+    parseDocument(params.getTextDocument().getUri(),
         params.getTextDocument().getText());
   }
 
@@ -230,10 +249,10 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
       final List<? extends TextDocumentContentChangeEvent> list) {
     TextDocumentContentChangeEvent e = list.iterator().next();
 
-    validateTextDocument(documentUri, e.getText());
+    parseDocument(documentUri, e.getText());
   }
 
-  private void validateTextDocument(final String documentUri, final String text) {
+  private void parseDocument(final String documentUri, final String text) {
     try {
       ArrayList<Diagnostic> diagnostics = som.parse(text, documentUri);
       reportDiagnostics(diagnostics, documentUri);
