@@ -12,6 +12,8 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.MixinDefinition;
+import som.compiler.MixinDefinition.SlotDefinition;
+import som.compiler.Variable;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vmobjects.SInvokable;
@@ -38,8 +40,7 @@ public class SomStructures extends StructuralProbe {
     return map[idx];
   }
 
-  public void getDefinitionsFor(final SSymbol name,
-      final ArrayList<Location> results) {
+  public void getDefinitionsFor(final SSymbol name, final ArrayList<Location> results) {
     for (MixinDefinition m : classes) {
       if (m.getName() == name) {
         results.add(SomAdapter.getLocation(m.getSourceSection()));
@@ -49,6 +50,18 @@ public class SomStructures extends StructuralProbe {
     for (SInvokable m : methods) {
       if (m.getSignature() == name) {
         results.add(SomAdapter.getLocation(m.getSourceSection()));
+      }
+    }
+
+    for (SlotDefinition s : slots) {
+      if (s.getName() == name) {
+        results.add(SomAdapter.getLocation(s.getSourceSection()));
+      }
+    }
+
+    for (Variable v : variables) {
+      if (v.name.equals(name.getString())) {
+        results.add(SomAdapter.getLocation(v.source));
       }
     }
   }
