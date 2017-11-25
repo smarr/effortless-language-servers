@@ -35,9 +35,15 @@ import som.compiler.ProgramDefinitionError;
 import som.compiler.ProgramDefinitionError.SemanticDefinitionError;
 import som.compiler.SourcecodeCompiler;
 import som.interpreter.SomLanguage;
+import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
+import som.interpreter.nodes.ArgumentReadNode.NonLocalArgumentReadNode;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.LocalVariableNode;
 import som.interpreter.nodes.MessageSendNode.AbstractUninitializedMessageSendNode;
+import som.interpreter.nodes.NonLocalVariableNode;
+import som.interpreter.nodes.ResolvingImplicitReceiverSend;
 import som.interpreter.nodes.dispatch.Dispatchable;
+import som.interpreter.nodes.nary.EagerPrimitiveNode;
 import som.vm.VmOptions;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
@@ -368,23 +374,47 @@ public class SomAdapter {
       return result;
     }
 
-    ExpressionNode node = probe.getElementAt(line + 1, character); // +1 to get to one based
-                                                                   // index
+    // +1 to get to one based index
+    ExpressionNode node = probe.getElementAt(line + 1, character);
+
     if (node == null) {
       return result;
     }
 
+    if (ServerLauncher.DEBUG) {
+      reportError(
+          "Node at " + (line + 1) + ":" + character + " " + node.getClass().getSimpleName());
+    }
+
     if (node instanceof AbstractUninitializedMessageSendNode) {
       SSymbol name = ((AbstractUninitializedMessageSendNode) node).getSelector();
-      for (SomStructures s : structuralProbes.values()) {
-        s.getDefinitionsFor(name, result);
-      }
+      addAllDefinitions(result, name);
+    } else if (node instanceof ResolvingImplicitReceiverSend) {
+      SSymbol name = ((ResolvingImplicitReceiverSend) node).getSelector();
+      addAllDefinitions(result, name);
+    } else if (node instanceof NonLocalVariableNode) {
+      result.add(SomAdapter.getLocation(((NonLocalVariableNode) node).getLocal().source));
+    } else if (node instanceof LocalVariableNode) {
+      result.add(SomAdapter.getLocation(((LocalVariableNode) node).getLocal().source));
+    } else if (node instanceof LocalArgumentReadNode) {
+      result.add(SomAdapter.getLocation(((LocalArgumentReadNode) node).getArg().source));
+    } else if (node instanceof NonLocalArgumentReadNode) {
+      result.add(SomAdapter.getLocation(((NonLocalArgumentReadNode) node).getArg().source));
+    } else if (node instanceof EagerPrimitiveNode) {
+      SSymbol name = ((EagerPrimitiveNode) node).getSelector();
+      addAllDefinitions(result, name);
     } else {
       if (ServerLauncher.DEBUG) {
         reportError("GET DEFINITION, unsupported node: " + node.getClass().getSimpleName());
       }
     }
     return result;
+  }
+
+  private void addAllDefinitions(final ArrayList<Location> result, final SSymbol name) {
+    for (SomStructures s : structuralProbes.values()) {
+      s.getDefinitionsFor(name, result);
+    }
   }
 
   private void reportError(final String msgStr) {
