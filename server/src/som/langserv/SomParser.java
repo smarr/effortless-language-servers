@@ -33,6 +33,14 @@ public class SomParser extends Parser {
   }
 
   @Override
+  protected ExpressionNode implicitUnaryMessage(final MethodBuilder meth,
+      final SSymbol selector, final SourceSection section) {
+    ExpressionNode result = super.implicitUnaryMessage(meth, selector, section);
+    struturalProbe.reportCall(result, section);
+    return result;
+  }
+
+  @Override
   protected ExpressionNode unaryMessage(final ExpressionNode receiver,
       final boolean eventualSend, final SourceSection sendOperator) throws ParseError {
     @SuppressWarnings("unused")
