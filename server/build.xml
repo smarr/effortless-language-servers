@@ -2,9 +2,11 @@
 
     <property name="src.dir"     value="src"/>
     <property name="lib.dir"     value="libs" />
-    <property name="truffle.dir" value="${lib.dir}/SOMns/libs/truffle/truffle" />
+    <property name="som.dir"     value="${lib.dir}/SOMns" />
+    <property name="bd.dir"      value="${som.dir}/libs/black-diamonds" />
+    <property name="truffle.dir" value="${som.dir}/libs/truffle/truffle" />
     <property name="truffle.build" value="${truffle.dir}/mxbuild/dists" />
-    <property name="sdk.build"   value="${lib.dir}/SOMns/libs/truffle/sdk/mxbuild/dists" />
+    <property name="sdk.build"   value="${som.dir}/libs/truffle/sdk/mxbuild/dists" />
 
     <property name="mvn.repo"    value="https://repo1.maven.org/maven2" />
 
@@ -24,8 +26,9 @@
         <pathelement location="${sdk.build}/word-api.jar" />
         <pathelement location="${truffle.build}/truffle-api.jar" />
         <pathelement location="${truffle.build}/truffle-debug.jar" />
-        <pathelement location="${lib.dir}/SOMns/libs/somns-deps.jar" />
-        <pathelement location="${lib.dir}/SOMns/build/som.jar" />
+        <pathelement location="${som.dir}/libs/somns-deps.jar" />
+        <pathelement location="${som.dir}/build/som.jar" />
+        <pathelement location="${bd.dir}/build/black-diamonds.jar" />
     </path>
 
     <path id="project.classpath">
@@ -53,10 +56,10 @@
     </target>
 
     <target name="somns" depends="somns-submodule">
-      <!-- <subant buildpath="libs/SOMns" target="jar" failonerror="true" /> -->
-      <exec executable="ant" dir="${lib.dir}/SOMns">
+      <exec executable="ant" dir="${som.dir}">
           <arg value="jar"/>
       </exec>
+      <jar destfile="${bd.dir}/build/black-diamonds.jar" basedir="${bd.dir}/build/classes" />
     </target>
     
     <target name="libs" depends="somns">
@@ -113,7 +116,7 @@
           </path>
         </copy>
         <copy todir="../out/server/core-lib">
-          <fileset dir="${lib.dir}/SOMns/core-lib"/>
+          <fileset dir="${som.dir}/core-lib"/>
         </copy>
     </target>
 </project>
