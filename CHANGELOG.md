@@ -2,7 +2,15 @@
 
 ## [Unreleased]
 
- - 
+ -
+
+## [0.5.2] - 2017-11-25
+
+ - load all files in workspace on startup
+ - enable go-to-definition for more language constructs
+ - add support for workspace symbols (cmd+shift+t)
+ - updated lsp4j to 0.4.0-SNAPSHOT
+ - updated SOMns to latest 0.5-dev
 
 ## [0.5.1] - 2017-08-11
 
