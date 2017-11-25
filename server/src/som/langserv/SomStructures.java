@@ -155,7 +155,9 @@ public class SomStructures extends StructuralProbe {
   private void putIntoMap(final SourceSection section,
       final ExpressionNode result) {
     for (int i = section.getCharIndex(); i < section.getCharEndIndex(); i++) {
-      map[i] = result;
+      if (map[i] == null) {
+        map[i] = result;
+      }
     }
   }
 
