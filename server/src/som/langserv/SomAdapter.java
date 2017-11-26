@@ -97,6 +97,10 @@ public class SomAdapter {
   }
 
   public void loadWorkspace(final String uri) throws URISyntaxException {
+    if (uri == null) {
+      return;
+    }
+    
     URI workspaceUri = new URI(uri);
     File workspace = new File(workspaceUri);
     assert workspace.isDirectory();
