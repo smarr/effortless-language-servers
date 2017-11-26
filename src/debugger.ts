@@ -187,6 +187,7 @@ class SomDebugSession extends DebugSession {
         const response = this.requests[data.requestId];
         delete this.requests[data.requestId];
         this.onProgramVariablesResponse(data, response);
+        break;
       }
       case "StoppedMessage":
         this.onStoppedMessage(data);
