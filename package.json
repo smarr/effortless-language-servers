@@ -83,6 +83,13 @@
 								"type": "string",
 								"description": "Path to the main program"
 							},
+							"args": {
+								"type": "array",
+								"description": "Arguments to the program",
+								"items": {
+									"type": "string"
+								}
+							},
 							"cwd": {
 								"type": "string",
 								"description": "Working directory",
