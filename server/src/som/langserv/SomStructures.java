@@ -35,12 +35,13 @@ public class SomStructures extends StructuralProbe {
     return source.getURI().toString();
   }
 
-  public ExpressionNode getElementAt(final int line, final int character) {
+  public synchronized ExpressionNode getElementAt(final int line, final int character) {
     int idx = source.getLineStartOffset(line) + character;
     return map[idx];
   }
 
-  public void getDefinitionsFor(final SSymbol name, final ArrayList<Location> results) {
+  public synchronized void getDefinitionsFor(final SSymbol name,
+      final ArrayList<Location> results) {
     for (MixinDefinition m : classes) {
       if (m.getName() == name) {
         results.add(SomAdapter.getLocation(m.getSourceSection()));
@@ -94,7 +95,8 @@ public class SomStructures extends StructuralProbe {
     return false;
   }
 
-  public void getCompletions(final SSymbol name, final ArrayList<CompletionItem> results) {
+  public synchronized void getCompletions(final SSymbol name,
+      final ArrayList<CompletionItem> results) {
     for (SInvokable m : methods) {
       if (fuzzyMatches(m.getSignature(), name)) {
         CompletionItem item = new CompletionItem();
@@ -105,7 +107,7 @@ public class SomStructures extends StructuralProbe {
     }
   }
 
-  public boolean classesAndMethodsConsistent() {
+  public synchronized boolean classesAndMethodsConsistent() {
     Set<SInvokable> methods = new HashSet<>();
 
     for (MixinDefinition c : classes) {
@@ -152,7 +154,7 @@ public class SomStructures extends StructuralProbe {
     putIntoMap(removeLast, result);
   }
 
-  private void putIntoMap(final SourceSection section,
+  private synchronized void putIntoMap(final SourceSection section,
       final ExpressionNode result) {
     for (int i = section.getCharIndex(); i < section.getCharEndIndex(); i++) {
       if (map[i] == null) {
