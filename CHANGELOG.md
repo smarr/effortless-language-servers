@@ -4,6 +4,12 @@
 
  -
 
+## [0.5.3] - 2017-11-26
+
+ - fix classpath issue
+ - fix race condition
+ - fix lang server for use on single files
+
 ## [0.5.2] - 2017-11-25
 
  - load all files in workspace on startup
@@ -63,7 +69,8 @@
  - improve first debug experience
  - publish extension on the [VS Code marketplace][SOMns-vscode]
 
-[Unreleased]:   https://github.com/smarr/SOMns-vscode/compare/v0.5.2...HEAD
+[Unreleased]:   https://github.com/smarr/SOMns-vscode/compare/v0.5.3...HEAD
+[0.5.3]:        https://github.com/smarr/SOMns-vscode/compare/v0.5.2...v0.5.3
 [0.5.2]:        https://github.com/smarr/SOMns-vscode/compare/v0.5.1...v0.5.2
 [0.5.1]:        https://github.com/smarr/SOMns-vscode/compare/v0.5.0...v0.5.1
 [0.5.0]:        https://github.com/smarr/SOMns-vscode/compare/v0.4.1...v0.5.0
