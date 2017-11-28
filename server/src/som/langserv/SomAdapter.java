@@ -7,7 +7,9 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,6 +50,7 @@ import som.interpreter.nodes.NonLocalVariableNode;
 import som.interpreter.nodes.ResolvingImplicitReceiverSend;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.nary.EagerPrimitiveNode;
+import som.vm.Symbols;
 import som.vm.VmOptions;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
@@ -100,7 +103,7 @@ public class SomAdapter {
     if (uri == null) {
       return;
     }
-    
+
     URI workspaceUri = new URI(uri);
     File workspace = new File(workspaceUri);
     assert workspace.isDirectory();
@@ -497,17 +500,38 @@ public class SomAdapter {
       return result;
     }
 
+    SSymbol sym = null;
     if (node instanceof AbstractUninitializedMessageSendNode) {
-      ArrayList<CompletionItem> completion = new ArrayList<>();
-      SSymbol name = ((AbstractUninitializedMessageSendNode) node).getSelector();
-      for (SomStructures s : structuralProbes.values()) {
-        s.getCompletions(name, completion);
-      }
-      result.setItems(completion);
+      sym = ((AbstractUninitializedMessageSendNode) node).getSelector();
+    } else if (node instanceof ResolvingImplicitReceiverSend) {
+      sym = ((ResolvingImplicitReceiverSend) node).getSelector();
+    } else if (node instanceof NonLocalVariableNode) {
+      sym = Symbols.symbolFor(((NonLocalVariableNode) node).getLocal().name);
+    } else if (node instanceof LocalVariableNode) {
+      sym = Symbols.symbolFor(((LocalVariableNode) node).getLocal().name);
+    } else if (node instanceof LocalArgumentReadNode) {
+      sym = Symbols.symbolFor(((LocalArgumentReadNode) node).getArg().name);
+    } else if (node instanceof NonLocalArgumentReadNode) {
+      sym = Symbols.symbolFor(((NonLocalArgumentReadNode) node).getArg().name);
+    } else if (node instanceof EagerPrimitiveNode) {
+      sym = ((EagerPrimitiveNode) node).getSelector();
     } else {
       if (ServerLauncher.DEBUG) {
         reportError("GET COMPLETIONS, unsupported node: " + node.getClass().getSimpleName());
       }
+    }
+
+    if (sym != null) {
+      Set<CompletionItem> completion = new HashSet<>();
+      Collection<SomStructures> probes;
+      synchronized (structuralProbes) {
+        probes = new ArrayList<>(structuralProbes.values());
+      }
+
+      for (SomStructures s : probes) {
+        s.getCompletions(sym, completion);
+      }
+      result.setItems(new ArrayList<>(completion));
     }
 
     return result;

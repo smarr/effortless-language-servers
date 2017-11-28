@@ -16,6 +16,7 @@ import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Variable;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
+import som.vm.Symbols;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 import tools.language.StructuralProbe;
@@ -96,14 +97,31 @@ public class SomStructures extends StructuralProbe {
   }
 
   public synchronized void getCompletions(final SSymbol name,
-      final ArrayList<CompletionItem> results) {
+      final Set<CompletionItem> results) {
+    for (Variable v : variables) {
+      matchAndAdd(name, Symbols.symbolFor(v.name), results, CompletionItemKind.Variable);
+    }
+
     for (SInvokable m : methods) {
-      if (fuzzyMatches(m.getSignature(), name)) {
-        CompletionItem item = new CompletionItem();
-        item.setKind(CompletionItemKind.Method);
-        item.setLabel(m.getSignature().getString());
-        results.add(item);
-      }
+      matchAndAdd(name, m.getSignature(), results, CompletionItemKind.Method);
+    }
+
+    for (SlotDefinition s : slots) {
+      matchAndAdd(name, s.getName(), results, CompletionItemKind.Field);
+    }
+
+    for (MixinDefinition c : classes) {
+      matchAndAdd(name, c.getName(), results, CompletionItemKind.Class);
+    }
+  }
+
+  private void matchAndAdd(final SSymbol query, final SSymbol symbol,
+      final Set<CompletionItem> results, final CompletionItemKind kind) {
+    if (fuzzyMatches(symbol, query)) {
+      CompletionItem item = new CompletionItem();
+      item.setKind(kind);
+      item.setLabel(symbol.getString());
+      results.add(item);
     }
   }
 
