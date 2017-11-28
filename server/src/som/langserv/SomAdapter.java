@@ -161,8 +161,8 @@ public class SomAdapter {
       return toDiagnostics(e);
     } catch (SemanticDefinitionError e) {
       return toDiagnostics(e);
-    } catch (ProgramDefinitionError e) {
-      throw new RuntimeException("Not yet supported error", e);
+    } catch (Exception e) {
+      return toDiagnostics(e.getMessage());
     }
     return new ArrayList<>();
   }
@@ -198,6 +198,19 @@ public class SomAdapter {
     r.setEnd(pos(source.getEndLine(), source.getEndColumn()));
     d.setRange(r);
     d.setMessage(e.getMessage());
+    d.setSource("Parser");
+
+    diagnostics.add(d);
+    return diagnostics;
+  }
+
+  private ArrayList<Diagnostic> toDiagnostics(final String msg) {
+    ArrayList<Diagnostic> diagnostics = new ArrayList<>();
+
+    Diagnostic d = new Diagnostic();
+    d.setSeverity(DiagnosticSeverity.Error);
+
+    d.setMessage(msg);
     d.setSource("Parser");
 
     diagnostics.add(d);
