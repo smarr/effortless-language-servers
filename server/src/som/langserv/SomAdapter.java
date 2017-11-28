@@ -347,23 +347,16 @@ public class SomAdapter {
     }
   }
 
-  private static boolean matchQuery(final String query, final String symbol) {
-    if (query == null) {
-      return true;
-    }
-    return symbol.startsWith(query);
-  }
-
   private static boolean matchQuery(final String query, final SInvokable m) {
-    return matchQuery(query, m.getSignature().getString());
+    return SomStructures.fuzzyMatches(m.getSignature().getString(), query);
   }
 
   private static boolean matchQuery(final String query, final MixinDefinition m) {
-    return matchQuery(query, m.getName().getString());
+    return SomStructures.fuzzyMatches(m.getName().getString(), query);
   }
 
   private static boolean matchQuery(final String query, final SlotDefinition s) {
-    return matchQuery(query, s.getName().getString());
+    return SomStructures.fuzzyMatches(s.getName().getString(), query);
   }
 
   private static SymbolInformation getSymbolInfo(final SInvokable m) {

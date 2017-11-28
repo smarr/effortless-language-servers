@@ -81,14 +81,18 @@ public class SomStructures extends StructuralProbe {
     return fuzzyMatches(symbol.getString().toLowerCase(), query.getString().toLowerCase());
   }
 
-  private static boolean fuzzyMatches(final String string, final String query) {
-    // trivial case
-    if (query.equals(string)) {
+  public static boolean fuzzyMatches(final String string, final String query) {
+    if (query == null) {
       return true;
     }
 
     // simple prefix
     if (string.startsWith(query)) {
+      return true;
+    }
+
+    // trivial case
+    if (query.equals(string)) {
       return true;
     }
 
