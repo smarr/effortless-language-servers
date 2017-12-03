@@ -401,6 +401,16 @@ class SomDebugSession extends DebugSession {
       variablesReference: args.variablesReference
     }
 
+    if (args.filter == "indexed") {
+      request.filter = "indexed";
+      if (args.start !== null) {
+        request.start = args.start;
+      }
+      if (args.count !== null) {
+        request.count = args.count;
+      }
+    }
+
     this.requests[this.nextRequestId] = response;
     this.nextRequestId += 1;
 
