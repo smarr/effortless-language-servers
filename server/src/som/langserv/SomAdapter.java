@@ -337,7 +337,6 @@ public class SomAdapter {
 
       Set<SInvokable> methods = probe.getMethods();
       for (SInvokable m : methods) {
-        assert m.getHolder() != null;
         assert m.getSourceSection().getSource().getURI().toString().equals(documentUri);
 
         if (matchQuery(query, m)) {
@@ -365,7 +364,7 @@ public class SomAdapter {
     sym.setKind(SymbolKind.Method);
     assert null != m.getSourceSection();
     sym.setLocation(getLocation(m.getSourceSection()));
-    if (m.getHolder() != null) {
+    if (m.getHolderUnsafe() != null) {
       sym.setContainerName(m.getHolder().getName().getString());
     }
     return sym;
