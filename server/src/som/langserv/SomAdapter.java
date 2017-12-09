@@ -117,7 +117,9 @@ public class SomAdapter {
         try {
           byte[] content = Files.readAllBytes(f.toPath());
           String str = new String(content, StandardCharsets.UTF_8);
-          parse(str, f.toURI().toString());
+          String uri = f.toURI().toString();
+          List<Diagnostic> diagnostics = parse(str, uri);
+          reportDiagnostics(diagnostics, uri);
         } catch (IOException | URISyntaxException e) {
           // if loading fails, we don't do anything, just move on to the next file
         }
@@ -143,34 +145,39 @@ public class SomAdapter {
     }
   }
 
-  public ArrayList<Diagnostic> parse(final String text, final String sourceUri)
+  public List<Diagnostic> parse(final String text, final String sourceUri)
       throws URISyntaxException {
     URI uri = new URI(sourceUri).normalize();
     Source source = Source.newBuilder(text).name(uri.getPath()).mimeType(SomLanguage.MIME_TYPE)
                           .uri(uri).build();
 
+    SomStructures newProbe = new SomStructures(source);
+    List<Diagnostic> diagnostics = newProbe.getDiagnostics();
     try {
       // clean out old structural data
-      SomStructures newProbe = new SomStructures(source);
+      synchronized (structuralProbes) {
+        structuralProbes.remove(uri.getPath());
+      }
+      synchronized (newProbe) {
+        MixinDefinition def = compiler.compileModule(source, newProbe);
+      }
+    } catch (ParseError e) {
+      return toDiagnostics(e, diagnostics);
+    } catch (SemanticDefinitionError e) {
+      return toDiagnostics(e, diagnostics);
+    } catch (Throwable e) {
+      return toDiagnostics(e.getMessage(), diagnostics);
+    } finally {
+      // set new probe once done with everything
       synchronized (structuralProbes) {
         structuralProbes.put(uri.getPath(), newProbe);
       }
-      synchronized (newProbe) {
-        compiler.compileModule(source, newProbe);
-      }
-    } catch (ParseError e) {
-      return toDiagnostics(e);
-    } catch (SemanticDefinitionError e) {
-      return toDiagnostics(e);
-    } catch (Exception e) {
-      return toDiagnostics(e.getMessage());
     }
-    return new ArrayList<>();
+    return diagnostics;
   }
 
-  private ArrayList<Diagnostic> toDiagnostics(final ParseError e) {
-    ArrayList<Diagnostic> diagnostics = new ArrayList<>();
-
+  private List<Diagnostic> toDiagnostics(final ParseError e,
+      final List<Diagnostic> diagnostics) {
     Diagnostic d = new Diagnostic();
     d.setSeverity(DiagnosticSeverity.Error);
 
@@ -183,8 +190,8 @@ public class SomAdapter {
     return diagnostics;
   }
 
-  private ArrayList<Diagnostic> toDiagnostics(final SemanticDefinitionError e) {
-    ArrayList<Diagnostic> diagnostics = new ArrayList<>();
+  private List<Diagnostic> toDiagnostics(final SemanticDefinitionError e,
+      final List<Diagnostic> diagnostics) {
     SourceSection source = e.getSourceSection();
 
     Diagnostic d = new Diagnostic();
@@ -197,9 +204,8 @@ public class SomAdapter {
     return diagnostics;
   }
 
-  private ArrayList<Diagnostic> toDiagnostics(final String msg) {
-    ArrayList<Diagnostic> diagnostics = new ArrayList<>();
-
+  private List<Diagnostic> toDiagnostics(final String msg,
+      final List<Diagnostic> diagnostics) {
     Diagnostic d = new Diagnostic();
     d.setSeverity(DiagnosticSeverity.Error);
 
