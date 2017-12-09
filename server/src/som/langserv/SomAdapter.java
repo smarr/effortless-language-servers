@@ -175,11 +175,7 @@ public class SomAdapter {
     d.setSeverity(DiagnosticSeverity.Error);
 
     SourceCoordinate coord = e.getSourceCoordinate();
-
-    Range r = new Range();
-    r.setStart(pos(coord.startLine, coord.startColumn));
-    r.setEnd(pos(coord.startLine, Integer.MAX_VALUE));
-    d.setRange(r);
+    d.setRange(toRangeMax(coord));
     d.setMessage(e.getMessage());
     d.setSource("Parser");
 
@@ -193,11 +189,7 @@ public class SomAdapter {
 
     Diagnostic d = new Diagnostic();
     d.setSeverity(DiagnosticSeverity.Error);
-
-    Range r = new Range();
-    r.setStart(pos(source.getStartLine(), source.getStartColumn()));
-    r.setEnd(pos(source.getEndLine(), source.getEndColumn()));
-    d.setRange(r);
+    d.setRange(toRange(source));
     d.setMessage(e.getMessage());
     d.setSource("Parser");
 
@@ -287,17 +279,24 @@ public class SomAdapter {
     return null;
   }
 
-  private static Range getRange(final SourceSection ss) {
+  public static Range toRange(final SourceSection ss) {
     Range range = new Range();
     range.setStart(pos(ss.getStartLine(), ss.getStartColumn()));
     range.setEnd(pos(ss.getEndLine(), ss.getEndColumn() + 1));
     return range;
   }
 
+  public static Range toRangeMax(final SourceCoordinate coord) {
+    Range range = new Range();
+    range.setStart(pos(coord.startLine, coord.startColumn));
+    range.setEnd(pos(coord.startLine, Integer.MAX_VALUE));
+    return range;
+  }
+
   public static Location getLocation(final SourceSection ss) {
     Location loc = new Location();
     loc.setUri(ss.getSource().getURI().toString());
-    loc.setRange(getRange(ss));
+    loc.setRange(toRange(ss));
     return loc;
   }
 
