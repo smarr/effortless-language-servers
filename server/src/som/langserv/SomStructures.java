@@ -16,7 +16,6 @@ import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Variable;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
-import som.vm.Symbols;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 import tools.language.StructuralProbe;
@@ -103,7 +102,7 @@ public class SomStructures extends StructuralProbe {
   public synchronized void getCompletions(final SSymbol name,
       final Set<CompletionItem> results) {
     for (Variable v : variables) {
-      matchAndAdd(name, Symbols.symbolFor(v.name), results, CompletionItemKind.Variable);
+      matchAndAdd(name, v.name, results, CompletionItemKind.Variable);
     }
 
     for (SInvokable m : methods) {

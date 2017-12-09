@@ -46,15 +46,12 @@ import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
 import som.interpreter.nodes.ArgumentReadNode.NonLocalArgumentReadNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.LocalVariableNode;
-import som.interpreter.nodes.MessageSendNode.AbstractUninitializedMessageSendNode;
 import som.interpreter.nodes.NonLocalVariableNode;
-import som.interpreter.nodes.ResolvingImplicitReceiverSend;
 import som.interpreter.nodes.dispatch.Dispatchable;
-import som.interpreter.nodes.nary.EagerPrimitiveNode;
-import som.vm.Symbols;
 import som.vm.VmOptions;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
+import tools.Send;
 import tools.SourceCoordinate;
 import tools.language.StructuralProbe;
 
@@ -435,11 +432,8 @@ public class SomAdapter {
           "Node at " + (line + 1) + ":" + character + " " + node.getClass().getSimpleName());
     }
 
-    if (node instanceof AbstractUninitializedMessageSendNode) {
-      SSymbol name = ((AbstractUninitializedMessageSendNode) node).getSelector();
-      addAllDefinitions(result, name);
-    } else if (node instanceof ResolvingImplicitReceiverSend) {
-      SSymbol name = ((ResolvingImplicitReceiverSend) node).getSelector();
+    if (node instanceof Send) {
+      SSymbol name = ((Send) node).getSelector();
       addAllDefinitions(result, name);
     } else if (node instanceof NonLocalVariableNode) {
       result.add(SomAdapter.getLocation(((NonLocalVariableNode) node).getLocal().source));
@@ -449,9 +443,6 @@ public class SomAdapter {
       result.add(SomAdapter.getLocation(((LocalArgumentReadNode) node).getArg().source));
     } else if (node instanceof NonLocalArgumentReadNode) {
       result.add(SomAdapter.getLocation(((NonLocalArgumentReadNode) node).getArg().source));
-    } else if (node instanceof EagerPrimitiveNode) {
-      SSymbol name = ((EagerPrimitiveNode) node).getSelector();
-      addAllDefinitions(result, name);
     } else {
       if (ServerLauncher.DEBUG) {
         reportError("GET DEFINITION, unsupported node: " + node.getClass().getSimpleName());
@@ -504,20 +495,8 @@ public class SomAdapter {
     }
 
     SSymbol sym = null;
-    if (node instanceof AbstractUninitializedMessageSendNode) {
-      sym = ((AbstractUninitializedMessageSendNode) node).getSelector();
-    } else if (node instanceof ResolvingImplicitReceiverSend) {
-      sym = ((ResolvingImplicitReceiverSend) node).getSelector();
-    } else if (node instanceof NonLocalVariableNode) {
-      sym = Symbols.symbolFor(((NonLocalVariableNode) node).getLocal().name);
-    } else if (node instanceof LocalVariableNode) {
-      sym = Symbols.symbolFor(((LocalVariableNode) node).getLocal().name);
-    } else if (node instanceof LocalArgumentReadNode) {
-      sym = Symbols.symbolFor(((LocalArgumentReadNode) node).getArg().name);
-    } else if (node instanceof NonLocalArgumentReadNode) {
-      sym = Symbols.symbolFor(((NonLocalArgumentReadNode) node).getArg().name);
-    } else if (node instanceof EagerPrimitiveNode) {
-      sym = ((EagerPrimitiveNode) node).getSelector();
+    if (node instanceof Send) {
+      sym = ((Send) node).getSelector();
     } else {
       if (ServerLauncher.DEBUG) {
         reportError("GET COMPLETIONS, unsupported node: " + node.getClass().getSimpleName());
