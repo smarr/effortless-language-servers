@@ -254,6 +254,7 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
   private void parseDocument(final String documentUri, final String text) {
     try {
       List<Diagnostic> diagnostics = som.parse(text, documentUri);
+      som.lintSends(documentUri, diagnostics);
       som.reportDiagnostics(diagnostics, documentUri);
     } catch (URISyntaxException ex) {
       ex.printStackTrace(ServerLauncher.errWriter());

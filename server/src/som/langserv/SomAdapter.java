@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.eclipse.lsp4j.CompletionItem;
@@ -106,25 +107,53 @@ public class SomAdapter {
     File workspace = new File(workspaceUri);
     assert workspace.isDirectory();
 
-    new Thread(() -> loadFolder(workspace)).start();
+    new Thread(() -> loadWorkspaceAndLint(workspace)).start();
   }
 
-  private void loadFolder(final File folder) {
+  private void loadWorkspaceAndLint(final File workspace) {
+    Map<String, List<Diagnostic>> allDiagnostics = new HashMap<>();
+    loadFolder(workspace, allDiagnostics);
+
+    for (Entry<String, List<Diagnostic>> e : allDiagnostics.entrySet()) {
+      try {
+        lintSends(e.getKey(), e.getValue());
+      } catch (URISyntaxException ex) {
+        /*
+         * at this point, there is nothing to be done anymore,
+         * would have been problematic earlier
+         */
+      }
+
+      reportDiagnostics(e.getValue(), e.getKey());
+    }
+  }
+
+  private void loadFolder(final File folder,
+      final Map<String, List<Diagnostic>> allDiagnostics) {
     for (File f : folder.listFiles()) {
       if (f.isDirectory()) {
-        loadFolder(f);
+        loadFolder(f, allDiagnostics);
       } else if (f.getName().endsWith(FILE_ENDING)) {
         try {
           byte[] content = Files.readAllBytes(f.toPath());
           String str = new String(content, StandardCharsets.UTF_8);
           String uri = f.toURI().toString();
           List<Diagnostic> diagnostics = parse(str, uri);
-          reportDiagnostics(diagnostics, uri);
+          allDiagnostics.put(uri, diagnostics);
         } catch (IOException | URISyntaxException e) {
           // if loading fails, we don't do anything, just move on to the next file
         }
       }
     }
+  }
+
+  public void lintSends(final String docUri, final List<Diagnostic> diagnostics)
+      throws URISyntaxException {
+    SomStructures probe;
+    synchronized (structuralProbes) {
+      probe = structuralProbes.get(docUriToNormalizedPath(docUri));
+    }
+    SomLint.checkSends(structuralProbes, probe, diagnostics);
   }
 
   private String docUriToNormalizedPath(final String documentUri) throws URISyntaxException {
@@ -165,7 +194,6 @@ public class SomAdapter {
       synchronized (newProbe) {
         MixinDefinition def = compiler.compileModule(source, newProbe);
         SomLint.checkModuleName(path, def, diagnostics);
-        SomLint.checkSends(structuralProbes, newProbe, diagnostics);
       }
     } catch (ParseError e) {
       return toDiagnostics(e, diagnostics);
