@@ -2,10 +2,12 @@ package som.langserv;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionItemKind;
+import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Location;
 
 import com.oracle.truffle.api.source.Source;
@@ -18,6 +20,7 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
+import tools.Send;
 import tools.language.StructuralProbe;
 
 
@@ -26,13 +29,37 @@ public class SomStructures extends StructuralProbe {
   private final Source           source;
   private final ExpressionNode[] map;
 
+  private final List<Diagnostic> diagnostics;
+
+  private final List<Call> calls;
+
+  public static class Call {
+    final SSymbol         selector;
+    final SourceSection[] sections;
+
+    Call(final SSymbol selector, final SourceSection[] sections) {
+      this.selector = selector;
+      this.sections = sections;
+    }
+  }
+
   public SomStructures(final Source source) {
     this.source = source;
     this.map = new ExpressionNode[source.getLength()];
+    this.diagnostics = new ArrayList<>(0);
+    this.calls = new ArrayList<>();
+  }
+
+  public List<Call> getCalls() {
+    return calls;
   }
 
   public String getDocumentUri() {
     return source.getURI().toString();
+  }
+
+  public List<Diagnostic> getDiagnostics() {
+    return diagnostics;
   }
 
   public synchronized ExpressionNode getElementAt(final int line, final int character) {
@@ -165,6 +192,12 @@ public class SomStructures extends StructuralProbe {
   }
 
   public void reportCall(final ExpressionNode send, final SourceSection... section) {
+    if (send instanceof Send) {
+      calls.add(new Call(((Send) send).getSelector(), section));
+    } else {
+      // ...
+    }
+
     for (SourceSection s : section) {
       putIntoMap(s, send);
     }
@@ -172,6 +205,11 @@ public class SomStructures extends StructuralProbe {
 
   public void reportAssignment(final ExpressionNode result,
       final SourceSection removeLast) {
+    if (result instanceof Send) {
+      calls.add(new Call(((Send) result).getSelector(), new SourceSection[] {removeLast}));
+    } else {
+      // ...
+    }
     putIntoMap(removeLast, result);
   }
 
@@ -182,6 +220,34 @@ public class SomStructures extends StructuralProbe {
         map[i] = result;
       }
     }
+  }
+
+  public boolean defines(final SSymbol selector) {
+    for (Variable v : variables) {
+      if (v.name == selector) {
+        return true;
+      }
+    }
+
+    for (SInvokable m : methods) {
+      if (m.getSignature() == selector) {
+        return true;
+      }
+    }
+
+    for (SlotDefinition s : slots) {
+      if (s.getName() == selector) {
+        return true;
+      }
+    }
+
+    for (MixinDefinition c : classes) {
+      if (c.getName() == selector) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   // REM:
