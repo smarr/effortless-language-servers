@@ -28,7 +28,6 @@ import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
-import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.ServerCapabilities;
@@ -254,20 +253,10 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
 
   private void parseDocument(final String documentUri, final String text) {
     try {
-      ArrayList<Diagnostic> diagnostics = som.parse(text, documentUri);
-      reportDiagnostics(diagnostics, documentUri);
+      List<Diagnostic> diagnostics = som.parse(text, documentUri);
+      som.reportDiagnostics(diagnostics, documentUri);
     } catch (URISyntaxException ex) {
       ex.printStackTrace(ServerLauncher.errWriter());
-    }
-  }
-
-  private void reportDiagnostics(final ArrayList<Diagnostic> diagnostics,
-      final String documentUri) {
-    if (diagnostics != null) {
-      PublishDiagnosticsParams result = new PublishDiagnosticsParams();
-      result.setDiagnostics(diagnostics);
-      result.setUri(documentUri);
-      client.publishDiagnostics(result);
     }
   }
 

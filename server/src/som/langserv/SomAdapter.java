@@ -23,6 +23,7 @@ import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
@@ -473,6 +474,16 @@ public class SomAdapter {
     client.logMessage(msg);
 
     ServerLauncher.logErr(msgStr);
+  }
+
+  public void reportDiagnostics(final List<Diagnostic> diagnostics,
+      final String documentUri) {
+    if (diagnostics != null) {
+      PublishDiagnosticsParams result = new PublishDiagnosticsParams();
+      result.setDiagnostics(diagnostics);
+      result.setUri(documentUri);
+      client.publishDiagnostics(result);
+    }
   }
 
   public CompletionList getCompletions(final String docUri, final int line,
