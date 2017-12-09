@@ -224,7 +224,7 @@ public class SomStructures extends StructuralProbe {
     }
   }
 
-  public boolean defines(final SSymbol selector) {
+  public synchronized boolean defines(final SSymbol selector) {
     for (Variable v : variables) {
       if (v.name == selector) {
         return true;
