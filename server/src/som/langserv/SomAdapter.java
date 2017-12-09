@@ -58,7 +58,7 @@ import tools.language.StructuralProbe;
 
 public class SomAdapter {
 
-  private final static String FILE_ENDING = ".ns";
+  public final static String FILE_ENDING = ".ns";
 
   private final Map<String, SomStructures> structuralProbes = new HashMap<>();
   private final SomCompiler                compiler;
@@ -164,6 +164,8 @@ public class SomAdapter {
       }
       synchronized (newProbe) {
         MixinDefinition def = compiler.compileModule(source, newProbe);
+        SomLint.checkModuleName(path, def, diagnostics);
+        SomLint.checkSends(structuralProbes, newProbe, diagnostics);
       }
     } catch (ParseError e) {
       return toDiagnostics(e, diagnostics);
@@ -220,7 +222,7 @@ public class SomAdapter {
     return diagnostics;
   }
 
-  private static Position pos(final int startLine, final int startChar) {
+  public static Position pos(final int startLine, final int startChar) {
     Position pos = new Position();
     pos.setLine(startLine - 1);
     pos.setCharacter(startChar - 1);
@@ -468,7 +470,7 @@ public class SomAdapter {
     }
   }
 
-  private void reportError(final String msgStr) {
+  public void reportError(final String msgStr) {
     MessageParams msg = new MessageParams();
     msg.setType(MessageType.Log);
     msg.setMessage(msgStr);
