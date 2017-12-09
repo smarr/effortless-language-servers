@@ -127,11 +127,15 @@ public class SomAdapter {
     }
   }
 
+  private String docUriToNormalizedPath(final String documentUri) throws URISyntaxException {
+    URI uri = new URI(documentUri).normalize();
+    return uri.getPath();
+  }
+
   private SomStructures getProbe(final String documentUri) {
     synchronized (structuralProbes) {
       try {
-        URI uri = new URI(documentUri).normalize();
-        return structuralProbes.get(uri.getPath());
+        return structuralProbes.get(docUriToNormalizedPath(documentUri));
       } catch (URISyntaxException e) {
         return null;
       }
@@ -139,24 +143,24 @@ public class SomAdapter {
   }
 
   /** Create a copy to work on safely. */
-  private Map<String, SomStructures> getProbes() {
+  private Collection<SomStructures> getProbes() {
     synchronized (structuralProbes) {
-      return new HashMap<>(structuralProbes);
+      return new ArrayList<>(structuralProbes.values());
     }
   }
 
   public List<Diagnostic> parse(final String text, final String sourceUri)
       throws URISyntaxException {
-    URI uri = new URI(sourceUri).normalize();
-    Source source = Source.newBuilder(text).name(uri.getPath()).mimeType(SomLanguage.MIME_TYPE)
-                          .uri(uri).build();
+    String path = docUriToNormalizedPath(sourceUri);
+    Source source = Source.newBuilder(text).name(path).mimeType(SomLanguage.MIME_TYPE)
+                          .uri(new URI(sourceUri).normalize()).build();
 
     SomStructures newProbe = new SomStructures(source);
     List<Diagnostic> diagnostics = newProbe.getDiagnostics();
     try {
       // clean out old structural data
       synchronized (structuralProbes) {
-        structuralProbes.remove(uri.getPath());
+        structuralProbes.remove(path);
       }
       synchronized (newProbe) {
         MixinDefinition def = compiler.compileModule(source, newProbe);
@@ -170,7 +174,7 @@ public class SomAdapter {
     } finally {
       // set new probe once done with everything
       synchronized (structuralProbes) {
-        structuralProbes.put(uri.getPath(), newProbe);
+        structuralProbes.put(path, newProbe);
       }
     }
     return diagnostics;
@@ -318,11 +322,11 @@ public class SomAdapter {
   }
 
   public List<? extends SymbolInformation> getAllSymbolInfo(final String query) {
-    Map<String, SomStructures> probesCopy = getProbes();
+    Collection<SomStructures> probes = getProbes();
 
     ArrayList<SymbolInformation> results = new ArrayList<>();
 
-    for (SomStructures probe : probesCopy.values()) {
+    for (SomStructures probe : probes) {
       addAllSymbols(results, query, probe, probe.getDocumentUri());
     }
 
@@ -457,8 +461,10 @@ public class SomAdapter {
   }
 
   private void addAllDefinitions(final ArrayList<Location> result, final SSymbol name) {
-    for (SomStructures s : structuralProbes.values()) {
-      s.getDefinitionsFor(name, result);
+    synchronized (structuralProbes) {
+      for (SomStructures s : structuralProbes.values()) {
+        s.getDefinitionsFor(name, result);
+      }
     }
   }
 
@@ -510,10 +516,7 @@ public class SomAdapter {
 
     if (sym != null) {
       Set<CompletionItem> completion = new HashSet<>();
-      Collection<SomStructures> probes;
-      synchronized (structuralProbes) {
-        probes = new ArrayList<>(structuralProbes.values());
-      }
+      Collection<SomStructures> probes = getProbes();
 
       for (SomStructures s : probes) {
         s.getCompletions(sym, completion);
