@@ -13,6 +13,7 @@ import org.eclipse.lsp4j.Location;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.compiler.MixinBuilder;
 import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Variable;
@@ -239,6 +240,10 @@ public class SomStructures extends StructuralProbe {
 
     for (SlotDefinition s : slots) {
       if (s.getName() == selector) {
+        return true;
+      }
+
+      if (!s.isImmutable() && MixinBuilder.getSetterName(s.getName()) == selector) {
         return true;
       }
     }
