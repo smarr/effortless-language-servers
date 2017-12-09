@@ -142,6 +142,8 @@ public class SomStructures extends StructuralProbe {
 
     for (MixinDefinition c : classes) {
       matchAndAdd(name, c.getName(), results, CompletionItemKind.Class);
+      matchAndAdd(name, c.getPrimaryFactorySelector(), results,
+          CompletionItemKind.Constructor);
     }
   }
 
