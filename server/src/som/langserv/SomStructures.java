@@ -245,6 +245,9 @@ public class SomStructures extends StructuralProbe {
       if (c.getName() == selector) {
         return true;
       }
+      if (c.getPrimaryFactorySelector() == selector) {
+        return true;
+      }
     }
 
     return false;
