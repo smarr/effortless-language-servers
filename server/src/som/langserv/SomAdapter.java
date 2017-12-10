@@ -49,6 +49,7 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.LocalVariableNode;
 import som.interpreter.nodes.NonLocalVariableNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
+import som.vm.Primitives;
 import som.vm.VmOptions;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
@@ -61,7 +62,7 @@ public class SomAdapter {
 
   public final static String FILE_ENDING = ".ns";
 
-  private final Map<String, SomStructures> structuralProbes = new HashMap<>();
+  private final Map<String, SomStructures> structuralProbes;
   private final SomCompiler                compiler;
 
   private LanguageClient client;
@@ -69,6 +70,24 @@ public class SomAdapter {
   public SomAdapter() {
     VM vm = initializePolyglot();
     this.compiler = new SomCompiler(vm.getLanguage());
+    this.structuralProbes = new HashMap<>();
+    registerVmMirrorPrimitives(vm);
+  }
+
+  private void registerVmMirrorPrimitives(final VM vm) {
+    Primitives prims = new Primitives(vm.getLanguage());
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    HashMap<SSymbol, SInvokable> ps = (HashMap) prims.takeVmMirrorPrimitives();
+
+    SomStructures primProbe =
+        new SomStructures(Source.newBuilder("vmMirror").mimeType(SomLanguage.MIME_TYPE)
+                                .name("vmMirror").build());
+    for (SInvokable i : ps.values()) {
+      primProbe.recordNewMethod(i);
+    }
+
+    structuralProbes.put("vmMirror", primProbe);
   }
 
   public void connect(final LanguageClient client) {
