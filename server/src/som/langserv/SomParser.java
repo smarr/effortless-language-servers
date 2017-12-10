@@ -36,8 +36,22 @@ public class SomParser extends Parser {
   protected ExpressionNode implicitUnaryMessage(final MethodBuilder meth,
       final SSymbol selector, final SourceSection section) {
     ExpressionNode result = super.implicitUnaryMessage(meth, selector, section);
-    struturalProbe.reportCall(result, section);
+
+    SourceSection s = sourceSections.getLast();
+    assert result.getSourceSection().getCharIndex() == s.getCharIndex();
+    struturalProbe.reportCall(result, sourceSections.removeLast());
     return result;
+  }
+
+  @Override
+  protected SSymbol selector() throws ParseError {
+    SSymbol sel = super.selector();
+    if (sel.getNumberOfSignatureArguments() <= 2) {
+      // in this case, we called binarySelector() or unarySelector() and put a
+      // source section on the stack that we need to remove
+      sourceSections.removeLast();
+    }
+    return sel;
   }
 
   @Override
@@ -46,6 +60,8 @@ public class SomParser extends Parser {
     @SuppressWarnings("unused")
     int stackHeight = sourceSections.size();
     ExpressionNode result = super.unaryMessage(receiver, eventualSend, sendOperator);
+    SourceSection selector = sourceSections.getLast();
+    assert result.getSourceSection().getCharIndex() == selector.getCharIndex();
     struturalProbe.reportCall(result, sourceSections.removeLast());
     // assert stackHeight == sourceSections.size();
     return result;
@@ -59,6 +75,8 @@ public class SomParser extends Parser {
     int stackHeight = sourceSections.size();
     ExpressionNode result = super.binaryMessage(
         builder, receiver, eventualSend, sendOperator);
+    SourceSection selector = sourceSections.getLast();
+    assert result.getSourceSection().getCharIndex() == selector.getCharIndex();
     struturalProbe.reportCall(result, sourceSections.removeLast());
     // assert stackHeight == sourceSections.size();
     return result;
@@ -123,5 +141,27 @@ public class SomParser extends Parser {
     String result = super.setterKeyword();
     sourceSections.addLast(getSource(coord));
     return result;
+  }
+
+  @Override
+  protected void unaryPattern(final MethodBuilder builder) throws ParseError {
+    super.unaryPattern(builder);
+    sourceSections.removeLast();
+  }
+
+  @Override
+  protected void binaryPattern(final MethodBuilder builder) throws ParseError {
+    super.binaryPattern(builder);
+    sourceSections.removeLast();
+  }
+
+  @Override
+  protected void keywordPattern(final MethodBuilder builder) throws ParseError {
+    super.keywordPattern(builder);
+
+    // remove one less than number of arguments
+    for (int i = 1; i < builder.getSignature().getNumberOfSignatureArguments(); i += 1) {
+      sourceSections.removeLast();
+    }
   }
 }
