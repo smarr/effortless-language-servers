@@ -387,18 +387,34 @@ public class SomAdapter {
     synchronized (probe) {
       Set<MixinDefinition> classes = probe.getClasses();
       for (MixinDefinition m : classes) {
-        assert m.getSourceSection().getSource().getURI().toString().equals(documentUri);
+        assert sameDocument(documentUri, m.getSourceSection());
         addSymbolInfo(m, query, results);
       }
 
       Set<SInvokable> methods = probe.getMethods();
       for (SInvokable m : methods) {
-        assert m.getSourceSection().getSource().getURI().toString().equals(documentUri);
+        assert sameDocument(documentUri, m.getSourceSection());
 
         if (matchQuery(query, m)) {
           results.add(getSymbolInfo(m));
         }
       }
+    }
+  }
+
+  private boolean sameDocument(final String documentUri, final SourceSection ss) {
+    if (documentUri == null) {
+      return ss == null;
+    }
+
+    if (ss == null) {
+      return documentUri.endsWith("vmMirror");
+    }
+
+    try {
+      return ss.getSource().getURI().getPath().equals(new URI(documentUri).getPath());
+    } catch (URISyntaxException e) {
+      return false;
     }
   }
 
