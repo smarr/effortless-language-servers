@@ -434,8 +434,9 @@ public class SomAdapter {
     SymbolInformation sym = new SymbolInformation();
     sym.setName(m.getSignature().toString());
     sym.setKind(SymbolKind.Method);
-    assert null != m.getSourceSection();
-    sym.setLocation(getLocation(m.getSourceSection()));
+    if (null != m.getSourceSection()) {
+      sym.setLocation(getLocation(m.getSourceSection()));
+    }
     if (m.getHolderUnsafe() != null) {
       sym.setContainerName(m.getHolder().getName().getString());
     }
