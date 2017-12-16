@@ -7,6 +7,7 @@ import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
+import org.eclipse.lsp4j.CodeLensOptions;
 import org.eclipse.lsp4j.CodeLensParams;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.CompletionItem;
@@ -22,6 +23,7 @@ import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentOnTypeFormattingParams;
 import org.eclipse.lsp4j.DocumentRangeFormattingParams;
 import org.eclipse.lsp4j.DocumentSymbolParams;
+import org.eclipse.lsp4j.ExecuteCommandOptions;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
@@ -45,6 +47,8 @@ import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
 
+import com.google.common.collect.Lists;
+
 
 public class SomLanguageServer implements LanguageServer, TextDocumentService,
     LanguageClientAware {
@@ -67,6 +71,9 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
     cap.setDocumentSymbolProvider(true);
     cap.setWorkspaceSymbolProvider(true);
     cap.setDefinitionProvider(true);
+    cap.setCodeLensProvider(new CodeLensOptions(true));
+    cap.setExecuteCommandProvider(
+        new ExecuteCommandOptions(Lists.newArrayList(SomMinitest.COMMAND)));
 
     CompletionOptions completion = new CompletionOptions();
     List<String> autoComplTrigger = new ArrayList<>();
@@ -195,8 +202,9 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
 
   @Override
   public CompletableFuture<List<? extends CodeLens>> codeLens(final CodeLensParams params) {
-    // TODO Auto-generated method stub
-    return null;
+    List<CodeLens> result = new ArrayList<>();
+    som.getCodeLenses(result, params.getTextDocument().getUri());
+    return CompletableFuture.completedFuture(result);
   }
 
   @Override

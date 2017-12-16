@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.Diagnostic;
@@ -62,6 +63,8 @@ public class SomAdapter {
 
   public final static String FILE_ENDING = ".ns";
 
+  public final static String CORE_LIB_PATH = System.getProperty("som.langserv.core-lib");
+
   private final Map<String, SomStructures> structuralProbes;
   private final SomCompiler                compiler;
 
@@ -95,7 +98,7 @@ public class SomAdapter {
   }
 
   private VM initializePolyglot() {
-    String coreLib = System.getProperty("som.langserv.core-lib");
+    String coreLib = CORE_LIB_PATH;
     if (coreLib == null) {
       throw new IllegalArgumentException(
           "The som.langserv.core-lib system property needs to be set. For instance: -Dsom.langserv.core-lib=/SOMns/core-lib");
@@ -175,7 +178,8 @@ public class SomAdapter {
     SomLint.checkSends(structuralProbes, probe, diagnostics);
   }
 
-  private String docUriToNormalizedPath(final String documentUri) throws URISyntaxException {
+  public static String docUriToNormalizedPath(final String documentUri)
+      throws URISyntaxException {
     URI uri = new URI(documentUri).normalize();
     return uri.getPath();
   }
@@ -606,6 +610,27 @@ public class SomAdapter {
       SomParser parser = new SomParser(source.getCharacters().toString(), source.getLength(),
           source, (SomStructures) structuralProbe, language);
       return compile(parser, source);
+    }
+  }
+
+  public void getCodeLenses(final List<CodeLens> codeLenses,
+      final String documentUri) {
+    String path;
+    try {
+      path = docUriToNormalizedPath(documentUri);
+    } catch (URISyntaxException e) {
+      return;
+    }
+
+    SomStructures probe;
+    synchronized (path) {
+      probe = structuralProbes.get(path);
+    }
+
+    if (probe != null) {
+      for (MixinDefinition c : probe.getClasses()) {
+        SomMinitest.checkForTests(c, codeLenses, documentUri);
+      }
     }
   }
 }
