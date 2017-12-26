@@ -7,6 +7,10 @@
 		"lib": ["es6"],
 		"sourceMap": true
 	},
+  "include": [
+    "test/**/*",
+    "src/**/*"
+  ],
 	"exclude": [
 		"node_modules",
 		"server"

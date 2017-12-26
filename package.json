@@ -157,16 +157,21 @@
 	},
 	"scripts": {
 		"compile:server": "cd server && ant deploy",
-		"compile:ext": "tsc -p ./",
+		"compile:ext": "tsc -p ./ && cp -R test/ns out/test/",
 		"vscode:prepublish": "npm run compile:server && npm run compile:ext",
 		"watch": "tsc -watch -p ./",
 		"compile": "npm run vscode:prepublish",
-		"postinstall": "node ./node_modules/vscode/bin/install"
+		"postinstall": "node ./node_modules/vscode/bin/install",
+		"test": "node ./node_modules/vscode/bin/test"
 	},
 	"devDependencies": {
-		"@types/node": "^8.0.53",
-		"typescript": "2.6.1",
-		"vscode": "1.1.8"
+		"@types/node": "^8.5.2",
+		"@types/chai": "^4.0.10",
+		"@types/mocha": "^2.2.45",
+		"typescript": "2.6.2",
+		"vscode": "1.1.10",
+		"chai": "^4.1.2",
+		"mocha": "^4.0.1"
 	},
 	"dependencies": {
 		"vscode-languageclient": "3.5.0",
