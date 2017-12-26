@@ -28,6 +28,18 @@
 				"${workspaceRoot}/out/**/*.js"
 			],
 			"cwd": "${workspaceRoot}"
+		},
+		{
+			"name": "Launch Tests",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": ["--extensionDevelopmentPath=${workspaceFolder}",
+							 "--extensionTestsPath=${workspaceFolder}/out/test"],
+			"stopOnEntry": false,
+			"sourceMaps": true,
+			"outFiles": ["${workspaceFolder}/out/tests/**/*.js"],
+			// "preLaunchTask": "npm"
 		}
 	]
 }
