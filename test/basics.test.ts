@@ -97,7 +97,7 @@ describe("Basic Tests", () => {
     client.addDiagnosticsHandler(function (params) {
       try {
         expect(params.uri).to.equal(uri.toString() + '/Hello.ns');
-        expect(params.diagnostics).to.have.lengthOf(7);
+        expect(params.diagnostics).to.have.lengthOf(8);
         done();
       } catch (e) {
         done(e);
