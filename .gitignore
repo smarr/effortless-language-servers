@@ -3,3 +3,6 @@ client/out
 server/bin
 server/libs/*.jar
 server/som-language-server.jar
+/node_modules
+/out
+/.vscode-test
