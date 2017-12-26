@@ -22,8 +22,8 @@ class TestLanguageClient extends LanguageClient {
   constructor(name: string, serverOptions, clientOptions, forceDebug?: boolean) {
     super(name, serverOptions, clientOptions, forceDebug);
 
-    const hd = (<any> this).handleDiagnostics;
-    (<any> this).handleDiagnostics = (params) => {
+    const hd = (<any>this).handleDiagnostics;
+    (<any>this).handleDiagnostics = (params) => {
       hd.call(this, params);
       this.handleDiag(params);
     }
@@ -46,7 +46,7 @@ class TestLanguageClient extends LanguageClient {
 }
 
 describe("Basic Tests", () => {
-  let clientDisposable : Disposable;
+  let clientDisposable: Disposable;
   let client: TestLanguageClient;
 
   after(done => {
@@ -69,7 +69,7 @@ describe("Basic Tests", () => {
         return CloseAction.DoNotRestart;
       }
     };
-    const options = Object.assign({}, CLIENT_OPTION, {errorHandler: errorHandler});
+    const options = Object.assign({}, CLIENT_OPTION, { errorHandler: errorHandler });
     client = new TestLanguageClient('SOMns Language Server', createLSPServer, options);
     clientDisposable = client.start();
 
