@@ -6,6 +6,9 @@ The extension provides support for:
  - syntax highlighting
  - parse errors
  - code navigation
+ - code completion
+ - basic linting
+ - CodeLens for running minitests
  - and debugging of SOMns programs
 
 #### Screenshot of SOMns Syntax Highlighting
@@ -68,7 +71,7 @@ When working on the Language Server, which provides the IDE services, it is best
 to start it for instance from Eclipse.
 
 To instruct VS code to use an already running instance of the language server,
-add the following to your VS Code User Settings: 
+add the following to your VS Code User Settings:
 
 ```JavaScript
 "somns.debugMode" : true
@@ -85,9 +88,9 @@ cd /$pathToCheckout/SOMns-vscode/server
 
 To debug the Debugger Adapter, load the code in VS code, and select "Run Debugger as server" in the debugger menu.
 
-In the configuration of the VS Code instance with the SOM code, add a 
+In the configuration of the VS Code instance with the SOM code, add a
 configuration that executes a SOM program, and add the `debugServer` port
-as part of the configuration. This needs to be inside the config, i.e., for 
+as part of the configuration. This needs to be inside the config, i.e., for
 instance next to the `"program"` setting.
 
 ```

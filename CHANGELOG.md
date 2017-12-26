@@ -4,6 +4,15 @@
 
  -
 
+## [0.6.0] - 2017-12-26
+
+ - added CodeLens for Minitests to run them on a click in the editor window
+ - added basic linting for SOMns code
+ - fix stepping issue in debugger
+ - improve code completion, also include VM primitives
+ - enable partial transmission of arrays in debugger
+ - enable completion for more kinds of lexical positions
+
 ## [0.5.3] - 2017-11-26
 
  - fix classpath issue
@@ -69,7 +78,8 @@
  - improve first debug experience
  - publish extension on the [VS Code marketplace][SOMns-vscode]
 
-[Unreleased]:   https://github.com/smarr/SOMns-vscode/compare/v0.5.3...HEAD
+[Unreleased]:   https://github.com/smarr/SOMns-vscode/compare/v0.6.0...HEAD
+[0.6.0]:        https://github.com/smarr/SOMns-vscode/compare/v0.5.3...v0.6.0
 [0.5.3]:        https://github.com/smarr/SOMns-vscode/compare/v0.5.2...v0.5.3
 [0.5.2]:        https://github.com/smarr/SOMns-vscode/compare/v0.5.1...v0.5.2
 [0.5.1]:        https://github.com/smarr/SOMns-vscode/compare/v0.5.0...v0.5.1
