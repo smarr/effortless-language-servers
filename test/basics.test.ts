@@ -8,9 +8,15 @@ import { expect } from "chai";
 
 let serverDisposable: Disposable;
 
-function createLSPServer() : Promise<StreamInfo> {
+function resolvePathAbsolute(path: string): string {
+  const result = resolvePath(__dirname + '/../../' + path);
+  console.log(result)
+  return result;
+}
+
+function createLSPServer(): Promise<StreamInfo> {
   return new Promise((resolve, reject) => {
-    serverDisposable = startLanguageServer(resolvePath, resolve, reject);
+    serverDisposable = startLanguageServer(resolvePathAbsolute, resolve, reject);
     // serverDisposable = new vscode.Disposable(() => {});
     // connectToLanguageServer(resolve, reject);
   });
