@@ -1,6 +1,9 @@
 package som.langserv;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
@@ -81,7 +84,7 @@ public class SomMinitest {
   }
 
   private static CodeLens addTestMethod(final MixinDefinition def, final String documentUri,
-      SInvokable i) {
+      final SInvokable i) {
     CodeLens lens = new CodeLens();
     Command cmd = new Command();
     cmd.setCommand(COMMAND);
@@ -111,6 +114,21 @@ public class SomMinitest {
     int endChar = (int) (double) arguments.get(5);
     executeTest(adapter, (String) arguments.get(0), (String) arguments.get(1),
         new Range(new Position(startLine, startChar), new Position(endLine, endChar)));
+  }
+
+  private static String toString(final InputStream inputStream) throws IOException {
+    final int bufferSize = 1024;
+    final char[] buffer = new char[bufferSize];
+    final StringBuilder out = new StringBuilder();
+    Reader in = new InputStreamReader(inputStream, "UTF-8");
+    for (;;) {
+      int rsz = in.read(buffer, 0, buffer.length);
+      if (rsz < 0) {
+        break;
+      }
+      out.append(buffer, 0, rsz);
+    }
+    return out.toString();
   }
 
   private static void executeTest(final SomAdapter adapter, final String documentUri,
@@ -147,8 +165,23 @@ public class SomMinitest {
 
         List<Diagnostic> diagnostics = new ArrayList<>();
         if (r != 0) {
+          String stdout = "";
+          String error = "";
+          try {
+            stdout = toString(p.getInputStream());
+            error = toString(p.getErrorStream());
+          } catch (IOException e) {}
+
+          String s = "";
+          for (String sp : str) {
+            s += sp + " ";
+          }
+
           diagnostics.add(new Diagnostic(range,
-              "Test " + test + " failed", DiagnosticSeverity.Warning, documentUri));
+              "Test " + test + " failed. \nError:\n" + error
+                  + "\n\nOut:\n" + stdout + "\n\nExec: " + s + "\nExit Code: " + r,
+              DiagnosticSeverity.Warning,
+              documentUri));
         } else {
           diagnostics.add(new Diagnostic(range,
               "Test " + test + " successed", DiagnosticSeverity.Information, documentUri));
@@ -158,7 +191,5 @@ public class SomMinitest {
         repeat = true;
       }
     } while (repeat);
-
   }
-
 }
