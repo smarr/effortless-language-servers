@@ -38,7 +38,7 @@
 							 "--extensionTestsPath=${workspaceFolder}/out/test"],
 			"stopOnEntry": false,
 			"sourceMaps": true,
-			"outFiles": ["${workspaceFolder}/out/tests/**/*.js"],
+			"outFiles": ["${workspaceFolder}/out/test/**/*.js"],
 			// "preLaunchTask": "npm"
 		}
 	]
