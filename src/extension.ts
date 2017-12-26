@@ -9,36 +9,46 @@ import { LanguageClient, LanguageClientOptions, SettingMonitor, ServerOptions, T
 const LSPort = 8123;  // TODO: make configurable
 const EnableExtensionDebugging : boolean = <boolean> workspace.getConfiguration('somns').get('debugMode');
 
-function getServerOptions(context: ExtensionContext): ServerOptions {
+export const CLIENT_OPTION: LanguageClientOptions = {
+	documentSelector: ['SOMns']
+}
+
+type PathConverter = (path: string) => string;
+
+function getServerOptions(asAbsolutePath: PathConverter, enableDebug:
+	  boolean, enableTcp: boolean): ServerOptions {
 	const javaCmd = '/usr/bin/java';
 	const bootCP = ['-Xbootclasspath/a',
-		context.asAbsolutePath('out/server/som.jar'),
-		context.asAbsolutePath('out/server/black-diamonds.jar'),
-		context.asAbsolutePath('out/server/graal-sdk.jar'),
-		context.asAbsolutePath('out/server/word-api.jar'),
-		context.asAbsolutePath('out/server/truffle-api.jar'),
-		context.asAbsolutePath('out/server/truffle-debug.jar'),
-		context.asAbsolutePath('out/server/somns-deps.jar')]
+		asAbsolutePath('out/server/som.jar'),
+		asAbsolutePath('out/server/black-diamonds.jar'),
+		asAbsolutePath('out/server/graal-sdk.jar'),
+		asAbsolutePath('out/server/word-api.jar'),
+		asAbsolutePath('out/server/truffle-api.jar'),
+		asAbsolutePath('out/server/truffle-debug.jar'),
+		asAbsolutePath('out/server/somns-deps.jar')]
 
-  const javaClasspass = [
-		context.asAbsolutePath('out/server/guava-19.0.jar'),
-		context.asAbsolutePath('out/server/org.eclipse.xtend.lib-2.10.0.jar'),
-		context.asAbsolutePath('out/server/org.eclipse.xtext.xbase.lib-2.10.0.jar'),
-		context.asAbsolutePath('out/server/som-language-server.jar')]
-	const somLib = '-Dsom.langserv.core-lib=' + context.asAbsolutePath('out/server/core-lib')
+  const javaClassPath = [
+		asAbsolutePath('out/server/guava-19.0.jar'),
+		asAbsolutePath('out/server/org.eclipse.xtend.lib-2.10.0.jar'),
+		asAbsolutePath('out/server/org.eclipse.xtext.xbase.lib-2.10.0.jar'),
+		asAbsolutePath('out/server/som-language-server.jar')]
+	const somLib = '-Dsom.langserv.core-lib=' + asAbsolutePath('out/server/core-lib')
 
 	let javaArgs = [
 		bootCP.join(':'),
-		'-cp', javaClasspass.join(':'),
+		'-cp', javaClassPath.join(':'),
 		somLib,
 		'som.langserv.ServerLauncher'];
 
-	if (EnableExtensionDebugging) {
+	if (enableDebug) {
 		javaArgs = ['-ea', '-esa',
 								'-Xdebug',
-								'-Xrunjdwp:transport=dt_socket,quiet=y,server=y,suspend=n,address=8000',
-								'-Dsom.langserv.transport=tcp'
+								'-Xrunjdwp:transport=dt_socket,quiet=y,server=y,suspend=n,address=8000'
 							 ].concat(javaArgs);
+	}
+
+	if (enableTcp) {
+		javaArgs = ['-Dsom.langserv.transport=tcp'].concat(javaArgs);
 	}
 
 	return {
@@ -49,8 +59,8 @@ function getServerOptions(context: ExtensionContext): ServerOptions {
 
 function startLanguageServerAndConnectTCP(context: ExtensionContext,
 													   resolve: (value?: StreamInfo | PromiseLike<StreamInfo>) => void,
-														 reject: (reason?: any) => void) {
-	const serverOptions: any = getServerOptions(context);
+														 reject: (reason?: any) => void): Disposable {
+	const serverOptions: any = getServerOptions(context.asAbsolutePath, true, true);
 	const lsProc = spawn(serverOptions.run.command, serverOptions.run.args);
 	let sawServerStarted = false;
 	lsProc.stdout.on('data', data => {
@@ -66,15 +76,13 @@ function startLanguageServerAndConnectTCP(context: ExtensionContext,
 		reject('SOMns language server stopped. Exit code: ' + code);
 	});
 
-	// when not needed anymore, make sure the language server is shutdown
-	// TODO: perhaps do this with some proper command sent to the server?
-	context.subscriptions.push(new Disposable(() => { lsProc.kill(); }));
+	return new Disposable(() => { lsProc.kill(); });
 }
 
-function startLanguageServer(context: ExtensionContext,
+export function startLanguageServer(asAbsolutePath: PathConverter,
 													   resolve: (value?: StreamInfo | PromiseLike<StreamInfo>) => void,
 														 reject: (reason?: any) => void) {
-	const serverOptions: any = getServerOptions(context);
+	const serverOptions: any = getServerOptions(asAbsolutePath, EnableExtensionDebugging, false);
 	const lsProc = spawn(serverOptions.run.command, serverOptions.run.args);
 
 	resolve({
@@ -82,12 +90,10 @@ function startLanguageServer(context: ExtensionContext,
 		writer: lsProc.stdin
 	});
 
-	// when not needed anymore, make sure the language server is shutdown
-	// TODO: perhaps do this with some proper command sent to the server?
-	context.subscriptions.push(new Disposable(() => { lsProc.kill(); }));
+	return new Disposable(() => { lsProc.kill(); });
 }
 
-function connectToLanguageServer(resolve: (value?: StreamInfo | PromiseLike<StreamInfo>) => void,
+export function connectToLanguageServer(resolve: (value?: StreamInfo | PromiseLike<StreamInfo>) => void,
 														     reject: (reason?: any) => void) {
 	const clientSocket = new Socket();
 	clientSocket.once('error', (e) => {
@@ -109,17 +115,19 @@ export function activate(context: ExtensionContext) {
 				window.showInformationMessage("SOMns Debug Mode: Trying to connect to Language Server on port " + LSPort);
 				connectToLanguageServer(resolve, reject);
 			} else {
-				startLanguageServer(context, resolve, reject);
+				const disposable = startLanguageServer(context.asAbsolutePath, resolve, reject);
+
+				// when not needed anymore, make sure the language server is shutdown
+				// TODO: perhaps do this with some proper command sent to the server?
+				context.subscriptions.push(disposable);
 			}
 		});
 	}
 
-	let clientOptions: LanguageClientOptions = {
-		documentSelector: ['SOMns']
-	}
+
 
 	// Create the language client and start the client.
-	let disposable = new LanguageClient('SOMns Language Server', createLSPServer, clientOptions).start();
+	let disposable = new LanguageClient('SOMns Language Server', createLSPServer, CLIENT_OPTION).start();
 
 	// Push the disposable to the context's subscriptions so that the
 	// client can be deactivated on extension deactivation
