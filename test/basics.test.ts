@@ -10,7 +10,6 @@ let serverDisposable: Disposable;
 
 function resolvePathAbsolute(path: string): string {
   const result = resolvePath(__dirname + '/../../' + path);
-  console.log(result)
   return result;
 }
 
