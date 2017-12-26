@@ -18,24 +18,24 @@ type PathConverter = (path: string) => string;
 function getServerOptions(asAbsolutePath: PathConverter, enableDebug:
 	  boolean, enableTcp: boolean): ServerOptions {
 	const javaCmd = '/usr/bin/java';
-	const bootCP = ['-Xbootclasspath/a',
+
+  const javaClassPath = [
 		asAbsolutePath('out/server/som.jar'),
 		asAbsolutePath('out/server/black-diamonds.jar'),
 		asAbsolutePath('out/server/graal-sdk.jar'),
 		asAbsolutePath('out/server/word-api.jar'),
 		asAbsolutePath('out/server/truffle-api.jar'),
 		asAbsolutePath('out/server/truffle-debug.jar'),
-		asAbsolutePath('out/server/somns-deps.jar')]
+		asAbsolutePath('out/server/somns-deps.jar'),
 
-  const javaClassPath = [
 		asAbsolutePath('out/server/guava-19.0.jar'),
 		asAbsolutePath('out/server/org.eclipse.xtend.lib-2.10.0.jar'),
 		asAbsolutePath('out/server/org.eclipse.xtext.xbase.lib-2.10.0.jar'),
-		asAbsolutePath('out/server/som-language-server.jar')]
+		asAbsolutePath('out/server/som-language-server.jar')];
+
 	const somLib = '-Dsom.langserv.core-lib=' + asAbsolutePath('out/server/core-lib')
 
 	let javaArgs = [
-		bootCP.join(':'),
 		'-cp', javaClassPath.join(':'),
 		somLib,
 		'som.langserv.ServerLauncher'];
