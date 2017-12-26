@@ -23,7 +23,7 @@
 	"activationEvents": [
 		"onLanguage:SOMns"
 	],
-	"main": "./out/extension",
+	"main": "./out/src/extension",
 	"icon": "resources/logo.png",
 	"contributes": {
 		"languages": [
@@ -69,7 +69,7 @@
 						"SOMns"
 					]
 				},
-				"program": "./out/debugger.js",
+				"program": "./out/src/debugger.js",
 				"runtime": "node",
 				"configurationAttributes": {
 					"launch": {
