@@ -184,7 +184,7 @@ public class SomMinitest {
               documentUri));
         } else {
           diagnostics.add(new Diagnostic(range,
-              "Test " + test + " successed", DiagnosticSeverity.Information, documentUri));
+              "Test " + test + " succeeded", DiagnosticSeverity.Information, documentUri));
         }
         adapter.reportDiagnostics(diagnostics, documentUri);
       } catch (InterruptedException e) {
