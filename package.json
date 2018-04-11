@@ -7,7 +7,7 @@
 	"version": "0.6.0",
 	"publisher": "MetaConcProject",
 	"engines": {
-		"vscode": "^1.18.1"
+		"vscode": "^1.22.0"
 	},
 	"categories": [
 		"Debuggers",
@@ -165,18 +165,19 @@
 		"test": "node ./node_modules/vscode/bin/test"
 	},
 	"devDependencies": {
-		"@types/node": "^8.5.2",
-		"@types/chai": "^4.0.10",
-		"@types/mocha": "^2.2.45",
-		"typescript": "2.6.2",
-		"vscode": "1.1.10",
+		"@types/node": "^10.9.4",
+		"@types/chai": "^4.1.4",
+		"@types/mocha": "^5.2.5",
+		"typescript": "^3.0.3",
+		"vscode": "^1.1.21",
 		"chai": "^4.1.2",
-		"mocha": "^4.0.1"
+		"mocha": "^5.2.0"
 	},
 	"dependencies": {
-		"vscode-languageclient": "3.5.0",
-		"vscode-debugprotocol": "1.24.0",
-		"vscode-debugadapter": "1.24.0",
-		"ws": "^3.3.2"
+		"vscode-languageserver-protocol": "^3.13.0",
+		"vscode-languageclient": "~4.3.0",
+		"vscode-debugprotocol": "^1.31.0",
+		"vscode-debugadapter": "^1.31.0",
+		"ws": "5.1.1"
 	}
 }
