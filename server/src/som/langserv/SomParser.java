@@ -6,9 +6,9 @@ import java.util.Deque;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.basic.ProgramDefinitionError;
 import som.compiler.MethodBuilder;
 import som.compiler.Parser;
-import som.compiler.ProgramDefinitionError;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
 import som.vmobjects.SSymbol;
