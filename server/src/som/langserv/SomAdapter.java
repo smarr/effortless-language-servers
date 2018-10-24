@@ -30,18 +30,21 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.services.LanguageClient;
+import org.graalvm.collections.EconomicMap;
+import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.Context.Builder;
+import org.graalvm.polyglot.Value;
 
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
-import com.oracle.truffle.api.vm.PolyglotEngine;
-import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
 
+import bd.basic.ProgramDefinitionError;
+import som.Launcher;
 import som.VM;
 import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Parser.ParseError;
-import som.compiler.ProgramDefinitionError;
-import som.compiler.ProgramDefinitionError.SemanticDefinitionError;
+import som.compiler.SemanticDefinitionError;
 import som.compiler.SourcecodeCompiler;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
@@ -50,8 +53,8 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.LocalVariableNode;
 import som.interpreter.nodes.NonLocalVariableNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
+import som.interpreter.objectstorage.StorageAccessor;
 import som.vm.Primitives;
-import som.vm.VmOptions;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 import tools.Send;
@@ -81,12 +84,12 @@ public class SomAdapter {
     Primitives prims = new Primitives(vm.getLanguage());
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    HashMap<SSymbol, SInvokable> ps = (HashMap) prims.takeVmMirrorPrimitives();
+    EconomicMap<SSymbol, SInvokable> ps = (EconomicMap) prims.takeVmMirrorPrimitives();
 
     SomStructures primProbe =
-        new SomStructures(Source.newBuilder("vmMirror").mimeType(SomLanguage.MIME_TYPE)
-                                .name("vmMirror").build());
-    for (SInvokable i : ps.values()) {
+        new SomStructures(Source.newBuilder(SomLanguage.LANG_ID, "vmMirror", "vmMirror")
+                                .mimeType(SomLanguage.MIME_TYPE).build());
+    for (SInvokable i : ps.getValues()) {
       primProbe.recordNewMethod(i);
     }
 
@@ -105,19 +108,20 @@ public class SomAdapter {
     }
 
     String[] args = new String[] {"--kernel", coreLib + "/Kernel.ns",
-        "--platform", coreLib + "/Platform.ns"};
-    VmOptions vmOptions = new VmOptions(args);
-    VM vm = new VM(vmOptions);
-    Builder builder = PolyglotEngine.newBuilder();
-    builder.config(SomLanguage.MIME_TYPE, SomLanguage.VM_OBJECT, vm);
+        "--platform", coreLib + "/Platform.ns", coreLib + "/Hello.ns"};
 
-    PolyglotEngine engine = builder.build();
-    engine.getRuntime().getInstruments().values().forEach(i -> i.setEnabled(false));
+    Builder builder = Launcher.createContextBuilder(args);
+    Context context = builder.build();
 
-    // Trigger object system initialization
-    engine.getLanguages().get(SomLanguage.MIME_TYPE).getGlobalObject();
+    // Needed to be able to execute SOMns initialization
+    StorageAccessor.initAccessors();
 
-    return vm;
+    // Initialize SomLanguage object
+    Value trueVal = context.eval(Launcher.INIT);
+    assert trueVal.as(
+        Boolean.class) : "INIT is exected to return true after initializing the Context";
+
+    return SomLanguage.getCurrent().getVM();
   }
 
   public void loadWorkspace(final String uri) throws URISyntaxException {
@@ -204,7 +208,8 @@ public class SomAdapter {
   public List<Diagnostic> parse(final String text, final String sourceUri)
       throws URISyntaxException {
     String path = docUriToNormalizedPath(sourceUri);
-    Source source = Source.newBuilder(text).name(path).mimeType(SomLanguage.MIME_TYPE)
+    Source source = Source.newBuilder(SomLanguage.LANG_ID, text, path)
+                          .mimeType(SomLanguage.MIME_TYPE)
                           .uri(new URI(sourceUri).normalize()).build();
 
     SomStructures newProbe = new SomStructures(source);
