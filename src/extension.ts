@@ -25,7 +25,8 @@ function getServerOptions(asAbsolutePath: PathConverter, enableDebug:
 		asAbsolutePath('out/server/graal-sdk.jar'),
 		asAbsolutePath('out/server/word-api.jar'),
 		asAbsolutePath('out/server/truffle-api.jar'),
-		asAbsolutePath('out/server/truffle-debug.jar'),
+		asAbsolutePath('out/server/svm-core.jar'),
+		asAbsolutePath('out/server/truffle-profiler.jar'),
 		asAbsolutePath('out/server/somns-deps.jar'),
 
 		asAbsolutePath('out/server/guava-19.0.jar'),

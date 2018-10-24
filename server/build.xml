@@ -7,6 +7,8 @@
     <property name="truffle.dir" value="${som.dir}/libs/truffle/truffle" />
     <property name="truffle.build" value="${truffle.dir}/mxbuild/dists" />
     <property name="sdk.build"   value="${som.dir}/libs/truffle/sdk/mxbuild/dists" />
+    <property name="svm.build"   value="${som.dir}/libs/truffle/substratevm/mxbuild/dists" />
+    <property name="tools.build" value="${som.dir}/libs/truffle/tools/mxbuild/dists" />
 
     <property name="mvn.repo"    value="https://repo1.maven.org/maven2" />
 
@@ -22,10 +24,13 @@
         <pathelement location="${lib.dir}/guava-${guava.version}.jar" />
         <pathelement location="${lib.dir}/org.eclipse.xtext.xbase.lib-${xbase.lib.version}.jar" />
         <pathelement location="${lib.dir}/org.eclipse.xtend.lib-${xtend.lib.version}.jar" />
+        
         <pathelement location="${sdk.build}/graal-sdk.jar" />
         <pathelement location="${sdk.build}/word-api.jar" />
+        <pathelement location="${svm.build}/svm-core.jar" />
+        <pathelement location="${tools.build}/truffle-profiler.jar" />
+        
         <pathelement location="${truffle.build}/truffle-api.jar" />
-        <pathelement location="${truffle.build}/truffle-debug.jar" />
         <pathelement location="${som.dir}/libs/somns-deps.jar" />
         <pathelement location="${som.dir}/build/som.jar" />
         <pathelement location="${bd.dir}/build/black-diamonds.jar" />
