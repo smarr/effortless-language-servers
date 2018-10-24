@@ -10,6 +10,8 @@
 	<classpathentry kind="lib" path="libs/org.eclipse.xtend.lib-2.10.0.jar"/>
 	<classpathentry kind="lib" path="libs/org.eclipse.xtext.xbase.lib-2.10.0.jar"/>
 	<classpathentry kind="src" path="/SOMns"/>
-	<classpathentry kind="src" path="/com.oracle.truffle.api.vm"/>
+	<classpathentry kind="src" path="/com.oracle.truffle.api"/>
+	<classpathentry kind="src" path="/BlackDiamonds"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/com.oracle.truffle.api.instrumentation"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

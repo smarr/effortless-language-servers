@@ -7,10 +7,12 @@
     <property name="truffle.dir" value="${som.dir}/libs/truffle/truffle" />
     <property name="truffle.build" value="${truffle.dir}/mxbuild/dists" />
     <property name="sdk.build"   value="${som.dir}/libs/truffle/sdk/mxbuild/dists" />
+    <property name="svm.build"   value="${som.dir}/libs/truffle/substratevm/mxbuild/dists" />
+    <property name="tools.build" value="${som.dir}/libs/truffle/tools/mxbuild/dists" />
 
     <property name="mvn.repo"    value="https://repo1.maven.org/maven2" />
 
-    <property name="checkstyle.version" value="7.6.1" />
+    <property name="checkstyle.version" value="8.11" />
     <property name="guava.version"      value="19.0" />
     <property name="xbase.lib.version"  value="2.10.0" />
     <property name="xtend.lib.version"  value="2.10.0" />
@@ -22,10 +24,13 @@
         <pathelement location="${lib.dir}/guava-${guava.version}.jar" />
         <pathelement location="${lib.dir}/org.eclipse.xtext.xbase.lib-${xbase.lib.version}.jar" />
         <pathelement location="${lib.dir}/org.eclipse.xtend.lib-${xtend.lib.version}.jar" />
+        
         <pathelement location="${sdk.build}/graal-sdk.jar" />
         <pathelement location="${sdk.build}/word-api.jar" />
+        <pathelement location="${svm.build}/svm-core.jar" />
+        <pathelement location="${tools.build}/truffle-profiler.jar" />
+        
         <pathelement location="${truffle.build}/truffle-api.jar" />
-        <pathelement location="${truffle.build}/truffle-debug.jar" />
         <pathelement location="${som.dir}/libs/somns-deps.jar" />
         <pathelement location="${som.dir}/build/som.jar" />
         <pathelement location="${bd.dir}/build/black-diamonds.jar" />
@@ -57,6 +62,7 @@
 
     <target name="somns" depends="somns-submodule">
       <exec executable="ant" dir="${som.dir}">
+          <arg value="-Dskip.graal=true" />
           <arg value="jar"/>
       </exec>
       <jar destfile="${bd.dir}/build/black-diamonds.jar" basedir="${bd.dir}/build/classes" />
@@ -75,7 +81,7 @@
     </target>
 
     <target name="checkstyle-jar">
-        <get src="http://tenet.dl.sourceforge.net/project/checkstyle/checkstyle/${checkstyle.version}/checkstyle-${checkstyle.version}-all.jar"
+        <get src="https://github.com/checkstyle/checkstyle/releases/download/checkstyle-${checkstyle.version}/checkstyle-${checkstyle.version}-all.jar"
             usetimestamp="true"
             dest="${lib.dir}/checkstyle-${checkstyle.version}-all.jar" />
     </target>

@@ -42,7 +42,7 @@ public class SomMinitest {
 
   public static void checkForTests(final MixinDefinition def,
       final List<CodeLens> codeLenses, final String documentUri) {
-    for (SSymbol s : def.getFactoryMethods().keySet()) {
+    for (SSymbol s : def.getFactoryMethods().getKeys()) {
       if (s == TEST_CONTEXT) {
         CodeLens lens = createTestLense(def, documentUri);
 
@@ -72,7 +72,7 @@ public class SomMinitest {
 
   private static void addTestMethods(final MixinDefinition def,
       final List<CodeLens> codeLenses, final String documentUri) {
-    for (Dispatchable d : def.getInstanceDispatchables().values()) {
+    for (Dispatchable d : def.getInstanceDispatchables().getValues()) {
       if (d instanceof SInvokable) {
         SInvokable i = (SInvokable) d;
         if (i.getSignature().getString().startsWith(TEST_PREFIX)) {
