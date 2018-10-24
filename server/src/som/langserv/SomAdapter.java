@@ -454,7 +454,7 @@ public class SomAdapter {
     }
 
     // We add the slots here, because we have more context at this point
-    for (Dispatchable d : m.getInstanceDispatchables().values()) {
+    for (Dispatchable d : m.getInstanceDispatchables().getValues()) {
       // needs to be exact test to avoid duplicate info
       if (d.getClass() == SlotDefinition.class) {
         if (matchQuery(query, (SlotDefinition) d)) {
