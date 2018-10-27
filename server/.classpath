@@ -13,5 +13,6 @@
 	<classpathentry kind="src" path="/com.oracle.truffle.api"/>
 	<classpathentry kind="src" path="/BlackDiamonds"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/com.oracle.truffle.api.instrumentation"/>
+	<classpathentry kind="src" path="/TruffleSOM"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

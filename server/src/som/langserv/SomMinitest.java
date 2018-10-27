@@ -60,7 +60,7 @@ public class SomMinitest {
     Command cmd = new Command();
     cmd.setCommand(COMMAND);
     cmd.setTitle("Run tests");
-    Range r = SomAdapter.toRange(def.getNameSourceSection());
+    Range r = Adapter.toRange(def.getNameSourceSection());
     cmd.setArguments(Lists.newArrayList(documentUri, def.getName().getString(),
         r.getStart().getLine(), r.getStart().getCharacter(), r.getEnd().getLine(),
         r.getEnd().getCharacter()));
@@ -89,7 +89,7 @@ public class SomMinitest {
     Command cmd = new Command();
     cmd.setCommand(COMMAND);
     cmd.setTitle("Run test");
-    Range r = SomAdapter.toRange(i.getSourceSection());
+    Range r = Adapter.toRange(i.getSourceSection());
     cmd.setArguments(Lists.newArrayList(documentUri,
         def.getName().getString() + "." + i.getSignature().getString(),
         r.getStart().getLine(), r.getStart().getCharacter(), r.getEnd().getLine(),
@@ -142,7 +142,7 @@ public class SomMinitest {
 
     String path;
     try {
-      path = SomAdapter.docUriToNormalizedPath(documentUri);
+      path = Adapter.docUriToNormalizedPath(documentUri);
     } catch (URISyntaxException e1) {
       return;
     }

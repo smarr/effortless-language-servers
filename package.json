@@ -22,7 +22,8 @@
 		"url": "https://github.com/smarr/SOMns-vscode/issues"
 	},
 	"activationEvents": [
-		"onLanguage:SOMns"
+		"onLanguage:SOMns",
+		"onLanguage:SOM"
 	],
 	"main": "./out/src/extension",
 	"icon": "resources/logo.png",
@@ -42,7 +43,11 @@
 				"id": "SOM",
 				"extensions": [
 					".som"
-				]
+				],
+				"aliases": [
+					"SOM"
+				],
+				"configuration": "./language-configuration.json"
 			}
 		],
 		"grammars": [

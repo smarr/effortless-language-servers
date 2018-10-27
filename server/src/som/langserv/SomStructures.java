@@ -72,25 +72,25 @@ public class SomStructures extends StructuralProbe {
       final ArrayList<Location> results) {
     for (MixinDefinition m : classes) {
       if (m.getName() == name) {
-        results.add(SomAdapter.getLocation(m.getSourceSection()));
+        results.add(Adapter.getLocation(m.getSourceSection()));
       }
     }
 
     for (SInvokable m : methods.getValues()) {
       if (m.getSignature() == name) {
-        results.add(SomAdapter.getLocation(m.getSourceSection()));
+        results.add(Adapter.getLocation(m.getSourceSection()));
       }
     }
 
     for (SlotDefinition s : slots) {
       if (s.getName() == name) {
-        results.add(SomAdapter.getLocation(s.getSourceSection()));
+        results.add(Adapter.getLocation(s.getSourceSection()));
       }
     }
 
     for (Variable v : variables) {
       if (v.name.equals(name.getString())) {
-        results.add(SomAdapter.getLocation(v.source));
+        results.add(Adapter.getLocation(v.source));
       }
     }
   }
