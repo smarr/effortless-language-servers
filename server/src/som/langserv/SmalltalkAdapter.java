@@ -12,25 +12,25 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.SymbolInformation;
+import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.Context.Builder;
 
 import com.oracle.truffle.api.source.Source;
-import com.oracle.truffle.api.vm.PolyglotEngine;
 
+import bd.basic.ProgramDefinitionError;
 import trufflesom.compiler.Parser;
-import trufflesom.compiler.SourcecodeCompiler;
 import trufflesom.compiler.Parser.ParseError;
+import trufflesom.compiler.SourcecodeCompiler;
 import trufflesom.interpreter.SomLanguage;
+import trufflesom.tools.SourceCoordinate;
 import trufflesom.vm.Universe;
 import trufflesom.vmobjects.SClass;
 
-import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
-import com.oracle.truffle.api.vm.PolyglotEngine.Language;
-
-import bd.basic.ProgramDefinitionError;
 
 public class SmalltalkAdapter extends Adapter {
 
-  public final static String CORE_LIB_PATH = System.getProperty("smalltalk.core-lib");
+  public final static String CORE_LIB_PATH =
+      System.getProperty("trufflesom.langserv.core-lib");
 
   private final Map<String, SomStructures> structuralProbes;
   private final SmalltalkCompiler          compiler;
@@ -48,23 +48,27 @@ public class SmalltalkAdapter extends Adapter {
   }
 
   private Universe initializePolyglot() {
-    Universe universe = new Universe(new SomLanguage());
+    if (CORE_LIB_PATH == null) {
+      throw new IllegalArgumentException(
+          "The trufflesom.langserv.core-lib system property needs to be set. For instance: -Dtrufflesom.langserv.core-lib=/TruffleSOM/core-lib");
+    }
+    String[] args = new String[] {"-cp", CORE_LIB_PATH + "/Smalltalk"};
 
-    Builder builder = PolyglotEngine.newBuilder();
-    builder.config(SomLanguage.MIME_TYPE, "vm-arguments", universe);
+    Builder builder = Universe.createContextBuilder(args);
+    Context context = builder.build();
 
-    PolyglotEngine engine = builder.build();
-    engine.getRuntime().getInstruments().values().forEach(i -> i.setEnabled(false));
+    context.eval(SomLanguage.INIT);
 
-    // Trigger object system initialization
-//    Map<String, ? extends Language> langs = engine.getLanguages();
-//    langs.get(SomLanguage.MIME_TYPE).getGlobalObject();
+    Universe universe = SomLanguage.getCurrent();
+    universe.setupClassPath(CORE_LIB_PATH + "/Smalltalk");
+    universe.initializeObjectSystem();
 
     return universe;
   }
 
   @Override
-  public void lintSends(String docUri, List<Diagnostic> diagnostics) throws URISyntaxException {
+  public void lintSends(final String docUri, final List<Diagnostic> diagnostics)
+      throws URISyntaxException {
     SomStructures probe;
     synchronized (structuralProbes) {
       probe = structuralProbes.get(docUriToNormalizedPath(docUri));
@@ -73,7 +77,8 @@ public class SmalltalkAdapter extends Adapter {
   }
 
   @Override
-  public List<Diagnostic> parse(String text, String sourceUri) throws URISyntaxException {
+  public List<Diagnostic> parse(final String text, final String sourceUri)
+      throws URISyntaxException {
     String path = docUriToNormalizedPath(sourceUri);
     Source source = Source.newBuilder(text).name(path).mimeType(SomLanguage.MIME_TYPE)
                           .uri(new URI(sourceUri).normalize()).build();
@@ -88,7 +93,7 @@ public class SmalltalkAdapter extends Adapter {
       synchronized (newProbe) {
         try {
           SClass def = compiler.compileClass(source, universe);
-//          SomLint.checkModuleName(path, def, diagnostics);
+          // SomLint.checkModuleName(path, def, diagnostics);
         } catch (ParseError e) {
           return toDiagnostics(e, diagnostics);
         } catch (Throwable e) {
@@ -105,31 +110,33 @@ public class SmalltalkAdapter extends Adapter {
   }
 
   @Override
-  public List<? extends SymbolInformation> getSymbolInfo(String documentUri) {
+  public List<? extends SymbolInformation> getSymbolInfo(final String documentUri) {
     // TODO Auto-generated method stub
     return null;
   }
 
   @Override
-  public List<? extends SymbolInformation> getAllSymbolInfo(String query) {
+  public List<? extends SymbolInformation> getAllSymbolInfo(final String query) {
     // TODO Auto-generated method stub
     return null;
   }
 
   @Override
-  public List<? extends Location> getDefinitions(String docUri, int line, int character) {
+  public List<? extends Location> getDefinitions(final String docUri, final int line,
+      final int character) {
     // TODO Auto-generated method stub
     return null;
   }
 
   @Override
-  public CompletionList getCompletions(String docUri, int line, int character) {
+  public CompletionList getCompletions(final String docUri, final int line,
+      final int character) {
     // TODO Auto-generated method stub
     return null;
   }
 
   @Override
-  public void getCodeLenses(List<CodeLens> codeLenses, String documentUri) {
+  public void getCodeLenses(final List<CodeLens> codeLenses, final String documentUri) {
     // TODO Auto-generated method stub
   }
 
@@ -138,9 +145,9 @@ public class SmalltalkAdapter extends Adapter {
     Diagnostic d = new Diagnostic();
     d.setSeverity(DiagnosticSeverity.Error);
 
-    // TODO: source coords for errors
-//    SourceCoordinate coord = e.getSourceCoordinate();
-    d.setMessage(e.getMessage());
+    SourceCoordinate coord = e.getSourceCoordinate();
+    d.setRange(toRangeMax(coord.startLine, coord.startColumn));
+    d.setMessage(e.toString());
     d.setSource("Parser");
 
     diagnostics.add(d);
@@ -162,7 +169,8 @@ public class SmalltalkAdapter extends Adapter {
   private static final class SmalltalkCompiler extends SourcecodeCompiler {
 
     // TODO: add structural probes into this later...
-    public SClass compileClass(final Source source, final Universe universe) throws ProgramDefinitionError {
+    public SClass compileClass(final Source source, final Universe universe)
+        throws ProgramDefinitionError {
       Parser parser = new Parser(source.getReader(), source.getLength(), source, universe);
 
       return compile(parser, null, universe);
