@@ -32,7 +32,7 @@ import trufflesom.vmobjects.SClass;
 import trufflesom.vmobjects.SInvokable;
 
 
-public class SmalltalkAdapter extends Adapter {
+public class TruffleSomAdapter extends Adapter {
 
   public final static String CORE_LIB_PATH =
       System.getProperty("trufflesom.langserv.core-lib");
@@ -42,7 +42,7 @@ public class SmalltalkAdapter extends Adapter {
   private final Universe                   universe;
   private SClass                           current;
 
-  public SmalltalkAdapter() {
+  public TruffleSomAdapter() {
     this.universe = initializePolyglot();
     this.compiler = new SmalltalkCompiler();
     this.structuralProbes = new HashMap<>();

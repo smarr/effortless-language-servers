@@ -55,11 +55,11 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
 
   private final SomWorkspace     workspace;
   private final SomAdapter       som;
-  private final SmalltalkAdapter st;
+  private final TruffleSomAdapter st;
   private LanguageClient         client;
 
   public SomLanguageServer() {
-    st = new SmalltalkAdapter();
+    st = new TruffleSomAdapter();
     som = new SomAdapter();
     workspace = new SomWorkspace(som);
   }
