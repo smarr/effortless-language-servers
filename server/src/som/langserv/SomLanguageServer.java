@@ -134,7 +134,7 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
   public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(
       final TextDocumentPositionParams position) {
     String uri = position.getTextDocument().getUri();
-    if(isSomnsUri(uri)) {
+    if (isSomnsUri(uri)) {
       CompletionList result = som.getCompletions(
           position.getTextDocument().getUri(), position.getPosition().getLine(),
           position.getPosition().getCharacter());
@@ -167,7 +167,7 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
   public CompletableFuture<List<? extends Location>> definition(
       final TextDocumentPositionParams position) {
     String uri = position.getTextDocument().getUri();
-    if(isSomnsUri(uri)) {
+    if (isSomnsUri(uri)) {
       List<? extends Location> result = som.getDefinitions(
           position.getTextDocument().getUri(), position.getPosition().getLine(),
           position.getPosition().getCharacter());
@@ -191,7 +191,7 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
     // so, this should actually return multiple results.
     // The spec is currently broken for that.
     String uri = position.getTextDocument().getUri();
-    if(isSomnsUri(uri)) {
+    if (isSomnsUri(uri)) {
       DocumentHighlight result = som.getHighlight(position.getTextDocument().getUri(),
           position.getPosition().getLine() + 1, position.getPosition().getCharacter() + 1);
       ArrayList<DocumentHighlight> list = new ArrayList<>(1);
@@ -205,7 +205,7 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
   public CompletableFuture<List<? extends SymbolInformation>> documentSymbol(
       final DocumentSymbolParams params) {
     String uri = params.getTextDocument().getUri();
-    if(isSomnsUri(uri)) {
+    if (isSomnsUri(uri)) {
       List<? extends SymbolInformation> result =
           som.getSymbolInfo(params.getTextDocument().getUri());
       return CompletableFuture.completedFuture(result);
@@ -222,7 +222,7 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
   @Override
   public CompletableFuture<List<? extends CodeLens>> codeLens(final CodeLensParams params) {
     String uri = params.getTextDocument().getUri();
-    if(isSomnsUri(uri)) {
+    if (isSomnsUri(uri)) {
       List<CodeLens> result = new ArrayList<>();
       som.getCodeLenses(result, params.getTextDocument().getUri());
       return CompletableFuture.completedFuture(result);
@@ -284,13 +284,13 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
 
   private void parseDocument(final String documentUri, final String text) {
     try {
-      if(isSomnsUri(documentUri)) {
+      if (isSomnsUri(documentUri)) {
         List<Diagnostic> diagnostics = som.parse(text, documentUri);
         som.lintSends(documentUri, diagnostics);
         som.reportDiagnostics(diagnostics, documentUri);
-      } else if(isTruffleSomUri(documentUri)) {
+      } else if (isTruffleSomUri(documentUri)) {
         List<Diagnostic> diagnostics = st.parse(text, documentUri);
-//      st.lintSends(documentUri, diagnostics);
+        // st.lintSends(documentUri, diagnostics);
         st.reportDiagnostics(diagnostics, documentUri);
       }
     } catch (URISyntaxException ex) {
@@ -315,12 +315,12 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
     this.client = client;
   }
 
-  private boolean isSomnsUri(String uri) {
+  protected boolean isSomnsUri(final String uri) {
     return uri.endsWith(".ns");
   }
 
   @SuppressWarnings("unused")
-  private boolean isTruffleSomUri(String uri) {
+  protected boolean isTruffleSomUri(final String uri) {
     return uri.endsWith(".som");
   }
 }

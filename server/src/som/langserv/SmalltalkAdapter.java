@@ -2,6 +2,7 @@ package som.langserv;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,7 +12,10 @@ import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolInformation;
+import org.eclipse.lsp4j.SymbolKind;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Context.Builder;
 
@@ -25,6 +29,7 @@ import trufflesom.interpreter.SomLanguage;
 import trufflesom.tools.SourceCoordinate;
 import trufflesom.vm.Universe;
 import trufflesom.vmobjects.SClass;
+import trufflesom.vmobjects.SInvokable;
 
 
 public class SmalltalkAdapter extends Adapter {
@@ -35,6 +40,7 @@ public class SmalltalkAdapter extends Adapter {
   private final Map<String, SomStructures> structuralProbes;
   private final SmalltalkCompiler          compiler;
   private final Universe                   universe;
+  private SClass                           current;
 
   public SmalltalkAdapter() {
     this.universe = initializePolyglot();
@@ -93,6 +99,7 @@ public class SmalltalkAdapter extends Adapter {
       synchronized (newProbe) {
         try {
           SClass def = compiler.compileClass(source, universe);
+          current = def;
           // SomLint.checkModuleName(path, def, diagnostics);
         } catch (ParseError e) {
           return toDiagnostics(e, diagnostics);

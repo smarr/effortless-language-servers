@@ -23,7 +23,6 @@ import org.graalvm.collections.EconomicMap;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
-import bd.basic.ProgramDefinitionError;
 import som.Launcher;
 import som.VM;
 import som.compiler.MixinDefinition;
@@ -441,6 +440,7 @@ public class SomAdapter extends Adapter {
     }
   }
 
+  @Override
   public void getCodeLenses(final List<CodeLens> codeLenses,
       final String documentUri) {
     String path;
