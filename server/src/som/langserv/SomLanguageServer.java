@@ -209,6 +209,10 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
       List<? extends SymbolInformation> result =
           som.getSymbolInfo(params.getTextDocument().getUri());
       return CompletableFuture.completedFuture(result);
+    } else if (isTruffleSomUri(uri)) {
+      List<? extends SymbolInformation> result =
+          st.getSymbolInfo(params.getTextDocument().getUri());
+      return CompletableFuture.completedFuture(result);
     }
     return CompletableFuture.completedFuture(new ArrayList<SymbolInformation>());
   }

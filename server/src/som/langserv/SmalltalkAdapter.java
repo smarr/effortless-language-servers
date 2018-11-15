@@ -118,21 +118,87 @@ public class SmalltalkAdapter extends Adapter {
 
   @Override
   public List<? extends SymbolInformation> getSymbolInfo(final String documentUri) {
-    // TODO Auto-generated method stub
-    return null;
+    if (current == null) {
+      return new ArrayList<>();
+    }
+
+    List<SymbolInformation> symbolInfos = new ArrayList<>();
+
+    SymbolInformation clazz = new SymbolInformation();
+    clazz.setKind(SymbolKind.Class);
+    clazz.setName(current.getName().getString());
+    clazz.setLocation(
+        new Location(documentUri, new Range(new Position(0, 0), new Position(0, 1))));
+    symbolInfos.add(clazz);
+
+    List<SInvokable> invokables = new ArrayList<>();
+    for (int i = 0; i < current.getNumberOfInstanceInvokables(); i++) {
+      invokables.add(current.getInstanceInvokable(i));
+    }
+
+    for (SInvokable invokable : invokables) {
+      SymbolInformation symbolInfo = new SymbolInformation();
+      symbolInfo.setName(invokable.getSignature().getString());
+      symbolInfo.setKind(SymbolKind.Method);
+      symbolInfo.setContainerName(clazz.getName());
+      symbolInfo.setLocation(
+          new Location(documentUri, new Range(new Position(1, 0), new Position(1, 1))));
+
+      symbolInfos.add(symbolInfo);
+    }
+
+    return symbolInfos;
   }
 
   @Override
   public List<? extends SymbolInformation> getAllSymbolInfo(final String query) {
-    // TODO Auto-generated method stub
-    return null;
+    if (current == null) {
+      return new ArrayList<>();
+    }
+
+    List<SymbolInformation> symbolInfos = new ArrayList<>();
+
+    List<SInvokable> invokables = new ArrayList<>();
+    for (int i = 0; i < current.getNumberOfInstanceInvokables(); i++) {
+      invokables.add(current.getInstanceInvokable(i));
+    }
+
+    for (SInvokable invokable : invokables) {
+      SymbolInformation symbolInfo = new SymbolInformation();
+      symbolInfo.setName(invokable.getSignature().getString());
+      symbolInfo.setKind(SymbolKind.Method);
+
+      symbolInfos.add(symbolInfo);
+    }
+
+    // return symbolInfos;
+    return new ArrayList<>();
   }
 
   @Override
   public List<? extends Location> getDefinitions(final String docUri, final int line,
       final int character) {
-    // TODO Auto-generated method stub
-    return null;
+    if (current == null) {
+      return new ArrayList<>();
+    }
+
+    List<SymbolInformation> symbolInfos = new ArrayList<>();
+
+    List<SInvokable> invokables = new ArrayList<>();
+    for (int i = 0; i < current.getNumberOfInstanceInvokables(); i++) {
+      invokables.add(current.getInstanceInvokable(i));
+    }
+
+    for (SInvokable invokable : invokables) {
+      SymbolInformation symbolInfo = new SymbolInformation();
+      symbolInfo.setName(invokable.getSignature().getString());
+      symbolInfo.setKind(SymbolKind.Method);
+
+      symbolInfos.add(symbolInfo);
+    }
+
+    // return symbolInfos;
+    return new ArrayList<>();
   }
 
   @Override
