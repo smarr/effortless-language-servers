@@ -53,15 +53,15 @@ import com.google.common.collect.Lists;
 public class SomLanguageServer implements LanguageServer, TextDocumentService,
     LanguageClientAware {
 
-  private final SomWorkspace     workspace;
-  private final SomAdapter       som;
-  private final TruffleSomAdapter st;
-  private LanguageClient         client;
+  private final SomWorkspace      workspace;
+  private final SomAdapter        som;
+  private final TruffleSomAdapter tsom;
+  private LanguageClient          client;
 
   public SomLanguageServer() {
-    st = new TruffleSomAdapter();
     som = new SomAdapter();
-    workspace = new SomWorkspace(som);
+    tsom = new TruffleSomAdapter();
+    workspace = new SomWorkspace(som, tsom);
   }
 
   @Override
@@ -96,7 +96,7 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
   private void loadWorkspace(final InitializeParams params) {
     try {
       som.loadWorkspace(params.getRootUri());
-      st.loadWorkspace(params.getRootUri());
+      tsom.loadWorkspace(params.getRootUri());
     } catch (URISyntaxException e) {
       MessageParams msg = new MessageParams();
       msg.setType(MessageType.Error);
@@ -139,6 +139,11 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
           position.getTextDocument().getUri(), position.getPosition().getLine(),
           position.getPosition().getCharacter());
       return CompletableFuture.completedFuture(Either.forRight(result));
+    } else if (isTruffleSomUri(uri)) {
+      CompletionList result = tsom.getCompletions(
+          position.getTextDocument().getUri(), position.getPosition().getLine(),
+          position.getPosition().getCharacter());
+      return CompletableFuture.completedFuture(Either.forRight(result));
     }
     return CompletableFuture.completedFuture(Either.forRight(new CompletionList()));
   }
@@ -167,13 +172,17 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
   public CompletableFuture<List<? extends Location>> definition(
       final TextDocumentPositionParams position) {
     String uri = position.getTextDocument().getUri();
+    List<? extends Location> result = new ArrayList<>();
     if (isSomnsUri(uri)) {
-      List<? extends Location> result = som.getDefinitions(
+      result = som.getDefinitions(
           position.getTextDocument().getUri(), position.getPosition().getLine(),
           position.getPosition().getCharacter());
-      return CompletableFuture.completedFuture(result);
+    } else if (isTruffleSomUri(uri)) {
+      result = tsom.getDefinitions(
+          position.getTextDocument().getUri(), position.getPosition().getLine(),
+          position.getPosition().getCharacter());
     }
-    return CompletableFuture.completedFuture(new ArrayList<Location>());
+    return CompletableFuture.completedFuture(result);
   }
 
   @Override
@@ -211,7 +220,7 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
       return CompletableFuture.completedFuture(result);
     } else if (isTruffleSomUri(uri)) {
       List<? extends SymbolInformation> result =
-          st.getSymbolInfo(params.getTextDocument().getUri());
+          tsom.getSymbolInfo(params.getTextDocument().getUri());
       return CompletableFuture.completedFuture(result);
     }
     return CompletableFuture.completedFuture(new ArrayList<SymbolInformation>());
@@ -293,9 +302,9 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
         som.lintSends(documentUri, diagnostics);
         som.reportDiagnostics(diagnostics, documentUri);
       } else if (isTruffleSomUri(documentUri)) {
-        List<Diagnostic> diagnostics = st.parse(text, documentUri);
+        List<Diagnostic> diagnostics = tsom.parse(text, documentUri);
         // st.lintSends(documentUri, diagnostics);
-        st.reportDiagnostics(diagnostics, documentUri);
+        tsom.reportDiagnostics(diagnostics, documentUri);
       }
     } catch (URISyntaxException ex) {
       ex.printStackTrace(ServerLauncher.errWriter());
@@ -315,7 +324,7 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
   @Override
   public void connect(final LanguageClient client) {
     this.som.connect(client);
-    this.st.connect(client);
+    this.tsom.connect(client);
     this.client = client;
   }
 

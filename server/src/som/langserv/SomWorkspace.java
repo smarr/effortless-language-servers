@@ -1,5 +1,6 @@
 package som.langserv;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -13,17 +14,20 @@ import org.eclipse.lsp4j.services.WorkspaceService;
 
 public class SomWorkspace implements WorkspaceService {
 
-  private final SomAdapter som;
+  private final SomAdapter        som;
+  private final TruffleSomAdapter tsom;
 
-  public SomWorkspace(final SomAdapter som) {
+  public SomWorkspace(final SomAdapter som, final TruffleSomAdapter truffleSom) {
     this.som = som;
+    this.tsom = truffleSom;
   }
 
   @Override
   public CompletableFuture<List<? extends SymbolInformation>> symbol(
       final WorkspaceSymbolParams params) {
-    // TODO: make this work for both langs
-    List<? extends SymbolInformation> result = som.getAllSymbolInfo(params.getQuery());
+    ArrayList<SymbolInformation> result = new ArrayList<>();
+    result.addAll(som.getAllSymbolInfo(params.getQuery()));
+    result.addAll(tsom.getAllSymbolInfo(params.getQuery()));
     return CompletableFuture.completedFuture(result);
   }
 
