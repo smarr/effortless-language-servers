@@ -19,6 +19,9 @@ import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
 import org.graalvm.collections.EconomicMap;
+import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.Context.Builder;
+import org.graalvm.polyglot.Value;
 
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
@@ -46,7 +49,7 @@ import tools.SourceCoordinate;
 import tools.language.StructuralProbe;
 
 
-public class SomAdapter extends Adapter {
+public class SomAdapter extends LanguageAdapter {
 
   public final static String CORE_LIB_PATH = System.getProperty("som.langserv.core-lib");
 

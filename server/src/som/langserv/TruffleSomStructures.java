@@ -68,13 +68,13 @@ public class TruffleSomStructures extends StructuralProbe {
       final ArrayList<Location> results) {
     for (SInvokable m : instanceMethods.getValues()) {
       if (m.getSignature().equals(name)) {
-        results.add(Adapter.getLocation(m.getSourceSection()));
+        results.add(LanguageAdapter.getLocation(m.getSourceSection()));
       }
     }
 
     for (SInvokable m : classMethods.getValues()) {
       if (m.getSignature().equals(name)) {
-        results.add(Adapter.getLocation(m.getInvokable().getSourceSection()));
+        results.add(LanguageAdapter.getLocation(m.getInvokable().getSourceSection()));
       }
     }
   }

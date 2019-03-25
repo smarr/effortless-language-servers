@@ -37,7 +37,7 @@ public class SomLint {
     if (!moduleName.equals(def.getName().getString())) {
 
       diagnostics.add(new Diagnostic(
-          Adapter.toRange(def.getNameSourceSection()),
+          LanguageAdapter.toRange(def.getNameSourceSection()),
           "Module name '" + def.getName().getString() + "' does not match file name '"
               + fileName
               + "'.",
@@ -47,7 +47,7 @@ public class SomLint {
 
   private static void checkFileEnding(final String name, final List<Diagnostic> diagnostics) {
     if (!name.endsWith(".ns")) { // TODO: generalise this
-      diagnostics.add(new Diagnostic(new Range(Adapter.pos(1, 1), Adapter.pos(1, 1)),
+      diagnostics.add(new Diagnostic(new Range(LanguageAdapter.pos(1, 1), LanguageAdapter.pos(1, 1)),
           "File name does not use the .ns extension.", DiagnosticSeverity.Hint, LINT_NAME));
     }
   }
@@ -74,8 +74,8 @@ public class SomLint {
       }
 
       if (!defined) {
-        Range r = new Range(Adapter.pos(c.sections[0].getStartLine(), c.sections[0].getStartColumn()),
-            Adapter.pos(c.sections[c.sections.length - 1].getEndLine(),
+        Range r = new Range(LanguageAdapter.pos(c.sections[0].getStartLine(), c.sections[0].getStartColumn()),
+            LanguageAdapter.pos(c.sections[c.sections.length - 1].getEndLine(),
                 c.sections[c.sections.length - 1].getEndColumn() + 1));
         diagnostics.add(new Diagnostic(r,
             "No " + c.selector.getString() + " defined. Might cause run time error.",

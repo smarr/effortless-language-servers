@@ -27,7 +27,7 @@ import org.eclipse.lsp4j.services.LanguageClient;
 import com.oracle.truffle.api.source.SourceSection;
 
 
-public abstract class Adapter {
+public abstract class LanguageAdapter {
   private LanguageClient client;
 
   public abstract String getFileEnding();
