@@ -4,7 +4,7 @@
 <dict>
 	<key>fileTypes</key>
 	<array>
-		<string>som</string>
+		<string>ns</string>
 	</array>
 	<key>name</key>
 	<string>SOMns</string>
