@@ -47,5 +47,13 @@
 	</array>
 	<key>uuid</key>
 	<string>2fb9a222-0a36-4f7d-a3a4-58c523cd7437</string>
+	<key>scopeName</key>
+	<string>source.som</string>
+	<key>fileTypes</key>
+	<array>
+		<string>som</string>
+	</array>
+	<key>name</key>
+	<string>SOM</string>
 </dict>
 </plist>

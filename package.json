@@ -37,6 +37,12 @@
 					"SOMns"
 				],
 				"configuration": "./language-configuration.json"
+			},
+			{
+				"id": "SOM",
+				"extensions": [
+					".som"
+				]
 			}
 		],
 		"grammars": [
@@ -44,6 +50,11 @@
 				"language": "SOMns",
 				"scopeName": "source.somns",
 				"path": "./syntaxes/SOMns.tmLanguage"
+			},
+			{
+				"language": "SOM",
+				"scopeName": "source.som",
+				"path": "./syntaxes/som/SOM.tmbundle/Syntaxes/SOM-Smalltalk.tmLanguage"
 			}
 		],
 		"breakpoints": [
