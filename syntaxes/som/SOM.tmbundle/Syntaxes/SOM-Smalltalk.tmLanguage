@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>changed</key>
+	<dict>
+		<key>patterns</key>
+		<array>
+			<dict>
+				<key>begin</key>
+				<string>"</string>
+				<key>end</key>
+				<string>"</string>
+				<key>name</key>
+				<string>comment.block.smalltalk</string>
+			</dict>
+			<dict>
+				<key>match</key>
+				<string>\b(nil|true|false|primitive|system)\b</string>
+				<key>name</key>
+				<string>constant.language.smalltalk</string>
+			</dict>
+			<dict>
+				<key>match</key>
+				<string>\b(self|super)\b</string>
+				<key>name</key>
+				<string>variable.language.smalltalk</string>
+			</dict>
+			<dict>
+				<key>begin</key>
+				<string>'</string>
+				<key>end</key>
+				<string>'</string>
+				<key>name</key>
+				<string>string.quoted.single</string>
+			</dict>
+			<dict>
+				<key>match</key>
+				<string>\b(\d+(\.\d+)?)\b</string>
+				<key>name</key>
+				<string>constant.numeric</string>
+			</dict>
+			<dict>
+				<key>match</key>
+				<string>\b#\w+</string>
+				<key>name</key>
+				<string>constant.character.symbol</string>
+			</dict>
+		</array>
+	</dict>
+	<key>deleted</key>
+	<array>
+		<string>repository</string>
+	</array>
+	<key>isDelta</key>
+	<true/>
+	<key>uuid</key>
+	<string>2fb9a222-0a36-4f7d-a3a4-58c523cd7437</string>
+</dict>
+</plist>

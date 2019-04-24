@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>name</key>
+	<string>SOM-Smalltalk</string>
+	<key>ordering</key>
+	<array>
+		<string>2fb9a222-0a36-4f7d-a3a4-58c523cd7437</string>
+		<string>528b4346-4545-425a-ba38-a1e65fe56dfd</string>
+		<string>8546d147-4a95-40cf-8f10-4db35201bfcd</string>
+	</array>
+	<key>uuid</key>
+	<string>e7565537-524a-43ff-8d37-c058dfee290c</string>
+</dict>
+</plist>
