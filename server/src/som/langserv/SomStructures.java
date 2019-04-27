@@ -14,6 +14,7 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.tools.nodes.Invocation;
+import bd.tools.structure.StructuralProbe;
 import som.compiler.MixinBuilder;
 import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
@@ -22,10 +23,10 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
-import tools.language.StructuralProbe;
 
 
-public class SomStructures extends StructuralProbe {
+public class SomStructures
+    extends StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> {
 
   private final Source           source;
   private final ExpressionNode[] map;

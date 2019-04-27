@@ -18,6 +18,7 @@ import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
+import org.graalvm.collections.EconomicSet;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Context.Builder;
 
@@ -27,6 +28,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import bd.basic.ProgramDefinitionError;
 import bd.source.SourceCoordinate;
 import bd.tools.nodes.Invocation;
+import bd.tools.structure.StructuralProbe;
 import trufflesom.compiler.Field;
 import trufflesom.compiler.Parser.ParseError;
 import trufflesom.compiler.SourcecodeCompiler;
@@ -36,7 +38,6 @@ import trufflesom.interpreter.SomLanguage;
 import trufflesom.interpreter.nodes.ExpressionNode;
 import trufflesom.interpreter.nodes.FieldNode.FieldWriteNode;
 import trufflesom.interpreter.nodes.UninitializedVariableNode.UninitializedVariableWriteNode;
-import trufflesom.tools.StructuralProbe;
 import trufflesom.vm.Universe;
 import trufflesom.vmobjects.SClass;
 import trufflesom.vmobjects.SInvokable;
@@ -176,14 +177,13 @@ public class TruffleSomAdapter extends LanguageAdapter {
   private void addAllSymbols(final ArrayList<SymbolInformation> results, final String query,
       final TruffleSomStructures probe, final String documentUri) {
     synchronized (probe) {
-      Set<SClass> classes = probe.getClasses();
+      EconomicSet<SClass> classes = probe.getClasses();
       for (SClass m : classes) {
         // assert sameDocument(documentUri, m.getSourceSection());
         addSymbolInfo(m, query, results);
       }
 
-      Set<SInvokable> methods = probe.getInstanceMethods();
-      methods.addAll(probe.getClassMethods());
+      EconomicSet<SInvokable> methods = probe.getMethods();
       for (SInvokable m : methods) {
         assert sameDocument(documentUri, m.getInvokable().getSourceSection());
 
@@ -192,15 +192,14 @@ public class TruffleSomAdapter extends LanguageAdapter {
         }
       }
 
-      Set<Field> fields = probe.getInstanceFields();
-      fields.addAll(probe.getClassFields());
+      EconomicSet<Field> fields = probe.getSlots();
       for (Field f : fields) {
         if (matchQuery(query, f)) {
           results.add(getSymbolInfo(f));
         }
       }
 
-      Set<Variable> variables = probe.getVariables();
+      EconomicSet<Variable> variables = probe.getVariables();
       for (Variable v : variables) {
         if (matchQuery(query, v)) {
           results.add(getSymbolInfo(v));
@@ -270,13 +269,13 @@ public class TruffleSomAdapter extends LanguageAdapter {
       result.add(getLocation(((UninitializedVariableWriteNode) node).getLocal().source));
     } else if (node instanceof FieldWriteNode) {
       Method method = (Method) node.getRootNode();
-      SInvokable si = getEncompassingInvokable(method, probe.getClassMethods());
+      SInvokable si = getEncompassingInvokable(method, probe.getMethods());
       if (si == null) {
-        si = getEncompassingInvokable(method, probe.getInstanceMethods());
+        si = getEncompassingInvokable(method, probe.getMethods());
       }
       int fieldIndex = ((FieldWriteNode) node).write.getFieldIndex();
-      SSymbol field = si.getHolder().getInstanceFieldName(fieldIndex);
-      result.add(getLocation(probe.lookupInstanceField(field.getString()).getSourceSection()));
+      Field field = si.getHolder().getInstanceFieldDefinitions()[fieldIndex];
+      result.add(getLocation(field.getSourceSection()));
     } else {
       if (ServerLauncher.DEBUG) {
         reportError("GET DEFINITION, unsupported node: " + node.getClass().getSimpleName());
@@ -434,17 +433,20 @@ public class TruffleSomAdapter extends LanguageAdapter {
   }
 
   private static SInvokable getEncompassingInvokable(final Method method,
-      final Set<SInvokable> invokables) {
-    return invokables.stream()
-                     .filter(s -> s.getInvokable().equals(method))
-                     .findFirst()
-                     .orElse(null);
+      final EconomicSet<SInvokable> invokables) {
+    for (SInvokable i : invokables) {
+      if (i.getInvokable().equals(method)) {
+        return i;
+      }
+    }
+    return null;
   }
 
   private final class TruffleSomCompiler extends SourcecodeCompiler {
 
     public SClass compileClass(final Source source, final Universe universe,
-        final StructuralProbe structuralProbe) throws ProgramDefinitionError {
+        final StructuralProbe<SSymbol, SClass, SInvokable, Field, Variable> structuralProbe)
+        throws ProgramDefinitionError {
       TruffleSomParser parser = new TruffleSomParser(source.getReader(), source.getLength(),
           source, (TruffleSomStructures) structuralProbe, universe);
 

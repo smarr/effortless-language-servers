@@ -19,6 +19,7 @@ import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
 import org.graalvm.collections.EconomicMap;
+import org.graalvm.collections.EconomicSet;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Context.Builder;
 import org.graalvm.polyglot.Value;
@@ -28,6 +29,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import bd.source.SourceCoordinate;
 import bd.tools.nodes.Invocation;
+import bd.tools.structure.StructuralProbe;
 import som.Launcher;
 import som.VM;
 import som.compiler.MixinDefinition;
@@ -35,6 +37,7 @@ import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Parser.ParseError;
 import som.compiler.SemanticDefinitionError;
 import som.compiler.SourcecodeCompiler;
+import som.compiler.Variable;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
 import som.interpreter.nodes.ArgumentReadNode.NonLocalArgumentReadNode;
@@ -46,7 +49,6 @@ import som.interpreter.objectstorage.StorageAccessor;
 import som.vm.Primitives;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
-import tools.language.StructuralProbe;
 
 
 public class SomAdapter extends LanguageAdapter {
@@ -78,7 +80,7 @@ public class SomAdapter extends LanguageAdapter {
         new SomStructures(Source.newBuilder(SomLanguage.LANG_ID, "vmMirror", "vmMirror")
                                 .mimeType(SomLanguage.MIME_TYPE).build());
     for (SInvokable i : ps.getValues()) {
-      primProbe.recordNewMethod(i);
+      primProbe.recordNewMethod(i.getIdentifier(), i);
     }
 
     structuralProbes.put("vmMirror", primProbe);
@@ -237,13 +239,13 @@ public class SomAdapter extends LanguageAdapter {
   private void addAllSymbols(final ArrayList<SymbolInformation> results, final String query,
       final SomStructures probe, final String documentUri) {
     synchronized (probe) {
-      Set<MixinDefinition> classes = probe.getClasses();
+      EconomicSet<MixinDefinition> classes = probe.getClasses();
       for (MixinDefinition m : classes) {
         assert sameDocument(documentUri, m.getSourceSection());
         addSymbolInfo(m, query, results);
       }
 
-      Set<SInvokable> methods = probe.getMethods();
+      EconomicSet<SInvokable> methods = probe.getMethods();
       for (SInvokable m : methods) {
         assert sameDocument(documentUri, m.getSourceSection());
 
@@ -438,7 +440,8 @@ public class SomAdapter extends LanguageAdapter {
 
     @Override
     public MixinDefinition compileModule(final Source source,
-        final StructuralProbe structuralProbe) throws bd.basic.ProgramDefinitionError {
+        final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe)
+        throws bd.basic.ProgramDefinitionError {
       SomParser parser = new SomParser(source.getCharacters().toString(), source.getLength(),
           source, (SomStructures) structuralProbe, language);
       return compile(parser, source);

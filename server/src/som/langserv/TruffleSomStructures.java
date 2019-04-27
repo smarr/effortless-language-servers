@@ -13,15 +13,17 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.tools.nodes.Invocation;
+import bd.tools.structure.StructuralProbe;
 import trufflesom.compiler.Field;
 import trufflesom.compiler.Variable;
 import trufflesom.interpreter.nodes.ExpressionNode;
-import trufflesom.tools.StructuralProbe;
+import trufflesom.vmobjects.SClass;
 import trufflesom.vmobjects.SInvokable;
 import trufflesom.vmobjects.SSymbol;
 
 
-public class TruffleSomStructures extends StructuralProbe {
+public class TruffleSomStructures
+    extends StructuralProbe<SSymbol, SClass, SInvokable, Field, Variable> {
 
   private final Source           source;
   private final ExpressionNode[] map;
@@ -67,15 +69,9 @@ public class TruffleSomStructures extends StructuralProbe {
   // TODO: split into getMethodsFor
   public synchronized void getDefinitionsFor(final SSymbol name,
       final ArrayList<Location> results) {
-    for (SInvokable m : instanceMethods.getValues()) {
+    for (SInvokable m : methods.getValues()) {
       if (m.getSignature().equals(name)) {
         results.add(LanguageAdapter.getLocation(m.getSourceSection()));
-      }
-    }
-
-    for (SInvokable m : classMethods.getValues()) {
-      if (m.getSignature().equals(name)) {
-        results.add(LanguageAdapter.getLocation(m.getInvokable().getSourceSection()));
       }
     }
   }
@@ -118,19 +114,11 @@ public class TruffleSomStructures extends StructuralProbe {
       matchAndAdd(name, v.name, results, CompletionItemKind.Variable);
     }
 
-    for (SInvokable m : instanceMethods.getValues()) {
+    for (SInvokable m : methods.getValues()) {
       matchAndAdd(name, m.getSignature(), results, CompletionItemKind.Method);
     }
 
-    for (SInvokable m : classMethods.getValues()) {
-      matchAndAdd(name, m.getSignature(), results, CompletionItemKind.Method);
-    }
-
-    for (Field f : instanceFields) {
-      matchAndAdd(name, f.getName(), results, CompletionItemKind.Field);
-    }
-
-    for (Field f : classFields) {
+    for (Field f : slots) {
       matchAndAdd(name, f.getName(), results, CompletionItemKind.Field);
     }
 
@@ -190,24 +178,16 @@ public class TruffleSomStructures extends StructuralProbe {
       }
     }
 
-    for (SInvokable m : instanceMethods.getValues()) {
+    for (SInvokable m : methods.getValues()) {
       if (m.getSignature() == selector) {
         return true;
       }
     }
 
-    for (SInvokable m : classMethods.getValues()) {
-      if (m.getSignature() == selector) {
+    for (Field field : slots) {
+      if (field.getName() == selector) {
         return true;
       }
-    }
-
-    if (instanceFields.contains(selector)) {
-      return true;
-    }
-
-    if (classFields.contains(selector)) {
-      return true;
     }
 
     return false;
