@@ -8,10 +8,10 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.basic.ProgramDefinitionError;
+import bd.source.SourceCoordinate;
 import trufflesom.compiler.MethodGenerationContext;
 import trufflesom.compiler.Parser;
 import trufflesom.interpreter.nodes.ExpressionNode;
-import trufflesom.tools.SourceCoordinate;
 import trufflesom.vm.Universe;
 import trufflesom.vmobjects.SSymbol;
 

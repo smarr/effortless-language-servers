@@ -25,6 +25,7 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.basic.ProgramDefinitionError;
+import bd.source.SourceCoordinate;
 import bd.tools.nodes.Invocation;
 import trufflesom.compiler.Field;
 import trufflesom.compiler.Parser.ParseError;
@@ -35,7 +36,6 @@ import trufflesom.interpreter.SomLanguage;
 import trufflesom.interpreter.nodes.ExpressionNode;
 import trufflesom.interpreter.nodes.FieldNode.FieldWriteNode;
 import trufflesom.interpreter.nodes.UninitializedVariableNode.UninitializedVariableWriteNode;
-import trufflesom.tools.SourceCoordinate;
 import trufflesom.tools.StructuralProbe;
 import trufflesom.vm.Universe;
 import trufflesom.vmobjects.SClass;

@@ -7,12 +7,12 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.basic.ProgramDefinitionError;
+import bd.source.SourceCoordinate;
 import som.compiler.MethodBuilder;
 import som.compiler.Parser;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
 import som.vmobjects.SSymbol;
-import tools.SourceCoordinate;
 
 
 /**

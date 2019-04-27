@@ -26,6 +26,7 @@ import org.graalvm.polyglot.Value;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.source.SourceCoordinate;
 import bd.tools.nodes.Invocation;
 import som.Launcher;
 import som.VM;
@@ -45,7 +46,6 @@ import som.interpreter.objectstorage.StorageAccessor;
 import som.vm.Primitives;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
-import tools.SourceCoordinate;
 import tools.language.StructuralProbe;
 
 
