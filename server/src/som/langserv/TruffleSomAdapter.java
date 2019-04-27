@@ -25,6 +25,8 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.basic.ProgramDefinitionError;
+import bd.tools.nodes.Invocation;
+import trufflesom.compiler.Field;
 import trufflesom.compiler.Parser.ParseError;
 import trufflesom.compiler.SourcecodeCompiler;
 import trufflesom.compiler.Variable;
@@ -33,10 +35,8 @@ import trufflesom.interpreter.SomLanguage;
 import trufflesom.interpreter.nodes.ExpressionNode;
 import trufflesom.interpreter.nodes.FieldNode.FieldWriteNode;
 import trufflesom.interpreter.nodes.UninitializedVariableNode.UninitializedVariableWriteNode;
-import trufflesom.tools.Send;
 import trufflesom.tools.SourceCoordinate;
 import trufflesom.tools.StructuralProbe;
-import trufflesom.tools.StructuralProbe.Field;
 import trufflesom.vm.Universe;
 import trufflesom.vmobjects.SClass;
 import trufflesom.vmobjects.SInvokable;
@@ -226,7 +226,7 @@ public class TruffleSomAdapter extends LanguageAdapter {
   }
 
   private static boolean matchQuery(final String query, final Field f) {
-    return TruffleSomStructures.fuzzyMatches(f.getSymbol().getString(), query);
+    return TruffleSomStructures.fuzzyMatches(f.getName().getString(), query);
   }
 
   private static boolean matchQuery(final String query, final Variable v) {
@@ -262,8 +262,9 @@ public class TruffleSomAdapter extends LanguageAdapter {
           "Node at " + (line + 1) + ":" + character + " " + node.getClass().getSimpleName());
     }
 
-    if (node instanceof Send) {
-      SSymbol name = ((Send) node).getSelector();
+    if (node instanceof Invocation<?>) {
+      @SuppressWarnings("unchecked")
+      SSymbol name = ((Invocation<SSymbol>) node).getInvocationIdentifier();
       addAllDefinitions(result, name);
     } else if (node instanceof UninitializedVariableWriteNode) {
       result.add(getLocation(((UninitializedVariableWriteNode) node).getLocal().source));
@@ -292,6 +293,7 @@ public class TruffleSomAdapter extends LanguageAdapter {
     }
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public CompletionList getCompletions(final String docUri, final int line,
       final int character) {
@@ -311,8 +313,8 @@ public class TruffleSomAdapter extends LanguageAdapter {
     }
 
     SSymbol sym = null;
-    if (node instanceof Send) {
-      sym = ((Send) node).getSelector();
+    if (node instanceof Invocation<?>) {
+      sym = ((Invocation<SSymbol>) node).getInvocationIdentifier();
     } else {
       if (ServerLauncher.DEBUG) {
         reportError("GET COMPLETIONS, unsupported node: " + node.getClass().getSimpleName());
@@ -379,7 +381,7 @@ public class TruffleSomAdapter extends LanguageAdapter {
 
   private static SymbolInformation getSymbolInfo(final Field f) {
     SymbolInformation sym = new SymbolInformation();
-    sym.setName(f.getSymbol().getString());
+    sym.setName(f.getName().getString());
     sym.setKind(SymbolKind.Field);
     sym.setLocation(getLocation(f.getSourceSection()));
     return sym;

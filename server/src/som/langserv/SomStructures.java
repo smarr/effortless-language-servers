@@ -13,6 +13,7 @@ import org.eclipse.lsp4j.Location;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.tools.nodes.Invocation;
 import som.compiler.MixinBuilder;
 import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
@@ -21,7 +22,6 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
-import tools.Send;
 import tools.language.StructuralProbe;
 
 
@@ -194,9 +194,10 @@ public class SomStructures extends StructuralProbe {
     super.recordNewClass(clazz);
   }
 
+  @SuppressWarnings("unchecked")
   public void reportCall(final ExpressionNode send, final SourceSection... section) {
-    if (send instanceof Send) {
-      calls.add(new Call(((Send) send).getSelector(), section));
+    if (send instanceof Invocation<?>) {
+      calls.add(new Call(((Invocation<SSymbol>) send).getInvocationIdentifier(), section));
     } else {
       // ...
     }
@@ -206,10 +207,12 @@ public class SomStructures extends StructuralProbe {
     }
   }
 
+  @SuppressWarnings("unchecked")
   public void reportAssignment(final ExpressionNode result,
       final SourceSection removeLast) {
-    if (result instanceof Send) {
-      calls.add(new Call(((Send) result).getSelector(), new SourceSection[] {removeLast}));
+    if (result instanceof Invocation<?>) {
+      calls.add(new Call(((Invocation<SSymbol>) result).getInvocationIdentifier(),
+          new SourceSection[] {removeLast}));
     } else {
       // ...
     }

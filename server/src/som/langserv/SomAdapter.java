@@ -26,6 +26,7 @@ import org.graalvm.polyglot.Value;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.tools.nodes.Invocation;
 import som.Launcher;
 import som.VM;
 import som.compiler.MixinDefinition;
@@ -44,7 +45,6 @@ import som.interpreter.objectstorage.StorageAccessor;
 import som.vm.Primitives;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
-import tools.Send;
 import tools.SourceCoordinate;
 import tools.language.StructuralProbe;
 
@@ -360,8 +360,9 @@ public class SomAdapter extends LanguageAdapter {
           "Node at " + (line + 1) + ":" + character + " " + node.getClass().getSimpleName());
     }
 
-    if (node instanceof Send) {
-      SSymbol name = ((Send) node).getSelector();
+    if (node instanceof Invocation<?>) {
+      @SuppressWarnings("unchecked")
+      SSymbol name = ((Invocation<SSymbol>) node).getInvocationIdentifier();
       addAllDefinitions(result, name);
     } else if (node instanceof NonLocalVariableNode) {
       result.add(getLocation(((NonLocalVariableNode) node).getLocal().source));
@@ -387,6 +388,7 @@ public class SomAdapter extends LanguageAdapter {
     }
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public CompletionList getCompletions(final String docUri, final int line,
       final int character) {
@@ -406,8 +408,8 @@ public class SomAdapter extends LanguageAdapter {
     }
 
     SSymbol sym = null;
-    if (node instanceof Send) {
-      sym = ((Send) node).getSelector();
+    if (node instanceof Invocation<?>) {
+      sym = ((Invocation<SSymbol>) node).getInvocationIdentifier();
     } else {
       if (ServerLauncher.DEBUG) {
         reportError("GET COMPLETIONS, unsupported node: " + node.getClass().getSimpleName());

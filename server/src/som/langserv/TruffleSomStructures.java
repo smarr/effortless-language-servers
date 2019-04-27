@@ -12,9 +12,10 @@ import org.eclipse.lsp4j.Location;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.tools.nodes.Invocation;
+import trufflesom.compiler.Field;
 import trufflesom.compiler.Variable;
 import trufflesom.interpreter.nodes.ExpressionNode;
-import trufflesom.tools.Send;
 import trufflesom.tools.StructuralProbe;
 import trufflesom.vmobjects.SInvokable;
 import trufflesom.vmobjects.SSymbol;
@@ -126,11 +127,11 @@ public class TruffleSomStructures extends StructuralProbe {
     }
 
     for (Field f : instanceFields) {
-      matchAndAdd(name, f.getSymbol(), results, CompletionItemKind.Field);
+      matchAndAdd(name, f.getName(), results, CompletionItemKind.Field);
     }
 
     for (Field f : classFields) {
-      matchAndAdd(name, f.getSymbol(), results, CompletionItemKind.Field);
+      matchAndAdd(name, f.getName(), results, CompletionItemKind.Field);
     }
 
     // TODO: for classes
@@ -151,19 +152,22 @@ public class TruffleSomStructures extends StructuralProbe {
     }
   }
 
+  @SuppressWarnings("unchecked")
   public void reportCall(final ExpressionNode send, final SourceSection... section) {
-    if (send instanceof Send) {
-      calls.add(new Call(((Send) send).getSelector(), section));
+    if (send instanceof Invocation<?>) {
+      calls.add(new Call(((Invocation<SSymbol>) send).getInvocationIdentifier(), section));
     }
     for (SourceSection s : section) {
       putIntoMap(s, send);
     }
   }
 
+  @SuppressWarnings("unchecked")
   public void reportAssignment(final ExpressionNode result,
       final SourceSection removeLast) {
-    if (result instanceof Send) {
-      calls.add(new Call(((Send) result).getSelector(), new SourceSection[] {removeLast}));
+    if (result instanceof Invocation<?>) {
+      calls.add(new Call(((Invocation<SSymbol>) result).getInvocationIdentifier(),
+          new SourceSection[] {removeLast}));
     }
     putIntoMap(removeLast, result);
   }
