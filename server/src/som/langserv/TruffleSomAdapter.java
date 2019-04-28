@@ -56,7 +56,7 @@ public class TruffleSomAdapter extends LanguageAdapter {
   public TruffleSomAdapter() {
     this.structuralProbes = new HashMap<>();
     this.universe = initializePolyglot();
-    this.compiler = new TruffleSomCompiler();
+    this.compiler = new TruffleSomCompiler(universe.getLanguage());
   }
 
   @Override
@@ -76,7 +76,7 @@ public class TruffleSomAdapter extends LanguageAdapter {
 
     context.eval(SomLanguage.INIT);
 
-    Universe universe = SomLanguage.getCurrent();
+    Universe universe = SomLanguage.getCurrent().getUniverse();
     universe.setupClassPath(CORE_LIB_PATH + "/Smalltalk");
 
     TruffleSomStructures systemClassProbe = new TruffleSomStructures(
@@ -92,6 +92,7 @@ public class TruffleSomAdapter extends LanguageAdapter {
   @Override
   public void lintSends(final String docUri, final List<Diagnostic> diagnostics)
       throws URISyntaxException {
+    // TODO: implement linting
     TruffleSomStructures probe;
     synchronized (structuralProbes) {
       probe = structuralProbes.get(docUriToNormalizedPath(docUri));
@@ -273,7 +274,7 @@ public class TruffleSomAdapter extends LanguageAdapter {
       if (si == null) {
         si = getEncompassingInvokable(method, probe.getMethods());
       }
-      int fieldIndex = ((FieldWriteNode) node).write.getFieldIndex();
+      int fieldIndex = ((FieldWriteNode) node).getFieldIndex();
       Field field = si.getHolder().getInstanceFieldDefinitions()[fieldIndex];
       result.add(getLocation(field.getSourceSection()));
     } else {
@@ -443,6 +444,10 @@ public class TruffleSomAdapter extends LanguageAdapter {
   }
 
   private final class TruffleSomCompiler extends SourcecodeCompiler {
+
+    public TruffleSomCompiler(final SomLanguage language) {
+      super(language);
+    }
 
     public SClass compileClass(final Source source, final Universe universe,
         final StructuralProbe<SSymbol, SClass, SInvokable, Field, Variable> structuralProbe)
