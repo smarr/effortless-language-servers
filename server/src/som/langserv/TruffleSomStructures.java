@@ -70,7 +70,7 @@ public class TruffleSomStructures
   public synchronized void getDefinitionsFor(final SSymbol name,
       final ArrayList<Location> results) {
     for (SInvokable m : methods.getValues()) {
-      if (m.getSignature().equals(name)) {
+      if (m.getSignature() == name) {
         results.add(LanguageAdapter.getLocation(m.getSourceSection()));
       }
     }
