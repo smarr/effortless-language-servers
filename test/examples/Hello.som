@@ -1,0 +1,4 @@
+Hello = (
+    "The 'run' method is called when initializing the system"
+    run = ('Hello, World from SOM' println )
+)
