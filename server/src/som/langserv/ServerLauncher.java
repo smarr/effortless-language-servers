@@ -65,7 +65,7 @@ public class ServerLauncher {
 
     if (TCP_CONNECTION) {
       try (ServerSocket serverSocket = new ServerSocket(SERVER_PORT)) {
-        msg.println("[SOMns LS] Server started and waiting on " + SERVER_PORT);
+        msg.println("[SOM LS] Server started and waiting on " + SERVER_PORT);
         while (acceptConnections) {
           try {
             Socket client = serverSocket.accept();
@@ -74,16 +74,16 @@ public class ServerLauncher {
             tls.connect(launcher.getRemoteProxy());
             launcher.startListening();
           } catch (IOException e) {
-            err.println("[SOMns LS] Error while connecting to client.");
+            err.println("[SOM LS] Error while connecting to client.");
             e.printStackTrace(err);
           }
         }
       } catch (IOException e) {
-        err.println("[SOMns LS] Failed to open port: " + SERVER_PORT);
+        err.println("[SOM LS] Failed to open port: " + SERVER_PORT);
         e.printStackTrace(err);
       }
     } else {
-      msg.println("[SOMns LS] Server started using stdin/stdout");
+      msg.println("[SOM LS] Server started using stdin/stdout");
       Launcher<LanguageClient> launcher =
           LSPLauncher.createServerLauncher(tls, System.in, System.out);
       tls.connect(launcher.getRemoteProxy());

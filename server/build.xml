@@ -10,6 +10,8 @@
     <property name="sdk.build"   value="${somns.dir}/libs/truffle/sdk/mxbuild/dists" />
     <property name="svm.build"   value="${somns.dir}/libs/truffle/substratevm/mxbuild/dists" />
     <property name="tools.build" value="${somns.dir}/libs/truffle/tools/mxbuild/dists" />
+    <property name="somns.jar"   location="${somns.dir}/build/som.jar" />
+    <property name="som.jar"     location="${som.dir}/build/som.jar" />
 
     <property name="mvn.repo"    value="https://repo1.maven.org/maven2" />
 
@@ -33,13 +35,14 @@
 
         <pathelement location="${truffle.build}/truffle-api.jar" />
         <pathelement location="${somns.dir}/libs/somns-deps.jar" />
-        <pathelement location="${somns.dir}/build/som.jar" />
         <pathelement location="${bd.dir}/build/black-diamonds.jar" />
     </path>
 
     <path id="project.classpath">
         <path refid="jar.classpath" />
         <pathelement location="${classes.dir}" />
+        <pathelement location="${som.jar}" />
+        <pathelement location="${somns.jar}" />
         <pathelement location="io.typefox.lsapi"/>
         <pathelement location="io.typefox.lsapi.services"/>
     </path>
@@ -129,8 +132,16 @@
             <path refid="jar.classpath" />
           </path>
         </copy>
-        <copy todir="../out/server/core-lib">
+        <!-- since the som.jar files have the same name, we copy them separately -->
+        <copy file="${som.jar}" tofile="../out/server/som.jar" />
+        <copy file="${somns.jar}" tofile="../out/server/somns.jar" />
+
+        <!-- copy the core libs -->
+        <copy todir="../out/server/somns-core-lib">
           <fileset dir="${somns.dir}/core-lib"/>
+        </copy>
+        <copy todir="../out/server/som-core-lib">
+          <fileset dir="${som.dir}/core-lib"/>
         </copy>
     </target>
 </project>

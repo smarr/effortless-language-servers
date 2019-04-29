@@ -53,7 +53,7 @@ import som.vmobjects.SSymbol;
 
 public class SomAdapter extends LanguageAdapter {
 
-  public final static String CORE_LIB_PATH = System.getProperty("som.langserv.core-lib");
+  public final static String CORE_LIB_PATH = System.getProperty("som.langserv.somns-core-lib");
 
   private final Map<String, SomStructures> structuralProbes;
   private final SomCompiler                compiler;

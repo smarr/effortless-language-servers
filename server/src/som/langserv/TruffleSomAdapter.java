@@ -47,7 +47,7 @@ import trufflesom.vmobjects.SSymbol;
 public class TruffleSomAdapter extends LanguageAdapter {
 
   public final static String CORE_LIB_PATH =
-      System.getProperty("trufflesom.langserv.core-lib");
+      System.getProperty("som.langserv.som-core-lib");
 
   private final Map<String, TruffleSomStructures> structuralProbes;
   private final TruffleSomCompiler                compiler;
