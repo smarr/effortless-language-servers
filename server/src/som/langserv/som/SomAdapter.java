@@ -185,6 +185,10 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
 
       EconomicSet<Variable> variables = probe.getVariables();
       for (Variable v : variables) {
+        if (v.name.getString().equals("self") || v.name.getString().equals("$blockSelf")) {
+          // don't show self or $blockSelf
+          continue;
+        }
         if (matchQuery(query, v)) {
           results.add(getSymbolInfo(v));
         }
