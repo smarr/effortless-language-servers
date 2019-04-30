@@ -1,5 +1,7 @@
 package som.langserv.som;
 
+import static som.langserv.Matcher.fuzzyMatch;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -206,19 +208,19 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
   }
 
   private static boolean matchQuery(final String query, final Field f) {
-    return SomStructures.fuzzyMatches(f.getName().getString(), query);
+    return fuzzyMatch(f.getName().getString(), query);
   }
 
   private static boolean matchQuery(final String query, final Variable v) {
-    return SomStructures.fuzzyMatches(v.name.getString(), query);
+    return fuzzyMatch(v.name.getString(), query);
   }
 
   private static boolean matchQuery(final String query, final SInvokable m) {
-    return SomStructures.fuzzyMatches(m.getSignature().getString(), query);
+    return fuzzyMatch(m.getSignature().getString(), query);
   }
 
   private static boolean matchQuery(final String query, final SClass c) {
-    return SomStructures.fuzzyMatches(c.getName().getString(), query);
+    return fuzzyMatch(c.getName().getString(), query);
   }
 
   @Override

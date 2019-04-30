@@ -1,5 +1,7 @@
 package som.langserv.som;
 
+import static som.langserv.Matcher.fuzzyMatch;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -87,26 +89,7 @@ public class SomStructures
       return true;
     }
 
-    return fuzzyMatches(symbol.getString().toLowerCase(), query.getString().toLowerCase());
-  }
-
-  public static boolean fuzzyMatches(final String string, final String query) {
-    if (query == null) {
-      return true;
-    }
-
-    // simple prefix
-    if (string.startsWith(query)) {
-      return true;
-    }
-
-    // trivial case
-    if (query.equals(string)) {
-      return true;
-    }
-
-    // TODO: camel case matching etc...
-    return false;
+    return fuzzyMatch(symbol.getString().toLowerCase(), query.getString().toLowerCase());
   }
 
   public synchronized void getCompletions(final SSymbol name,

@@ -1,5 +1,7 @@
 package som.langserv.newspeak;
 
+import static som.langserv.Matcher.fuzzyMatch;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -91,7 +93,7 @@ public class NewspeakStructures
     }
 
     for (Variable v : variables) {
-      if (v.name.equals(name.getString())) {
+      if (v.name == name) {
         results.add(LanguageAdapter.getLocation(v.source));
       }
     }
@@ -107,26 +109,7 @@ public class NewspeakStructures
       return true;
     }
 
-    return fuzzyMatches(symbol.getString().toLowerCase(), query.getString().toLowerCase());
-  }
-
-  public static boolean fuzzyMatches(final String string, final String query) {
-    if (query == null) {
-      return true;
-    }
-
-    // simple prefix
-    if (string.startsWith(query)) {
-      return true;
-    }
-
-    // trivial case
-    if (query.equals(string)) {
-      return true;
-    }
-
-    // TODO: camel case matching etc...
-    return false;
+    return fuzzyMatch(symbol.getString().toLowerCase(), query.getString().toLowerCase());
   }
 
   public synchronized void getCompletions(final SSymbol name,

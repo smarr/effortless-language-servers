@@ -1,5 +1,7 @@
 package som.langserv.newspeak;
 
+import static som.langserv.Matcher.fuzzyMatch;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -256,15 +258,15 @@ public class NewspeakAdapter extends LanguageAdapter<NewspeakStructures> {
   }
 
   private static boolean matchQuery(final String query, final SInvokable m) {
-    return NewspeakStructures.fuzzyMatches(m.getSignature().getString(), query);
+    return fuzzyMatch(m.getSignature().getString(), query);
   }
 
   private static boolean matchQuery(final String query, final MixinDefinition m) {
-    return NewspeakStructures.fuzzyMatches(m.getName().getString(), query);
+    return fuzzyMatch(m.getName().getString(), query);
   }
 
   private static boolean matchQuery(final String query, final SlotDefinition s) {
-    return NewspeakStructures.fuzzyMatches(s.getName().getString(), query);
+    return fuzzyMatch(s.getName().getString(), query);
   }
 
   private static SymbolInformation getSymbolInfo(final SInvokable m) {
