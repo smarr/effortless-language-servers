@@ -196,10 +196,6 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
       return ss == null;
     }
 
-    if (ss == null) {
-      return documentUri.endsWith("vmMirror");
-    }
-
     try {
       return ss.getSource().getURI().getPath().equals(new URI(documentUri).getPath());
     } catch (URISyntaxException e) {
