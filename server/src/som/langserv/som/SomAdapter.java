@@ -46,7 +46,7 @@ import trufflesom.vmobjects.SInvokable;
 import trufflesom.vmobjects.SSymbol;
 
 
-public class SomAdapter extends LanguageAdapter {
+public class SomAdapter extends LanguageAdapter<SomStructures> {
 
   public final static String CORE_LIB_PATH =
       System.getProperty("som.langserv.som-core-lib");
@@ -102,7 +102,8 @@ public class SomAdapter extends LanguageAdapter {
     // SomLint.checkSends(structuralProbes, probe, diagnostics);
   }
 
-  private SomStructures getProbe(final String documentUri) {
+  @Override
+  protected SomStructures getProbe(final String documentUri) {
     synchronized (structuralProbes) {
       try {
         return structuralProbes.get(docUriToNormalizedPath(documentUri));
@@ -113,7 +114,8 @@ public class SomAdapter extends LanguageAdapter {
   }
 
   /** Create a copy to work on safely. */
-  private Collection<SomStructures> getProbes() {
+  @Override
+  protected Collection<SomStructures> getProbes() {
     synchronized (structuralProbes) {
       return new ArrayList<>(structuralProbes.values());
     }
@@ -153,32 +155,8 @@ public class SomAdapter extends LanguageAdapter {
   }
 
   @Override
-  public List<? extends SymbolInformation> getSymbolInfo(final String documentUri) {
-    SomStructures probe = getProbe(documentUri);
-    ArrayList<SymbolInformation> results = new ArrayList<>();
-    if (probe == null) {
-      return results;
-    }
-
-    addAllSymbols(results, null, probe, documentUri);
-    return results;
-  }
-
-  @Override
-  public List<? extends SymbolInformation> getAllSymbolInfo(final String query) {
-    Collection<SomStructures> probes = getProbes();
-
-    ArrayList<SymbolInformation> results = new ArrayList<>();
-
-    for (SomStructures probe : probes) {
-      addAllSymbols(results, query, probe, probe.getDocumentUri());
-    }
-
-    return results;
-  }
-
-  private void addAllSymbols(final ArrayList<SymbolInformation> results, final String query,
-      final SomStructures probe, final String documentUri) {
+  protected void addAllSymbols(final List<SymbolInformation> results, final String query,
+      final SomStructures probe) {
     synchronized (probe) {
       EconomicSet<SClass> classes = probe.getClasses();
       for (SClass m : classes) {
@@ -188,7 +166,7 @@ public class SomAdapter extends LanguageAdapter {
 
       EconomicSet<SInvokable> methods = probe.getMethods();
       for (SInvokable m : methods) {
-        assert sameDocument(documentUri, m.getInvokable().getSourceSection());
+        assert sameDocument(probe.getDocumentUri(), m.getInvokable().getSourceSection());
 
         if (matchQuery(query, m)) {
           results.add(getSymbolInfo(m));
@@ -429,7 +407,7 @@ public class SomAdapter extends LanguageAdapter {
   }
 
   private static void addSymbolInfo(final SClass c, final String query,
-      final ArrayList<SymbolInformation> results) {
+      final List<SymbolInformation> results) {
     if (matchQuery(query, c)) {
       results.add(getSymbolInfo(c));
     }

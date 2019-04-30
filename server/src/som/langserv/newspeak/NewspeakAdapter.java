@@ -56,7 +56,7 @@ import som.vmobjects.SSymbol;
 /**
  * Provides Newspeak/SOMns specific functionality.
  */
-public class NewspeakAdapter extends LanguageAdapter {
+public class NewspeakAdapter extends LanguageAdapter<NewspeakStructures> {
 
   public final static String CORE_LIB_PATH = System.getProperty("som.langserv.somns-core-lib");
 
@@ -125,7 +125,8 @@ public class NewspeakAdapter extends LanguageAdapter {
     Lint.checkSends(structuralProbes, probe, diagnostics);
   }
 
-  private NewspeakStructures getProbe(final String documentUri) {
+  @Override
+  protected NewspeakStructures getProbe(final String documentUri) {
     synchronized (structuralProbes) {
       try {
         return structuralProbes.get(docUriToNormalizedPath(documentUri));
@@ -136,7 +137,8 @@ public class NewspeakAdapter extends LanguageAdapter {
   }
 
   /** Create a copy to work on safely. */
-  private Collection<NewspeakStructures> getProbes() {
+  @Override
+  protected Collection<NewspeakStructures> getProbes() {
     synchronized (structuralProbes) {
       return new ArrayList<>(structuralProbes.values());
     }
@@ -217,42 +219,18 @@ public class NewspeakAdapter extends LanguageAdapter {
   }
 
   @Override
-  public List<? extends SymbolInformation> getSymbolInfo(final String documentUri) {
-    NewspeakStructures probe = getProbe(documentUri);
-    ArrayList<SymbolInformation> results = new ArrayList<>();
-    if (probe == null) {
-      return results;
-    }
-
-    addAllSymbols(results, null, probe, documentUri);
-    return results;
-  }
-
-  @Override
-  public List<? extends SymbolInformation> getAllSymbolInfo(final String query) {
-    Collection<NewspeakStructures> probes = getProbes();
-
-    ArrayList<SymbolInformation> results = new ArrayList<>();
-
-    for (NewspeakStructures probe : probes) {
-      addAllSymbols(results, query, probe, probe.getDocumentUri());
-    }
-
-    return results;
-  }
-
-  private void addAllSymbols(final ArrayList<SymbolInformation> results, final String query,
-      final NewspeakStructures probe, final String documentUri) {
+  protected void addAllSymbols(final List<SymbolInformation> results, final String query,
+      final NewspeakStructures probe) {
     synchronized (probe) {
       EconomicSet<MixinDefinition> classes = probe.getClasses();
       for (MixinDefinition m : classes) {
-        assert sameDocument(documentUri, m.getSourceSection());
+        assert sameDocument(probe.getDocumentUri(), m.getSourceSection());
         addSymbolInfo(m, query, results);
       }
 
       EconomicSet<SInvokable> methods = probe.getMethods();
       for (SInvokable m : methods) {
-        assert sameDocument(documentUri, m.getSourceSection());
+        assert sameDocument(probe.getDocumentUri(), m.getSourceSection());
 
         if (matchQuery(query, m)) {
           results.add(getSymbolInfo(m));
@@ -303,7 +281,7 @@ public class NewspeakAdapter extends LanguageAdapter {
   }
 
   private static void addSymbolInfo(final MixinDefinition m, final String query,
-      final ArrayList<SymbolInformation> results) {
+      final List<SymbolInformation> results) {
     if (matchQuery(query, m)) {
       results.add(getSymbolInfo(m));
     }

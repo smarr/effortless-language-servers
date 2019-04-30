@@ -6,6 +6,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +29,7 @@ import org.eclipse.lsp4j.services.LanguageClient;
 import com.oracle.truffle.api.source.SourceSection;
 
 
-public abstract class LanguageAdapter {
+public abstract class LanguageAdapter<Probe> {
   private LanguageClient client;
 
   public abstract String getFileEnding();
@@ -85,7 +87,8 @@ public abstract class LanguageAdapter {
     }
   }
 
-  public abstract void lintSends(final String docUri, final List<Diagnostic> diagnostics) throws URISyntaxException;
+  public abstract void lintSends(final String docUri, final List<Diagnostic> diagnostics)
+      throws URISyntaxException;
 
   public static String docUriToNormalizedPath(final String documentUri)
       throws URISyntaxException {
@@ -93,7 +96,8 @@ public abstract class LanguageAdapter {
     return uri.getPath();
   }
 
-  public abstract List<Diagnostic> parse(final String text, final String sourceUri) throws URISyntaxException;
+  public abstract List<Diagnostic> parse(final String text, final String sourceUri)
+      throws URISyntaxException;
 
   public static Position pos(final int startLine, final int startChar) {
     Position pos = new Position();
@@ -169,11 +173,38 @@ public abstract class LanguageAdapter {
     return loc;
   }
 
-  public abstract List<? extends SymbolInformation> getSymbolInfo(final String documentUri);
+  protected abstract Probe getProbe(String documentUri);
 
-  public abstract List<? extends SymbolInformation> getAllSymbolInfo(final String query);
+  protected abstract Collection<Probe> getProbes();
 
-  public abstract List<? extends Location> getDefinitions(final String docUri, final int line, final int character);
+  public final List<? extends SymbolInformation> getSymbolInfo(final String documentUri) {
+    Probe probe = getProbe(documentUri);
+    ArrayList<SymbolInformation> results = new ArrayList<>();
+    if (probe == null) {
+      return results;
+    }
+
+    addAllSymbols(results, null, probe);
+    return results;
+  }
+
+  protected abstract void addAllSymbols(
+      List<SymbolInformation> results, String query, Probe probe);
+
+  public final List<? extends SymbolInformation> getAllSymbolInfo(final String query) {
+    Collection<Probe> probes = getProbes();
+
+    ArrayList<SymbolInformation> results = new ArrayList<>();
+
+    for (Probe probe : probes) {
+      addAllSymbols(results, query, probe);
+    }
+
+    return results;
+  }
+
+  public abstract List<? extends Location> getDefinitions(final String docUri, final int line,
+      final int character);
 
   public void reportError(final String msgStr) {
     MessageParams msg = new MessageParams();
@@ -195,7 +226,9 @@ public abstract class LanguageAdapter {
     }
   }
 
-  public abstract CompletionList getCompletions(final String docUri, final int line, final int character);
+  public abstract CompletionList getCompletions(final String docUri, final int line,
+      final int character);
 
-  public abstract void getCodeLenses(final List<CodeLens> codeLenses, final String documentUri);
+  public abstract void getCodeLenses(final List<CodeLens> codeLenses,
+      final String documentUri);
 }
