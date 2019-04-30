@@ -1,4 +1,4 @@
-package som.langserv;
+package som.langserv.newspeak;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -21,11 +21,12 @@ import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Variable;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
+import som.langserv.LanguageAdapter;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
 
-public class SomStructures
+public class NewspeakStructures
     extends StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> {
 
   private final Source           source;
@@ -45,7 +46,7 @@ public class SomStructures
     }
   }
 
-  public SomStructures(final Source source) {
+  public NewspeakStructures(final Source source) {
     this.source = source;
     this.map = new ExpressionNode[source.getLength()];
     this.diagnostics = new ArrayList<>(0);

@@ -11,13 +11,16 @@ import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.eclipse.lsp4j.services.WorkspaceService;
 
+import som.langserv.newspeak.Minitest;
+import som.langserv.newspeak.NewspeakAdapter;
+
 
 public class SomWorkspace implements WorkspaceService {
 
-  private final SomAdapter        som;
+  private final NewspeakAdapter   som;
   private final TruffleSomAdapter tsom;
 
-  public SomWorkspace(final SomAdapter som, final TruffleSomAdapter truffleSom) {
+  public SomWorkspace(final NewspeakAdapter som, final TruffleSomAdapter truffleSom) {
     this.som = som;
     this.tsom = truffleSom;
   }
@@ -44,7 +47,7 @@ public class SomWorkspace implements WorkspaceService {
   @Override
   public CompletableFuture<Object> executeCommand(final ExecuteCommandParams params) {
     if (params.getCommand().equals(params.getCommand())) {
-      SomMinitest.executeTest(som, params.getArguments());
+      Minitest.executeTest(som, params.getArguments());
     }
     return CompletableFuture.completedFuture(new Object());
   }

@@ -1,4 +1,4 @@
-package som.langserv;
+package som.langserv.newspeak;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -46,19 +46,24 @@ import som.interpreter.nodes.LocalVariableNode;
 import som.interpreter.nodes.NonLocalVariableNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.objectstorage.StorageAccessor;
+import som.langserv.LanguageAdapter;
+import som.langserv.ServerLauncher;
 import som.vm.Primitives;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
 
-public class SomAdapter extends LanguageAdapter {
+/**
+ * Provides Newspeak/SOMns specific functionality.
+ */
+public class NewspeakAdapter extends LanguageAdapter {
 
   public final static String CORE_LIB_PATH = System.getProperty("som.langserv.somns-core-lib");
 
-  private final Map<String, SomStructures> structuralProbes;
-  private final SomCompiler                compiler;
+  private final Map<String, NewspeakStructures> structuralProbes;
+  private final SomCompiler                     compiler;
 
-  public SomAdapter() {
+  public NewspeakAdapter() {
     VM vm = initializePolyglot();
     this.compiler = new SomCompiler(vm.getLanguage());
     this.structuralProbes = new HashMap<>();
@@ -76,9 +81,9 @@ public class SomAdapter extends LanguageAdapter {
     @SuppressWarnings({"rawtypes", "unchecked"})
     EconomicMap<SSymbol, SInvokable> ps = (EconomicMap) prims.takeVmMirrorPrimitives();
 
-    SomStructures primProbe =
-        new SomStructures(Source.newBuilder(SomLanguage.LANG_ID, "vmMirror", "vmMirror")
-                                .mimeType(SomLanguage.MIME_TYPE).build());
+    NewspeakStructures primProbe =
+        new NewspeakStructures(Source.newBuilder(SomLanguage.LANG_ID, "vmMirror", "vmMirror")
+                                     .mimeType(SomLanguage.MIME_TYPE).build());
     for (SInvokable i : ps.getValues()) {
       primProbe.recordNewMethod(i.getIdentifier(), i);
     }
@@ -113,14 +118,14 @@ public class SomAdapter extends LanguageAdapter {
   @Override
   public void lintSends(final String docUri, final List<Diagnostic> diagnostics)
       throws URISyntaxException {
-    SomStructures probe;
+    NewspeakStructures probe;
     synchronized (structuralProbes) {
       probe = structuralProbes.get(docUriToNormalizedPath(docUri));
     }
-    SomLint.checkSends(structuralProbes, probe, diagnostics);
+    Lint.checkSends(structuralProbes, probe, diagnostics);
   }
 
-  private SomStructures getProbe(final String documentUri) {
+  private NewspeakStructures getProbe(final String documentUri) {
     synchronized (structuralProbes) {
       try {
         return structuralProbes.get(docUriToNormalizedPath(documentUri));
@@ -131,7 +136,7 @@ public class SomAdapter extends LanguageAdapter {
   }
 
   /** Create a copy to work on safely. */
-  private Collection<SomStructures> getProbes() {
+  private Collection<NewspeakStructures> getProbes() {
     synchronized (structuralProbes) {
       return new ArrayList<>(structuralProbes.values());
     }
@@ -145,7 +150,7 @@ public class SomAdapter extends LanguageAdapter {
                           .mimeType(SomLanguage.MIME_TYPE)
                           .uri(new URI(sourceUri).normalize()).build();
 
-    SomStructures newProbe = new SomStructures(source);
+    NewspeakStructures newProbe = new NewspeakStructures(source);
     List<Diagnostic> diagnostics = newProbe.getDiagnostics();
     try {
       // clean out old structural data
@@ -154,7 +159,7 @@ public class SomAdapter extends LanguageAdapter {
       }
       synchronized (newProbe) {
         MixinDefinition def = compiler.compileModule(source, newProbe);
-        SomLint.checkModuleName(path, def, diagnostics);
+        Lint.checkModuleName(path, def, diagnostics);
       }
     } catch (ParseError e) {
       return toDiagnostics(e, diagnostics);
@@ -213,7 +218,7 @@ public class SomAdapter extends LanguageAdapter {
 
   @Override
   public List<? extends SymbolInformation> getSymbolInfo(final String documentUri) {
-    SomStructures probe = getProbe(documentUri);
+    NewspeakStructures probe = getProbe(documentUri);
     ArrayList<SymbolInformation> results = new ArrayList<>();
     if (probe == null) {
       return results;
@@ -225,11 +230,11 @@ public class SomAdapter extends LanguageAdapter {
 
   @Override
   public List<? extends SymbolInformation> getAllSymbolInfo(final String query) {
-    Collection<SomStructures> probes = getProbes();
+    Collection<NewspeakStructures> probes = getProbes();
 
     ArrayList<SymbolInformation> results = new ArrayList<>();
 
-    for (SomStructures probe : probes) {
+    for (NewspeakStructures probe : probes) {
       addAllSymbols(results, query, probe, probe.getDocumentUri());
     }
 
@@ -237,7 +242,7 @@ public class SomAdapter extends LanguageAdapter {
   }
 
   private void addAllSymbols(final ArrayList<SymbolInformation> results, final String query,
-      final SomStructures probe, final String documentUri) {
+      final NewspeakStructures probe, final String documentUri) {
     synchronized (probe) {
       EconomicSet<MixinDefinition> classes = probe.getClasses();
       for (MixinDefinition m : classes) {
@@ -273,15 +278,15 @@ public class SomAdapter extends LanguageAdapter {
   }
 
   private static boolean matchQuery(final String query, final SInvokable m) {
-    return SomStructures.fuzzyMatches(m.getSignature().getString(), query);
+    return NewspeakStructures.fuzzyMatches(m.getSignature().getString(), query);
   }
 
   private static boolean matchQuery(final String query, final MixinDefinition m) {
-    return SomStructures.fuzzyMatches(m.getName().getString(), query);
+    return NewspeakStructures.fuzzyMatches(m.getName().getString(), query);
   }
 
   private static boolean matchQuery(final String query, final SlotDefinition s) {
-    return SomStructures.fuzzyMatches(s.getName().getString(), query);
+    return NewspeakStructures.fuzzyMatches(s.getName().getString(), query);
   }
 
   private static SymbolInformation getSymbolInfo(final SInvokable m) {
@@ -345,7 +350,7 @@ public class SomAdapter extends LanguageAdapter {
   public List<? extends Location> getDefinitions(final String docUri,
       final int line, final int character) {
     ArrayList<Location> result = new ArrayList<>();
-    SomStructures probe = getProbe(docUri);
+    NewspeakStructures probe = getProbe(docUri);
     if (probe == null) {
       return result;
     }
@@ -384,7 +389,7 @@ public class SomAdapter extends LanguageAdapter {
 
   private void addAllDefinitions(final ArrayList<Location> result, final SSymbol name) {
     synchronized (structuralProbes) {
-      for (SomStructures s : structuralProbes.values()) {
+      for (NewspeakStructures s : structuralProbes.values()) {
         s.getDefinitionsFor(name, result);
       }
     }
@@ -397,7 +402,7 @@ public class SomAdapter extends LanguageAdapter {
     CompletionList result = new CompletionList();
     result.setIsIncomplete(true);
 
-    SomStructures probe = getProbe(docUri);
+    NewspeakStructures probe = getProbe(docUri);
     if (probe == null) {
       return result;
     }
@@ -420,9 +425,9 @@ public class SomAdapter extends LanguageAdapter {
 
     if (sym != null) {
       Set<CompletionItem> completion = new HashSet<>();
-      Collection<SomStructures> probes = getProbes();
+      Collection<NewspeakStructures> probes = getProbes();
 
-      for (SomStructures s : probes) {
+      for (NewspeakStructures s : probes) {
         s.getCompletions(sym, completion);
       }
       result.setItems(new ArrayList<>(completion));
@@ -442,8 +447,9 @@ public class SomAdapter extends LanguageAdapter {
     public MixinDefinition compileModule(final Source source,
         final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe)
         throws bd.basic.ProgramDefinitionError {
-      SomParser parser = new SomParser(source.getCharacters().toString(), source.getLength(),
-          source, (SomStructures) structuralProbe, language);
+      NewspeakParser parser =
+          new NewspeakParser(source.getCharacters().toString(), source.getLength(),
+              source, (NewspeakStructures) structuralProbe, language);
       return compile(parser, source);
     }
   }
@@ -458,14 +464,14 @@ public class SomAdapter extends LanguageAdapter {
       return;
     }
 
-    SomStructures probe;
+    NewspeakStructures probe;
     synchronized (path) {
       probe = structuralProbes.get(path);
     }
 
     if (probe != null) {
       for (MixinDefinition c : probe.getClasses()) {
-        SomMinitest.checkForTests(c, codeLenses, documentUri);
+        Minitest.checkForTests(c, codeLenses, documentUri);
       }
     }
   }

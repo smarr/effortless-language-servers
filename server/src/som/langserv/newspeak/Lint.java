@@ -1,4 +1,4 @@
-package som.langserv;
+package som.langserv.newspeak;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -11,10 +11,11 @@ import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Range;
 
 import som.compiler.MixinDefinition;
-import som.langserv.SomStructures.Call;
+import som.langserv.LanguageAdapter;
+import som.langserv.newspeak.NewspeakStructures.Call;
 
 
-public class SomLint {
+public class Lint {
   private static final String LINT_NAME = "SOMns Lint";
 
   public static void checkModuleName(final String filepath, final MixinDefinition def,
@@ -47,14 +48,15 @@ public class SomLint {
 
   private static void checkFileEnding(final String name, final List<Diagnostic> diagnostics) {
     if (!name.endsWith(".ns")) { // TODO: generalise this
-      diagnostics.add(new Diagnostic(new Range(LanguageAdapter.pos(1, 1), LanguageAdapter.pos(1, 1)),
+      diagnostics.add(new Diagnostic(
+          new Range(LanguageAdapter.pos(1, 1), LanguageAdapter.pos(1, 1)),
           "File name does not use the .ns extension.", DiagnosticSeverity.Hint, LINT_NAME));
     }
   }
 
-  public static void checkSends(final Map<String, SomStructures> structuralProbes,
-      final SomStructures newProbe, final List<Diagnostic> diagnostics) {
-    Collection<SomStructures> probes;
+  public static void checkSends(final Map<String, NewspeakStructures> structuralProbes,
+      final NewspeakStructures newProbe, final List<Diagnostic> diagnostics) {
+    Collection<NewspeakStructures> probes;
     synchronized (structuralProbes) {
       probes = new ArrayList<>(structuralProbes.values());
     }
@@ -66,7 +68,7 @@ public class SomLint {
       }
 
       boolean defined = false;
-      for (SomStructures p : probes) {
+      for (NewspeakStructures p : probes) {
         if (p.defines(c.selector)) {
           defined = true;
           break;
@@ -74,7 +76,8 @@ public class SomLint {
       }
 
       if (!defined) {
-        Range r = new Range(LanguageAdapter.pos(c.sections[0].getStartLine(), c.sections[0].getStartColumn()),
+        Range r = new Range(
+            LanguageAdapter.pos(c.sections[0].getStartLine(), c.sections[0].getStartColumn()),
             LanguageAdapter.pos(c.sections[c.sections.length - 1].getEndLine(),
                 c.sections[c.sections.length - 1].getEndColumn() + 1));
         diagnostics.add(new Diagnostic(r,

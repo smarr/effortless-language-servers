@@ -49,17 +49,20 @@ import org.eclipse.lsp4j.services.WorkspaceService;
 
 import com.google.common.collect.Lists;
 
+import som.langserv.newspeak.Minitest;
+import som.langserv.newspeak.NewspeakAdapter;
+
 
 public class SomLanguageServer implements LanguageServer, TextDocumentService,
     LanguageClientAware {
 
   private final SomWorkspace      workspace;
-  private final SomAdapter        som;
+  private final NewspeakAdapter   som;
   private final TruffleSomAdapter tsom;
   private LanguageClient          client;
 
   public SomLanguageServer() {
-    som = new SomAdapter();
+    som = new NewspeakAdapter();
     tsom = new TruffleSomAdapter();
     workspace = new SomWorkspace(som, tsom);
   }
@@ -75,7 +78,7 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
     cap.setDefinitionProvider(true);
     cap.setCodeLensProvider(new CodeLensOptions(true));
     cap.setExecuteCommandProvider(
-        new ExecuteCommandOptions(Lists.newArrayList(SomMinitest.COMMAND)));
+        new ExecuteCommandOptions(Lists.newArrayList(Minitest.COMMAND)));
 
     CompletionOptions completion = new CompletionOptions();
     List<String> autoComplTrigger = new ArrayList<>();
