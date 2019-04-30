@@ -3,7 +3,6 @@ package som.langserv.newspeak;
 import static som.langserv.Matcher.fuzzyMatch;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -141,27 +140,6 @@ public class NewspeakStructures
       item.setLabel(symbol.getString());
       results.add(item);
     }
-  }
-
-  public synchronized boolean classesAndMethodsConsistent() {
-    Set<SInvokable> methods = new HashSet<>();
-
-    for (MixinDefinition c : classes) {
-      for (Dispatchable disp : c.getInstanceDispatchables().getValues()) {
-        if (disp instanceof SInvokable) {
-          methods.add((SInvokable) disp);
-        }
-      }
-
-      for (SInvokable disp : c.getFactoryMethods().getValues()) {
-        methods.add(disp);
-      }
-    }
-
-    Set<SInvokable> regMethods = new HashSet<>(methods);
-    regMethods.removeAll(methods);
-    assert regMethods.isEmpty();
-    return regMethods.isEmpty();
   }
 
   @Override
