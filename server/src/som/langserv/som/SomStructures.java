@@ -1,4 +1,4 @@
-package som.langserv;
+package som.langserv.som;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +14,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import bd.tools.nodes.Invocation;
 import bd.tools.structure.StructuralProbe;
+import som.langserv.LanguageAdapter;
 import trufflesom.compiler.Field;
 import trufflesom.compiler.Variable;
 import trufflesom.interpreter.nodes.ExpressionNode;
@@ -22,7 +23,7 @@ import trufflesom.vmobjects.SInvokable;
 import trufflesom.vmobjects.SSymbol;
 
 
-public class TruffleSomStructures
+public class SomStructures
     extends StructuralProbe<SSymbol, SClass, SInvokable, Field, Variable> {
 
   private final Source           source;
@@ -42,7 +43,7 @@ public class TruffleSomStructures
     }
   }
 
-  public TruffleSomStructures(final Source source) {
+  public SomStructures(final Source source) {
     this.source = source;
     this.map = new ExpressionNode[source.getLength()];
     this.diagnostics = new ArrayList<>(0);

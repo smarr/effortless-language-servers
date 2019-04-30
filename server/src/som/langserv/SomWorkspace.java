@@ -13,14 +13,15 @@ import org.eclipse.lsp4j.services.WorkspaceService;
 
 import som.langserv.newspeak.Minitest;
 import som.langserv.newspeak.NewspeakAdapter;
+import som.langserv.som.SomAdapter;
 
 
 public class SomWorkspace implements WorkspaceService {
 
-  private final NewspeakAdapter   som;
-  private final TruffleSomAdapter tsom;
+  private final NewspeakAdapter som;
+  private final SomAdapter      tsom;
 
-  public SomWorkspace(final NewspeakAdapter som, final TruffleSomAdapter truffleSom) {
+  public SomWorkspace(final NewspeakAdapter som, final SomAdapter truffleSom) {
     this.som = som;
     this.tsom = truffleSom;
   }

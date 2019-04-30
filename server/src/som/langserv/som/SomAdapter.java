@@ -1,4 +1,4 @@
-package som.langserv;
+package som.langserv.som;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -29,6 +29,8 @@ import bd.basic.ProgramDefinitionError;
 import bd.source.SourceCoordinate;
 import bd.tools.nodes.Invocation;
 import bd.tools.structure.StructuralProbe;
+import som.langserv.LanguageAdapter;
+import som.langserv.ServerLauncher;
 import trufflesom.compiler.Field;
 import trufflesom.compiler.Parser.ParseError;
 import trufflesom.compiler.SourcecodeCompiler;
@@ -44,16 +46,16 @@ import trufflesom.vmobjects.SInvokable;
 import trufflesom.vmobjects.SSymbol;
 
 
-public class TruffleSomAdapter extends LanguageAdapter {
+public class SomAdapter extends LanguageAdapter {
 
   public final static String CORE_LIB_PATH =
       System.getProperty("som.langserv.som-core-lib");
 
-  private final Map<String, TruffleSomStructures> structuralProbes;
-  private final TruffleSomCompiler                compiler;
-  private final Universe                          universe;
+  private final Map<String, SomStructures> structuralProbes;
+  private final TruffleSomCompiler         compiler;
+  private final Universe                   universe;
 
-  public TruffleSomAdapter() {
+  public SomAdapter() {
     this.structuralProbes = new HashMap<>();
     this.universe = initializePolyglot();
     this.compiler = new TruffleSomCompiler(universe.getLanguage());
@@ -79,7 +81,7 @@ public class TruffleSomAdapter extends LanguageAdapter {
     Universe universe = SomLanguage.getCurrent().getUniverse();
     universe.setupClassPath(CORE_LIB_PATH + "/Smalltalk");
 
-    TruffleSomStructures systemClassProbe = new TruffleSomStructures(
+    SomStructures systemClassProbe = new SomStructures(
         Source.newBuilder(SomLanguage.SOM, "systemClasses", null).internal(true).build());
     universe.setSystemClassProbe(systemClassProbe);
     structuralProbes.put("systemClasses", systemClassProbe);
@@ -93,14 +95,14 @@ public class TruffleSomAdapter extends LanguageAdapter {
   public void lintSends(final String docUri, final List<Diagnostic> diagnostics)
       throws URISyntaxException {
     // TODO: implement linting
-    TruffleSomStructures probe;
+    SomStructures probe;
     synchronized (structuralProbes) {
       probe = structuralProbes.get(docUriToNormalizedPath(docUri));
     }
     // SomLint.checkSends(structuralProbes, probe, diagnostics);
   }
 
-  private TruffleSomStructures getProbe(final String documentUri) {
+  private SomStructures getProbe(final String documentUri) {
     synchronized (structuralProbes) {
       try {
         return structuralProbes.get(docUriToNormalizedPath(documentUri));
@@ -111,7 +113,7 @@ public class TruffleSomAdapter extends LanguageAdapter {
   }
 
   /** Create a copy to work on safely. */
-  private Collection<TruffleSomStructures> getProbes() {
+  private Collection<SomStructures> getProbes() {
     synchronized (structuralProbes) {
       return new ArrayList<>(structuralProbes.values());
     }
@@ -124,7 +126,7 @@ public class TruffleSomAdapter extends LanguageAdapter {
     Source source = Source.newBuilder(text).name(path).mimeType(SomLanguage.MIME_TYPE)
                           .uri(new URI(sourceUri).normalize()).build();
 
-    TruffleSomStructures newProbe = new TruffleSomStructures(source);
+    SomStructures newProbe = new SomStructures(source);
     List<Diagnostic> diagnostics = newProbe.getDiagnostics();
     try {
       // clean out old structural data
@@ -152,7 +154,7 @@ public class TruffleSomAdapter extends LanguageAdapter {
 
   @Override
   public List<? extends SymbolInformation> getSymbolInfo(final String documentUri) {
-    TruffleSomStructures probe = getProbe(documentUri);
+    SomStructures probe = getProbe(documentUri);
     ArrayList<SymbolInformation> results = new ArrayList<>();
     if (probe == null) {
       return results;
@@ -164,11 +166,11 @@ public class TruffleSomAdapter extends LanguageAdapter {
 
   @Override
   public List<? extends SymbolInformation> getAllSymbolInfo(final String query) {
-    Collection<TruffleSomStructures> probes = getProbes();
+    Collection<SomStructures> probes = getProbes();
 
     ArrayList<SymbolInformation> results = new ArrayList<>();
 
-    for (TruffleSomStructures probe : probes) {
+    for (SomStructures probe : probes) {
       addAllSymbols(results, query, probe, probe.getDocumentUri());
     }
 
@@ -176,7 +178,7 @@ public class TruffleSomAdapter extends LanguageAdapter {
   }
 
   private void addAllSymbols(final ArrayList<SymbolInformation> results, final String query,
-      final TruffleSomStructures probe, final String documentUri) {
+      final SomStructures probe, final String documentUri) {
     synchronized (probe) {
       EconomicSet<SClass> classes = probe.getClasses();
       for (SClass m : classes) {
@@ -226,26 +228,26 @@ public class TruffleSomAdapter extends LanguageAdapter {
   }
 
   private static boolean matchQuery(final String query, final Field f) {
-    return TruffleSomStructures.fuzzyMatches(f.getName().getString(), query);
+    return SomStructures.fuzzyMatches(f.getName().getString(), query);
   }
 
   private static boolean matchQuery(final String query, final Variable v) {
-    return TruffleSomStructures.fuzzyMatches(v.name.getString(), query);
+    return SomStructures.fuzzyMatches(v.name.getString(), query);
   }
 
   private static boolean matchQuery(final String query, final SInvokable m) {
-    return TruffleSomStructures.fuzzyMatches(m.getSignature().getString(), query);
+    return SomStructures.fuzzyMatches(m.getSignature().getString(), query);
   }
 
   private static boolean matchQuery(final String query, final SClass c) {
-    return TruffleSomStructures.fuzzyMatches(c.getName().getString(), query);
+    return SomStructures.fuzzyMatches(c.getName().getString(), query);
   }
 
   @Override
   public List<? extends Location> getDefinitions(final String docUri, final int line,
       final int character) {
     ArrayList<Location> result = new ArrayList<>();
-    TruffleSomStructures probe = getProbe(docUri);
+    SomStructures probe = getProbe(docUri);
     if (probe == null) {
       return result;
     }
@@ -287,7 +289,7 @@ public class TruffleSomAdapter extends LanguageAdapter {
 
   private void addAllDefinitions(final ArrayList<Location> result, final SSymbol name) {
     synchronized (structuralProbes) {
-      for (TruffleSomStructures s : structuralProbes.values()) {
+      for (SomStructures s : structuralProbes.values()) {
         s.getDefinitionsFor(name, result);
       }
     }
@@ -300,7 +302,7 @@ public class TruffleSomAdapter extends LanguageAdapter {
     CompletionList result = new CompletionList();
     result.setIsIncomplete(true);
 
-    TruffleSomStructures probe = getProbe(docUri);
+    SomStructures probe = getProbe(docUri);
     if (probe == null) {
       return result;
     }
@@ -323,9 +325,9 @@ public class TruffleSomAdapter extends LanguageAdapter {
 
     if (sym != null) {
       Set<CompletionItem> completion = new HashSet<>();
-      Collection<TruffleSomStructures> probes = getProbes();
+      Collection<SomStructures> probes = getProbes();
 
-      for (TruffleSomStructures s : probes) {
+      for (SomStructures s : probes) {
         s.getCompletions(sym, completion);
       }
       result.setItems(new ArrayList<>(completion));
@@ -452,8 +454,8 @@ public class TruffleSomAdapter extends LanguageAdapter {
     public SClass compileClass(final Source source, final Universe universe,
         final StructuralProbe<SSymbol, SClass, SInvokable, Field, Variable> structuralProbe)
         throws ProgramDefinitionError {
-      TruffleSomParser parser = new TruffleSomParser(source.getReader(), source.getLength(),
-          source, (TruffleSomStructures) structuralProbe, universe);
+      SomParser parser = new SomParser(source.getReader(), source.getLength(),
+          source, (SomStructures) structuralProbe, universe);
 
       return compile(parser, null, universe);
     }

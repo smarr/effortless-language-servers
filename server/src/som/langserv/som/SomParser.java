@@ -1,4 +1,4 @@
-package som.langserv;
+package som.langserv.som;
 
 import java.io.Reader;
 import java.util.ArrayDeque;
@@ -20,13 +20,13 @@ import trufflesom.vmobjects.SSymbol;
  * Extension of the normal SOM parser to record more structural information
  * that is useful for tooling.
  */
-public class TruffleSomParser extends Parser {
+public class SomParser extends Parser {
 
-  private TruffleSomStructures       structuralProbe;
+  private SomStructures              structuralProbe;
   private final Deque<SourceSection> sourceSections;
 
-  public TruffleSomParser(final Reader reader, final long fileSize, final Source source,
-      final TruffleSomStructures structuralProbe, final Universe universe) {
+  public SomParser(final Reader reader, final long fileSize, final Source source,
+      final SomStructures structuralProbe, final Universe universe) {
     super(reader, fileSize, source, structuralProbe, universe);
     assert structuralProbe != null : "Needed for this extended parser.";
     this.structuralProbe = structuralProbe;

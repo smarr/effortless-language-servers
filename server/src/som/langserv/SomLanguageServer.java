@@ -51,19 +51,20 @@ import com.google.common.collect.Lists;
 
 import som.langserv.newspeak.Minitest;
 import som.langserv.newspeak.NewspeakAdapter;
+import som.langserv.som.SomAdapter;
 
 
 public class SomLanguageServer implements LanguageServer, TextDocumentService,
     LanguageClientAware {
 
-  private final SomWorkspace      workspace;
-  private final NewspeakAdapter   som;
-  private final TruffleSomAdapter tsom;
-  private LanguageClient          client;
+  private final SomWorkspace    workspace;
+  private final NewspeakAdapter som;
+  private final SomAdapter      tsom;
+  private LanguageClient        client;
 
   public SomLanguageServer() {
     som = new NewspeakAdapter();
-    tsom = new TruffleSomAdapter();
+    tsom = new SomAdapter();
     workspace = new SomWorkspace(som, tsom);
   }
 
