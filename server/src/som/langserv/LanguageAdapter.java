@@ -34,6 +34,10 @@ public abstract class LanguageAdapter<Probe> {
 
   public abstract String getFileEnding();
 
+  public boolean handlesUri(final String uri) {
+    return uri.endsWith(getFileEnding());
+  }
+
   public void connect(final LanguageClient client) {
     this.client = client;
   }

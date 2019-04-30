@@ -13,25 +13,25 @@ import org.eclipse.lsp4j.services.WorkspaceService;
 
 import som.langserv.newspeak.Minitest;
 import som.langserv.newspeak.NewspeakAdapter;
-import som.langserv.som.SomAdapter;
 
 
 public class SomWorkspace implements WorkspaceService {
 
-  private final NewspeakAdapter som;
-  private final SomAdapter      tsom;
+  private final LanguageAdapter<?> adapters[];
 
-  public SomWorkspace(final NewspeakAdapter som, final SomAdapter truffleSom) {
-    this.som = som;
-    this.tsom = truffleSom;
+  public SomWorkspace(final LanguageAdapter<?> languageAdapters[]) {
+    this.adapters = languageAdapters;
   }
 
   @Override
   public CompletableFuture<List<? extends SymbolInformation>> symbol(
       final WorkspaceSymbolParams params) {
     ArrayList<SymbolInformation> result = new ArrayList<>();
-    result.addAll(som.getAllSymbolInfo(params.getQuery()));
-    result.addAll(tsom.getAllSymbolInfo(params.getQuery()));
+
+    for (LanguageAdapter<?> adapter : adapters) {
+      result.addAll(adapter.getAllSymbolInfo(params.getQuery()));
+    }
+
     return CompletableFuture.completedFuture(result);
   }
 
@@ -47,8 +47,10 @@ public class SomWorkspace implements WorkspaceService {
 
   @Override
   public CompletableFuture<Object> executeCommand(final ExecuteCommandParams params) {
+    assert adapters != null && adapters.length > 0
+        && adapters[0] instanceof NewspeakAdapter : "Currently only the Newspeak adapter supports this, so it is hardcoded";
     if (params.getCommand().equals(params.getCommand())) {
-      Minitest.executeTest(som, params.getArguments());
+      Minitest.executeTest((NewspeakAdapter) adapters[0], params.getArguments());
     }
     return CompletableFuture.completedFuture(new Object());
   }

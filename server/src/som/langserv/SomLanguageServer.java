@@ -57,15 +57,13 @@ import som.langserv.som.SomAdapter;
 public class SomLanguageServer implements LanguageServer, TextDocumentService,
     LanguageClientAware {
 
-  private final SomWorkspace    workspace;
-  private final NewspeakAdapter som;
-  private final SomAdapter      tsom;
-  private LanguageClient        client;
+  private final SomWorkspace       workspace;
+  private final LanguageAdapter<?> adapters[];
+  private LanguageClient           client;
 
   public SomLanguageServer() {
-    som = new NewspeakAdapter();
-    tsom = new SomAdapter();
-    workspace = new SomWorkspace(som, tsom);
+    adapters = new LanguageAdapter[] {new NewspeakAdapter(), new SomAdapter()};
+    workspace = new SomWorkspace(adapters);
   }
 
   @Override
@@ -99,8 +97,9 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
 
   private void loadWorkspace(final InitializeParams params) {
     try {
-      som.loadWorkspace(params.getRootUri());
-      tsom.loadWorkspace(params.getRootUri());
+      for (LanguageAdapter<?> adapter : adapters) {
+        adapter.loadWorkspace(params.getRootUri());
+      }
     } catch (URISyntaxException e) {
       MessageParams msg = new MessageParams();
       msg.setType(MessageType.Error);
@@ -138,17 +137,16 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
   public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(
       final TextDocumentPositionParams position) {
     String uri = position.getTextDocument().getUri();
-    if (isSomnsUri(uri)) {
-      CompletionList result = som.getCompletions(
-          position.getTextDocument().getUri(), position.getPosition().getLine(),
-          position.getPosition().getCharacter());
-      return CompletableFuture.completedFuture(Either.forRight(result));
-    } else if (isTruffleSomUri(uri)) {
-      CompletionList result = tsom.getCompletions(
-          position.getTextDocument().getUri(), position.getPosition().getLine(),
-          position.getPosition().getCharacter());
-      return CompletableFuture.completedFuture(Either.forRight(result));
+
+    for (LanguageAdapter<?> adapter : adapters) {
+      if (adapter.handlesUri(uri)) {
+        CompletionList result = adapter.getCompletions(
+            position.getTextDocument().getUri(), position.getPosition().getLine(),
+            position.getPosition().getCharacter());
+        return CompletableFuture.completedFuture(Either.forRight(result));
+      }
     }
+
     return CompletableFuture.completedFuture(Either.forRight(new CompletionList()));
   }
 
@@ -177,15 +175,16 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
       final TextDocumentPositionParams position) {
     String uri = position.getTextDocument().getUri();
     List<? extends Location> result = new ArrayList<>();
-    if (isSomnsUri(uri)) {
-      result = som.getDefinitions(
-          position.getTextDocument().getUri(), position.getPosition().getLine(),
-          position.getPosition().getCharacter());
-    } else if (isTruffleSomUri(uri)) {
-      result = tsom.getDefinitions(
-          position.getTextDocument().getUri(), position.getPosition().getLine(),
-          position.getPosition().getCharacter());
+
+    for (LanguageAdapter<?> adapter : adapters) {
+      if (adapter.handlesUri(uri)) {
+        result = adapter.getDefinitions(
+            position.getTextDocument().getUri(), position.getPosition().getLine(),
+            position.getPosition().getCharacter());
+        break;
+      }
     }
+
     return CompletableFuture.completedFuture(result);
   }
 
@@ -204,12 +203,14 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
     // so, this should actually return multiple results.
     // The spec is currently broken for that.
     String uri = position.getTextDocument().getUri();
-    if (isSomnsUri(uri)) {
-      DocumentHighlight result = som.getHighlight(position.getTextDocument().getUri(),
-          position.getPosition().getLine() + 1, position.getPosition().getCharacter() + 1);
-      ArrayList<DocumentHighlight> list = new ArrayList<>(1);
-      list.add(result);
-      return CompletableFuture.completedFuture(list);
+    for (LanguageAdapter<?> adapter : adapters) {
+      if (adapter.handlesUri(uri)) {
+        DocumentHighlight result = adapter.getHighlight(position.getTextDocument().getUri(),
+            position.getPosition().getLine() + 1, position.getPosition().getCharacter() + 1);
+        ArrayList<DocumentHighlight> list = new ArrayList<>(1);
+        list.add(result);
+        return CompletableFuture.completedFuture(list);
+      }
     }
     return CompletableFuture.completedFuture(new ArrayList<DocumentHighlight>());
   }
@@ -218,14 +219,12 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
   public CompletableFuture<List<? extends SymbolInformation>> documentSymbol(
       final DocumentSymbolParams params) {
     String uri = params.getTextDocument().getUri();
-    if (isSomnsUri(uri)) {
-      List<? extends SymbolInformation> result =
-          som.getSymbolInfo(params.getTextDocument().getUri());
-      return CompletableFuture.completedFuture(result);
-    } else if (isTruffleSomUri(uri)) {
-      List<? extends SymbolInformation> result =
-          tsom.getSymbolInfo(params.getTextDocument().getUri());
-      return CompletableFuture.completedFuture(result);
+    for (LanguageAdapter<?> adapter : adapters) {
+      if (adapter.handlesUri(uri)) {
+        List<? extends SymbolInformation> result =
+            adapter.getSymbolInfo(params.getTextDocument().getUri());
+        return CompletableFuture.completedFuture(result);
+      }
     }
     return CompletableFuture.completedFuture(new ArrayList<SymbolInformation>());
   }
@@ -239,10 +238,12 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
   @Override
   public CompletableFuture<List<? extends CodeLens>> codeLens(final CodeLensParams params) {
     String uri = params.getTextDocument().getUri();
-    if (isSomnsUri(uri)) {
-      List<CodeLens> result = new ArrayList<>();
-      som.getCodeLenses(result, params.getTextDocument().getUri());
-      return CompletableFuture.completedFuture(result);
+    for (LanguageAdapter<?> adapter : adapters) {
+      if (adapter.handlesUri(uri)) {
+        List<CodeLens> result = new ArrayList<>();
+        adapter.getCodeLenses(result, params.getTextDocument().getUri());
+        return CompletableFuture.completedFuture(result);
+      }
     }
     return CompletableFuture.completedFuture(new ArrayList<CodeLens>());
   }
@@ -301,15 +302,15 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
 
   private void parseDocument(final String documentUri, final String text) {
     try {
-      if (isSomnsUri(documentUri)) {
-        List<Diagnostic> diagnostics = som.parse(text, documentUri);
-        som.lintSends(documentUri, diagnostics);
-        som.reportDiagnostics(diagnostics, documentUri);
-      } else if (isTruffleSomUri(documentUri)) {
-        List<Diagnostic> diagnostics = tsom.parse(text, documentUri);
-        // st.lintSends(documentUri, diagnostics);
-        tsom.reportDiagnostics(diagnostics, documentUri);
+      for (LanguageAdapter<?> adapter : adapters) {
+        if (adapter.handlesUri(documentUri)) {
+          List<Diagnostic> diagnostics = adapter.parse(text, documentUri);
+          adapter.lintSends(documentUri, diagnostics);
+          adapter.reportDiagnostics(diagnostics, documentUri);
+          return;
+        }
       }
+      assert false : "LanguageServer does not support file type: " + documentUri;
     } catch (URISyntaxException ex) {
       ex.printStackTrace(ServerLauncher.errWriter());
     }
@@ -327,17 +328,9 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
 
   @Override
   public void connect(final LanguageClient client) {
-    this.som.connect(client);
-    this.tsom.connect(client);
+    for (LanguageAdapter<?> adapter : adapters) {
+      adapter.connect(client);
+    }
     this.client = client;
-  }
-
-  protected boolean isSomnsUri(final String uri) {
-    return uri.endsWith(".ns");
-  }
-
-  @SuppressWarnings("unused")
-  protected boolean isTruffleSomUri(final String uri) {
-    return uri.endsWith(".som");
   }
 }
