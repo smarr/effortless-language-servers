@@ -168,7 +168,8 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
 
       EconomicSet<SInvokable> methods = probe.getMethods();
       for (SInvokable m : methods) {
-        assert sameDocument(probe.getDocumentUri(), m.getInvokable().getSourceSection());
+        // does not hold, because we have all systems classes in one probe
+        // assert sameDocument(probe.getDocumentUri(), m.getInvokable().getSourceSection());
 
         if (matchQuery(query, m)) {
           results.add(getSymbolInfo(m));
