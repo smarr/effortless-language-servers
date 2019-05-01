@@ -49,17 +49,21 @@ import org.eclipse.lsp4j.services.WorkspaceService;
 
 import com.google.common.collect.Lists;
 
+import som.langserv.newspeak.Minitest;
+import som.langserv.newspeak.NewspeakAdapter;
+import som.langserv.som.SomAdapter;
+
 
 public class SomLanguageServer implements LanguageServer, TextDocumentService,
     LanguageClientAware {
 
-  private final SomWorkspace workspace;
-  private final SomAdapter   som;
-  private LanguageClient     client;
+  private final SomWorkspace       workspace;
+  private final LanguageAdapter<?> adapters[];
+  private LanguageClient           client;
 
   public SomLanguageServer() {
-    som = new SomAdapter();
-    workspace = new SomWorkspace(som);
+    adapters = new LanguageAdapter[] {new NewspeakAdapter(), new SomAdapter()};
+    workspace = new SomWorkspace(adapters);
   }
 
   @Override
@@ -73,7 +77,7 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
     cap.setDefinitionProvider(true);
     cap.setCodeLensProvider(new CodeLensOptions(true));
     cap.setExecuteCommandProvider(
-        new ExecuteCommandOptions(Lists.newArrayList(SomMinitest.COMMAND)));
+        new ExecuteCommandOptions(Lists.newArrayList(Minitest.COMMAND)));
 
     CompletionOptions completion = new CompletionOptions();
     List<String> autoComplTrigger = new ArrayList<>();
@@ -93,7 +97,9 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
 
   private void loadWorkspace(final InitializeParams params) {
     try {
-      som.loadWorkspace(params.getRootUri());
+      for (LanguageAdapter<?> adapter : adapters) {
+        adapter.loadWorkspace(params.getRootUri());
+      }
     } catch (URISyntaxException e) {
       MessageParams msg = new MessageParams();
       msg.setType(MessageType.Error);
@@ -130,10 +136,18 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
   @Override
   public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(
       final TextDocumentPositionParams position) {
-    CompletionList result = som.getCompletions(
-        position.getTextDocument().getUri(), position.getPosition().getLine(),
-        position.getPosition().getCharacter());
-    return CompletableFuture.completedFuture(Either.forRight(result));
+    String uri = position.getTextDocument().getUri();
+
+    for (LanguageAdapter<?> adapter : adapters) {
+      if (adapter.handlesUri(uri)) {
+        CompletionList result = adapter.getCompletions(
+            position.getTextDocument().getUri(), position.getPosition().getLine(),
+            position.getPosition().getCharacter());
+        return CompletableFuture.completedFuture(Either.forRight(result));
+      }
+    }
+
+    return CompletableFuture.completedFuture(Either.forRight(new CompletionList()));
   }
 
   @Override
@@ -159,9 +173,18 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
   @Override
   public CompletableFuture<List<? extends Location>> definition(
       final TextDocumentPositionParams position) {
-    List<? extends Location> result = som.getDefinitions(
-        position.getTextDocument().getUri(), position.getPosition().getLine(),
-        position.getPosition().getCharacter());
+    String uri = position.getTextDocument().getUri();
+    List<? extends Location> result = new ArrayList<>();
+
+    for (LanguageAdapter<?> adapter : adapters) {
+      if (adapter.handlesUri(uri)) {
+        result = adapter.getDefinitions(
+            position.getTextDocument().getUri(), position.getPosition().getLine(),
+            position.getPosition().getCharacter());
+        break;
+      }
+    }
+
     return CompletableFuture.completedFuture(result);
   }
 
@@ -179,19 +202,31 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
     // like a variable, where it is used.
     // so, this should actually return multiple results.
     // The spec is currently broken for that.
-    DocumentHighlight result = som.getHighlight(position.getTextDocument().getUri(),
-        position.getPosition().getLine() + 1, position.getPosition().getCharacter() + 1);
-    ArrayList<DocumentHighlight> list = new ArrayList<>(1);
-    list.add(result);
-    return CompletableFuture.completedFuture(list);
+    String uri = position.getTextDocument().getUri();
+    for (LanguageAdapter<?> adapter : adapters) {
+      if (adapter.handlesUri(uri)) {
+        DocumentHighlight result = adapter.getHighlight(position.getTextDocument().getUri(),
+            position.getPosition().getLine() + 1, position.getPosition().getCharacter() + 1);
+        ArrayList<DocumentHighlight> list = new ArrayList<>(1);
+        list.add(result);
+        return CompletableFuture.completedFuture(list);
+      }
+    }
+    return CompletableFuture.completedFuture(new ArrayList<DocumentHighlight>());
   }
 
   @Override
   public CompletableFuture<List<? extends SymbolInformation>> documentSymbol(
       final DocumentSymbolParams params) {
-    List<? extends SymbolInformation> result =
-        som.getSymbolInfo(params.getTextDocument().getUri());
-    return CompletableFuture.completedFuture(result);
+    String uri = params.getTextDocument().getUri();
+    for (LanguageAdapter<?> adapter : adapters) {
+      if (adapter.handlesUri(uri)) {
+        List<? extends SymbolInformation> result =
+            adapter.getSymbolInfo(params.getTextDocument().getUri());
+        return CompletableFuture.completedFuture(result);
+      }
+    }
+    return CompletableFuture.completedFuture(new ArrayList<SymbolInformation>());
   }
 
   @Override
@@ -202,9 +237,15 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
 
   @Override
   public CompletableFuture<List<? extends CodeLens>> codeLens(final CodeLensParams params) {
-    List<CodeLens> result = new ArrayList<>();
-    som.getCodeLenses(result, params.getTextDocument().getUri());
-    return CompletableFuture.completedFuture(result);
+    String uri = params.getTextDocument().getUri();
+    for (LanguageAdapter<?> adapter : adapters) {
+      if (adapter.handlesUri(uri)) {
+        List<CodeLens> result = new ArrayList<>();
+        adapter.getCodeLenses(result, params.getTextDocument().getUri());
+        return CompletableFuture.completedFuture(result);
+      }
+    }
+    return CompletableFuture.completedFuture(new ArrayList<CodeLens>());
   }
 
   @Override
@@ -261,9 +302,15 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
 
   private void parseDocument(final String documentUri, final String text) {
     try {
-      List<Diagnostic> diagnostics = som.parse(text, documentUri);
-      som.lintSends(documentUri, diagnostics);
-      som.reportDiagnostics(diagnostics, documentUri);
+      for (LanguageAdapter<?> adapter : adapters) {
+        if (adapter.handlesUri(documentUri)) {
+          List<Diagnostic> diagnostics = adapter.parse(text, documentUri);
+          adapter.lintSends(documentUri, diagnostics);
+          adapter.reportDiagnostics(diagnostics, documentUri);
+          return;
+        }
+      }
+      assert false : "LanguageServer does not support file type: " + documentUri;
     } catch (URISyntaxException ex) {
       ex.printStackTrace(ServerLauncher.errWriter());
     }
@@ -281,7 +328,9 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
 
   @Override
   public void connect(final LanguageClient client) {
-    this.som.connect(client);
+    for (LanguageAdapter<?> adapter : adapters) {
+      adapter.connect(client);
+    }
     this.client = client;
   }
 }

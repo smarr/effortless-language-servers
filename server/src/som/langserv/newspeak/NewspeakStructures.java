@@ -1,7 +1,8 @@
-package som.langserv;
+package som.langserv.newspeak;
+
+import static som.langserv.Matcher.fuzzyMatch;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -13,19 +14,21 @@ import org.eclipse.lsp4j.Location;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.tools.nodes.Invocation;
+import bd.tools.structure.StructuralProbe;
 import som.compiler.MixinBuilder;
 import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Variable;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
+import som.langserv.LanguageAdapter;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
-import tools.Send;
-import tools.language.StructuralProbe;
 
 
-public class SomStructures extends StructuralProbe {
+public class NewspeakStructures
+    extends StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> {
 
   private final Source           source;
   private final ExpressionNode[] map;
@@ -44,7 +47,7 @@ public class SomStructures extends StructuralProbe {
     }
   }
 
-  public SomStructures(final Source source) {
+  public NewspeakStructures(final Source source) {
     this.source = source;
     this.map = new ExpressionNode[source.getLength()];
     this.diagnostics = new ArrayList<>(0);
@@ -72,25 +75,25 @@ public class SomStructures extends StructuralProbe {
       final ArrayList<Location> results) {
     for (MixinDefinition m : classes) {
       if (m.getName() == name) {
-        results.add(SomAdapter.getLocation(m.getSourceSection()));
+        results.add(LanguageAdapter.getLocation(m.getSourceSection()));
       }
     }
 
     for (SInvokable m : methods.getValues()) {
       if (m.getSignature() == name) {
-        results.add(SomAdapter.getLocation(m.getSourceSection()));
+        results.add(LanguageAdapter.getLocation(m.getSourceSection()));
       }
     }
 
     for (SlotDefinition s : slots) {
       if (s.getName() == name) {
-        results.add(SomAdapter.getLocation(s.getSourceSection()));
+        results.add(LanguageAdapter.getLocation(s.getSourceSection()));
       }
     }
 
     for (Variable v : variables) {
-      if (v.name.equals(name.getString())) {
-        results.add(SomAdapter.getLocation(v.source));
+      if (v.name == name) {
+        results.add(LanguageAdapter.getLocation(v.source));
       }
     }
   }
@@ -105,26 +108,7 @@ public class SomStructures extends StructuralProbe {
       return true;
     }
 
-    return fuzzyMatches(symbol.getString().toLowerCase(), query.getString().toLowerCase());
-  }
-
-  public static boolean fuzzyMatches(final String string, final String query) {
-    if (query == null) {
-      return true;
-    }
-
-    // simple prefix
-    if (string.startsWith(query)) {
-      return true;
-    }
-
-    // trivial case
-    if (query.equals(string)) {
-      return true;
-    }
-
-    // TODO: camel case matching etc...
-    return false;
+    return fuzzyMatch(symbol.getString().toLowerCase(), query.getString().toLowerCase());
   }
 
   public synchronized void getCompletions(final SSymbol name,
@@ -158,27 +142,6 @@ public class SomStructures extends StructuralProbe {
     }
   }
 
-  public synchronized boolean classesAndMethodsConsistent() {
-    Set<SInvokable> methods = new HashSet<>();
-
-    for (MixinDefinition c : classes) {
-      for (Dispatchable disp : c.getInstanceDispatchables().getValues()) {
-        if (disp instanceof SInvokable) {
-          methods.add((SInvokable) disp);
-        }
-      }
-
-      for (SInvokable disp : c.getFactoryMethods().getValues()) {
-        methods.add(disp);
-      }
-    }
-
-    Set<SInvokable> regMethods = new HashSet<>(methods);
-    regMethods.removeAll(methods);
-    assert regMethods.isEmpty();
-    return regMethods.isEmpty();
-  }
-
   @Override
   public void recordNewClass(final MixinDefinition clazz) {
     for (Dispatchable disp : clazz.getInstanceDispatchables().getValues()) {
@@ -194,9 +157,10 @@ public class SomStructures extends StructuralProbe {
     super.recordNewClass(clazz);
   }
 
+  @SuppressWarnings("unchecked")
   public void reportCall(final ExpressionNode send, final SourceSection... section) {
-    if (send instanceof Send) {
-      calls.add(new Call(((Send) send).getSelector(), section));
+    if (send instanceof Invocation<?>) {
+      calls.add(new Call(((Invocation<SSymbol>) send).getInvocationIdentifier(), section));
     } else {
       // ...
     }
@@ -206,10 +170,12 @@ public class SomStructures extends StructuralProbe {
     }
   }
 
+  @SuppressWarnings("unchecked")
   public void reportAssignment(final ExpressionNode result,
       final SourceSection removeLast) {
-    if (result instanceof Send) {
-      calls.add(new Call(((Send) result).getSelector(), new SourceSection[] {removeLast}));
+    if (result instanceof Invocation<?>) {
+      calls.add(new Call(((Invocation<SSymbol>) result).getInvocationIdentifier(),
+          new SourceSection[] {removeLast}));
     } else {
       // ...
     }

@@ -1,0 +1,8 @@
+Hello = (
+
+    "The 'run' method is called when initializing the system"
+    run = (
+      'Hello, World from SOM' println
+      + "+ is a binary message, so, expects something more"
+    )
+)

@@ -60,9 +60,9 @@ describe("Basic Tests", () => {
     done();
   });
 
-  const p = resolvePath("out/test/ns");
-  const uri = vscode.Uri.file(p);
-  const wsF = vscode.workspace.getWorkspaceFolder(uri);
+  const examplesPath = resolvePath("out/test/examples");
+  const examplesUri = vscode.Uri.file(examplesPath);
+  const wsF = vscode.workspace.getWorkspaceFolder(examplesUri);
 
   it("Start Client", () => {
     const errorHandler: ErrorHandler = {
@@ -81,11 +81,11 @@ describe("Basic Tests", () => {
     return client.onReady();
   });
 
-  it("Load Hello World and expect diagnostics", done => {
-    const content = readFileSync(p + '/Hello.ns').toString();
+  it("Load SOMns Hello World and expect diagnostics", done => {
+    const content = readFileSync(examplesPath + '/Hello.ns').toString();
     client.sendNotification("textDocument/didChange", {
       textDocument: {
-        uri: uri.toString() + '/Hello.ns',
+        uri: examplesUri.toString() + '/Hello.ns',
         version: 1,
       },
       contentChanges: [{
@@ -95,8 +95,58 @@ describe("Basic Tests", () => {
 
     client.addDiagnosticsHandler(function (params) {
       try {
-        expect(params.uri).to.equal(uri.toString() + '/Hello.ns');
+        expect(params.uri).to.equal(examplesUri.toString() + '/Hello.ns');
         expect(params.diagnostics).to.have.lengthOf(8);
+        done();
+      } catch (e) {
+        done(e);
+      }
+    });
+  });
+
+  it("Load SOM Hello World and expect no problems", done => {
+    const content = readFileSync(examplesPath + '/Hello.som').toString();
+    client.sendNotification("textDocument/didChange", {
+      textDocument: {
+        uri: examplesUri.toString() + '/Hello.som',
+        version: 1,
+      },
+      contentChanges: [{
+        text: content,
+      }]
+    });
+
+    client.addDiagnosticsHandler(function (params) {
+      try {
+        expect(params.uri).to.equal(examplesUri.toString() + '/Hello.som');
+        expect(params.diagnostics).to.have.lengthOf(0);
+        done();
+      } catch (e) {
+        done(e);
+      }
+    });
+  });
+
+  it("Load SOM Hello World and expect parse errors", done => {
+    const content = readFileSync(examplesPath + '/HelloWithError.som').toString();
+    client.sendNotification("textDocument/didChange", {
+      textDocument: {
+        uri: examplesUri.toString() + '/HelloWithError.som',
+        version: 1,
+      },
+      contentChanges: [{
+        text: content,
+      }]
+    });
+
+    client.addDiagnosticsHandler(function (params) {
+      try {
+        console.log(params);
+        expect(params.uri).to.equal(examplesUri.toString() + '/HelloWithError.som');
+        expect(params.diagnostics).to.have.lengthOf(1);
+        const error = params.diagnostics[0];
+        expect(error.source).to.equal('Parser');
+        expect(error.message).to.contain('Unexpected symbol');
         done();
       } catch (e) {
         done(e);

@@ -1,4 +1,4 @@
-package som.langserv;
+package som.langserv.newspeak;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,12 +19,13 @@ import com.google.common.collect.Lists;
 
 import som.compiler.MixinDefinition;
 import som.interpreter.nodes.dispatch.Dispatchable;
+import som.langserv.LanguageAdapter;
 import som.vm.Symbols;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
 
-public class SomMinitest {
+public class Minitest {
   private static final SSymbol TEST_CONTEXT = Symbols.symbolFor("TEST_CONTEXT");
   private static final String  TEST_PREFIX  = "test";
 
@@ -36,9 +37,9 @@ public class SomMinitest {
       new String[] {"-d64", "-Dbd.settings=som.vm.VmSettings", "som.VM"};
 
   private static final String[] SOM_ARGS = new String[] {
-      "--platform", SomAdapter.CORE_LIB_PATH + "/Platform.ns",
-      "--kernel", SomAdapter.CORE_LIB_PATH + "/Kernel.ns",
-      SomAdapter.CORE_LIB_PATH + "/TestSuite/TestRunner.ns"};
+      "--platform", NewspeakAdapter.CORE_LIB_PATH + "/Platform.ns",
+      "--kernel", NewspeakAdapter.CORE_LIB_PATH + "/Kernel.ns",
+      NewspeakAdapter.CORE_LIB_PATH + "/TestSuite/TestRunner.ns"};
 
   public static void checkForTests(final MixinDefinition def,
       final List<CodeLens> codeLenses, final String documentUri) {
@@ -60,7 +61,7 @@ public class SomMinitest {
     Command cmd = new Command();
     cmd.setCommand(COMMAND);
     cmd.setTitle("Run tests");
-    Range r = SomAdapter.toRange(def.getNameSourceSection());
+    Range r = LanguageAdapter.toRange(def.getNameSourceSection());
     cmd.setArguments(Lists.newArrayList(documentUri, def.getName().getString(),
         r.getStart().getLine(), r.getStart().getCharacter(), r.getEnd().getLine(),
         r.getEnd().getCharacter()));
@@ -89,7 +90,7 @@ public class SomMinitest {
     Command cmd = new Command();
     cmd.setCommand(COMMAND);
     cmd.setTitle("Run test");
-    Range r = SomAdapter.toRange(i.getSourceSection());
+    Range r = LanguageAdapter.toRange(i.getSourceSection());
     cmd.setArguments(Lists.newArrayList(documentUri,
         def.getName().getString() + "." + i.getSignature().getString(),
         r.getStart().getLine(), r.getStart().getCharacter(), r.getEnd().getLine(),
@@ -106,7 +107,7 @@ public class SomMinitest {
     }
   }
 
-  public static void executeTest(final SomAdapter adapter, final List<Object> arguments) {
+  public static void executeTest(final NewspeakAdapter adapter, final List<Object> arguments) {
     assert arguments.size() == 2 + 4;
     int startLine = (int) (double) arguments.get(2);
     int startChar = (int) (double) arguments.get(3);
@@ -131,7 +132,7 @@ public class SomMinitest {
     return out.toString();
   }
 
-  private static void executeTest(final SomAdapter adapter, final String documentUri,
+  private static void executeTest(final NewspeakAdapter adapter, final String documentUri,
       final String test, final Range range) {
     ArrayList<String> str = new ArrayList<>();
     str.add(JAVA_BIN);
@@ -142,7 +143,7 @@ public class SomMinitest {
 
     String path;
     try {
-      path = SomAdapter.docUriToNormalizedPath(documentUri);
+      path = LanguageAdapter.docUriToNormalizedPath(documentUri);
     } catch (URISyntaxException e1) {
       return;
     }

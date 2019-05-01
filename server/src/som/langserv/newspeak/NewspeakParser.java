@@ -1,4 +1,4 @@
-package som.langserv;
+package som.langserv.newspeak;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -7,25 +7,25 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.basic.ProgramDefinitionError;
+import bd.source.SourceCoordinate;
 import som.compiler.MethodBuilder;
 import som.compiler.Parser;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
 import som.vmobjects.SSymbol;
-import tools.SourceCoordinate;
 
 
 /**
- * Extension of the normal SOM parser to record more structural information
+ * Extension of the SOMns parser to record additional structural information
  * that is useful for tooling.
  */
-public class SomParser extends Parser {
+public class NewspeakParser extends Parser {
 
-  private SomStructures              struturalProbe;
+  private NewspeakStructures         struturalProbe;
   private final Deque<SourceSection> sourceSections;
 
-  public SomParser(final String content, final long fileSize, final Source source,
-      final SomStructures structuralProbe, final SomLanguage lang) throws ParseError {
+  public NewspeakParser(final String content, final long fileSize, final Source source,
+      final NewspeakStructures structuralProbe, final SomLanguage lang) throws ParseError {
     super(content, fileSize, source, structuralProbe, lang);
     // assert structuralProbe != null : "Needed for this extended parser.";
     this.struturalProbe = structuralProbe;

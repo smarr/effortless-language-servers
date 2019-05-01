@@ -10,7 +10,7 @@ const LSPort = 8123;  // TODO: make configurable
 const EnableExtensionDebugging : boolean = <boolean> workspace.getConfiguration('somns').get('debugMode');
 
 export const CLIENT_OPTION: LanguageClientOptions = {
-	documentSelector: ['SOMns']
+	documentSelector: ['SOMns', 'SOM']
 }
 
 type PathConverter = (path: string) => string;
@@ -21,6 +21,7 @@ function getServerOptions(asAbsolutePath: PathConverter, enableDebug:
 
   const javaClassPath = [
 		asAbsolutePath('out/server/som.jar'),
+		asAbsolutePath('out/server/somns.jar'),
 		asAbsolutePath('out/server/black-diamonds.jar'),
 		asAbsolutePath('out/server/graal-sdk.jar'),
 		asAbsolutePath('out/server/word-api.jar'),
@@ -34,11 +35,12 @@ function getServerOptions(asAbsolutePath: PathConverter, enableDebug:
 		asAbsolutePath('out/server/org.eclipse.xtext.xbase.lib-2.10.0.jar'),
 		asAbsolutePath('out/server/som-language-server.jar')];
 
-	const somLib = '-Dsom.langserv.core-lib=' + asAbsolutePath('out/server/core-lib')
+	const somnsLib = '-Dsom.langserv.somns-core-lib=' + asAbsolutePath('out/server/somns-core-lib')
+	const somLib = '-Dsom.langserv.som-core-lib=' + asAbsolutePath('out/server/som-core-lib')
 
 	let javaArgs = [
 		'-cp', javaClassPath.join(':'),
-		somLib,
+		somLib, somnsLib,
 		'som.langserv.ServerLauncher'];
 
 	if (enableDebug) {

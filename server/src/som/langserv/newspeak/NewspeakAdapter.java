@@ -1,18 +1,15 @@
-package som.langserv;
+package som.langserv.newspeak;
 
-import java.io.File;
-import java.io.IOException;
+import static som.langserv.Matcher.fuzzyMatch;
+
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.eclipse.lsp4j.CodeLens;
@@ -20,17 +17,11 @@ import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
-import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.Location;
-import org.eclipse.lsp4j.MessageParams;
-import org.eclipse.lsp4j.MessageType;
-import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.PublishDiagnosticsParams;
-import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
-import org.eclipse.lsp4j.services.LanguageClient;
 import org.graalvm.collections.EconomicMap;
+import org.graalvm.collections.EconomicSet;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Context.Builder;
 import org.graalvm.polyglot.Value;
@@ -38,7 +29,9 @@ import org.graalvm.polyglot.Value;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
-import bd.basic.ProgramDefinitionError;
+import bd.source.SourceCoordinate;
+import bd.tools.nodes.Invocation;
+import bd.tools.structure.StructuralProbe;
 import som.Launcher;
 import som.VM;
 import som.compiler.MixinDefinition;
@@ -46,6 +39,7 @@ import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Parser.ParseError;
 import som.compiler.SemanticDefinitionError;
 import som.compiler.SourcecodeCompiler;
+import som.compiler.Variable;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
 import som.interpreter.nodes.ArgumentReadNode.NonLocalArgumentReadNode;
@@ -54,30 +48,33 @@ import som.interpreter.nodes.LocalVariableNode;
 import som.interpreter.nodes.NonLocalVariableNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.objectstorage.StorageAccessor;
+import som.langserv.LanguageAdapter;
+import som.langserv.ServerLauncher;
 import som.vm.Primitives;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
-import tools.Send;
-import tools.SourceCoordinate;
-import tools.language.StructuralProbe;
 
 
-public class SomAdapter {
+/**
+ * Provides Newspeak/SOMns specific functionality.
+ */
+public class NewspeakAdapter extends LanguageAdapter<NewspeakStructures> {
 
-  public final static String FILE_ENDING = ".ns";
+  public final static String CORE_LIB_PATH = System.getProperty("som.langserv.somns-core-lib");
 
-  public final static String CORE_LIB_PATH = System.getProperty("som.langserv.core-lib");
+  private final Map<String, NewspeakStructures> structuralProbes;
+  private final SomCompiler                     compiler;
 
-  private final Map<String, SomStructures> structuralProbes;
-  private final SomCompiler                compiler;
-
-  private LanguageClient client;
-
-  public SomAdapter() {
+  public NewspeakAdapter() {
     VM vm = initializePolyglot();
     this.compiler = new SomCompiler(vm.getLanguage());
     this.structuralProbes = new HashMap<>();
     registerVmMirrorPrimitives(vm);
+  }
+
+  @Override
+  public String getFileEnding() {
+    return ".ns";
   }
 
   private void registerVmMirrorPrimitives(final VM vm) {
@@ -86,18 +83,14 @@ public class SomAdapter {
     @SuppressWarnings({"rawtypes", "unchecked"})
     EconomicMap<SSymbol, SInvokable> ps = (EconomicMap) prims.takeVmMirrorPrimitives();
 
-    SomStructures primProbe =
-        new SomStructures(Source.newBuilder(SomLanguage.LANG_ID, "vmMirror", "vmMirror")
-                                .mimeType(SomLanguage.MIME_TYPE).build());
+    NewspeakStructures primProbe =
+        new NewspeakStructures(Source.newBuilder(SomLanguage.LANG_ID, "vmMirror", "vmMirror")
+                                     .mimeType(SomLanguage.MIME_TYPE).build());
     for (SInvokable i : ps.getValues()) {
-      primProbe.recordNewMethod(i);
+      primProbe.recordNewMethod(i.getIdentifier(), i);
     }
 
     structuralProbes.put("vmMirror", primProbe);
-  }
-
-  public void connect(final LanguageClient client) {
-    this.client = client;
   }
 
   private VM initializePolyglot() {
@@ -124,71 +117,18 @@ public class SomAdapter {
     return SomLanguage.getCurrent().getVM();
   }
 
-  public void loadWorkspace(final String uri) throws URISyntaxException {
-    if (uri == null) {
-      return;
-    }
-
-    URI workspaceUri = new URI(uri);
-    File workspace = new File(workspaceUri);
-    assert workspace.isDirectory();
-
-    new Thread(() -> loadWorkspaceAndLint(workspace)).start();
-  }
-
-  private void loadWorkspaceAndLint(final File workspace) {
-    Map<String, List<Diagnostic>> allDiagnostics = new HashMap<>();
-    loadFolder(workspace, allDiagnostics);
-
-    for (Entry<String, List<Diagnostic>> e : allDiagnostics.entrySet()) {
-      try {
-        lintSends(e.getKey(), e.getValue());
-      } catch (URISyntaxException ex) {
-        /*
-         * at this point, there is nothing to be done anymore,
-         * would have been problematic earlier
-         */
-      }
-
-      reportDiagnostics(e.getValue(), e.getKey());
-    }
-  }
-
-  private void loadFolder(final File folder,
-      final Map<String, List<Diagnostic>> allDiagnostics) {
-    for (File f : folder.listFiles()) {
-      if (f.isDirectory()) {
-        loadFolder(f, allDiagnostics);
-      } else if (f.getName().endsWith(FILE_ENDING)) {
-        try {
-          byte[] content = Files.readAllBytes(f.toPath());
-          String str = new String(content, StandardCharsets.UTF_8);
-          String uri = f.toURI().toString();
-          List<Diagnostic> diagnostics = parse(str, uri);
-          allDiagnostics.put(uri, diagnostics);
-        } catch (IOException | URISyntaxException e) {
-          // if loading fails, we don't do anything, just move on to the next file
-        }
-      }
-    }
-  }
-
+  @Override
   public void lintSends(final String docUri, final List<Diagnostic> diagnostics)
       throws URISyntaxException {
-    SomStructures probe;
+    NewspeakStructures probe;
     synchronized (structuralProbes) {
       probe = structuralProbes.get(docUriToNormalizedPath(docUri));
     }
-    SomLint.checkSends(structuralProbes, probe, diagnostics);
+    Lint.checkSends(structuralProbes, probe, diagnostics);
   }
 
-  public static String docUriToNormalizedPath(final String documentUri)
-      throws URISyntaxException {
-    URI uri = new URI(documentUri).normalize();
-    return uri.getPath();
-  }
-
-  private SomStructures getProbe(final String documentUri) {
+  @Override
+  protected NewspeakStructures getProbe(final String documentUri) {
     synchronized (structuralProbes) {
       try {
         return structuralProbes.get(docUriToNormalizedPath(documentUri));
@@ -199,12 +139,14 @@ public class SomAdapter {
   }
 
   /** Create a copy to work on safely. */
-  private Collection<SomStructures> getProbes() {
+  @Override
+  protected Collection<NewspeakStructures> getProbes() {
     synchronized (structuralProbes) {
       return new ArrayList<>(structuralProbes.values());
     }
   }
 
+  @Override
   public List<Diagnostic> parse(final String text, final String sourceUri)
       throws URISyntaxException {
     String path = docUriToNormalizedPath(sourceUri);
@@ -212,7 +154,7 @@ public class SomAdapter {
                           .mimeType(SomLanguage.MIME_TYPE)
                           .uri(new URI(sourceUri).normalize()).build();
 
-    SomStructures newProbe = new SomStructures(source);
+    NewspeakStructures newProbe = new NewspeakStructures(source);
     List<Diagnostic> diagnostics = newProbe.getDiagnostics();
     try {
       // clean out old structural data
@@ -221,7 +163,7 @@ public class SomAdapter {
       }
       synchronized (newProbe) {
         MixinDefinition def = compiler.compileModule(source, newProbe);
-        SomLint.checkModuleName(path, def, diagnostics);
+        Lint.checkModuleName(path, def, diagnostics);
       }
     } catch (ParseError e) {
       return toDiagnostics(e, diagnostics);
@@ -244,7 +186,7 @@ public class SomAdapter {
     d.setSeverity(DiagnosticSeverity.Error);
 
     SourceCoordinate coord = e.getSourceCoordinate();
-    d.setRange(toRangeMax(coord));
+    d.setRange(toRangeMax(coord.startLine, coord.startColumn));
     d.setMessage(e.getMessage());
     d.setSource("Parser");
 
@@ -278,131 +220,19 @@ public class SomAdapter {
     return diagnostics;
   }
 
-  public static Position pos(final int startLine, final int startChar) {
-    Position pos = new Position();
-    pos.setLine(startLine - 1);
-    pos.setCharacter(startChar - 1);
-    return pos;
-  }
-
-  @SuppressWarnings("unused")
-  private static boolean in(final SourceSection s, final int line, final int character) {
-    if (s.getStartLine() > line || s.getEndLine() < line) {
-      return false;
-    }
-
-    if (s.getStartLine() == line && s.getStartColumn() > character) {
-      return false;
-    }
-    if (s.getEndLine() == line && s.getEndColumn() < character) {
-      return false;
-    }
-
-    return true;
-  }
-
-  public DocumentHighlight getHighlight(final String documentUri,
-      final int line, final int character) {
-    // TODO: this is wrong, it should be something entierly different.
-    // this feature is about marking the occurrences of a selected element
-    // like a variable, where it is used.
-    // so, this should actually return multiple results.
-    // The spec is currently broken for that.
-
-    // XXX: the code here doesn't make any sense for what it is supposed to do
-
-    // Map<SourceSection, Set<Class<? extends Tags>>> sections = Highlight.
-    // getSourceSections();
-    // SourceSection[] all = sections.entrySet().stream().map(e -> e.getKey()).toArray(size ->
-    // new SourceSection[size]);
-    //
-    // Stream<Entry<SourceSection, Set<Class<? extends Tags>>>> filtered = sections.
-    // entrySet().stream().filter(
-    // (final Entry<SourceSection, Set<Class<? extends Tags>>> e) -> in(e.getKey(), line,
-    // character));
-    //
-    // @SuppressWarnings("rawtypes")
-    // Entry[] matching = filtered.toArray(size -> new Entry[size]);
-    //
-    // for (Entry<SourceSection, Set<Class<? extends Tags>>> e : matching) {
-    // int kind;
-    // if (e.getValue().contains(LiteralTag.class)) {
-    // kind = DocumentHighlight.KIND_READ;
-    // } else {
-    // kind = DocumentHighlight.KIND_TEXT;
-    // }
-    // DocumentHighlightImpl highlight = new DocumentHighlightImpl();
-    // highlight.setKind(kind);
-    // highlight.setRange(getRange(e.getKey()));
-    // return highlight;
-    // }
-    //
-    // DocumentHighlightImpl highlight = new DocumentHighlightImpl();
-    // highlight.setKind(DocumentHighlight.KIND_TEXT);
-    // RangeImpl range = new RangeImpl();
-    // range.setStart(pos(line, character));
-    // range.setEnd(pos(line, character + 1));
-    // highlight.setRange(range);
-    // return highlight;
-    return null;
-  }
-
-  public static Range toRange(final SourceSection ss) {
-    Range range = new Range();
-    range.setStart(pos(ss.getStartLine(), ss.getStartColumn()));
-    range.setEnd(pos(ss.getEndLine(), ss.getEndColumn() + 1));
-    return range;
-  }
-
-  public static Range toRangeMax(final SourceCoordinate coord) {
-    Range range = new Range();
-    range.setStart(pos(coord.startLine, coord.startColumn));
-    range.setEnd(pos(coord.startLine, Integer.MAX_VALUE));
-    return range;
-  }
-
-  public static Location getLocation(final SourceSection ss) {
-    Location loc = new Location();
-    loc.setUri(ss.getSource().getURI().toString());
-    loc.setRange(toRange(ss));
-    return loc;
-  }
-
-  public List<? extends SymbolInformation> getSymbolInfo(final String documentUri) {
-    SomStructures probe = getProbe(documentUri);
-    ArrayList<SymbolInformation> results = new ArrayList<>();
-    if (probe == null) {
-      return results;
-    }
-
-    addAllSymbols(results, null, probe, documentUri);
-    return results;
-  }
-
-  public List<? extends SymbolInformation> getAllSymbolInfo(final String query) {
-    Collection<SomStructures> probes = getProbes();
-
-    ArrayList<SymbolInformation> results = new ArrayList<>();
-
-    for (SomStructures probe : probes) {
-      addAllSymbols(results, query, probe, probe.getDocumentUri());
-    }
-
-    return results;
-  }
-
-  private void addAllSymbols(final ArrayList<SymbolInformation> results, final String query,
-      final SomStructures probe, final String documentUri) {
+  @Override
+  protected void addAllSymbols(final List<SymbolInformation> results, final String query,
+      final NewspeakStructures probe) {
     synchronized (probe) {
-      Set<MixinDefinition> classes = probe.getClasses();
+      EconomicSet<MixinDefinition> classes = probe.getClasses();
       for (MixinDefinition m : classes) {
-        assert sameDocument(documentUri, m.getSourceSection());
+        assert sameDocument(probe.getDocumentUri(), m.getSourceSection());
         addSymbolInfo(m, query, results);
       }
 
-      Set<SInvokable> methods = probe.getMethods();
+      EconomicSet<SInvokable> methods = probe.getMethods();
       for (SInvokable m : methods) {
-        assert sameDocument(documentUri, m.getSourceSection());
+        assert sameDocument(probe.getDocumentUri(), m.getSourceSection());
 
         if (matchQuery(query, m)) {
           results.add(getSymbolInfo(m));
@@ -428,15 +258,15 @@ public class SomAdapter {
   }
 
   private static boolean matchQuery(final String query, final SInvokable m) {
-    return SomStructures.fuzzyMatches(m.getSignature().getString(), query);
+    return fuzzyMatch(m.getSignature().getString(), query);
   }
 
   private static boolean matchQuery(final String query, final MixinDefinition m) {
-    return SomStructures.fuzzyMatches(m.getName().getString(), query);
+    return fuzzyMatch(m.getName().getString(), query);
   }
 
   private static boolean matchQuery(final String query, final SlotDefinition s) {
-    return SomStructures.fuzzyMatches(s.getName().getString(), query);
+    return fuzzyMatch(s.getName().getString(), query);
   }
 
   private static SymbolInformation getSymbolInfo(final SInvokable m) {
@@ -453,7 +283,7 @@ public class SomAdapter {
   }
 
   private static void addSymbolInfo(final MixinDefinition m, final String query,
-      final ArrayList<SymbolInformation> results) {
+      final List<SymbolInformation> results) {
     if (matchQuery(query, m)) {
       results.add(getSymbolInfo(m));
     }
@@ -496,10 +326,11 @@ public class SomAdapter {
     return sym;
   }
 
+  @Override
   public List<? extends Location> getDefinitions(final String docUri,
       final int line, final int character) {
     ArrayList<Location> result = new ArrayList<>();
-    SomStructures probe = getProbe(docUri);
+    NewspeakStructures probe = getProbe(docUri);
     if (probe == null) {
       return result;
     }
@@ -516,17 +347,18 @@ public class SomAdapter {
           "Node at " + (line + 1) + ":" + character + " " + node.getClass().getSimpleName());
     }
 
-    if (node instanceof Send) {
-      SSymbol name = ((Send) node).getSelector();
+    if (node instanceof Invocation<?>) {
+      @SuppressWarnings("unchecked")
+      SSymbol name = ((Invocation<SSymbol>) node).getInvocationIdentifier();
       addAllDefinitions(result, name);
     } else if (node instanceof NonLocalVariableNode) {
-      result.add(SomAdapter.getLocation(((NonLocalVariableNode) node).getLocal().source));
+      result.add(getLocation(((NonLocalVariableNode) node).getLocal().source));
     } else if (node instanceof LocalVariableNode) {
-      result.add(SomAdapter.getLocation(((LocalVariableNode) node).getLocal().source));
+      result.add(getLocation(((LocalVariableNode) node).getLocal().source));
     } else if (node instanceof LocalArgumentReadNode) {
-      result.add(SomAdapter.getLocation(((LocalArgumentReadNode) node).getArg().source));
+      result.add(getLocation(((LocalArgumentReadNode) node).getArg().source));
     } else if (node instanceof NonLocalArgumentReadNode) {
-      result.add(SomAdapter.getLocation(((NonLocalArgumentReadNode) node).getArg().source));
+      result.add(getLocation(((NonLocalArgumentReadNode) node).getArg().source));
     } else {
       if (ServerLauncher.DEBUG) {
         reportError("GET DEFINITION, unsupported node: " + node.getClass().getSimpleName());
@@ -537,38 +369,20 @@ public class SomAdapter {
 
   private void addAllDefinitions(final ArrayList<Location> result, final SSymbol name) {
     synchronized (structuralProbes) {
-      for (SomStructures s : structuralProbes.values()) {
+      for (NewspeakStructures s : structuralProbes.values()) {
         s.getDefinitionsFor(name, result);
       }
     }
   }
 
-  public void reportError(final String msgStr) {
-    MessageParams msg = new MessageParams();
-    msg.setType(MessageType.Log);
-    msg.setMessage(msgStr);
-
-    client.logMessage(msg);
-
-    ServerLauncher.logErr(msgStr);
-  }
-
-  public void reportDiagnostics(final List<Diagnostic> diagnostics,
-      final String documentUri) {
-    if (diagnostics != null) {
-      PublishDiagnosticsParams result = new PublishDiagnosticsParams();
-      result.setDiagnostics(diagnostics);
-      result.setUri(documentUri);
-      client.publishDiagnostics(result);
-    }
-  }
-
+  @SuppressWarnings("unchecked")
+  @Override
   public CompletionList getCompletions(final String docUri, final int line,
       final int character) {
     CompletionList result = new CompletionList();
     result.setIsIncomplete(true);
 
-    SomStructures probe = getProbe(docUri);
+    NewspeakStructures probe = getProbe(docUri);
     if (probe == null) {
       return result;
     }
@@ -581,8 +395,8 @@ public class SomAdapter {
     }
 
     SSymbol sym = null;
-    if (node instanceof Send) {
-      sym = ((Send) node).getSelector();
+    if (node instanceof Invocation<?>) {
+      sym = ((Invocation<SSymbol>) node).getInvocationIdentifier();
     } else {
       if (ServerLauncher.DEBUG) {
         reportError("GET COMPLETIONS, unsupported node: " + node.getClass().getSimpleName());
@@ -591,9 +405,9 @@ public class SomAdapter {
 
     if (sym != null) {
       Set<CompletionItem> completion = new HashSet<>();
-      Collection<SomStructures> probes = getProbes();
+      Collection<NewspeakStructures> probes = getProbes();
 
-      for (SomStructures s : probes) {
+      for (NewspeakStructures s : probes) {
         s.getCompletions(sym, completion);
       }
       result.setItems(new ArrayList<>(completion));
@@ -611,13 +425,16 @@ public class SomAdapter {
 
     @Override
     public MixinDefinition compileModule(final Source source,
-        final StructuralProbe structuralProbe) throws ProgramDefinitionError {
-      SomParser parser = new SomParser(source.getCharacters().toString(), source.getLength(),
-          source, (SomStructures) structuralProbe, language);
+        final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe)
+        throws bd.basic.ProgramDefinitionError {
+      NewspeakParser parser =
+          new NewspeakParser(source.getCharacters().toString(), source.getLength(),
+              source, (NewspeakStructures) structuralProbe, language);
       return compile(parser, source);
     }
   }
 
+  @Override
   public void getCodeLenses(final List<CodeLens> codeLenses,
       final String documentUri) {
     String path;
@@ -627,14 +444,14 @@ public class SomAdapter {
       return;
     }
 
-    SomStructures probe;
+    NewspeakStructures probe;
     synchronized (path) {
       probe = structuralProbes.get(path);
     }
 
     if (probe != null) {
       for (MixinDefinition c : probe.getClasses()) {
-        SomMinitest.checkForTests(c, codeLenses, documentUri);
+        Minitest.checkForTests(c, codeLenses, documentUri);
       }
     }
   }
