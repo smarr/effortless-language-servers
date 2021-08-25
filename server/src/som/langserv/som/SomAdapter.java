@@ -81,6 +81,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
     Context context = builder.build();
 
     context.eval(SomLanguage.INIT);
+    context.enter();
 
     Universe universe = SomLanguage.getCurrent().getUniverse();
     universe.setupClassPath(CORE_LIB_PATH + "/Smalltalk");
