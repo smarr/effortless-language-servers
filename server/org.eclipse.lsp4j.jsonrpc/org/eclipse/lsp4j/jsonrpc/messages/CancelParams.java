@@ -1,10 +1,14 @@
-/*******************************************************************************
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
+/******************************************************************************
+ * Copyright (c) 2016 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
+ ******************************************************************************/
 package org.eclipse.lsp4j.jsonrpc.messages;
 
 import org.eclipse.lsp4j.jsonrpc.json.MessageJsonHandler;
@@ -19,13 +23,33 @@ public class CancelParams {
 	 * The request id to cancel.
 	 */
 	@NonNull
-	private String id;
-	
+	private Either<String, Number> id;
+
+	@NonNull
 	public String getId() {
-		return this.id;
+		if (id == null)
+			return null;
+		if (id.isLeft())
+			return id.getLeft();
+		if (id.isRight())
+			return id.getRight().toString();
+		return null;
 	}
 	
-	public void setId(String id) {
+	@NonNull
+	public Either<String, Number> getRawId() {
+		return id;
+	}
+
+	public void setId(@NonNull String id) {
+		this.id = Either.forLeft(id);
+	}
+	
+	public void setId(@NonNull int id) {
+		this.id = Either.forRight(id);
+	}
+	
+	public void setRawId(@NonNull Either<String, Number> id) {
 		this.id = id;
 	}
 	
@@ -33,5 +57,30 @@ public class CancelParams {
 	public String toString() {
 		return MessageJsonHandler.toString(this);
 	}
-	
+
+	@Override
+	public boolean equals(final Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		CancelParams other = (CancelParams) obj;
+		if (this.id == null) {
+			if (other.id != null)
+				return false;
+		} else if (!this.id.equals(other.id))
+			return false;
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((this.id == null) ? 0 : this.id.hashCode());
+		return result;
+	}
+
 }

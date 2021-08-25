@@ -1,12 +1,17 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
+import org.eclipse.lsp4j.AbstractWorkDoneProgressOptions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
@@ -14,16 +19,16 @@ import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
  * Code Lens options.
  */
 @SuppressWarnings("all")
-public class CodeLensOptions {
+public class CodeLensOptions extends AbstractWorkDoneProgressOptions {
   /**
    * Code lens has a resolve provider as well.
    */
-  private boolean resolveProvider;
+  private Boolean resolveProvider;
   
   public CodeLensOptions() {
   }
   
-  public CodeLensOptions(final boolean resolveProvider) {
+  public CodeLensOptions(final Boolean resolveProvider) {
     this.resolveProvider = resolveProvider;
   }
   
@@ -31,14 +36,14 @@ public class CodeLensOptions {
    * Code lens has a resolve provider as well.
    */
   @Pure
-  public boolean isResolveProvider() {
+  public Boolean getResolveProvider() {
     return this.resolveProvider;
   }
   
   /**
    * Code lens has a resolve provider as well.
    */
-  public void setResolveProvider(final boolean resolveProvider) {
+  public void setResolveProvider(final Boolean resolveProvider) {
     this.resolveProvider = resolveProvider;
   }
   
@@ -47,6 +52,7 @@ public class CodeLensOptions {
   public String toString() {
     ToStringBuilder b = new ToStringBuilder(this);
     b.add("resolveProvider", this.resolveProvider);
+    b.add("workDoneProgress", getWorkDoneProgress());
     return b.toString();
   }
   
@@ -59,8 +65,13 @@ public class CodeLensOptions {
       return false;
     if (getClass() != obj.getClass())
       return false;
+    if (!super.equals(obj))
+      return false;
     CodeLensOptions other = (CodeLensOptions) obj;
-    if (other.resolveProvider != this.resolveProvider)
+    if (this.resolveProvider == null) {
+      if (other.resolveProvider != null)
+        return false;
+    } else if (!this.resolveProvider.equals(other.resolveProvider))
       return false;
     return true;
   }
@@ -68,9 +79,6 @@ public class CodeLensOptions {
   @Override
   @Pure
   public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + (this.resolveProvider ? 1231 : 1237);
-    return result;
+    return 31 * super.hashCode() + ((this.resolveProvider== null) ? 0 : this.resolveProvider.hashCode());
   }
 }

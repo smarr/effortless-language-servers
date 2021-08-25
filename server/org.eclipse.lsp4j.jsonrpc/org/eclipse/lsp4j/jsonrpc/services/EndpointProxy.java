@@ -1,16 +1,22 @@
-/*******************************************************************************
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
+/******************************************************************************
+ * Copyright (c) 2016 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
+ ******************************************************************************/
 package org.eclipse.lsp4j.jsonrpc.services;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 
@@ -19,9 +25,8 @@ import org.eclipse.lsp4j.jsonrpc.services.AnnotationUtil.DelegateInfo;
 import org.eclipse.lsp4j.jsonrpc.services.AnnotationUtil.MethodInfo;
 
 /**
- * A Proxy that wraps an {@link Endpoint} in a service interface, i.e. an
- * interface containing {@link JsonNotification} and {@link JsonRequest}
- * methods.
+ * A Proxy that wraps an {@link Endpoint} in one or more service interfaces, i.e. interfaces
+ * containing {@link JsonNotification} and {@link JsonRequest} methods.
  */
 public class EndpointProxy implements InvocationHandler {
 	
@@ -33,11 +38,18 @@ public class EndpointProxy implements InvocationHandler {
 	private final LinkedHashMap<String, MethodInfo> methodInfos;
 	private final LinkedHashMap<String, DelegateInfo> delegatedSegments;
 
-	public EndpointProxy(Endpoint delegate, Class<?> interf) {
+	public EndpointProxy(Endpoint delegate, Class<?> interface_) {
+		this(delegate, Collections.singletonList(interface_));
+	}
+	
+	public EndpointProxy(Endpoint delegate, Collection<Class<?>> interfaces) {
 		if (delegate == null)
 			throw new NullPointerException("delegate");
-		if (interf == null)
-			throw new NullPointerException("interf");
+		if (interfaces == null)
+			throw new NullPointerException("interfaces");
+		if (interfaces.isEmpty())
+			throw new IllegalArgumentException("interfaces must not be empty.");
+		
 		this.delegate = delegate;
 		try {
 			object_equals = Object.class.getDeclaredMethod("equals", Object.class);
@@ -47,21 +59,23 @@ public class EndpointProxy implements InvocationHandler {
 			throw new RuntimeException(exception);
 		}
 		methodInfos = new LinkedHashMap<>();
-		AnnotationUtil.findRpcMethods(interf, new HashSet<Class<?>>(), (methodInfo) -> {
-			if (methodInfos.put(methodInfo.method.getName(), methodInfo) != null) {
-				throw new IllegalStateException("Method overload not allowed : " + methodInfo.method);
-			}
-		});
 		delegatedSegments = new LinkedHashMap<>();
-		AnnotationUtil.findDelegateSegments(interf, new HashSet<Class<?>>(), (method) -> {
-			Object delegateProxy = ServiceEndpoints.toServiceObject(delegate, method.getReturnType());
-			DelegateInfo info = new DelegateInfo();
-			info.delegate = delegateProxy;
-			info.method = method;
-			if (delegatedSegments.put(method.getName(), info) != null) {
-				throw new IllegalStateException("Method overload not allowed : " + method);
-			}
-		});
+		for (Class<?> interf : interfaces) {
+			AnnotationUtil.findRpcMethods(interf, new HashSet<Class<?>>(), (methodInfo) -> {
+				if (methodInfos.put(methodInfo.method.getName(), methodInfo) != null) {
+					throw new IllegalStateException("Duplicate RPC method " + methodInfo.method);
+				}
+			});
+			AnnotationUtil.findDelegateSegments(interf, new HashSet<Class<?>>(), (method) -> {
+				Object delegateProxy = ServiceEndpoints.toServiceObject(delegate, method.getReturnType());
+				DelegateInfo info = new DelegateInfo();
+				info.delegate = delegateProxy;
+				info.method = method;
+				if (delegatedSegments.put(method.getName(), info) != null) {
+					throw new IllegalStateException("Duplicate RPC method " + method);
+				}
+			});
+		}
 	}
 
 	@Override
@@ -81,11 +95,13 @@ public class EndpointProxy implements InvocationHandler {
 			return delegateInfo.delegate;
 		}
 		if (object_equals.equals(method) && args.length == 1) {
-			try {
-				return this.equals(Proxy.getInvocationHandler(args[0]));
-			} catch (IllegalArgumentException exception) {
-				return this.equals(args[0]);
+			if(args[0] != null ) {
+				try {
+					return this.equals(Proxy.getInvocationHandler(args[0]));
+				} catch (IllegalArgumentException exception) {
+				}
 			}
+			return this.equals(args[0]);
 		}
 		if (object_hashCode.equals(method)) {
 			return this.hashCode();

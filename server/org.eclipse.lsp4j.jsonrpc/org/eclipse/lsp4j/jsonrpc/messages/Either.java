@@ -1,16 +1,21 @@
-/*******************************************************************************
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
+/******************************************************************************
+ * Copyright (c) 2016 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
+ ******************************************************************************/
 package org.eclipse.lsp4j.jsonrpc.messages;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.function.Function;
 
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
 
@@ -20,11 +25,11 @@ import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
 public class Either<L, R> {
 
 	public static <L, R> Either<L, R> forLeft(@NonNull L left) {
-		return new Either<L, R>(left, null);
+		return new Either<>(left, null);
 	}
 
 	public static <L, R> Either<L, R> forRight(@NonNull R right) {
-		return new Either<L, R>(null, right);
+		return new Either<>(null, right);
 	}
 
 	private final L left;
@@ -43,6 +48,14 @@ public class Either<L, R> {
 	public R getRight() {
 		return right;
 	}
+	
+	public Object get() {
+		if (left != null)
+			return left;
+		if (right != null)
+			return right;
+		return null;
+	}
 
 	public boolean isLeft() {
 		return left != null;
@@ -51,13 +64,26 @@ public class Either<L, R> {
 	public boolean isRight() {
 		return right != null;
 	}
-	
+
+	public <T> T map(
+			@NonNull Function<? super L, ? extends T> mapLeft,
+			@NonNull Function<? super R, ? extends T> mapRight) {
+		if (isLeft()) {
+			return mapLeft.apply(getLeft());
+		}
+		if (isRight()) {
+			return mapRight.apply(getRight());
+		}
+		return null;
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof Either<?, ?>) {
 			Either<?, ?> other = (Either<?, ?>) obj;
-			return this.left != null && other.left != null && this.left.equals(other.left)
-					|| this.right != null && other.right != null && this.right.equals(other.right);
+			return (this.left == other.left && this.right == other.right)
+				|| (this.left != null && other.left != null && this.left.equals(other.left))
+				|| (this.right != null && other.right != null && this.right.equals(other.right));
 		}
 		return false;
 	}

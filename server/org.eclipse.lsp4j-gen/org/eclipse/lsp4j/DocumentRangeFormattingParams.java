@@ -1,15 +1,23 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
-import org.eclipse.lsp4j.DocumentFormattingParams;
+import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.TextDocumentIdentifier;
+import org.eclipse.lsp4j.WorkDoneProgressParams;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
+import org.eclipse.lsp4j.util.Preconditions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
@@ -17,7 +25,24 @@ import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
  * The document range formatting request is sent from the client to the server to format a given range in a document.
  */
 @SuppressWarnings("all")
-public class DocumentRangeFormattingParams extends DocumentFormattingParams {
+public class DocumentRangeFormattingParams implements WorkDoneProgressParams {
+  /**
+   * An optional token that a server can use to report work done progress.
+   */
+  private Either<String, Integer> workDoneToken;
+  
+  /**
+   * The document to format.
+   */
+  @NonNull
+  private TextDocumentIdentifier textDocument;
+  
+  /**
+   * The format options
+   */
+  @NonNull
+  private FormattingOptions options;
+  
   /**
    * The range to format
    */
@@ -27,8 +52,79 @@ public class DocumentRangeFormattingParams extends DocumentFormattingParams {
   public DocumentRangeFormattingParams() {
   }
   
+  public DocumentRangeFormattingParams(@NonNull final TextDocumentIdentifier textDocument, @NonNull final FormattingOptions options, @NonNull final Range range) {
+    this.textDocument = Preconditions.<TextDocumentIdentifier>checkNotNull(textDocument, "textDocument");
+    this.options = Preconditions.<FormattingOptions>checkNotNull(options, "options");
+    this.range = Preconditions.<Range>checkNotNull(range, "range");
+  }
+  
+  @Deprecated
   public DocumentRangeFormattingParams(@NonNull final Range range) {
-    this.range = range;
+    this.range = Preconditions.<Range>checkNotNull(range, "range");
+  }
+  
+  /**
+   * An optional token that a server can use to report work done progress.
+   */
+  @Pure
+  @Override
+  public Either<String, Integer> getWorkDoneToken() {
+    return this.workDoneToken;
+  }
+  
+  /**
+   * An optional token that a server can use to report work done progress.
+   */
+  public void setWorkDoneToken(final Either<String, Integer> workDoneToken) {
+    this.workDoneToken = workDoneToken;
+  }
+  
+  public void setWorkDoneToken(final String workDoneToken) {
+    if (workDoneToken == null) {
+      this.workDoneToken = null;
+      return;
+    }
+    this.workDoneToken = Either.forLeft(workDoneToken);
+  }
+  
+  public void setWorkDoneToken(final Integer workDoneToken) {
+    if (workDoneToken == null) {
+      this.workDoneToken = null;
+      return;
+    }
+    this.workDoneToken = Either.forRight(workDoneToken);
+  }
+  
+  /**
+   * The document to format.
+   */
+  @Pure
+  @NonNull
+  public TextDocumentIdentifier getTextDocument() {
+    return this.textDocument;
+  }
+  
+  /**
+   * The document to format.
+   */
+  public void setTextDocument(@NonNull final TextDocumentIdentifier textDocument) {
+    this.textDocument = Preconditions.checkNotNull(textDocument, "textDocument");
+  }
+  
+  /**
+   * The format options
+   */
+  @Pure
+  @NonNull
+  public FormattingOptions getOptions() {
+    return this.options;
+  }
+  
+  /**
+   * The format options
+   */
+  public void setOptions(@NonNull final FormattingOptions options) {
+    this.options = Preconditions.checkNotNull(options, "options");
   }
   
   /**
@@ -44,16 +140,17 @@ public class DocumentRangeFormattingParams extends DocumentFormattingParams {
    * The range to format
    */
   public void setRange(@NonNull final Range range) {
-    this.range = range;
+    this.range = Preconditions.checkNotNull(range, "range");
   }
   
   @Override
   @Pure
   public String toString() {
     ToStringBuilder b = new ToStringBuilder(this);
+    b.add("workDoneToken", this.workDoneToken);
+    b.add("textDocument", this.textDocument);
+    b.add("options", this.options);
     b.add("range", this.range);
-    b.add("textDocument", getTextDocument());
-    b.add("options", getOptions());
     return b.toString();
   }
   
@@ -66,9 +163,22 @@ public class DocumentRangeFormattingParams extends DocumentFormattingParams {
       return false;
     if (getClass() != obj.getClass())
       return false;
-    if (!super.equals(obj))
-      return false;
     DocumentRangeFormattingParams other = (DocumentRangeFormattingParams) obj;
+    if (this.workDoneToken == null) {
+      if (other.workDoneToken != null)
+        return false;
+    } else if (!this.workDoneToken.equals(other.workDoneToken))
+      return false;
+    if (this.textDocument == null) {
+      if (other.textDocument != null)
+        return false;
+    } else if (!this.textDocument.equals(other.textDocument))
+      return false;
+    if (this.options == null) {
+      if (other.options != null)
+        return false;
+    } else if (!this.options.equals(other.options))
+      return false;
     if (this.range == null) {
       if (other.range != null)
         return false;
@@ -81,8 +191,10 @@ public class DocumentRangeFormattingParams extends DocumentFormattingParams {
   @Pure
   public int hashCode() {
     final int prime = 31;
-    int result = super.hashCode();
-    result = prime * result + ((this.range== null) ? 0 : this.range.hashCode());
-    return result;
+    int result = 1;
+    result = prime * result + ((this.workDoneToken== null) ? 0 : this.workDoneToken.hashCode());
+    result = prime * result + ((this.textDocument== null) ? 0 : this.textDocument.hashCode());
+    result = prime * result + ((this.options== null) ? 0 : this.options.hashCode());
+    return prime * result + ((this.range== null) ? 0 : this.range.hashCode());
   }
 }

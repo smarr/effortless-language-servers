@@ -1,10 +1,14 @@
-/*******************************************************************************
- * Copyright (c) 2017 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
+/******************************************************************************
+ * Copyright (c) 2017 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
+ ******************************************************************************/
 package org.eclipse.lsp4j.jsonrpc.json.adapters;
 
 import java.lang.reflect.ParameterizedType;
@@ -19,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.eclipse.lsp4j.jsonrpc.messages.Tuple;
 
 import com.google.gson.reflect.TypeToken;
 
@@ -217,6 +222,19 @@ public final class TypeUtils {
 		}
 		if (type instanceof Class) {
 			return Either.class.isAssignableFrom((Class<?>) type);
+		}
+		return false;
+	}
+	
+	/**
+	 * Test whether the given type is a two-tuple (pair).
+	 */
+	public static boolean isTwoTuple(Type type) {
+		if (type instanceof ParameterizedType) {
+			return isTwoTuple(((ParameterizedType) type).getRawType());
+		}
+		if (type instanceof Class) {
+			return Tuple.Two.class.isAssignableFrom((Class<?>) type);
 		}
 		return false;
 	}

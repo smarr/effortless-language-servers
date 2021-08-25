@@ -1,16 +1,22 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
-import com.google.common.annotations.Beta;
+import org.eclipse.lsp4j.CodeLensWorkspaceCapabilities;
 import org.eclipse.lsp4j.DidChangeConfigurationCapabilities;
 import org.eclipse.lsp4j.DidChangeWatchedFilesCapabilities;
 import org.eclipse.lsp4j.ExecuteCommandCapabilities;
+import org.eclipse.lsp4j.FileOperationsWorkspaceCapabilities;
+import org.eclipse.lsp4j.SemanticTokensWorkspaceCapabilities;
 import org.eclipse.lsp4j.SymbolCapabilities;
 import org.eclipse.lsp4j.WorkspaceEditCapabilities;
 import org.eclipse.xtext.xbase.lib.Pure;
@@ -28,7 +34,7 @@ public class WorkspaceClientCapabilities {
   private Boolean applyEdit;
   
   /**
-   * Capabilities specific to `WorkspaceEdit`s
+   * Capabilities specific to {@link WorkspaceEdit}s
    */
   private WorkspaceEditCapabilities workspaceEdit;
   
@@ -38,7 +44,7 @@ public class WorkspaceClientCapabilities {
   private DidChangeConfigurationCapabilities didChangeConfiguration;
   
   /**
-   * Capabilities specific to the `workspace/didChangeConfiguration` notification.
+   * Capabilities specific to the `workspace/didChangeWatchedFiles` notification.
    */
   private DidChangeWatchedFilesCapabilities didChangeWatchedFiles;
   
@@ -53,12 +59,41 @@ public class WorkspaceClientCapabilities {
   private ExecuteCommandCapabilities executeCommand;
   
   /**
-   * Capabilities specific to the `workspace/didChangeWorkspaceFolders` notification.
-   * 
-   * This API is a <b>proposal</b> from LSP and may change.
+   * The client has support for workspace folders.
+   * <p>
+   * Since 3.6.0
    */
-  @Beta
   private Boolean workspaceFolders;
+  
+  /**
+   * The client supports `workspace/configuration` requests.
+   * <p>
+   * Since 3.6.0
+   */
+  private Boolean configuration;
+  
+  /**
+   * Capabilities specific to the semantic token requests scoped to the
+   * workspace.
+   * <p>
+   * Since 3.16.0
+   */
+  private SemanticTokensWorkspaceCapabilities semanticTokens;
+  
+  /**
+   * Capabilities specific to the code lens requests scoped to the
+   * workspace.
+   * <p>
+   * Since 3.16.0
+   */
+  private CodeLensWorkspaceCapabilities codeLens;
+  
+  /**
+   * The client has support for file requests/notifications.
+   * <p>
+   * Since 3.16.0
+   */
+  private FileOperationsWorkspaceCapabilities fileOperations;
   
   /**
    * The client supports applying batch edits to the workspace by supporting
@@ -78,7 +113,7 @@ public class WorkspaceClientCapabilities {
   }
   
   /**
-   * Capabilities specific to `WorkspaceEdit`s
+   * Capabilities specific to {@link WorkspaceEdit}s
    */
   @Pure
   public WorkspaceEditCapabilities getWorkspaceEdit() {
@@ -86,7 +121,7 @@ public class WorkspaceClientCapabilities {
   }
   
   /**
-   * Capabilities specific to `WorkspaceEdit`s
+   * Capabilities specific to {@link WorkspaceEdit}s
    */
   public void setWorkspaceEdit(final WorkspaceEditCapabilities workspaceEdit) {
     this.workspaceEdit = workspaceEdit;
@@ -108,7 +143,7 @@ public class WorkspaceClientCapabilities {
   }
   
   /**
-   * Capabilities specific to the `workspace/didChangeConfiguration` notification.
+   * Capabilities specific to the `workspace/didChangeWatchedFiles` notification.
    */
   @Pure
   public DidChangeWatchedFilesCapabilities getDidChangeWatchedFiles() {
@@ -116,7 +151,7 @@ public class WorkspaceClientCapabilities {
   }
   
   /**
-   * Capabilities specific to the `workspace/didChangeConfiguration` notification.
+   * Capabilities specific to the `workspace/didChangeWatchedFiles` notification.
    */
   public void setDidChangeWatchedFiles(final DidChangeWatchedFilesCapabilities didChangeWatchedFiles) {
     this.didChangeWatchedFiles = didChangeWatchedFiles;
@@ -153,9 +188,9 @@ public class WorkspaceClientCapabilities {
   }
   
   /**
-   * Capabilities specific to the `workspace/didChangeWorkspaceFolders` notification.
-   * 
-   * This API is a <b>proposal</b> from LSP and may change.
+   * The client has support for workspace folders.
+   * <p>
+   * Since 3.6.0
    */
   @Pure
   public Boolean getWorkspaceFolders() {
@@ -163,12 +198,92 @@ public class WorkspaceClientCapabilities {
   }
   
   /**
-   * Capabilities specific to the `workspace/didChangeWorkspaceFolders` notification.
-   * 
-   * This API is a <b>proposal</b> from LSP and may change.
+   * The client has support for workspace folders.
+   * <p>
+   * Since 3.6.0
    */
   public void setWorkspaceFolders(final Boolean workspaceFolders) {
     this.workspaceFolders = workspaceFolders;
+  }
+  
+  /**
+   * The client supports `workspace/configuration` requests.
+   * <p>
+   * Since 3.6.0
+   */
+  @Pure
+  public Boolean getConfiguration() {
+    return this.configuration;
+  }
+  
+  /**
+   * The client supports `workspace/configuration` requests.
+   * <p>
+   * Since 3.6.0
+   */
+  public void setConfiguration(final Boolean configuration) {
+    this.configuration = configuration;
+  }
+  
+  /**
+   * Capabilities specific to the semantic token requests scoped to the
+   * workspace.
+   * <p>
+   * Since 3.16.0
+   */
+  @Pure
+  public SemanticTokensWorkspaceCapabilities getSemanticTokens() {
+    return this.semanticTokens;
+  }
+  
+  /**
+   * Capabilities specific to the semantic token requests scoped to the
+   * workspace.
+   * <p>
+   * Since 3.16.0
+   */
+  public void setSemanticTokens(final SemanticTokensWorkspaceCapabilities semanticTokens) {
+    this.semanticTokens = semanticTokens;
+  }
+  
+  /**
+   * Capabilities specific to the code lens requests scoped to the
+   * workspace.
+   * <p>
+   * Since 3.16.0
+   */
+  @Pure
+  public CodeLensWorkspaceCapabilities getCodeLens() {
+    return this.codeLens;
+  }
+  
+  /**
+   * Capabilities specific to the code lens requests scoped to the
+   * workspace.
+   * <p>
+   * Since 3.16.0
+   */
+  public void setCodeLens(final CodeLensWorkspaceCapabilities codeLens) {
+    this.codeLens = codeLens;
+  }
+  
+  /**
+   * The client has support for file requests/notifications.
+   * <p>
+   * Since 3.16.0
+   */
+  @Pure
+  public FileOperationsWorkspaceCapabilities getFileOperations() {
+    return this.fileOperations;
+  }
+  
+  /**
+   * The client has support for file requests/notifications.
+   * <p>
+   * Since 3.16.0
+   */
+  public void setFileOperations(final FileOperationsWorkspaceCapabilities fileOperations) {
+    this.fileOperations = fileOperations;
   }
   
   @Override
@@ -182,6 +297,10 @@ public class WorkspaceClientCapabilities {
     b.add("symbol", this.symbol);
     b.add("executeCommand", this.executeCommand);
     b.add("workspaceFolders", this.workspaceFolders);
+    b.add("configuration", this.configuration);
+    b.add("semanticTokens", this.semanticTokens);
+    b.add("codeLens", this.codeLens);
+    b.add("fileOperations", this.fileOperations);
     return b.toString();
   }
   
@@ -230,6 +349,26 @@ public class WorkspaceClientCapabilities {
         return false;
     } else if (!this.workspaceFolders.equals(other.workspaceFolders))
       return false;
+    if (this.configuration == null) {
+      if (other.configuration != null)
+        return false;
+    } else if (!this.configuration.equals(other.configuration))
+      return false;
+    if (this.semanticTokens == null) {
+      if (other.semanticTokens != null)
+        return false;
+    } else if (!this.semanticTokens.equals(other.semanticTokens))
+      return false;
+    if (this.codeLens == null) {
+      if (other.codeLens != null)
+        return false;
+    } else if (!this.codeLens.equals(other.codeLens))
+      return false;
+    if (this.fileOperations == null) {
+      if (other.fileOperations != null)
+        return false;
+    } else if (!this.fileOperations.equals(other.fileOperations))
+      return false;
     return true;
   }
   
@@ -245,6 +384,9 @@ public class WorkspaceClientCapabilities {
     result = prime * result + ((this.symbol== null) ? 0 : this.symbol.hashCode());
     result = prime * result + ((this.executeCommand== null) ? 0 : this.executeCommand.hashCode());
     result = prime * result + ((this.workspaceFolders== null) ? 0 : this.workspaceFolders.hashCode());
-    return result;
+    result = prime * result + ((this.configuration== null) ? 0 : this.configuration.hashCode());
+    result = prime * result + ((this.semanticTokens== null) ? 0 : this.semanticTokens.hashCode());
+    result = prime * result + ((this.codeLens== null) ? 0 : this.codeLens.hashCode());
+    return prime * result + ((this.fileOperations== null) ? 0 : this.fileOperations.hashCode());
   }
 }

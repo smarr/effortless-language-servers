@@ -1,9 +1,13 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
@@ -20,9 +24,15 @@ import org.eclipse.xtext.xbase.lib.CollectionLiterals;
  */
 @SuppressWarnings("all")
 public class FormattingOptions extends LinkedHashMap<String, Either3<String, Number, Boolean>> {
-  private final static String TAB_SIZE = "tabSize";
+  private static final String TAB_SIZE = "tabSize";
   
-  private final static String INSERT_SPACES = "insertSpaces";
+  private static final String INSERT_SPACES = "insertSpaces";
+  
+  private static final String TRIM_TRAILING_WHITESPACE = "trimTrailingWhitespace";
+  
+  private static final String INSERT_FINAL_NEWLINE = "insertFinalNewline";
+  
+  private static final String TRIM_FINAL_NEWLINES = "trimFinalNewlines";
   
   public FormattingOptions() {
   }
@@ -110,6 +120,60 @@ public class FormattingOptions extends LinkedHashMap<String, Either3<String, Num
   
   public void setInsertSpaces(final boolean insertSpaces) {
     this.putBoolean(FormattingOptions.INSERT_SPACES, Boolean.valueOf(insertSpaces));
+  }
+  
+  /**
+   * Trim trailing whitespace on a line.
+   * <p>
+   * Since 3.15.0
+   */
+  public boolean isTrimTrailingWhitespace() {
+    final Boolean value = this.getBoolean(FormattingOptions.TRIM_TRAILING_WHITESPACE);
+    if ((value != null)) {
+      return (value).booleanValue();
+    } else {
+      return false;
+    }
+  }
+  
+  public void setTrimTrailingWhitespace(final boolean trimTrailingWhitespace) {
+    this.putBoolean(FormattingOptions.TRIM_TRAILING_WHITESPACE, Boolean.valueOf(trimTrailingWhitespace));
+  }
+  
+  /**
+   * Insert a newline character at the end of the file if one does not exist.
+   * <p>
+   * Since 3.15.0
+   */
+  public boolean isInsertFinalNewline() {
+    final Boolean value = this.getBoolean(FormattingOptions.INSERT_FINAL_NEWLINE);
+    if ((value != null)) {
+      return (value).booleanValue();
+    } else {
+      return false;
+    }
+  }
+  
+  public void setInsertFinalNewline(final boolean insertFinalNewline) {
+    this.putBoolean(FormattingOptions.INSERT_FINAL_NEWLINE, Boolean.valueOf(insertFinalNewline));
+  }
+  
+  /**
+   * Trim all newlines after the final newline at the end of the file.
+   * <p>
+   * Since 3.15.0
+   */
+  public boolean isTrimFinalNewlines() {
+    final Boolean value = this.getBoolean(FormattingOptions.TRIM_FINAL_NEWLINES);
+    if ((value != null)) {
+      return (value).booleanValue();
+    } else {
+      return false;
+    }
+  }
+  
+  public void setTrimFinalNewlines(final boolean trimFinalNewlines) {
+    this.putBoolean(FormattingOptions.TRIM_FINAL_NEWLINES, Boolean.valueOf(trimFinalNewlines));
   }
   
   /**

@@ -1,15 +1,22 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
 import java.util.List;
+import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.ParameterInformation;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
+import org.eclipse.lsp4j.util.Preconditions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
@@ -28,23 +35,38 @@ public class SignatureInformation {
   /**
    * The human-readable doc-comment of this signature. Will be shown in the UI but can be omitted.
    */
-  private String documentation;
+  private Either<String, MarkupContent> documentation;
   
   /**
    * The parameters of this signature.
    */
   private List<ParameterInformation> parameters;
   
+  /**
+   * The index of the active parameter.
+   * <p>
+   * If provided, this is used in place of {@link SignatureHelp#activeParameter}.
+   * <p>
+   * Since 3.16.0
+   */
+  private Integer activeParameter;
+  
   public SignatureInformation() {
   }
   
   public SignatureInformation(@NonNull final String label) {
-    this.label = label;
+    this.label = Preconditions.<String>checkNotNull(label, "label");
   }
   
   public SignatureInformation(@NonNull final String label, final String documentation, final List<ParameterInformation> parameters) {
-    this.label = label;
-    this.documentation = documentation;
+    this(label);
+    this.setDocumentation(documentation);
+    this.parameters = parameters;
+  }
+  
+  public SignatureInformation(@NonNull final String label, final MarkupContent documentation, final List<ParameterInformation> parameters) {
+    this(label);
+    this.setDocumentation(documentation);
     this.parameters = parameters;
   }
   
@@ -61,22 +83,38 @@ public class SignatureInformation {
    * The label of this signature. Will be shown in the UI.
    */
   public void setLabel(@NonNull final String label) {
-    this.label = label;
+    this.label = Preconditions.checkNotNull(label, "label");
   }
   
   /**
    * The human-readable doc-comment of this signature. Will be shown in the UI but can be omitted.
    */
   @Pure
-  public String getDocumentation() {
+  public Either<String, MarkupContent> getDocumentation() {
     return this.documentation;
   }
   
   /**
    * The human-readable doc-comment of this signature. Will be shown in the UI but can be omitted.
    */
-  public void setDocumentation(final String documentation) {
+  public void setDocumentation(final Either<String, MarkupContent> documentation) {
     this.documentation = documentation;
+  }
+  
+  public void setDocumentation(final String documentation) {
+    if (documentation == null) {
+      this.documentation = null;
+      return;
+    }
+    this.documentation = Either.forLeft(documentation);
+  }
+  
+  public void setDocumentation(final MarkupContent documentation) {
+    if (documentation == null) {
+      this.documentation = null;
+      return;
+    }
+    this.documentation = Either.forRight(documentation);
   }
   
   /**
@@ -94,6 +132,29 @@ public class SignatureInformation {
     this.parameters = parameters;
   }
   
+  /**
+   * The index of the active parameter.
+   * <p>
+   * If provided, this is used in place of {@link SignatureHelp#activeParameter}.
+   * <p>
+   * Since 3.16.0
+   */
+  @Pure
+  public Integer getActiveParameter() {
+    return this.activeParameter;
+  }
+  
+  /**
+   * The index of the active parameter.
+   * <p>
+   * If provided, this is used in place of {@link SignatureHelp#activeParameter}.
+   * <p>
+   * Since 3.16.0
+   */
+  public void setActiveParameter(final Integer activeParameter) {
+    this.activeParameter = activeParameter;
+  }
+  
   @Override
   @Pure
   public String toString() {
@@ -101,6 +162,7 @@ public class SignatureInformation {
     b.add("label", this.label);
     b.add("documentation", this.documentation);
     b.add("parameters", this.parameters);
+    b.add("activeParameter", this.activeParameter);
     return b.toString();
   }
   
@@ -129,6 +191,11 @@ public class SignatureInformation {
         return false;
     } else if (!this.parameters.equals(other.parameters))
       return false;
+    if (this.activeParameter == null) {
+      if (other.activeParameter != null)
+        return false;
+    } else if (!this.activeParameter.equals(other.activeParameter))
+      return false;
     return true;
   }
   
@@ -140,6 +207,6 @@ public class SignatureInformation {
     result = prime * result + ((this.label== null) ? 0 : this.label.hashCode());
     result = prime * result + ((this.documentation== null) ? 0 : this.documentation.hashCode());
     result = prime * result + ((this.parameters== null) ? 0 : this.parameters.hashCode());
-    return result;
+    return prime * result + ((this.activeParameter== null) ? 0 : this.activeParameter.hashCode());
   }
 }

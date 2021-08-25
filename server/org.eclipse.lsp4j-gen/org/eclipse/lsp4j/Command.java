@@ -1,14 +1,19 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
 import java.util.List;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
+import org.eclipse.lsp4j.util.Preconditions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
@@ -39,8 +44,8 @@ public class Command {
   }
   
   public Command(@NonNull final String title, @NonNull final String command) {
-    this.title = title;
-    this.command = command;
+    this.title = Preconditions.<String>checkNotNull(title, "title");
+    this.command = Preconditions.<String>checkNotNull(command, "command");
   }
   
   public Command(@NonNull final String title, @NonNull final String command, final List<Object> arguments) {
@@ -61,7 +66,7 @@ public class Command {
    * Title of the command, like `save`.
    */
   public void setTitle(@NonNull final String title) {
-    this.title = title;
+    this.title = Preconditions.checkNotNull(title, "title");
   }
   
   /**
@@ -77,7 +82,7 @@ public class Command {
    * The identifier of the actual command handler.
    */
   public void setCommand(@NonNull final String command) {
-    this.command = command;
+    this.command = Preconditions.checkNotNull(command, "command");
   }
   
   /**
@@ -140,7 +145,6 @@ public class Command {
     int result = 1;
     result = prime * result + ((this.title== null) ? 0 : this.title.hashCode());
     result = prime * result + ((this.command== null) ? 0 : this.command.hashCode());
-    result = prime * result + ((this.arguments== null) ? 0 : this.arguments.hashCode());
-    return result;
+    return prime * result + ((this.arguments== null) ? 0 : this.arguments.hashCode());
   }
 }

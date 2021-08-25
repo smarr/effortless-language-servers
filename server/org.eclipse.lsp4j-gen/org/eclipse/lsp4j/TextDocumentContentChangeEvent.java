@@ -1,14 +1,19 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
+import org.eclipse.lsp4j.util.Preconditions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
@@ -25,7 +30,10 @@ public class TextDocumentContentChangeEvent {
   
   /**
    * The length of the range that got replaced.
+   * 
+   * @deprecated Use range instead.
    */
+  @Deprecated
   private Integer rangeLength;
   
   /**
@@ -38,13 +46,13 @@ public class TextDocumentContentChangeEvent {
   }
   
   public TextDocumentContentChangeEvent(@NonNull final String text) {
-    this.text = text;
+    this.text = Preconditions.<String>checkNotNull(text, "text");
   }
   
   public TextDocumentContentChangeEvent(final Range range, final Integer rangeLength, @NonNull final String text) {
+    this(text);
     this.range = range;
     this.rangeLength = rangeLength;
-    this.text = text;
   }
   
   /**
@@ -64,15 +72,21 @@ public class TextDocumentContentChangeEvent {
   
   /**
    * The length of the range that got replaced.
+   * 
+   * @deprecated Use range instead.
    */
   @Pure
+  @Deprecated
   public Integer getRangeLength() {
     return this.rangeLength;
   }
   
   /**
    * The length of the range that got replaced.
+   * 
+   * @deprecated Use range instead.
    */
+  @Deprecated
   public void setRangeLength(final Integer rangeLength) {
     this.rangeLength = rangeLength;
   }
@@ -90,7 +104,7 @@ public class TextDocumentContentChangeEvent {
    * The new text of the range/document.
    */
   public void setText(@NonNull final String text) {
-    this.text = text;
+    this.text = Preconditions.checkNotNull(text, "text");
   }
   
   @Override
@@ -138,7 +152,6 @@ public class TextDocumentContentChangeEvent {
     int result = 1;
     result = prime * result + ((this.range== null) ? 0 : this.range.hashCode());
     result = prime * result + ((this.rangeLength== null) ? 0 : this.rangeLength.hashCode());
-    result = prime * result + ((this.text== null) ? 0 : this.text.hashCode());
-    return result;
+    return prime * result + ((this.text== null) ? 0 : this.text.hashCode());
   }
 }

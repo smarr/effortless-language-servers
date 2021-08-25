@@ -1,9 +1,13 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
@@ -15,12 +19,27 @@ public class ApplyWorkspaceEditResponse {
   /**
    * Indicates whether the edit was applied or not.
    */
-  private Boolean applied;
+  private boolean applied;
+  
+  /**
+   * An optional textual description for why the edit was not applied.
+   * This may be used by the server for diagnostic logging or to provide
+   * a suitable error for a request that triggered the edit.
+   */
+  private String failureReason;
+  
+  /**
+   * Depending on the client's failure handling strategy `failedChange`
+   * might contain the index of the change that failed. This property is
+   * only available if the client signals a {@link WorkspaceEditCapabilities#failureHandling}
+   * strategy in its client capabilities.
+   */
+  private Integer failedChange;
   
   public ApplyWorkspaceEditResponse() {
   }
   
-  public ApplyWorkspaceEditResponse(final Boolean applied) {
+  public ApplyWorkspaceEditResponse(final boolean applied) {
     this.applied = applied;
   }
   
@@ -28,15 +47,55 @@ public class ApplyWorkspaceEditResponse {
    * Indicates whether the edit was applied or not.
    */
   @Pure
-  public Boolean getApplied() {
+  public boolean isApplied() {
     return this.applied;
   }
   
   /**
    * Indicates whether the edit was applied or not.
    */
-  public void setApplied(final Boolean applied) {
+  public void setApplied(final boolean applied) {
     this.applied = applied;
+  }
+  
+  /**
+   * An optional textual description for why the edit was not applied.
+   * This may be used by the server for diagnostic logging or to provide
+   * a suitable error for a request that triggered the edit.
+   */
+  @Pure
+  public String getFailureReason() {
+    return this.failureReason;
+  }
+  
+  /**
+   * An optional textual description for why the edit was not applied.
+   * This may be used by the server for diagnostic logging or to provide
+   * a suitable error for a request that triggered the edit.
+   */
+  public void setFailureReason(final String failureReason) {
+    this.failureReason = failureReason;
+  }
+  
+  /**
+   * Depending on the client's failure handling strategy `failedChange`
+   * might contain the index of the change that failed. This property is
+   * only available if the client signals a {@link WorkspaceEditCapabilities#failureHandling}
+   * strategy in its client capabilities.
+   */
+  @Pure
+  public Integer getFailedChange() {
+    return this.failedChange;
+  }
+  
+  /**
+   * Depending on the client's failure handling strategy `failedChange`
+   * might contain the index of the change that failed. This property is
+   * only available if the client signals a {@link WorkspaceEditCapabilities#failureHandling}
+   * strategy in its client capabilities.
+   */
+  public void setFailedChange(final Integer failedChange) {
+    this.failedChange = failedChange;
   }
   
   @Override
@@ -44,6 +103,8 @@ public class ApplyWorkspaceEditResponse {
   public String toString() {
     ToStringBuilder b = new ToStringBuilder(this);
     b.add("applied", this.applied);
+    b.add("failureReason", this.failureReason);
+    b.add("failedChange", this.failedChange);
     return b.toString();
   }
   
@@ -57,10 +118,17 @@ public class ApplyWorkspaceEditResponse {
     if (getClass() != obj.getClass())
       return false;
     ApplyWorkspaceEditResponse other = (ApplyWorkspaceEditResponse) obj;
-    if (this.applied == null) {
-      if (other.applied != null)
+    if (other.applied != this.applied)
+      return false;
+    if (this.failureReason == null) {
+      if (other.failureReason != null)
         return false;
-    } else if (!this.applied.equals(other.applied))
+    } else if (!this.failureReason.equals(other.failureReason))
+      return false;
+    if (this.failedChange == null) {
+      if (other.failedChange != null)
+        return false;
+    } else if (!this.failedChange.equals(other.failedChange))
       return false;
     return true;
   }
@@ -70,7 +138,8 @@ public class ApplyWorkspaceEditResponse {
   public int hashCode() {
     final int prime = 31;
     int result = 1;
-    result = prime * result + ((this.applied== null) ? 0 : this.applied.hashCode());
-    return result;
+    result = prime * result + (this.applied ? 1231 : 1237);
+    result = prime * result + ((this.failureReason== null) ? 0 : this.failureReason.hashCode());
+    return prime * result + ((this.failedChange== null) ? 0 : this.failedChange.hashCode());
   }
 }

@@ -1,27 +1,44 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
+import com.google.common.annotations.Beta;
+import org.eclipse.lsp4j.CallHierarchyCapabilities;
 import org.eclipse.lsp4j.CodeActionCapabilities;
 import org.eclipse.lsp4j.CodeLensCapabilities;
+import org.eclipse.lsp4j.ColorProviderCapabilities;
 import org.eclipse.lsp4j.CompletionCapabilities;
+import org.eclipse.lsp4j.DeclarationCapabilities;
 import org.eclipse.lsp4j.DefinitionCapabilities;
 import org.eclipse.lsp4j.DocumentHighlightCapabilities;
 import org.eclipse.lsp4j.DocumentLinkCapabilities;
 import org.eclipse.lsp4j.DocumentSymbolCapabilities;
+import org.eclipse.lsp4j.FoldingRangeCapabilities;
 import org.eclipse.lsp4j.FormattingCapabilities;
 import org.eclipse.lsp4j.HoverCapabilities;
+import org.eclipse.lsp4j.ImplementationCapabilities;
+import org.eclipse.lsp4j.LinkedEditingRangeCapabilities;
+import org.eclipse.lsp4j.MonikerCapabilities;
 import org.eclipse.lsp4j.OnTypeFormattingCapabilities;
+import org.eclipse.lsp4j.PublishDiagnosticsCapabilities;
 import org.eclipse.lsp4j.RangeFormattingCapabilities;
 import org.eclipse.lsp4j.ReferencesCapabilities;
 import org.eclipse.lsp4j.RenameCapabilities;
+import org.eclipse.lsp4j.SelectionRangeCapabilities;
+import org.eclipse.lsp4j.SemanticTokensCapabilities;
 import org.eclipse.lsp4j.SignatureHelpCapabilities;
 import org.eclipse.lsp4j.SynchronizationCapabilities;
+import org.eclipse.lsp4j.TypeDefinitionCapabilities;
+import org.eclipse.lsp4j.TypeHierarchyCapabilities;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
@@ -33,74 +50,158 @@ public class TextDocumentClientCapabilities {
   private SynchronizationCapabilities synchronization;
   
   /**
-   * Capabilities specific to the `textDocument/completion`
+   * Capabilities specific to the {@code textDocument/completion}
    */
   private CompletionCapabilities completion;
   
   /**
-   * Capabilities specific to the `textDocument/hover`
+   * Capabilities specific to the {@code textDocument/hover}
    */
   private HoverCapabilities hover;
   
   /**
-   * Capabilities specific to the `textDocument/signatureHelp`
+   * Capabilities specific to the {@code textDocument/signatureHelp}
    */
   private SignatureHelpCapabilities signatureHelp;
   
   /**
-   * Capabilities specific to the `textDocument/references`
+   * Capabilities specific to the {@code textDocument/references}
    */
   private ReferencesCapabilities references;
   
   /**
-   * Capabilities specific to the `textDocument/documentHighlight`
+   * Capabilities specific to the {@code textDocument/documentHighlight}
    */
   private DocumentHighlightCapabilities documentHighlight;
   
   /**
-   * Capabilities specific to the `textDocument/documentSymbol`
+   * Capabilities specific to the {@code textDocument/documentSymbol}
    */
   private DocumentSymbolCapabilities documentSymbol;
   
   /**
-   * Capabilities specific to the `textDocument/formatting`
+   * Capabilities specific to the {@code textDocument/formatting}
    */
   private FormattingCapabilities formatting;
   
   /**
-   * Capabilities specific to the `textDocument/rangeFormatting`
+   * Capabilities specific to the {@code textDocument/rangeFormatting}
    */
   private RangeFormattingCapabilities rangeFormatting;
   
   /**
-   * Capabilities specific to the `textDocument/onTypeFormatting`
+   * Capabilities specific to the {@code textDocument/onTypeFormatting}
    */
   private OnTypeFormattingCapabilities onTypeFormatting;
   
   /**
-   * Capabilities specific to the `textDocument/definition`
+   * Capabilities specific to the {@code textDocument/declaration}
+   * <p>
+   * Since 3.14.0
+   */
+  private DeclarationCapabilities declaration;
+  
+  /**
+   * Capabilities specific to the {@code textDocument/definition}
+   * <p>
+   * Since 3.14.0
    */
   private DefinitionCapabilities definition;
   
   /**
-   * Capabilities specific to the `textDocument/codeAction`
+   * Capabilities specific to the {@code textDocument/typeDefinition}
+   * <p>
+   * Since 3.6.0
+   */
+  private TypeDefinitionCapabilities typeDefinition;
+  
+  /**
+   * Capabilities specific to the {@code textDocument/implementation}
+   * <p>
+   * Since 3.6.0
+   */
+  private ImplementationCapabilities implementation;
+  
+  /**
+   * Capabilities specific to the {@code textDocument/codeAction}
    */
   private CodeActionCapabilities codeAction;
   
   /**
-   * Capabilities specific to the `textDocument/codeLens`
+   * Capabilities specific to the {@code textDocument/codeLens}
    */
   private CodeLensCapabilities codeLens;
   
   /**
-   * Capabilities specific to the `textDocument/documentLink`
+   * Capabilities specific to the {@code textDocument/documentLink}
    */
   private DocumentLinkCapabilities documentLink;
   
   /**
-   * Capabilities specific to the `textDocument/rename`
+   * Capabilities specific to the {@code textDocument/documentColor} and the
+   * {@code textDocument/colorPresentation} request.
+   * <p>
+   * Since 3.6.0
+   */
+  private ColorProviderCapabilities colorProvider;
+  
+  /**
+   * Capabilities specific to the {@code textDocument/rename}
    */
   private RenameCapabilities rename;
+  
+  /**
+   * Capabilities specific to {@code textDocument/publishDiagnostics}.
+   */
+  private PublishDiagnosticsCapabilities publishDiagnostics;
+  
+  /**
+   * Capabilities specific to {@code textDocument/foldingRange} requests.
+   * <p>
+   * Since 3.10.0
+   */
+  private FoldingRangeCapabilities foldingRange;
+  
+  /**
+   * Capabilities specific to {@code textDocument/typeHierarchy}.
+   */
+  @Beta
+  private TypeHierarchyCapabilities typeHierarchyCapabilities;
+  
+  /**
+   * Capabilities specific to {@code textDocument/prepareCallHierarchy}.
+   * <p>
+   * Since 3.16.0
+   */
+  private CallHierarchyCapabilities callHierarchy;
+  
+  /**
+   * Capabilities specific to `textDocument/selectionRange` requests
+   * <p>
+   * Since 3.15.0
+   */
+  private SelectionRangeCapabilities selectionRange;
+  
+  /**
+   * Capabilities specific to {@code textDocument/semanticTokens}.
+   * <p>
+   * Since 3.16.0
+   */
+  private SemanticTokensCapabilities semanticTokens;
+  
+  /**
+   * Capabilities specific to the {@code textDocument/moniker} request.
+   * <p>
+   * Since 3.16.0
+   */
+  private MonikerCapabilities moniker;
+  
+  /**
+   * Capabilities specific to the {@code textDocument/linkedEditingRange} request.
+   * <p>
+   * Since 3.16.0
+   */
+  private LinkedEditingRangeCapabilities linkedEditingRange;
   
   @Pure
   public SynchronizationCapabilities getSynchronization() {
@@ -112,7 +213,7 @@ public class TextDocumentClientCapabilities {
   }
   
   /**
-   * Capabilities specific to the `textDocument/completion`
+   * Capabilities specific to the {@code textDocument/completion}
    */
   @Pure
   public CompletionCapabilities getCompletion() {
@@ -120,14 +221,14 @@ public class TextDocumentClientCapabilities {
   }
   
   /**
-   * Capabilities specific to the `textDocument/completion`
+   * Capabilities specific to the {@code textDocument/completion}
    */
   public void setCompletion(final CompletionCapabilities completion) {
     this.completion = completion;
   }
   
   /**
-   * Capabilities specific to the `textDocument/hover`
+   * Capabilities specific to the {@code textDocument/hover}
    */
   @Pure
   public HoverCapabilities getHover() {
@@ -135,14 +236,14 @@ public class TextDocumentClientCapabilities {
   }
   
   /**
-   * Capabilities specific to the `textDocument/hover`
+   * Capabilities specific to the {@code textDocument/hover}
    */
   public void setHover(final HoverCapabilities hover) {
     this.hover = hover;
   }
   
   /**
-   * Capabilities specific to the `textDocument/signatureHelp`
+   * Capabilities specific to the {@code textDocument/signatureHelp}
    */
   @Pure
   public SignatureHelpCapabilities getSignatureHelp() {
@@ -150,14 +251,14 @@ public class TextDocumentClientCapabilities {
   }
   
   /**
-   * Capabilities specific to the `textDocument/signatureHelp`
+   * Capabilities specific to the {@code textDocument/signatureHelp}
    */
   public void setSignatureHelp(final SignatureHelpCapabilities signatureHelp) {
     this.signatureHelp = signatureHelp;
   }
   
   /**
-   * Capabilities specific to the `textDocument/references`
+   * Capabilities specific to the {@code textDocument/references}
    */
   @Pure
   public ReferencesCapabilities getReferences() {
@@ -165,14 +266,14 @@ public class TextDocumentClientCapabilities {
   }
   
   /**
-   * Capabilities specific to the `textDocument/references`
+   * Capabilities specific to the {@code textDocument/references}
    */
   public void setReferences(final ReferencesCapabilities references) {
     this.references = references;
   }
   
   /**
-   * Capabilities specific to the `textDocument/documentHighlight`
+   * Capabilities specific to the {@code textDocument/documentHighlight}
    */
   @Pure
   public DocumentHighlightCapabilities getDocumentHighlight() {
@@ -180,14 +281,14 @@ public class TextDocumentClientCapabilities {
   }
   
   /**
-   * Capabilities specific to the `textDocument/documentHighlight`
+   * Capabilities specific to the {@code textDocument/documentHighlight}
    */
   public void setDocumentHighlight(final DocumentHighlightCapabilities documentHighlight) {
     this.documentHighlight = documentHighlight;
   }
   
   /**
-   * Capabilities specific to the `textDocument/documentSymbol`
+   * Capabilities specific to the {@code textDocument/documentSymbol}
    */
   @Pure
   public DocumentSymbolCapabilities getDocumentSymbol() {
@@ -195,14 +296,14 @@ public class TextDocumentClientCapabilities {
   }
   
   /**
-   * Capabilities specific to the `textDocument/documentSymbol`
+   * Capabilities specific to the {@code textDocument/documentSymbol}
    */
   public void setDocumentSymbol(final DocumentSymbolCapabilities documentSymbol) {
     this.documentSymbol = documentSymbol;
   }
   
   /**
-   * Capabilities specific to the `textDocument/formatting`
+   * Capabilities specific to the {@code textDocument/formatting}
    */
   @Pure
   public FormattingCapabilities getFormatting() {
@@ -210,14 +311,14 @@ public class TextDocumentClientCapabilities {
   }
   
   /**
-   * Capabilities specific to the `textDocument/formatting`
+   * Capabilities specific to the {@code textDocument/formatting}
    */
   public void setFormatting(final FormattingCapabilities formatting) {
     this.formatting = formatting;
   }
   
   /**
-   * Capabilities specific to the `textDocument/rangeFormatting`
+   * Capabilities specific to the {@code textDocument/rangeFormatting}
    */
   @Pure
   public RangeFormattingCapabilities getRangeFormatting() {
@@ -225,14 +326,14 @@ public class TextDocumentClientCapabilities {
   }
   
   /**
-   * Capabilities specific to the `textDocument/rangeFormatting`
+   * Capabilities specific to the {@code textDocument/rangeFormatting}
    */
   public void setRangeFormatting(final RangeFormattingCapabilities rangeFormatting) {
     this.rangeFormatting = rangeFormatting;
   }
   
   /**
-   * Capabilities specific to the `textDocument/onTypeFormatting`
+   * Capabilities specific to the {@code textDocument/onTypeFormatting}
    */
   @Pure
   public OnTypeFormattingCapabilities getOnTypeFormatting() {
@@ -240,14 +341,35 @@ public class TextDocumentClientCapabilities {
   }
   
   /**
-   * Capabilities specific to the `textDocument/onTypeFormatting`
+   * Capabilities specific to the {@code textDocument/onTypeFormatting}
    */
   public void setOnTypeFormatting(final OnTypeFormattingCapabilities onTypeFormatting) {
     this.onTypeFormatting = onTypeFormatting;
   }
   
   /**
-   * Capabilities specific to the `textDocument/definition`
+   * Capabilities specific to the {@code textDocument/declaration}
+   * <p>
+   * Since 3.14.0
+   */
+  @Pure
+  public DeclarationCapabilities getDeclaration() {
+    return this.declaration;
+  }
+  
+  /**
+   * Capabilities specific to the {@code textDocument/declaration}
+   * <p>
+   * Since 3.14.0
+   */
+  public void setDeclaration(final DeclarationCapabilities declaration) {
+    this.declaration = declaration;
+  }
+  
+  /**
+   * Capabilities specific to the {@code textDocument/definition}
+   * <p>
+   * Since 3.14.0
    */
   @Pure
   public DefinitionCapabilities getDefinition() {
@@ -255,14 +377,54 @@ public class TextDocumentClientCapabilities {
   }
   
   /**
-   * Capabilities specific to the `textDocument/definition`
+   * Capabilities specific to the {@code textDocument/definition}
+   * <p>
+   * Since 3.14.0
    */
   public void setDefinition(final DefinitionCapabilities definition) {
     this.definition = definition;
   }
   
   /**
-   * Capabilities specific to the `textDocument/codeAction`
+   * Capabilities specific to the {@code textDocument/typeDefinition}
+   * <p>
+   * Since 3.6.0
+   */
+  @Pure
+  public TypeDefinitionCapabilities getTypeDefinition() {
+    return this.typeDefinition;
+  }
+  
+  /**
+   * Capabilities specific to the {@code textDocument/typeDefinition}
+   * <p>
+   * Since 3.6.0
+   */
+  public void setTypeDefinition(final TypeDefinitionCapabilities typeDefinition) {
+    this.typeDefinition = typeDefinition;
+  }
+  
+  /**
+   * Capabilities specific to the {@code textDocument/implementation}
+   * <p>
+   * Since 3.6.0
+   */
+  @Pure
+  public ImplementationCapabilities getImplementation() {
+    return this.implementation;
+  }
+  
+  /**
+   * Capabilities specific to the {@code textDocument/implementation}
+   * <p>
+   * Since 3.6.0
+   */
+  public void setImplementation(final ImplementationCapabilities implementation) {
+    this.implementation = implementation;
+  }
+  
+  /**
+   * Capabilities specific to the {@code textDocument/codeAction}
    */
   @Pure
   public CodeActionCapabilities getCodeAction() {
@@ -270,14 +432,14 @@ public class TextDocumentClientCapabilities {
   }
   
   /**
-   * Capabilities specific to the `textDocument/codeAction`
+   * Capabilities specific to the {@code textDocument/codeAction}
    */
   public void setCodeAction(final CodeActionCapabilities codeAction) {
     this.codeAction = codeAction;
   }
   
   /**
-   * Capabilities specific to the `textDocument/codeLens`
+   * Capabilities specific to the {@code textDocument/codeLens}
    */
   @Pure
   public CodeLensCapabilities getCodeLens() {
@@ -285,14 +447,14 @@ public class TextDocumentClientCapabilities {
   }
   
   /**
-   * Capabilities specific to the `textDocument/codeLens`
+   * Capabilities specific to the {@code textDocument/codeLens}
    */
   public void setCodeLens(final CodeLensCapabilities codeLens) {
     this.codeLens = codeLens;
   }
   
   /**
-   * Capabilities specific to the `textDocument/documentLink`
+   * Capabilities specific to the {@code textDocument/documentLink}
    */
   @Pure
   public DocumentLinkCapabilities getDocumentLink() {
@@ -300,14 +462,35 @@ public class TextDocumentClientCapabilities {
   }
   
   /**
-   * Capabilities specific to the `textDocument/documentLink`
+   * Capabilities specific to the {@code textDocument/documentLink}
    */
   public void setDocumentLink(final DocumentLinkCapabilities documentLink) {
     this.documentLink = documentLink;
   }
   
   /**
-   * Capabilities specific to the `textDocument/rename`
+   * Capabilities specific to the {@code textDocument/documentColor} and the
+   * {@code textDocument/colorPresentation} request.
+   * <p>
+   * Since 3.6.0
+   */
+  @Pure
+  public ColorProviderCapabilities getColorProvider() {
+    return this.colorProvider;
+  }
+  
+  /**
+   * Capabilities specific to the {@code textDocument/documentColor} and the
+   * {@code textDocument/colorPresentation} request.
+   * <p>
+   * Since 3.6.0
+   */
+  public void setColorProvider(final ColorProviderCapabilities colorProvider) {
+    this.colorProvider = colorProvider;
+  }
+  
+  /**
+   * Capabilities specific to the {@code textDocument/rename}
    */
   @Pure
   public RenameCapabilities getRename() {
@@ -315,10 +498,154 @@ public class TextDocumentClientCapabilities {
   }
   
   /**
-   * Capabilities specific to the `textDocument/rename`
+   * Capabilities specific to the {@code textDocument/rename}
    */
   public void setRename(final RenameCapabilities rename) {
     this.rename = rename;
+  }
+  
+  /**
+   * Capabilities specific to {@code textDocument/publishDiagnostics}.
+   */
+  @Pure
+  public PublishDiagnosticsCapabilities getPublishDiagnostics() {
+    return this.publishDiagnostics;
+  }
+  
+  /**
+   * Capabilities specific to {@code textDocument/publishDiagnostics}.
+   */
+  public void setPublishDiagnostics(final PublishDiagnosticsCapabilities publishDiagnostics) {
+    this.publishDiagnostics = publishDiagnostics;
+  }
+  
+  /**
+   * Capabilities specific to {@code textDocument/foldingRange} requests.
+   * <p>
+   * Since 3.10.0
+   */
+  @Pure
+  public FoldingRangeCapabilities getFoldingRange() {
+    return this.foldingRange;
+  }
+  
+  /**
+   * Capabilities specific to {@code textDocument/foldingRange} requests.
+   * <p>
+   * Since 3.10.0
+   */
+  public void setFoldingRange(final FoldingRangeCapabilities foldingRange) {
+    this.foldingRange = foldingRange;
+  }
+  
+  /**
+   * Capabilities specific to {@code textDocument/typeHierarchy}.
+   */
+  @Pure
+  public TypeHierarchyCapabilities getTypeHierarchyCapabilities() {
+    return this.typeHierarchyCapabilities;
+  }
+  
+  /**
+   * Capabilities specific to {@code textDocument/typeHierarchy}.
+   */
+  public void setTypeHierarchyCapabilities(final TypeHierarchyCapabilities typeHierarchyCapabilities) {
+    this.typeHierarchyCapabilities = typeHierarchyCapabilities;
+  }
+  
+  /**
+   * Capabilities specific to {@code textDocument/prepareCallHierarchy}.
+   * <p>
+   * Since 3.16.0
+   */
+  @Pure
+  public CallHierarchyCapabilities getCallHierarchy() {
+    return this.callHierarchy;
+  }
+  
+  /**
+   * Capabilities specific to {@code textDocument/prepareCallHierarchy}.
+   * <p>
+   * Since 3.16.0
+   */
+  public void setCallHierarchy(final CallHierarchyCapabilities callHierarchy) {
+    this.callHierarchy = callHierarchy;
+  }
+  
+  /**
+   * Capabilities specific to `textDocument/selectionRange` requests
+   * <p>
+   * Since 3.15.0
+   */
+  @Pure
+  public SelectionRangeCapabilities getSelectionRange() {
+    return this.selectionRange;
+  }
+  
+  /**
+   * Capabilities specific to `textDocument/selectionRange` requests
+   * <p>
+   * Since 3.15.0
+   */
+  public void setSelectionRange(final SelectionRangeCapabilities selectionRange) {
+    this.selectionRange = selectionRange;
+  }
+  
+  /**
+   * Capabilities specific to {@code textDocument/semanticTokens}.
+   * <p>
+   * Since 3.16.0
+   */
+  @Pure
+  public SemanticTokensCapabilities getSemanticTokens() {
+    return this.semanticTokens;
+  }
+  
+  /**
+   * Capabilities specific to {@code textDocument/semanticTokens}.
+   * <p>
+   * Since 3.16.0
+   */
+  public void setSemanticTokens(final SemanticTokensCapabilities semanticTokens) {
+    this.semanticTokens = semanticTokens;
+  }
+  
+  /**
+   * Capabilities specific to the {@code textDocument/moniker} request.
+   * <p>
+   * Since 3.16.0
+   */
+  @Pure
+  public MonikerCapabilities getMoniker() {
+    return this.moniker;
+  }
+  
+  /**
+   * Capabilities specific to the {@code textDocument/moniker} request.
+   * <p>
+   * Since 3.16.0
+   */
+  public void setMoniker(final MonikerCapabilities moniker) {
+    this.moniker = moniker;
+  }
+  
+  /**
+   * Capabilities specific to the {@code textDocument/linkedEditingRange} request.
+   * <p>
+   * Since 3.16.0
+   */
+  @Pure
+  public LinkedEditingRangeCapabilities getLinkedEditingRange() {
+    return this.linkedEditingRange;
+  }
+  
+  /**
+   * Capabilities specific to the {@code textDocument/linkedEditingRange} request.
+   * <p>
+   * Since 3.16.0
+   */
+  public void setLinkedEditingRange(final LinkedEditingRangeCapabilities linkedEditingRange) {
+    this.linkedEditingRange = linkedEditingRange;
   }
   
   @Override
@@ -335,11 +662,23 @@ public class TextDocumentClientCapabilities {
     b.add("formatting", this.formatting);
     b.add("rangeFormatting", this.rangeFormatting);
     b.add("onTypeFormatting", this.onTypeFormatting);
+    b.add("declaration", this.declaration);
     b.add("definition", this.definition);
+    b.add("typeDefinition", this.typeDefinition);
+    b.add("implementation", this.implementation);
     b.add("codeAction", this.codeAction);
     b.add("codeLens", this.codeLens);
     b.add("documentLink", this.documentLink);
+    b.add("colorProvider", this.colorProvider);
     b.add("rename", this.rename);
+    b.add("publishDiagnostics", this.publishDiagnostics);
+    b.add("foldingRange", this.foldingRange);
+    b.add("typeHierarchyCapabilities", this.typeHierarchyCapabilities);
+    b.add("callHierarchy", this.callHierarchy);
+    b.add("selectionRange", this.selectionRange);
+    b.add("semanticTokens", this.semanticTokens);
+    b.add("moniker", this.moniker);
+    b.add("linkedEditingRange", this.linkedEditingRange);
     return b.toString();
   }
   
@@ -403,10 +742,25 @@ public class TextDocumentClientCapabilities {
         return false;
     } else if (!this.onTypeFormatting.equals(other.onTypeFormatting))
       return false;
+    if (this.declaration == null) {
+      if (other.declaration != null)
+        return false;
+    } else if (!this.declaration.equals(other.declaration))
+      return false;
     if (this.definition == null) {
       if (other.definition != null)
         return false;
     } else if (!this.definition.equals(other.definition))
+      return false;
+    if (this.typeDefinition == null) {
+      if (other.typeDefinition != null)
+        return false;
+    } else if (!this.typeDefinition.equals(other.typeDefinition))
+      return false;
+    if (this.implementation == null) {
+      if (other.implementation != null)
+        return false;
+    } else if (!this.implementation.equals(other.implementation))
       return false;
     if (this.codeAction == null) {
       if (other.codeAction != null)
@@ -423,10 +777,55 @@ public class TextDocumentClientCapabilities {
         return false;
     } else if (!this.documentLink.equals(other.documentLink))
       return false;
+    if (this.colorProvider == null) {
+      if (other.colorProvider != null)
+        return false;
+    } else if (!this.colorProvider.equals(other.colorProvider))
+      return false;
     if (this.rename == null) {
       if (other.rename != null)
         return false;
     } else if (!this.rename.equals(other.rename))
+      return false;
+    if (this.publishDiagnostics == null) {
+      if (other.publishDiagnostics != null)
+        return false;
+    } else if (!this.publishDiagnostics.equals(other.publishDiagnostics))
+      return false;
+    if (this.foldingRange == null) {
+      if (other.foldingRange != null)
+        return false;
+    } else if (!this.foldingRange.equals(other.foldingRange))
+      return false;
+    if (this.typeHierarchyCapabilities == null) {
+      if (other.typeHierarchyCapabilities != null)
+        return false;
+    } else if (!this.typeHierarchyCapabilities.equals(other.typeHierarchyCapabilities))
+      return false;
+    if (this.callHierarchy == null) {
+      if (other.callHierarchy != null)
+        return false;
+    } else if (!this.callHierarchy.equals(other.callHierarchy))
+      return false;
+    if (this.selectionRange == null) {
+      if (other.selectionRange != null)
+        return false;
+    } else if (!this.selectionRange.equals(other.selectionRange))
+      return false;
+    if (this.semanticTokens == null) {
+      if (other.semanticTokens != null)
+        return false;
+    } else if (!this.semanticTokens.equals(other.semanticTokens))
+      return false;
+    if (this.moniker == null) {
+      if (other.moniker != null)
+        return false;
+    } else if (!this.moniker.equals(other.moniker))
+      return false;
+    if (this.linkedEditingRange == null) {
+      if (other.linkedEditingRange != null)
+        return false;
+    } else if (!this.linkedEditingRange.equals(other.linkedEditingRange))
       return false;
     return true;
   }
@@ -446,11 +845,22 @@ public class TextDocumentClientCapabilities {
     result = prime * result + ((this.formatting== null) ? 0 : this.formatting.hashCode());
     result = prime * result + ((this.rangeFormatting== null) ? 0 : this.rangeFormatting.hashCode());
     result = prime * result + ((this.onTypeFormatting== null) ? 0 : this.onTypeFormatting.hashCode());
+    result = prime * result + ((this.declaration== null) ? 0 : this.declaration.hashCode());
     result = prime * result + ((this.definition== null) ? 0 : this.definition.hashCode());
+    result = prime * result + ((this.typeDefinition== null) ? 0 : this.typeDefinition.hashCode());
+    result = prime * result + ((this.implementation== null) ? 0 : this.implementation.hashCode());
     result = prime * result + ((this.codeAction== null) ? 0 : this.codeAction.hashCode());
     result = prime * result + ((this.codeLens== null) ? 0 : this.codeLens.hashCode());
     result = prime * result + ((this.documentLink== null) ? 0 : this.documentLink.hashCode());
+    result = prime * result + ((this.colorProvider== null) ? 0 : this.colorProvider.hashCode());
     result = prime * result + ((this.rename== null) ? 0 : this.rename.hashCode());
-    return result;
+    result = prime * result + ((this.publishDiagnostics== null) ? 0 : this.publishDiagnostics.hashCode());
+    result = prime * result + ((this.foldingRange== null) ? 0 : this.foldingRange.hashCode());
+    result = prime * result + ((this.typeHierarchyCapabilities== null) ? 0 : this.typeHierarchyCapabilities.hashCode());
+    result = prime * result + ((this.callHierarchy== null) ? 0 : this.callHierarchy.hashCode());
+    result = prime * result + ((this.selectionRange== null) ? 0 : this.selectionRange.hashCode());
+    result = prime * result + ((this.semanticTokens== null) ? 0 : this.semanticTokens.hashCode());
+    result = prime * result + ((this.moniker== null) ? 0 : this.moniker.hashCode());
+    return prime * result + ((this.linkedEditingRange== null) ? 0 : this.linkedEditingRange.hashCode());
   }
 }

@@ -1,34 +1,46 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
 import org.eclipse.lsp4j.TextDocumentIdentifier;
+import org.eclipse.lsp4j.WorkDoneProgressAndPartialResultParams;
+import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
+import org.eclipse.lsp4j.util.Preconditions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
+/**
+ * The document links request is sent from the client to the server to request the location of links in a document.
+ */
 @SuppressWarnings("all")
-public class DocumentLinkParams {
+public class DocumentLinkParams extends WorkDoneProgressAndPartialResultParams {
   /**
    * The document to provide document links for.
    */
+  @NonNull
   private TextDocumentIdentifier textDocument;
   
   public DocumentLinkParams() {
   }
   
-  public DocumentLinkParams(final TextDocumentIdentifier textDocument) {
-    this.textDocument = textDocument;
+  public DocumentLinkParams(@NonNull final TextDocumentIdentifier textDocument) {
+    this.textDocument = Preconditions.<TextDocumentIdentifier>checkNotNull(textDocument, "textDocument");
   }
   
   /**
    * The document to provide document links for.
    */
   @Pure
+  @NonNull
   public TextDocumentIdentifier getTextDocument() {
     return this.textDocument;
   }
@@ -36,8 +48,8 @@ public class DocumentLinkParams {
   /**
    * The document to provide document links for.
    */
-  public void setTextDocument(final TextDocumentIdentifier textDocument) {
-    this.textDocument = textDocument;
+  public void setTextDocument(@NonNull final TextDocumentIdentifier textDocument) {
+    this.textDocument = Preconditions.checkNotNull(textDocument, "textDocument");
   }
   
   @Override
@@ -45,6 +57,8 @@ public class DocumentLinkParams {
   public String toString() {
     ToStringBuilder b = new ToStringBuilder(this);
     b.add("textDocument", this.textDocument);
+    b.add("workDoneToken", getWorkDoneToken());
+    b.add("partialResultToken", getPartialResultToken());
     return b.toString();
   }
   
@@ -56,6 +70,8 @@ public class DocumentLinkParams {
     if (obj == null)
       return false;
     if (getClass() != obj.getClass())
+      return false;
+    if (!super.equals(obj))
       return false;
     DocumentLinkParams other = (DocumentLinkParams) obj;
     if (this.textDocument == null) {
@@ -69,9 +85,6 @@ public class DocumentLinkParams {
   @Override
   @Pure
   public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((this.textDocument== null) ? 0 : this.textDocument.hashCode());
-    return result;
+    return 31 * super.hashCode() + ((this.textDocument== null) ? 0 : this.textDocument.hashCode());
   }
 }

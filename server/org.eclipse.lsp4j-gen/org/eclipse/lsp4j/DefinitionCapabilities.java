@@ -1,9 +1,13 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
@@ -11,8 +15,18 @@ import org.eclipse.lsp4j.DynamicRegistrationCapabilities;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
+/**
+ * Capabilities specific to the `textDocument/definition`
+ * <p>
+ * Since 3.14.0
+ */
 @SuppressWarnings("all")
 public class DefinitionCapabilities extends DynamicRegistrationCapabilities {
+  /**
+   * The client supports additional metadata in the form of definition links.
+   */
+  private Boolean linkSupport;
+  
   public DefinitionCapabilities() {
   }
   
@@ -20,10 +34,31 @@ public class DefinitionCapabilities extends DynamicRegistrationCapabilities {
     super(dynamicRegistration);
   }
   
+  public DefinitionCapabilities(final Boolean dynamicRegistration, final Boolean linkSupport) {
+    super(dynamicRegistration);
+    this.linkSupport = linkSupport;
+  }
+  
+  /**
+   * The client supports additional metadata in the form of definition links.
+   */
+  @Pure
+  public Boolean getLinkSupport() {
+    return this.linkSupport;
+  }
+  
+  /**
+   * The client supports additional metadata in the form of definition links.
+   */
+  public void setLinkSupport(final Boolean linkSupport) {
+    this.linkSupport = linkSupport;
+  }
+  
   @Override
   @Pure
   public String toString() {
     ToStringBuilder b = new ToStringBuilder(this);
+    b.add("linkSupport", this.linkSupport);
     b.add("dynamicRegistration", getDynamicRegistration());
     return b.toString();
   }
@@ -39,13 +74,18 @@ public class DefinitionCapabilities extends DynamicRegistrationCapabilities {
       return false;
     if (!super.equals(obj))
       return false;
+    DefinitionCapabilities other = (DefinitionCapabilities) obj;
+    if (this.linkSupport == null) {
+      if (other.linkSupport != null)
+        return false;
+    } else if (!this.linkSupport.equals(other.linkSupport))
+      return false;
     return true;
   }
   
   @Override
   @Pure
   public int hashCode() {
-    int result = super.hashCode();
-    return result;
+    return 31 * super.hashCode() + ((this.linkSupport== null) ? 0 : this.linkSupport.hashCode());
   }
 }

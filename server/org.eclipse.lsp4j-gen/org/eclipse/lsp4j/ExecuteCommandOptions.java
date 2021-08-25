@@ -1,15 +1,21 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.eclipse.lsp4j.AbstractWorkDoneProgressOptions;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
+import org.eclipse.lsp4j.util.Preconditions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
@@ -17,7 +23,7 @@ import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
  * Execute command options.
  */
 @SuppressWarnings("all")
-public class ExecuteCommandOptions {
+public class ExecuteCommandOptions extends AbstractWorkDoneProgressOptions {
   /**
    * The commands to be executed on the server
    */
@@ -29,7 +35,7 @@ public class ExecuteCommandOptions {
   }
   
   public ExecuteCommandOptions(@NonNull final List<String> commands) {
-    this.commands = commands;
+    this.commands = Preconditions.<List<String>>checkNotNull(commands, "commands");
   }
   
   /**
@@ -45,7 +51,7 @@ public class ExecuteCommandOptions {
    * The commands to be executed on the server
    */
   public void setCommands(@NonNull final List<String> commands) {
-    this.commands = commands;
+    this.commands = Preconditions.checkNotNull(commands, "commands");
   }
   
   @Override
@@ -53,6 +59,7 @@ public class ExecuteCommandOptions {
   public String toString() {
     ToStringBuilder b = new ToStringBuilder(this);
     b.add("commands", this.commands);
+    b.add("workDoneProgress", getWorkDoneProgress());
     return b.toString();
   }
   
@@ -64,6 +71,8 @@ public class ExecuteCommandOptions {
     if (obj == null)
       return false;
     if (getClass() != obj.getClass())
+      return false;
+    if (!super.equals(obj))
       return false;
     ExecuteCommandOptions other = (ExecuteCommandOptions) obj;
     if (this.commands == null) {
@@ -77,9 +86,6 @@ public class ExecuteCommandOptions {
   @Override
   @Pure
   public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((this.commands== null) ? 0 : this.commands.hashCode());
-    return result;
+    return 31 * super.hashCode() + ((this.commands== null) ? 0 : this.commands.hashCode());
   }
 }

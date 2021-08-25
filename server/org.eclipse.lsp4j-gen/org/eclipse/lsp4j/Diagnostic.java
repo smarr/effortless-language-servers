@@ -1,15 +1,27 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
+import com.google.gson.annotations.JsonAdapter;
+import java.util.List;
+import org.eclipse.lsp4j.DiagnosticCodeDescription;
+import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.eclipse.lsp4j.DiagnosticTag;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.jsonrpc.json.adapters.JsonElementTypeAdapter;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
+import org.eclipse.lsp4j.util.Preconditions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
@@ -33,7 +45,14 @@ public class Diagnostic {
   /**
    * The diagnostic's code. Can be omitted.
    */
-  private String code;
+  private Either<String, Integer> code;
+  
+  /**
+   * An optional property to describe the error code.
+   * <p>
+   * Since 3.16.0
+   */
+  private DiagnosticCodeDescription codeDescription;
   
   /**
    * A human-readable string describing the source of this diagnostic, e.g. 'typescript' or 'super lint'.
@@ -46,12 +65,36 @@ public class Diagnostic {
   @NonNull
   private String message;
   
+  /**
+   * Additional metadata about the diagnostic.
+   * <p>
+   * Since 3.15.0
+   */
+  private List<DiagnosticTag> tags;
+  
+  /**
+   * An array of related diagnostic information, e.g. when symbol-names within a scope collide
+   * all definitions can be marked via this property.
+   * <p>
+   * Since 3.7.0
+   */
+  private List<DiagnosticRelatedInformation> relatedInformation;
+  
+  /**
+   * A data entry field that is preserved between a `textDocument/publishDiagnostics`
+   * notification and `textDocument/codeAction` request.
+   * <p>
+   * Since 3.16.0
+   */
+  @JsonAdapter(JsonElementTypeAdapter.Factory.class)
+  private Object data;
+  
   public Diagnostic() {
   }
   
   public Diagnostic(@NonNull final Range range, @NonNull final String message) {
-    this.range = range;
-    this.message = message;
+    this.range = Preconditions.<Range>checkNotNull(range, "range");
+    this.message = Preconditions.<String>checkNotNull(message, "message");
   }
   
   public Diagnostic(@NonNull final Range range, @NonNull final String message, final DiagnosticSeverity severity, final String source) {
@@ -62,7 +105,7 @@ public class Diagnostic {
   
   public Diagnostic(@NonNull final Range range, @NonNull final String message, final DiagnosticSeverity severity, final String source, final String code) {
     this(range, message, severity, source);
-    this.code = code;
+    this.setCode(code);
   }
   
   /**
@@ -78,7 +121,7 @@ public class Diagnostic {
    * The range at which the message applies
    */
   public void setRange(@NonNull final Range range) {
-    this.range = range;
+    this.range = Preconditions.checkNotNull(range, "range");
   }
   
   /**
@@ -102,15 +145,50 @@ public class Diagnostic {
    * The diagnostic's code. Can be omitted.
    */
   @Pure
-  public String getCode() {
+  public Either<String, Integer> getCode() {
     return this.code;
   }
   
   /**
    * The diagnostic's code. Can be omitted.
    */
-  public void setCode(final String code) {
+  public void setCode(final Either<String, Integer> code) {
     this.code = code;
+  }
+  
+  public void setCode(final String code) {
+    if (code == null) {
+      this.code = null;
+      return;
+    }
+    this.code = Either.forLeft(code);
+  }
+  
+  public void setCode(final Integer code) {
+    if (code == null) {
+      this.code = null;
+      return;
+    }
+    this.code = Either.forRight(code);
+  }
+  
+  /**
+   * An optional property to describe the error code.
+   * <p>
+   * Since 3.16.0
+   */
+  @Pure
+  public DiagnosticCodeDescription getCodeDescription() {
+    return this.codeDescription;
+  }
+  
+  /**
+   * An optional property to describe the error code.
+   * <p>
+   * Since 3.16.0
+   */
+  public void setCodeDescription(final DiagnosticCodeDescription codeDescription) {
+    this.codeDescription = codeDescription;
   }
   
   /**
@@ -141,7 +219,68 @@ public class Diagnostic {
    * The diagnostic's message.
    */
   public void setMessage(@NonNull final String message) {
-    this.message = message;
+    this.message = Preconditions.checkNotNull(message, "message");
+  }
+  
+  /**
+   * Additional metadata about the diagnostic.
+   * <p>
+   * Since 3.15.0
+   */
+  @Pure
+  public List<DiagnosticTag> getTags() {
+    return this.tags;
+  }
+  
+  /**
+   * Additional metadata about the diagnostic.
+   * <p>
+   * Since 3.15.0
+   */
+  public void setTags(final List<DiagnosticTag> tags) {
+    this.tags = tags;
+  }
+  
+  /**
+   * An array of related diagnostic information, e.g. when symbol-names within a scope collide
+   * all definitions can be marked via this property.
+   * <p>
+   * Since 3.7.0
+   */
+  @Pure
+  public List<DiagnosticRelatedInformation> getRelatedInformation() {
+    return this.relatedInformation;
+  }
+  
+  /**
+   * An array of related diagnostic information, e.g. when symbol-names within a scope collide
+   * all definitions can be marked via this property.
+   * <p>
+   * Since 3.7.0
+   */
+  public void setRelatedInformation(final List<DiagnosticRelatedInformation> relatedInformation) {
+    this.relatedInformation = relatedInformation;
+  }
+  
+  /**
+   * A data entry field that is preserved between a `textDocument/publishDiagnostics`
+   * notification and `textDocument/codeAction` request.
+   * <p>
+   * Since 3.16.0
+   */
+  @Pure
+  public Object getData() {
+    return this.data;
+  }
+  
+  /**
+   * A data entry field that is preserved between a `textDocument/publishDiagnostics`
+   * notification and `textDocument/codeAction` request.
+   * <p>
+   * Since 3.16.0
+   */
+  public void setData(final Object data) {
+    this.data = data;
   }
   
   @Override
@@ -151,8 +290,12 @@ public class Diagnostic {
     b.add("range", this.range);
     b.add("severity", this.severity);
     b.add("code", this.code);
+    b.add("codeDescription", this.codeDescription);
     b.add("source", this.source);
     b.add("message", this.message);
+    b.add("tags", this.tags);
+    b.add("relatedInformation", this.relatedInformation);
+    b.add("data", this.data);
     return b.toString();
   }
   
@@ -181,6 +324,11 @@ public class Diagnostic {
         return false;
     } else if (!this.code.equals(other.code))
       return false;
+    if (this.codeDescription == null) {
+      if (other.codeDescription != null)
+        return false;
+    } else if (!this.codeDescription.equals(other.codeDescription))
+      return false;
     if (this.source == null) {
       if (other.source != null)
         return false;
@@ -190,6 +338,21 @@ public class Diagnostic {
       if (other.message != null)
         return false;
     } else if (!this.message.equals(other.message))
+      return false;
+    if (this.tags == null) {
+      if (other.tags != null)
+        return false;
+    } else if (!this.tags.equals(other.tags))
+      return false;
+    if (this.relatedInformation == null) {
+      if (other.relatedInformation != null)
+        return false;
+    } else if (!this.relatedInformation.equals(other.relatedInformation))
+      return false;
+    if (this.data == null) {
+      if (other.data != null)
+        return false;
+    } else if (!this.data.equals(other.data))
       return false;
     return true;
   }
@@ -202,8 +365,11 @@ public class Diagnostic {
     result = prime * result + ((this.range== null) ? 0 : this.range.hashCode());
     result = prime * result + ((this.severity== null) ? 0 : this.severity.hashCode());
     result = prime * result + ((this.code== null) ? 0 : this.code.hashCode());
+    result = prime * result + ((this.codeDescription== null) ? 0 : this.codeDescription.hashCode());
     result = prime * result + ((this.source== null) ? 0 : this.source.hashCode());
     result = prime * result + ((this.message== null) ? 0 : this.message.hashCode());
-    return result;
+    result = prime * result + ((this.tags== null) ? 0 : this.tags.hashCode());
+    result = prime * result + ((this.relatedInformation== null) ? 0 : this.relatedInformation.hashCode());
+    return prime * result + ((this.data== null) ? 0 : this.data.hashCode());
   }
 }

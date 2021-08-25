@@ -1,15 +1,20 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
+import org.eclipse.lsp4j.util.Preconditions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
@@ -40,15 +45,15 @@ public class TextDocumentPositionParams {
   }
   
   public TextDocumentPositionParams(@NonNull final TextDocumentIdentifier textDocument, @NonNull final Position position) {
-    this.textDocument = textDocument;
-    this.position = position;
+    this.textDocument = Preconditions.<TextDocumentIdentifier>checkNotNull(textDocument, "textDocument");
+    this.position = Preconditions.<Position>checkNotNull(position, "position");
   }
   
   @Deprecated
   public TextDocumentPositionParams(@NonNull final TextDocumentIdentifier textDocument, final String uri, @NonNull final Position position) {
-    this.textDocument = textDocument;
+    this.textDocument = Preconditions.<TextDocumentIdentifier>checkNotNull(textDocument, "textDocument");
     this.uri = uri;
-    this.position = position;
+    this.position = Preconditions.<Position>checkNotNull(position, "position");
   }
   
   /**
@@ -64,7 +69,7 @@ public class TextDocumentPositionParams {
    * The text document.
    */
   public void setTextDocument(@NonNull final TextDocumentIdentifier textDocument) {
-    this.textDocument = textDocument;
+    this.textDocument = Preconditions.checkNotNull(textDocument, "textDocument");
   }
   
   /**
@@ -97,7 +102,7 @@ public class TextDocumentPositionParams {
    * The position inside the text document.
    */
   public void setPosition(@NonNull final Position position) {
-    this.position = position;
+    this.position = Preconditions.checkNotNull(position, "position");
   }
   
   @Override
@@ -145,7 +150,6 @@ public class TextDocumentPositionParams {
     int result = 1;
     result = prime * result + ((this.textDocument== null) ? 0 : this.textDocument.hashCode());
     result = prime * result + ((this.uri== null) ? 0 : this.uri.hashCode());
-    result = prime * result + ((this.position== null) ? 0 : this.position.hashCode());
-    return result;
+    return prime * result + ((this.position== null) ? 0 : this.position.hashCode());
   }
 }

@@ -1,9 +1,13 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
@@ -12,6 +16,7 @@ import java.util.List;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
+import org.eclipse.lsp4j.util.Preconditions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
@@ -43,8 +48,8 @@ public class DidChangeTextDocumentParams {
   }
   
   public DidChangeTextDocumentParams(@NonNull final VersionedTextDocumentIdentifier textDocument, @NonNull final List<TextDocumentContentChangeEvent> contentChanges) {
-    this.textDocument = textDocument;
-    this.contentChanges = contentChanges;
+    this.textDocument = Preconditions.<VersionedTextDocumentIdentifier>checkNotNull(textDocument, "textDocument");
+    this.contentChanges = Preconditions.<List<TextDocumentContentChangeEvent>>checkNotNull(contentChanges, "contentChanges");
   }
   
   @Deprecated
@@ -68,7 +73,7 @@ public class DidChangeTextDocumentParams {
    * been applied.
    */
   public void setTextDocument(@NonNull final VersionedTextDocumentIdentifier textDocument) {
-    this.textDocument = textDocument;
+    this.textDocument = Preconditions.checkNotNull(textDocument, "textDocument");
   }
   
   /**
@@ -101,7 +106,7 @@ public class DidChangeTextDocumentParams {
    * The actual content changes.
    */
   public void setContentChanges(@NonNull final List<TextDocumentContentChangeEvent> contentChanges) {
-    this.contentChanges = contentChanges;
+    this.contentChanges = Preconditions.checkNotNull(contentChanges, "contentChanges");
   }
   
   @Override
@@ -149,7 +154,6 @@ public class DidChangeTextDocumentParams {
     int result = 1;
     result = prime * result + ((this.textDocument== null) ? 0 : this.textDocument.hashCode());
     result = prime * result + ((this.uri== null) ? 0 : this.uri.hashCode());
-    result = prime * result + ((this.contentChanges== null) ? 0 : this.contentChanges.hashCode());
-    return result;
+    return prime * result + ((this.contentChanges== null) ? 0 : this.contentChanges.hashCode());
   }
 }

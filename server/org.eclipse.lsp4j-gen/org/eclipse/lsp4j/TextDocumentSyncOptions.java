@@ -1,14 +1,19 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
 import org.eclipse.lsp4j.SaveOptions;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
@@ -38,7 +43,7 @@ public class TextDocumentSyncOptions {
   /**
    * Save notifications are sent to the server.
    */
-  private SaveOptions save;
+  private Either<Boolean, SaveOptions> save;
   
   /**
    * Open and close notifications are sent to the server.
@@ -106,15 +111,31 @@ public class TextDocumentSyncOptions {
    * Save notifications are sent to the server.
    */
   @Pure
-  public SaveOptions getSave() {
+  public Either<Boolean, SaveOptions> getSave() {
     return this.save;
   }
   
   /**
    * Save notifications are sent to the server.
    */
-  public void setSave(final SaveOptions save) {
+  public void setSave(final Either<Boolean, SaveOptions> save) {
     this.save = save;
+  }
+  
+  public void setSave(final Boolean save) {
+    if (save == null) {
+      this.save = null;
+      return;
+    }
+    this.save = Either.forLeft(save);
+  }
+  
+  public void setSave(final SaveOptions save) {
+    if (save == null) {
+      this.save = null;
+      return;
+    }
+    this.save = Either.forRight(save);
   }
   
   @Override
@@ -176,7 +197,6 @@ public class TextDocumentSyncOptions {
     result = prime * result + ((this.change== null) ? 0 : this.change.hashCode());
     result = prime * result + ((this.willSave== null) ? 0 : this.willSave.hashCode());
     result = prime * result + ((this.willSaveWaitUntil== null) ? 0 : this.willSaveWaitUntil.hashCode());
-    result = prime * result + ((this.save== null) ? 0 : this.save.hashCode());
-    return result;
+    return prime * result + ((this.save== null) ? 0 : this.save.hashCode());
   }
 }
