@@ -72,7 +72,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
   private Universe initializePolyglot() {
     if (CORE_LIB_PATH == null) {
       throw new IllegalArgumentException(
-          "The trufflesom.langserv.core-lib system property needs to be set. For instance: -Dtrufflesom.langserv.core-lib=/TruffleSOM/core-lib");
+          "The trufflesom.langserv.som-core-lib system property needs to be set. For instance: -Dtrufflesom.langserv.core-lib=/TruffleSOM/core-lib");
     }
     String[] args = new String[] {"-cp", CORE_LIB_PATH + "/Smalltalk"};
 
