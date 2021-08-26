@@ -17,16 +17,16 @@
 
     <property name="checkstyle.version" value="8.11" />
     <property name="guava.version"      value="19.0" />
-    <property name="xbase.lib.version"  value="2.10.0" />
-    <property name="xtend.lib.version"  value="2.10.0" />
+    <property name="gson.version"      value="2.8.6" />
+    <property name="xtend.version"  value="2.24.0" />
 
     <property name="build.dir"   value="bin"/>
     <property name="classes.dir" value="${build.dir}"/>
 
     <path id="jar.classpath">
         <pathelement location="${lib.dir}/guava-${guava.version}.jar" />
-        <pathelement location="${lib.dir}/org.eclipse.xtext.xbase.lib-${xbase.lib.version}.jar" />
-        <pathelement location="${lib.dir}/org.eclipse.xtend.lib-${xtend.lib.version}.jar" />
+        <pathelement location="${lib.dir}/org.eclipse.xtext.xbase.lib-${xtend.version}.jar" />
+        <pathelement location="${lib.dir}/org.eclipse.xtend.lib-${xtend.version}.jar" />
 
         <pathelement location="${sdk.build}/graal-sdk.jar" />
         <pathelement location="${sdk.build}/word-api.jar" />
@@ -43,8 +43,6 @@
         <pathelement location="${classes.dir}" />
         <pathelement location="${som.jar}" />
         <pathelement location="${somns.jar}" />
-        <pathelement location="io.typefox.lsapi"/>
-        <pathelement location="io.typefox.lsapi.services"/>
     </path>
 
     <target name="clean" description="Remove build directories and generated code">
@@ -80,15 +78,21 @@
     </target>
 
     <target name="libs" depends="somns,trufflesom">
+        <get src="${mvn.repo}/com/google/code/gson/gson/${gson.version}/gson-${gson.version}.jar"
+            usetimestamp="true"
+            dest="${lib.dir}/gson-${gson.version}.jar" />
         <get src="${mvn.repo}/com/google/guava/guava/${guava.version}/guava-${guava.version}.jar"
             usetimestamp="true"
             dest="${lib.dir}/guava-${guava.version}.jar" />
-        <get src="${mvn.repo}/org/eclipse/xtext/org.eclipse.xtext.xbase.lib/${xbase.lib.version}/org.eclipse.xtext.xbase.lib-${xbase.lib.version}.jar"
+        <get src="${mvn.repo}/org/eclipse/xtext/org.eclipse.xtext.xbase.lib/${xtend.version}/org.eclipse.xtext.xbase.lib-${xtend.version}.jar"
             usetimestamp="true"
-            dest="${lib.dir}/org.eclipse.xtext.xbase.lib-${xbase.lib.version}.jar" />
-        <get src="${mvn.repo}/org/eclipse/xtend/org.eclipse.xtend.lib/${xtend.lib.version}/org.eclipse.xtend.lib-${xtend.lib.version}.jar"
+            dest="${lib.dir}/org.eclipse.xtext.xbase.lib-${xtend.version}.jar" />
+        <get src="${mvn.repo}/org/eclipse/xtend/org.eclipse.xtend.lib/${xtend.version}/org.eclipse.xtend.lib-${xtend.version}.jar"
             usetimestamp="true"
-            dest="${lib.dir}/org.eclipse.xtend.lib-${xtend.lib.version}.jar" />
+            dest="${lib.dir}/org.eclipse.xtend.lib-${xtend.version}.jar" />
+        <get src="${mvn.repo}/org/eclipse/xtend/org.eclipse.xtend.lib.macro/${xtend.version}/org.eclipse.xtend.lib.macro-${xtend.version}.jar"
+            usetimestamp="true"
+            dest="${lib.dir}/org.eclipse.xtend.lib.macro-${xtend.version}.jar" />
     </target>
 
     <target name="checkstyle-jar">
