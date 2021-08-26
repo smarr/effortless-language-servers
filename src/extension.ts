@@ -1,10 +1,10 @@
 'use strict';
 
-import { spawn } from 'child_process';
+import { ChildProcess, spawn } from 'child_process';
 import { Socket } from 'net';
 
-import { workspace, Disposable, ExtensionContext, commands, window } from 'vscode';
-import { LanguageClient, LanguageClientOptions, SettingMonitor, ServerOptions, TransportKind, StreamInfo } from 'vscode-languageclient';
+import { workspace, ExtensionContext, window, OutputChannel } from 'vscode';
+import { LanguageClient, LanguageClientOptions, ServerOptions, StreamInfo } from 'vscode-languageclient/node';
 
 const LSPort = 8123;  // TODO: make configurable
 const EnableExtensionDebugging : boolean = <boolean> workspace.getConfiguration('somns').get('debugMode');
@@ -14,6 +14,9 @@ export const CLIENT_OPTION: LanguageClientOptions = {
 }
 
 type PathConverter = (path: string) => string;
+
+let client: LanguageClient = null;
+let serverProcess: ChildProcess = null;
 
 function getServerOptions(asAbsolutePath: PathConverter, enableDebug:
 	  boolean, enableTcp: boolean): ServerOptions {
@@ -62,7 +65,7 @@ function getServerOptions(asAbsolutePath: PathConverter, enableDebug:
 
 function startLanguageServerAndConnectTCP(context: ExtensionContext,
 													   resolve: (value?: StreamInfo | PromiseLike<StreamInfo>) => void,
-														 reject: (reason?: any) => void): Disposable {
+														 reject: (reason?: any) => void): void {
 	const serverOptions: any = getServerOptions(context.asAbsolutePath, true, true);
 	const lsProc = spawn(serverOptions.run.command, serverOptions.run.args);
 	let sawServerStarted = false;
@@ -79,27 +82,34 @@ function startLanguageServerAndConnectTCP(context: ExtensionContext,
 		reject('SOMns language server stopped. Exit code: ' + code);
 	});
 
-	return new Disposable(() => { lsProc.kill(); });
+	serverProcess = lsProc;
 }
 
 export function startLanguageServer(asAbsolutePath: PathConverter,
 													   resolve: (value?: StreamInfo | PromiseLike<StreamInfo>) => void,
-														 reject: (reason?: any) => void) {
+														 reject: (reason?: any) => void): void {
 	const serverOptions: any = getServerOptions(asAbsolutePath, EnableExtensionDebugging, false);
+
+	const cmd = `${serverOptions.run.command} ${serverOptions.run.args.join(" ")}`;
+	console.log(`[SOM-EXT] spawn '${cmd}'`);
 	const lsProc = spawn(serverOptions.run.command, serverOptions.run.args);
+
+	lsProc.on('exit', code => { console.log(`[SOM-EXT] Server processes exited with code: ${code}`) });
 
 	resolve({
 		reader: lsProc.stdout,
 		writer: lsProc.stdin
 	});
 
-	return new Disposable(() => { lsProc.kill(); });
+	serverProcess = lsProc;
 }
 
 export function connectToLanguageServer(resolve: (value?: StreamInfo | PromiseLike<StreamInfo>) => void,
 														     reject: (reason?: any) => void) {
+	console.log("[SOM-EXT] Create socket to connect to SOM Language Server");
 	const clientSocket = new Socket();
 	clientSocket.once('error', (e) => {
+		console.log(`[SOM-EXT] Failed to connect to language server. Socket error: ${JSON.stringify(e)}`);
 		window.showErrorMessage("Failed to connect to language server. Socket error: " + JSON.stringify(e));
 		reject(e);
 	});
@@ -118,11 +128,8 @@ export function activate(context: ExtensionContext) {
 				window.showInformationMessage("SOMns Debug Mode: Trying to connect to Language Server on port " + LSPort);
 				connectToLanguageServer(resolve, reject);
 			} else {
-				const disposable = startLanguageServer(context.asAbsolutePath, resolve, reject);
-
-				// when not needed anymore, make sure the language server is shutdown
-				// TODO: perhaps do this with some proper command sent to the server?
-				context.subscriptions.push(disposable);
+				window.showInformationMessage("SOMns Starting Language Server");
+				startLanguageServer(context.asAbsolutePath, resolve, reject);
 			}
 		});
 	}
@@ -130,12 +137,17 @@ export function activate(context: ExtensionContext) {
 
 
 	// Create the language client and start the client.
-	let disposable = new LanguageClient('SOMns Language Server', createLSPServer, CLIENT_OPTION).start();
+	client = new LanguageClient('SOMns Language Server', createLSPServer, CLIENT_OPTION);
+	client.start();
+}
 
-	// Push the disposable to the context's subscriptions so that the
-	// client can be deactivated on extension deactivation
-	context.subscriptions.push(disposable);
+export function deactivate(): Thenable<void> | undefined {
+	if (serverProcess !== null) {
+		serverProcess.kill();
+	}
 
-	// see: https://github.com/Microsoft/vscode-extension-samples/blob/37a9a2f413686d1a8f029accdbf969a568f07344/previewhtml-sample/src/extension.ts
-	// context.subscriptions.push(disposable, registr) ??
+	if (!client) {
+		return undefined;
+	}
+	return client.stop();
 }
