@@ -174,11 +174,10 @@
 	},
 	"scripts": {
 		"compile:server": "cd server && ant deploy",
-		"compile:ext": "tsc -p ./ && cp -R test/examples out/test/",
-		"vscode:prepublish": "npm run compile:server && npm run compile:ext",
-		"watch": "tsc -watch -p ./",
-		"compile": "npm run vscode:prepublish",
-		"postinstall": "node ./node_modules/vscode/bin/install",
+		"vscode:prepublish": " && npm run compile:ext",
+		"watch": "tsc --build --watch",
+		"compile": "tsc --build && cp -R test/examples out/test/",
+		"postinstall": "npm run compile:server",
 		"test": "node ./node_modules/vscode/bin/test"
 	},
 	"devDependencies": {
