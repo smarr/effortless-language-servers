@@ -1,6 +1,6 @@
 import { resolve as resolvePath } from "path";
 import { LanguageClient, StreamInfo, Disposable, ErrorHandler, ErrorAction, CloseAction } from "vscode-languageclient/node";
-import { startLanguageServer, CLIENT_OPTION, connectToLanguageServer } from "../src/extension";
+import { startLanguageServer, CLIENT_OPTION } from "../src/extension";
 import * as vscode from "vscode";
 import { Message } from "vscode-languageserver-protocol";
 import { readFileSync } from "fs";
