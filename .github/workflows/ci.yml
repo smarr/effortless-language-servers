@@ -13,10 +13,12 @@ jobs:
 
       - name: NPM Install
         run: |
+          export JAVA_HOME=$JAVA_HOME_8_X64
           npm install .
 
       - name: NPM Tests
         run: |
+          export JAVA_HOME=$JAVA_HOME_8_X64
           npm test
 
       # - name: CheckStyle
