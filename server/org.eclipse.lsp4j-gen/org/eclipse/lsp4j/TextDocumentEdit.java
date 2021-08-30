@@ -1,9 +1,13 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
@@ -11,12 +15,13 @@ import java.util.List;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
+import org.eclipse.lsp4j.util.Preconditions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
 /**
  * Describes textual changes on a single text document.
- * The text document is referred to as a `VersionedTextDocumentIdentifier`
+ * The text document is referred to as a {@link VersionedTextDocumentIdentifier}
  * to allow clients to check the text document version before an edit is applied.
  */
 @SuppressWarnings("all")
@@ -37,8 +42,8 @@ public class TextDocumentEdit {
   }
   
   public TextDocumentEdit(@NonNull final VersionedTextDocumentIdentifier textDocument, @NonNull final List<TextEdit> edits) {
-    this.textDocument = textDocument;
-    this.edits = edits;
+    this.textDocument = Preconditions.<VersionedTextDocumentIdentifier>checkNotNull(textDocument, "textDocument");
+    this.edits = Preconditions.<List<TextEdit>>checkNotNull(edits, "edits");
   }
   
   /**
@@ -54,7 +59,7 @@ public class TextDocumentEdit {
    * The text document to change.
    */
   public void setTextDocument(@NonNull final VersionedTextDocumentIdentifier textDocument) {
-    this.textDocument = textDocument;
+    this.textDocument = Preconditions.checkNotNull(textDocument, "textDocument");
   }
   
   /**
@@ -70,7 +75,7 @@ public class TextDocumentEdit {
    * The edits to be applied
    */
   public void setEdits(@NonNull final List<TextEdit> edits) {
-    this.edits = edits;
+    this.edits = Preconditions.checkNotNull(edits, "edits");
   }
   
   @Override
@@ -111,7 +116,6 @@ public class TextDocumentEdit {
     final int prime = 31;
     int result = 1;
     result = prime * result + ((this.textDocument== null) ? 0 : this.textDocument.hashCode());
-    result = prime * result + ((this.edits== null) ? 0 : this.edits.hashCode());
-    return result;
+    return prime * result + ((this.edits== null) ? 0 : this.edits.hashCode());
   }
 }

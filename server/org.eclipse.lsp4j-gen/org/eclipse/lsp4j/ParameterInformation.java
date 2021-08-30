@@ -1,13 +1,21 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
+import org.eclipse.lsp4j.MarkupContent;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.eclipse.lsp4j.jsonrpc.messages.Tuple;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
+import org.eclipse.lsp4j.util.Preconditions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
@@ -17,57 +25,117 @@ import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 @SuppressWarnings("all")
 public class ParameterInformation {
   /**
-   * The label of this signature. Will be shown in the UI.
+   * The label of this parameter information.
+   * <p>
+   * Either a string or an inclusive start and exclusive end offsets within its containing
+   * signature label (see {@link SignatureInformation#label}). The offsets are based on a UTF-16
+   * string representation as {@link Position} and {@link Range} does.
+   * <p>
+   * <em>Note</em>: a label of type string should be a substring of its containing signature label.
+   * Its intended use case is to highlight the parameter label part in the {@link SignatureInformation#label}.
    */
   @NonNull
-  private String label;
+  private Either<String, Tuple.Two<Integer, Integer>> label;
   
   /**
    * The human-readable doc-comment of this signature. Will be shown in the UI but can be omitted.
    */
-  private String documentation;
+  private Either<String, MarkupContent> documentation;
   
   public ParameterInformation() {
   }
   
   public ParameterInformation(@NonNull final String label) {
-    this.label = label;
+    this.setLabel(Preconditions.<String>checkNotNull(label, "label"));
   }
   
   public ParameterInformation(@NonNull final String label, final String documentation) {
-    this.label = label;
-    this.documentation = documentation;
+    this(label);
+    this.setDocumentation(documentation);
+  }
+  
+  public ParameterInformation(@NonNull final String label, final MarkupContent documentation) {
+    this(label);
+    this.setDocumentation(documentation);
   }
   
   /**
-   * The label of this signature. Will be shown in the UI.
+   * The label of this parameter information.
+   * <p>
+   * Either a string or an inclusive start and exclusive end offsets within its containing
+   * signature label (see {@link SignatureInformation#label}). The offsets are based on a UTF-16
+   * string representation as {@link Position} and {@link Range} does.
+   * <p>
+   * <em>Note</em>: a label of type string should be a substring of its containing signature label.
+   * Its intended use case is to highlight the parameter label part in the {@link SignatureInformation#label}.
    */
   @Pure
   @NonNull
-  public String getLabel() {
+  public Either<String, Tuple.Two<Integer, Integer>> getLabel() {
     return this.label;
   }
   
   /**
-   * The label of this signature. Will be shown in the UI.
+   * The label of this parameter information.
+   * <p>
+   * Either a string or an inclusive start and exclusive end offsets within its containing
+   * signature label (see {@link SignatureInformation#label}). The offsets are based on a UTF-16
+   * string representation as {@link Position} and {@link Range} does.
+   * <p>
+   * <em>Note</em>: a label of type string should be a substring of its containing signature label.
+   * Its intended use case is to highlight the parameter label part in the {@link SignatureInformation#label}.
    */
-  public void setLabel(@NonNull final String label) {
-    this.label = label;
+  public void setLabel(@NonNull final Either<String, Tuple.Two<Integer, Integer>> label) {
+    this.label = Preconditions.checkNotNull(label, "label");
+  }
+  
+  public void setLabel(final String label) {
+    if (label == null) {
+      Preconditions.checkNotNull(label, "label");
+      this.label = null;
+      return;
+    }
+    this.label = Either.forLeft(label);
+  }
+  
+  public void setLabel(final Tuple.Two<Integer, Integer> label) {
+    if (label == null) {
+      Preconditions.checkNotNull(label, "label");
+      this.label = null;
+      return;
+    }
+    this.label = Either.forRight(label);
   }
   
   /**
    * The human-readable doc-comment of this signature. Will be shown in the UI but can be omitted.
    */
   @Pure
-  public String getDocumentation() {
+  public Either<String, MarkupContent> getDocumentation() {
     return this.documentation;
   }
   
   /**
    * The human-readable doc-comment of this signature. Will be shown in the UI but can be omitted.
    */
-  public void setDocumentation(final String documentation) {
+  public void setDocumentation(final Either<String, MarkupContent> documentation) {
     this.documentation = documentation;
+  }
+  
+  public void setDocumentation(final String documentation) {
+    if (documentation == null) {
+      this.documentation = null;
+      return;
+    }
+    this.documentation = Either.forLeft(documentation);
+  }
+  
+  public void setDocumentation(final MarkupContent documentation) {
+    if (documentation == null) {
+      this.documentation = null;
+      return;
+    }
+    this.documentation = Either.forRight(documentation);
   }
   
   @Override
@@ -108,7 +176,6 @@ public class ParameterInformation {
     final int prime = 31;
     int result = 1;
     result = prime * result + ((this.label== null) ? 0 : this.label.hashCode());
-    result = prime * result + ((this.documentation== null) ? 0 : this.documentation.hashCode());
-    return result;
+    return prime * result + ((this.documentation== null) ? 0 : this.documentation.hashCode());
   }
 }

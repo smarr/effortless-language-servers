@@ -1,0 +1,39 @@
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-20.04 # ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: NPM Install
+        run: |
+          export JAVA_HOME=$JAVA_HOME_8_X64
+          npm install .
+
+      - name: NPM Tests
+        run: |
+          sudo apt-get install xvfb
+          export JAVA_HOME=$JAVA_HOME_8_X64
+          xvfb-run --auto-servernum npm test
+
+      # - name: CheckStyle
+      #   run: |
+      #     ant -e checkstyle
+
+      # - name: Download Eclipse
+      #   run: |
+      #     export ECLIPSE_TAR=eclipse.tar.gz
+      #     export ECLIPSE_URL=https://ftp.snt.utwente.nl/pub/software/eclipse/eclipse/downloads/drops4/R-4.19-202103031800/eclipse-SDK-4.19-linux-gtk-x86_64.tar.gz
+      #     curl ${ECLIPSE_URL} -o ${ECLIPSE_TAR}
+      #     tar -C ${GITHUB_WORKSPACE}/.. -xzf ${ECLIPSE_TAR}
+
+      # - name: Check Eclipse Format
+      #   run: |
+      #     export ECLIPSE_EXE=${GITHUB_WORKSPACE}/../eclipse/eclipse
+      #     ant -e eclipseformat

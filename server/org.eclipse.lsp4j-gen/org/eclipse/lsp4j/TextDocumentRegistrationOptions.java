@@ -1,18 +1,24 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
-import org.eclipse.lsp4j.DocumentSelector;
+import java.util.List;
+import org.eclipse.lsp4j.DocumentFilter;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
 /**
- * Since most of the registration options require to specify a document selector there is a base interface that can be used.
+ * Since most of the registration options require to specify a document selector there is
+ * a base interface that can be used.
  */
 @SuppressWarnings("all")
 public class TextDocumentRegistrationOptions {
@@ -20,12 +26,12 @@ public class TextDocumentRegistrationOptions {
    * A document selector to identify the scope of the registration. If set to null
    * the document selector provided on the client side will be used.
    */
-  private DocumentSelector documentSelector;
+  private List<DocumentFilter> documentSelector;
   
   public TextDocumentRegistrationOptions() {
   }
   
-  public TextDocumentRegistrationOptions(final DocumentSelector documentSelector) {
+  public TextDocumentRegistrationOptions(final List<DocumentFilter> documentSelector) {
     this.documentSelector = documentSelector;
   }
   
@@ -34,7 +40,7 @@ public class TextDocumentRegistrationOptions {
    * the document selector provided on the client side will be used.
    */
   @Pure
-  public DocumentSelector getDocumentSelector() {
+  public List<DocumentFilter> getDocumentSelector() {
     return this.documentSelector;
   }
   
@@ -42,7 +48,7 @@ public class TextDocumentRegistrationOptions {
    * A document selector to identify the scope of the registration. If set to null
    * the document selector provided on the client side will be used.
    */
-  public void setDocumentSelector(final DocumentSelector documentSelector) {
+  public void setDocumentSelector(final List<DocumentFilter> documentSelector) {
     this.documentSelector = documentSelector;
   }
   
@@ -75,9 +81,6 @@ public class TextDocumentRegistrationOptions {
   @Override
   @Pure
   public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((this.documentSelector== null) ? 0 : this.documentSelector.hashCode());
-    return result;
+    return 31 * 1 + ((this.documentSelector== null) ? 0 : this.documentSelector.hashCode());
   }
 }

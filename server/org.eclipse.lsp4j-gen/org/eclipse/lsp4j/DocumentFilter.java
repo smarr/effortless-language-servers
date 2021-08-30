@@ -1,9 +1,13 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
@@ -23,7 +27,7 @@ public class DocumentFilter {
   /**
    * A uri scheme, like `file` or `untitled`.
    */
-  private String schema;
+  private String scheme;
   
   /**
    * A glob pattern, like `*.{ts,js}`.
@@ -33,9 +37,9 @@ public class DocumentFilter {
   public DocumentFilter() {
   }
   
-  public DocumentFilter(final String language, final String schema, final String pattern) {
+  public DocumentFilter(final String language, final String scheme, final String pattern) {
     this.language = language;
-    this.schema = schema;
+    this.scheme = scheme;
     this.pattern = pattern;
   }
   
@@ -58,15 +62,15 @@ public class DocumentFilter {
    * A uri scheme, like `file` or `untitled`.
    */
   @Pure
-  public String getSchema() {
-    return this.schema;
+  public String getScheme() {
+    return this.scheme;
   }
   
   /**
    * A uri scheme, like `file` or `untitled`.
    */
-  public void setSchema(final String schema) {
-    this.schema = schema;
+  public void setScheme(final String scheme) {
+    this.scheme = scheme;
   }
   
   /**
@@ -89,7 +93,7 @@ public class DocumentFilter {
   public String toString() {
     ToStringBuilder b = new ToStringBuilder(this);
     b.add("language", this.language);
-    b.add("schema", this.schema);
+    b.add("scheme", this.scheme);
     b.add("pattern", this.pattern);
     return b.toString();
   }
@@ -109,10 +113,10 @@ public class DocumentFilter {
         return false;
     } else if (!this.language.equals(other.language))
       return false;
-    if (this.schema == null) {
-      if (other.schema != null)
+    if (this.scheme == null) {
+      if (other.scheme != null)
         return false;
-    } else if (!this.schema.equals(other.schema))
+    } else if (!this.scheme.equals(other.scheme))
       return false;
     if (this.pattern == null) {
       if (other.pattern != null)
@@ -128,8 +132,7 @@ public class DocumentFilter {
     final int prime = 31;
     int result = 1;
     result = prime * result + ((this.language== null) ? 0 : this.language.hashCode());
-    result = prime * result + ((this.schema== null) ? 0 : this.schema.hashCode());
-    result = prime * result + ((this.pattern== null) ? 0 : this.pattern.hashCode());
-    return result;
+    result = prime * result + ((this.scheme== null) ? 0 : this.scheme.hashCode());
+    return prime * result + ((this.pattern== null) ? 0 : this.pattern.hashCode());
   }
 }

@@ -1,13 +1,20 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
+import com.google.gson.annotations.JsonAdapter;
+import org.eclipse.lsp4j.jsonrpc.json.adapters.JsonElementTypeAdapter;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
+import org.eclipse.lsp4j.util.Preconditions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
@@ -32,19 +39,19 @@ public class Registration {
   /**
    * Options necessary for the registration.
    */
+  @JsonAdapter(JsonElementTypeAdapter.Factory.class)
   private Object registerOptions;
   
   public Registration() {
   }
   
   public Registration(@NonNull final String id, @NonNull final String method) {
-    this.id = id;
-    this.method = method;
+    this.id = Preconditions.<String>checkNotNull(id, "id");
+    this.method = Preconditions.<String>checkNotNull(method, "method");
   }
   
   public Registration(@NonNull final String id, @NonNull final String method, final Object registerOptions) {
-    this.id = id;
-    this.method = method;
+    this(id, method);
     this.registerOptions = registerOptions;
   }
   
@@ -63,7 +70,7 @@ public class Registration {
    * the request again.
    */
   public void setId(@NonNull final String id) {
-    this.id = id;
+    this.id = Preconditions.checkNotNull(id, "id");
   }
   
   /**
@@ -79,7 +86,7 @@ public class Registration {
    * The method / capability to register for.
    */
   public void setMethod(@NonNull final String method) {
-    this.method = method;
+    this.method = Preconditions.checkNotNull(method, "method");
   }
   
   /**
@@ -142,7 +149,6 @@ public class Registration {
     int result = 1;
     result = prime * result + ((this.id== null) ? 0 : this.id.hashCode());
     result = prime * result + ((this.method== null) ? 0 : this.method.hashCode());
-    result = prime * result + ((this.registerOptions== null) ? 0 : this.registerOptions.hashCode());
-    return result;
+    return prime * result + ((this.registerOptions== null) ? 0 : this.registerOptions.hashCode());
   }
 }

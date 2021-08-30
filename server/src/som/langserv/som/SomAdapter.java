@@ -41,7 +41,8 @@ import trufflesom.interpreter.Method;
 import trufflesom.interpreter.SomLanguage;
 import trufflesom.interpreter.nodes.ExpressionNode;
 import trufflesom.interpreter.nodes.FieldNode.FieldWriteNode;
-import trufflesom.interpreter.nodes.UninitializedVariableNode.UninitializedVariableWriteNode;
+import trufflesom.interpreter.nodes.LocalVariableNode;
+import trufflesom.interpreter.nodes.NonLocalVariableNode;
 import trufflesom.vm.Universe;
 import trufflesom.vmobjects.SClass;
 import trufflesom.vmobjects.SInvokable;
@@ -71,20 +72,22 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
   private Universe initializePolyglot() {
     if (CORE_LIB_PATH == null) {
       throw new IllegalArgumentException(
-          "The trufflesom.langserv.core-lib system property needs to be set. For instance: -Dtrufflesom.langserv.core-lib=/TruffleSOM/core-lib");
+          "The trufflesom.langserv.som-core-lib system property needs to be set. For instance: -Dtrufflesom.langserv.core-lib=/TruffleSOM/core-lib");
     }
     String[] args = new String[] {"-cp", CORE_LIB_PATH + "/Smalltalk"};
 
-    Builder builder = Universe.createContextBuilder(args);
+    Builder builder = Universe.createContextBuilder();
+    builder.arguments(SomLanguage.LANG_ID, args);
     Context context = builder.build();
 
     context.eval(SomLanguage.INIT);
+    context.enter();
 
     Universe universe = SomLanguage.getCurrent().getUniverse();
     universe.setupClassPath(CORE_LIB_PATH + "/Smalltalk");
 
     SomStructures systemClassProbe = new SomStructures(
-        Source.newBuilder(SomLanguage.SOM, "systemClasses", null).internal(true).build());
+        Source.newBuilder(SomLanguage.LANG_ID, "systemClasses", null).internal(true).build());
     universe.setSystemClassProbe(systemClassProbe);
     structuralProbes.put("systemClasses", systemClassProbe);
 
@@ -127,8 +130,10 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
   public List<Diagnostic> parse(final String text, final String sourceUri)
       throws URISyntaxException {
     String path = docUriToNormalizedPath(sourceUri);
-    Source source = Source.newBuilder(text).name(path).mimeType(SomLanguage.MIME_TYPE)
-                          .uri(new URI(sourceUri).normalize()).build();
+    Source source =
+        Source.newBuilder(SomLanguage.LANG_ID, text, path).name(path)
+              .mimeType(SomLanguage.MIME_TYPE)
+              .uri(new URI(sourceUri).normalize()).build();
 
     SomStructures newProbe = new SomStructures(source);
     List<Diagnostic> diagnostics = newProbe.getDiagnostics();
@@ -139,7 +144,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
       }
       synchronized (newProbe) {
         try {
-          SClass def = compiler.compileClass(source, universe, newProbe);
+          SClass def = compiler.compileClass(text, source, universe, newProbe);
           // SomLint.checkModuleName(path, def, diagnostics);
         } catch (ParseError e) {
           return toDiagnostics(e, diagnostics);
@@ -249,8 +254,10 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
       @SuppressWarnings("unchecked")
       SSymbol name = ((Invocation<SSymbol>) node).getInvocationIdentifier();
       addAllDefinitions(result, name);
-    } else if (node instanceof UninitializedVariableWriteNode) {
-      result.add(getLocation(((UninitializedVariableWriteNode) node).getLocal().source));
+    } else if (node instanceof LocalVariableNode) {
+      result.add(getLocation(((LocalVariableNode) node).getLocal().source));
+    } else if (node instanceof NonLocalVariableNode) {
+      result.add(getLocation(((NonLocalVariableNode) node).getLocal().source));
     } else if (node instanceof FieldWriteNode) {
       Method method = (Method) node.getRootNode();
       SInvokable si = getEncompassingInvokable(method, probe.getMethods());
@@ -432,11 +439,11 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
       super(language);
     }
 
-    public SClass compileClass(final Source source, final Universe universe,
+    public SClass compileClass(final String text, final Source source, final Universe universe,
         final StructuralProbe<SSymbol, SClass, SInvokable, Field, Variable> structuralProbe)
         throws ProgramDefinitionError {
-      SomParser parser = new SomParser(source.getReader(), source.getLength(),
-          source, (SomStructures) structuralProbe, universe);
+      SomParser parser =
+          new SomParser(text, source, (SomStructures) structuralProbe, universe);
 
       return compile(parser, null, universe);
     }

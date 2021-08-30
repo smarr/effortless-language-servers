@@ -5,14 +5,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensOptions;
 import org.eclipse.lsp4j.CodeLensParams;
-import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionOptions;
+import org.eclipse.lsp4j.CompletionParams;
+import org.eclipse.lsp4j.DefinitionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
@@ -20,26 +20,27 @@ import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
 import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.DocumentHighlight;
+import org.eclipse.lsp4j.DocumentHighlightParams;
 import org.eclipse.lsp4j.DocumentOnTypeFormattingParams;
 import org.eclipse.lsp4j.DocumentRangeFormattingParams;
+import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.DocumentSymbolParams;
 import org.eclipse.lsp4j.ExecuteCommandOptions;
-import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.ServerCapabilities;
-import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
-import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
+import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
@@ -96,18 +97,25 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
   }
 
   private void loadWorkspace(final InitializeParams params) {
-    try {
-      for (LanguageAdapter<?> adapter : adapters) {
-        adapter.loadWorkspace(params.getRootUri());
+    List<WorkspaceFolder> folders = params.getWorkspaceFolders();
+    if (folders == null) {
+      return;
+    }
+
+    for (LanguageAdapter<?> adapter : adapters) {
+      for (WorkspaceFolder f : folders) {
+        try {
+          adapter.loadWorkspace(f.getUri());
+        } catch (URISyntaxException e) {
+          MessageParams msg = new MessageParams();
+          msg.setType(MessageType.Error);
+          msg.setMessage("Workspace root URI invalid: " + f.getUri());
+
+          client.logMessage(msg);
+
+          ServerLauncher.logErr(msg.getMessage());
+        }
       }
-    } catch (URISyntaxException e) {
-      MessageParams msg = new MessageParams();
-      msg.setType(MessageType.Error);
-      msg.setMessage("Workspace root URI invalid: " + params.getRootUri());
-
-      client.logMessage(msg);
-
-      ServerLauncher.logErr(msg.getMessage());
     }
   }
 
@@ -135,7 +143,7 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
 
   @Override
   public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(
-      final TextDocumentPositionParams position) {
+      final CompletionParams position) {
     String uri = position.getTextDocument().getUri();
 
     for (LanguageAdapter<?> adapter : adapters) {
@@ -151,41 +159,21 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
   }
 
   @Override
-  public CompletableFuture<CompletionItem> resolveCompletionItem(
-      final CompletionItem unresolved) {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  @Override
-  public CompletableFuture<Hover> hover(final TextDocumentPositionParams position) {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  @Override
-  public CompletableFuture<SignatureHelp> signatureHelp(
-      final TextDocumentPositionParams position) {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  @Override
-  public CompletableFuture<List<? extends Location>> definition(
-      final TextDocumentPositionParams position) {
-    String uri = position.getTextDocument().getUri();
+  public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> definition(
+      final DefinitionParams params) {
+    String uri = params.getTextDocument().getUri();
     List<? extends Location> result = new ArrayList<>();
 
     for (LanguageAdapter<?> adapter : adapters) {
       if (adapter.handlesUri(uri)) {
         result = adapter.getDefinitions(
-            position.getTextDocument().getUri(), position.getPosition().getLine(),
-            position.getPosition().getCharacter());
+            params.getTextDocument().getUri(), params.getPosition().getLine(),
+            params.getPosition().getCharacter());
         break;
       }
     }
 
-    return CompletableFuture.completedFuture(result);
+    return CompletableFuture.completedFuture(Either.forLeft(result));
   }
 
   @Override
@@ -196,17 +184,17 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
 
   @Override
   public CompletableFuture<List<? extends DocumentHighlight>> documentHighlight(
-      final TextDocumentPositionParams position) {
+      final DocumentHighlightParams params) {
     // TODO: this is wrong, it should be something entirely different.
     // this feature is about marking the occurrences of a selected element
     // like a variable, where it is used.
     // so, this should actually return multiple results.
     // The spec is currently broken for that.
-    String uri = position.getTextDocument().getUri();
+    String uri = params.getTextDocument().getUri();
     for (LanguageAdapter<?> adapter : adapters) {
       if (adapter.handlesUri(uri)) {
-        DocumentHighlight result = adapter.getHighlight(position.getTextDocument().getUri(),
-            position.getPosition().getLine() + 1, position.getPosition().getCharacter() + 1);
+        DocumentHighlight result = adapter.getHighlight(params.getTextDocument().getUri(),
+            params.getPosition().getLine() + 1, params.getPosition().getCharacter() + 1);
         ArrayList<DocumentHighlight> list = new ArrayList<>(1);
         list.add(result);
         return CompletableFuture.completedFuture(list);
@@ -216,23 +204,23 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
   }
 
   @Override
-  public CompletableFuture<List<? extends SymbolInformation>> documentSymbol(
+  public CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> documentSymbol(
       final DocumentSymbolParams params) {
     String uri = params.getTextDocument().getUri();
     for (LanguageAdapter<?> adapter : adapters) {
       if (adapter.handlesUri(uri)) {
         List<? extends SymbolInformation> result =
             adapter.getSymbolInfo(params.getTextDocument().getUri());
-        return CompletableFuture.completedFuture(result);
+        ArrayList<Either<SymbolInformation, DocumentSymbol>> eitherList =
+            new ArrayList<>(result.size());
+        for (SymbolInformation s : result) {
+          eitherList.add(Either.forLeft(s));
+        }
+        return CompletableFuture.completedFuture(eitherList);
       }
     }
-    return CompletableFuture.completedFuture(new ArrayList<SymbolInformation>());
-  }
-
-  @Override
-  public CompletableFuture<List<? extends Command>> codeAction(final CodeActionParams params) {
-    // TODO Auto-generated method stub
-    return null;
+    return CompletableFuture.completedFuture(
+        new ArrayList<Either<SymbolInformation, DocumentSymbol>>());
   }
 
   @Override

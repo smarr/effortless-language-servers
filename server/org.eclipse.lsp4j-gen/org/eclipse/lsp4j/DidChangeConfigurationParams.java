@@ -1,13 +1,20 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
+import com.google.gson.annotations.JsonAdapter;
+import org.eclipse.lsp4j.jsonrpc.json.adapters.JsonElementTypeAdapter;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
+import org.eclipse.lsp4j.util.Preconditions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
@@ -16,24 +23,34 @@ import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
  */
 @SuppressWarnings("all")
 public class DidChangeConfigurationParams {
+  /**
+   * The actual changed settings.
+   */
   @NonNull
+  @JsonAdapter(JsonElementTypeAdapter.Factory.class)
   private Object settings;
   
   public DidChangeConfigurationParams() {
   }
   
   public DidChangeConfigurationParams(@NonNull final Object settings) {
-    this.settings = settings;
+    this.settings = Preconditions.<Object>checkNotNull(settings, "settings");
   }
   
+  /**
+   * The actual changed settings.
+   */
   @Pure
   @NonNull
   public Object getSettings() {
     return this.settings;
   }
   
+  /**
+   * The actual changed settings.
+   */
   public void setSettings(@NonNull final Object settings) {
-    this.settings = settings;
+    this.settings = Preconditions.checkNotNull(settings, "settings");
   }
   
   @Override
@@ -65,9 +82,6 @@ public class DidChangeConfigurationParams {
   @Override
   @Pure
   public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((this.settings== null) ? 0 : this.settings.hashCode());
-    return result;
+    return 31 * 1 + ((this.settings== null) ? 0 : this.settings.hashCode());
   }
 }

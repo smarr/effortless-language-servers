@@ -1,13 +1,18 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
+import org.eclipse.lsp4j.util.Preconditions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
@@ -34,7 +39,7 @@ public class TextDocumentItem {
   private int version;
   
   /**
-   * The content of the opened  text document.
+   * The content of the opened text document.
    */
   @NonNull
   private String text;
@@ -43,10 +48,10 @@ public class TextDocumentItem {
   }
   
   public TextDocumentItem(@NonNull final String uri, @NonNull final String languageId, final int version, @NonNull final String text) {
-    this.uri = uri;
-    this.languageId = languageId;
+    this.uri = Preconditions.<String>checkNotNull(uri, "uri");
+    this.languageId = Preconditions.<String>checkNotNull(languageId, "languageId");
     this.version = version;
-    this.text = text;
+    this.text = Preconditions.<String>checkNotNull(text, "text");
   }
   
   /**
@@ -62,7 +67,7 @@ public class TextDocumentItem {
    * The text document's uri.
    */
   public void setUri(@NonNull final String uri) {
-    this.uri = uri;
+    this.uri = Preconditions.checkNotNull(uri, "uri");
   }
   
   /**
@@ -78,7 +83,7 @@ public class TextDocumentItem {
    * The text document's language identifier
    */
   public void setLanguageId(@NonNull final String languageId) {
-    this.languageId = languageId;
+    this.languageId = Preconditions.checkNotNull(languageId, "languageId");
   }
   
   /**
@@ -97,7 +102,7 @@ public class TextDocumentItem {
   }
   
   /**
-   * The content of the opened  text document.
+   * The content of the opened text document.
    */
   @Pure
   @NonNull
@@ -106,10 +111,10 @@ public class TextDocumentItem {
   }
   
   /**
-   * The content of the opened  text document.
+   * The content of the opened text document.
    */
   public void setText(@NonNull final String text) {
-    this.text = text;
+    this.text = Preconditions.checkNotNull(text, "text");
   }
   
   @Override
@@ -161,7 +166,6 @@ public class TextDocumentItem {
     result = prime * result + ((this.uri== null) ? 0 : this.uri.hashCode());
     result = prime * result + ((this.languageId== null) ? 0 : this.languageId.hashCode());
     result = prime * result + this.version;
-    result = prime * result + ((this.text== null) ? 0 : this.text.hashCode());
-    return result;
+    return prime * result + ((this.text== null) ? 0 : this.text.hashCode());
   }
 }

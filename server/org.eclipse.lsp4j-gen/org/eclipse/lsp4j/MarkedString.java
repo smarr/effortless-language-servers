@@ -1,29 +1,39 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
+import org.eclipse.lsp4j.util.Preconditions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
 /**
  * MarkedString can be used to render human readable text. It is either a markdown string
  * or a code-block that provides a language and a code snippet. The language identifier
- * is sematically equal to the optional language identifier in fenced code blocks in GitHub
+ * is semantically equal to the optional language identifier in fenced code blocks in GitHub
  * issues. See https://help.github.com/articles/creating-and-highlighting-code-blocks/#syntax-highlighting
- * 
+ * <p>
  * The pair of a language and a value is an equivalent to markdown:
+ * <pre>
  * ```${language}
  * ${value}
  * ```
- * 
+ * </pre>
+ * <p>
  * Note that markdown strings will be sanitized - that means html will be escaped.
+ * 
+ * @deprecated Use {@link MarkupContent} instead.
  */
+@Deprecated
 @SuppressWarnings("all")
 public class MarkedString {
   @NonNull
@@ -36,8 +46,8 @@ public class MarkedString {
   }
   
   public MarkedString(@NonNull final String language, @NonNull final String value) {
-    this.language = language;
-    this.value = value;
+    this.language = Preconditions.<String>checkNotNull(language, "language");
+    this.value = Preconditions.<String>checkNotNull(value, "value");
   }
   
   @Pure
@@ -47,7 +57,7 @@ public class MarkedString {
   }
   
   public void setLanguage(@NonNull final String language) {
-    this.language = language;
+    this.language = Preconditions.checkNotNull(language, "language");
   }
   
   @Pure
@@ -57,7 +67,7 @@ public class MarkedString {
   }
   
   public void setValue(@NonNull final String value) {
-    this.value = value;
+    this.value = Preconditions.checkNotNull(value, "value");
   }
   
   @Override
@@ -98,7 +108,6 @@ public class MarkedString {
     final int prime = 31;
     int result = 1;
     result = prime * result + ((this.language== null) ? 0 : this.language.hashCode());
-    result = prime * result + ((this.value== null) ? 0 : this.value.hashCode());
-    return result;
+    return prime * result + ((this.value== null) ? 0 : this.value.hashCode());
   }
 }

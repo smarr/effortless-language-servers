@@ -1,9 +1,13 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
@@ -11,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.lsp4j.SignatureInformation;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
+import org.eclipse.lsp4j.util.Preconditions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
@@ -28,22 +33,24 @@ public class SignatureHelp {
   
   /**
    * The active signature. If omitted or the value lies outside the
-   * range of `signatures` the value defaults to zero or is ignored if
-   * `signatures.length === 0`. Whenever possible implementors should
+   * range of {@link #signatures} the value defaults to zero or is ignored if
+   * the {@code SignatureHelp} has no signatures. Whenever possible implementors should
    * make an active decision about the active signature and shouldn't
    * rely on a default value.
+   * <p>
    * In future version of the protocol this property might become
-   * mandantory to better express this.
+   * mandatory to better express this.
    */
   private Integer activeSignature;
   
   /**
    * The active parameter of the active signature. If omitted or the value
-   * lies outside the range of `signatures[activeSignature].parameters`
+   * lies outside the range of {@code signatures[activeSignature].parameters}
    * defaults to 0 if the active signature has parameters. If
    * the active signature has no parameters it is ignored.
+   * <p>
    * In future version of the protocol this property might become
-   * mandantory to better express the active parameter if the
+   * mandatory to better express the active parameter if the
    * active signature does have any.
    */
   private Integer activeParameter;
@@ -54,7 +61,7 @@ public class SignatureHelp {
   }
   
   public SignatureHelp(@NonNull final List<SignatureInformation> signatures, final Integer activeSignature, final Integer activeParameter) {
-    this.signatures = signatures;
+    this.signatures = Preconditions.<List<SignatureInformation>>checkNotNull(signatures, "signatures");
     this.activeSignature = activeSignature;
     this.activeParameter = activeParameter;
   }
@@ -72,17 +79,18 @@ public class SignatureHelp {
    * One or more signatures.
    */
   public void setSignatures(@NonNull final List<SignatureInformation> signatures) {
-    this.signatures = signatures;
+    this.signatures = Preconditions.checkNotNull(signatures, "signatures");
   }
   
   /**
    * The active signature. If omitted or the value lies outside the
-   * range of `signatures` the value defaults to zero or is ignored if
-   * `signatures.length === 0`. Whenever possible implementors should
+   * range of {@link #signatures} the value defaults to zero or is ignored if
+   * the {@code SignatureHelp} has no signatures. Whenever possible implementors should
    * make an active decision about the active signature and shouldn't
    * rely on a default value.
+   * <p>
    * In future version of the protocol this property might become
-   * mandantory to better express this.
+   * mandatory to better express this.
    */
   @Pure
   public Integer getActiveSignature() {
@@ -91,12 +99,13 @@ public class SignatureHelp {
   
   /**
    * The active signature. If omitted or the value lies outside the
-   * range of `signatures` the value defaults to zero or is ignored if
-   * `signatures.length === 0`. Whenever possible implementors should
+   * range of {@link #signatures} the value defaults to zero or is ignored if
+   * the {@code SignatureHelp} has no signatures. Whenever possible implementors should
    * make an active decision about the active signature and shouldn't
    * rely on a default value.
+   * <p>
    * In future version of the protocol this property might become
-   * mandantory to better express this.
+   * mandatory to better express this.
    */
   public void setActiveSignature(final Integer activeSignature) {
     this.activeSignature = activeSignature;
@@ -104,11 +113,12 @@ public class SignatureHelp {
   
   /**
    * The active parameter of the active signature. If omitted or the value
-   * lies outside the range of `signatures[activeSignature].parameters`
+   * lies outside the range of {@code signatures[activeSignature].parameters}
    * defaults to 0 if the active signature has parameters. If
    * the active signature has no parameters it is ignored.
+   * <p>
    * In future version of the protocol this property might become
-   * mandantory to better express the active parameter if the
+   * mandatory to better express the active parameter if the
    * active signature does have any.
    */
   @Pure
@@ -118,11 +128,12 @@ public class SignatureHelp {
   
   /**
    * The active parameter of the active signature. If omitted or the value
-   * lies outside the range of `signatures[activeSignature].parameters`
+   * lies outside the range of {@code signatures[activeSignature].parameters}
    * defaults to 0 if the active signature has parameters. If
    * the active signature has no parameters it is ignored.
+   * <p>
    * In future version of the protocol this property might become
-   * mandantory to better express the active parameter if the
+   * mandatory to better express the active parameter if the
    * active signature does have any.
    */
   public void setActiveParameter(final Integer activeParameter) {
@@ -174,7 +185,6 @@ public class SignatureHelp {
     int result = 1;
     result = prime * result + ((this.signatures== null) ? 0 : this.signatures.hashCode());
     result = prime * result + ((this.activeSignature== null) ? 0 : this.activeSignature.hashCode());
-    result = prime * result + ((this.activeParameter== null) ? 0 : this.activeParameter.hashCode());
-    return result;
+    return prime * result + ((this.activeParameter== null) ? 0 : this.activeParameter.hashCode());
   }
 }

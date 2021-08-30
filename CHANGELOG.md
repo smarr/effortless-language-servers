@@ -1,8 +1,14 @@
 # Change Log
 
-## [Unreleased]
+## [Not Started]
 
  -
+
+## [0.7.0] - In progress 2021-??-??
+
+ - update TruffleSOM and SOMns to the latest version as of August 2021
+ - update LSP4J to latest version to support latest language server protocol
+ - updated JavaScript dependencies
 
 ## [0.6.0] - 2017-12-26
 

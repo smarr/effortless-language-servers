@@ -1,14 +1,19 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
 import org.eclipse.lsp4j.FileChangeType;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
+import org.eclipse.lsp4j.util.Preconditions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
@@ -33,8 +38,8 @@ public class FileEvent {
   }
   
   public FileEvent(@NonNull final String uri, @NonNull final FileChangeType type) {
-    this.uri = uri;
-    this.type = type;
+    this.uri = Preconditions.<String>checkNotNull(uri, "uri");
+    this.type = Preconditions.<FileChangeType>checkNotNull(type, "type");
   }
   
   /**
@@ -50,7 +55,7 @@ public class FileEvent {
    * The file's uri.
    */
   public void setUri(@NonNull final String uri) {
-    this.uri = uri;
+    this.uri = Preconditions.checkNotNull(uri, "uri");
   }
   
   /**
@@ -66,7 +71,7 @@ public class FileEvent {
    * The change type.
    */
   public void setType(@NonNull final FileChangeType type) {
-    this.type = type;
+    this.type = Preconditions.checkNotNull(type, "type");
   }
   
   @Override
@@ -107,7 +112,6 @@ public class FileEvent {
     final int prime = 31;
     int result = 1;
     result = prime * result + ((this.uri== null) ? 0 : this.uri.hashCode());
-    result = prime * result + ((this.type== null) ? 0 : this.type.hashCode());
-    return result;
+    return prime * result + ((this.type== null) ? 0 : this.type.hashCode());
   }
 }

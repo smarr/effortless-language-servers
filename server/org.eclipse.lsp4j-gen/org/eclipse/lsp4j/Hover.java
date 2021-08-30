@@ -1,30 +1,40 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
+import com.google.gson.annotations.JsonAdapter;
+import java.util.Arrays;
 import java.util.List;
 import org.eclipse.lsp4j.MarkedString;
+import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.adapters.HoverTypeAdapter;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
+import org.eclipse.lsp4j.util.Preconditions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
 /**
  * The result of a hover request.
  */
+@JsonAdapter(HoverTypeAdapter.Factory.class)
 @SuppressWarnings("all")
 public class Hover {
   /**
    * The hover's content as markdown
    */
   @NonNull
-  private List<Either<String, MarkedString>> contents;
+  private Either<List<Either<String, MarkedString>>, MarkupContent> contents;
   
   /**
    * An optional range
@@ -35,12 +45,25 @@ public class Hover {
   }
   
   public Hover(@NonNull final List<Either<String, MarkedString>> contents) {
-    this.contents = contents;
+    this.setContents(Preconditions.<List<Either<String, MarkedString>>>checkNotNull(contents, "contents"));
   }
   
   public Hover(@NonNull final List<Either<String, MarkedString>> contents, final Range range) {
-    this.contents = contents;
+    this.setContents(Preconditions.<List<Either<String, MarkedString>>>checkNotNull(contents, "contents"));
     this.range = range;
+  }
+  
+  public Hover(@NonNull final MarkupContent contents) {
+    this.setContents(Preconditions.<MarkupContent>checkNotNull(contents, "contents"));
+  }
+  
+  public Hover(@NonNull final MarkupContent contents, final Range range) {
+    this.setContents(Preconditions.<MarkupContent>checkNotNull(contents, "contents"));
+    this.range = range;
+  }
+  
+  public Hover(@NonNull final Either<String, MarkedString> contents) {
+    this.setContents(Arrays.<Either<String, MarkedString>>asList(Preconditions.<Either<String, MarkedString>>checkNotNull(contents, "contents")));
   }
   
   /**
@@ -48,15 +71,33 @@ public class Hover {
    */
   @Pure
   @NonNull
-  public List<Either<String, MarkedString>> getContents() {
+  public Either<List<Either<String, MarkedString>>, MarkupContent> getContents() {
     return this.contents;
   }
   
   /**
    * The hover's content as markdown
    */
-  public void setContents(@NonNull final List<Either<String, MarkedString>> contents) {
-    this.contents = contents;
+  public void setContents(@NonNull final Either<List<Either<String, MarkedString>>, MarkupContent> contents) {
+    this.contents = Preconditions.checkNotNull(contents, "contents");
+  }
+  
+  public void setContents(final List<Either<String, MarkedString>> contents) {
+    if (contents == null) {
+      Preconditions.checkNotNull(contents, "contents");
+      this.contents = null;
+      return;
+    }
+    this.contents = Either.forLeft(contents);
+  }
+  
+  public void setContents(final MarkupContent contents) {
+    if (contents == null) {
+      Preconditions.checkNotNull(contents, "contents");
+      this.contents = null;
+      return;
+    }
+    this.contents = Either.forRight(contents);
   }
   
   /**
@@ -112,7 +153,6 @@ public class Hover {
     final int prime = 31;
     int result = 1;
     result = prime * result + ((this.contents== null) ? 0 : this.contents.hashCode());
-    result = prime * result + ((this.range== null) ? 0 : this.range.hashCode());
-    return result;
+    return prime * result + ((this.range== null) ? 0 : this.range.hashCode());
   }
 }

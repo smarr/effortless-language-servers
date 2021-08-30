@@ -1,26 +1,32 @@
-/**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- */
+/******************************************************************************
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
+ ******************************************************************************/
 package org.eclipse.lsp4j.services;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import org.eclipse.lsp4j.CreateFilesParams;
+import org.eclipse.lsp4j.DeleteFilesParams;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
 import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams;
 import org.eclipse.lsp4j.ExecuteCommandParams;
+import org.eclipse.lsp4j.RenameFilesParams;
 import org.eclipse.lsp4j.SymbolInformation;
+import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
 import org.eclipse.lsp4j.jsonrpc.services.JsonRequest;
 import org.eclipse.lsp4j.jsonrpc.services.JsonSegment;
-
-import com.google.common.annotations.Beta;
 
 @JsonSegment("workspace")
 public interface WorkspaceService {
@@ -45,7 +51,9 @@ public interface WorkspaceService {
 	 * Registration Options: void
 	 */
 	@JsonRequest
-	CompletableFuture<List<? extends SymbolInformation>> symbol(WorkspaceSymbolParams params);
+	default CompletableFuture<List<? extends SymbolInformation>> symbol(WorkspaceSymbolParams params) {
+		throw new UnsupportedOperationException();
+	}
 
 	/**
 	 * A notification sent from the client to the server to signal the change of
@@ -67,10 +75,89 @@ public interface WorkspaceService {
 	 * The notification is sent by default if both ServerCapabilities/workspaceFolders
 	 * and ClientCapabilities/workspace/workspaceFolders are true; or if the server has
 	 * registered to receive this notification it first.
-	 *
-	 * This API is a <b>proposal</b> from LSP and may change.
+	 * 
+	 * Since 3.6.0
 	 */
 	@JsonNotification
-	@Beta
-	default void didChangeWorkspaceFolders(DidChangeWorkspaceFoldersParams params) {}
+	default void didChangeWorkspaceFolders(DidChangeWorkspaceFoldersParams params) {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * The will create files request is sent from the client to the server before files
+	 * are actually created as long as the creation is triggered from within the client.
+	 * The request can return a {@link WorkspaceEdit} which will be applied to workspace
+	 * before the files are created. Please note that clients might drop results if computing
+	 * the edit took too long or if a server constantly fails on this request. This is
+	 * done to keep creates fast and reliable.
+	 *
+	 * Since 3.16.0
+	 */
+	@JsonRequest
+	default CompletableFuture<WorkspaceEdit> willCreateFiles(CreateFilesParams params) {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * The did create files notification is sent from the client to the server when files
+	 * were created from within the client.
+	 * 
+	 * Since 3.16.0
+	 */
+	@JsonNotification
+	default void didCreateFiles(CreateFilesParams params) {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * The will rename files request is sent from the client to the server before files
+	 * are actually renamed as long as the rename is triggered from within the client.
+	 * The request can return a {@link WorkspaceEdit} which will be applied to workspace
+	 * before the files are renamed. Please note that clients might drop results if computing
+	 * the edit took too long or if a server constantly fails on this request. This is
+	 * done to keep renames fast and reliable.
+	 *
+	 * Since 3.16.0
+	 */
+	@JsonRequest
+	default CompletableFuture<WorkspaceEdit> willRenameFiles(RenameFilesParams params) {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * The did rename files notification is sent from the client to the server when files
+	 * were renamed from within the client.
+	 * 
+	 * Since 3.16.0
+	 */
+	@JsonNotification
+	default void didRenameFiles(RenameFilesParams params) {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * The will delete files request is sent from the client to the server before files
+	 * are actually deleted as long as the deletion is triggered from within the client.
+	 * The request can return a {@link WorkspaceEdit} which will be applied to workspace
+	 * before the files are deleted. Please note that clients might drop results if computing
+	 * the edit took too long or if a server constantly fails on this request. This is
+	 * done to keep deletes fast and reliable.
+	 *
+	 * Since 3.16.0
+	 */
+	@JsonRequest
+	default CompletableFuture<WorkspaceEdit> willDeleteFiles(DeleteFilesParams params) {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * The did delete files notification is sent from the client to the server when files
+	 * were deleted from within the client.
+	 * 
+	 * Since 3.16.0
+	 */
+	@JsonNotification
+	default void didDeleteFiles(DeleteFilesParams params) {
+		throw new UnsupportedOperationException();
+	}
 }

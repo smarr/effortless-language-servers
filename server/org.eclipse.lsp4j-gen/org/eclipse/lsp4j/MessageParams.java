@@ -1,21 +1,26 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
 import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
+import org.eclipse.lsp4j.util.Preconditions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
 /**
  * The show message notification is sent from a server to a client to ask the client to display a particular message
  * in the user class.
- * 
+ * <p>
  * The log message notification is send from the server to the client to ask the client to log a particular message.
  */
 @SuppressWarnings("all")
@@ -36,8 +41,8 @@ public class MessageParams {
   }
   
   public MessageParams(@NonNull final MessageType type, @NonNull final String message) {
-    this.type = type;
-    this.message = message;
+    this.type = Preconditions.<MessageType>checkNotNull(type, "type");
+    this.message = Preconditions.<String>checkNotNull(message, "message");
   }
   
   /**
@@ -53,7 +58,7 @@ public class MessageParams {
    * The message type.
    */
   public void setType(@NonNull final MessageType type) {
-    this.type = type;
+    this.type = Preconditions.checkNotNull(type, "type");
   }
   
   /**
@@ -69,7 +74,7 @@ public class MessageParams {
    * The actual message.
    */
   public void setMessage(@NonNull final String message) {
-    this.message = message;
+    this.message = Preconditions.checkNotNull(message, "message");
   }
   
   @Override
@@ -110,7 +115,6 @@ public class MessageParams {
     final int prime = 31;
     int result = 1;
     result = prime * result + ((this.type== null) ? 0 : this.type.hashCode());
-    result = prime * result + ((this.message== null) ? 0 : this.message.hashCode());
-    return result;
+    return prime * result + ((this.message== null) ? 0 : this.message.hashCode());
   }
 }

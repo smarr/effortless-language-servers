@@ -1,15 +1,22 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
+import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.ReferenceContext;
-import org.eclipse.lsp4j.TextDocumentPositionParams;
+import org.eclipse.lsp4j.TextDocumentIdentifier;
+import org.eclipse.lsp4j.TextDocumentPositionAndWorkDoneProgressAndPartialResultParams;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
+import org.eclipse.lsp4j.util.Preconditions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
@@ -18,15 +25,21 @@ import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
  * denoted by the given text document position.
  */
 @SuppressWarnings("all")
-public class ReferenceParams extends TextDocumentPositionParams {
+public class ReferenceParams extends TextDocumentPositionAndWorkDoneProgressAndPartialResultParams {
   @NonNull
   private ReferenceContext context;
   
   public ReferenceParams() {
   }
   
+  public ReferenceParams(@NonNull final TextDocumentIdentifier textDocument, @NonNull final Position position, @NonNull final ReferenceContext context) {
+    super(textDocument, position);
+    this.context = Preconditions.<ReferenceContext>checkNotNull(context, "context");
+  }
+  
+  @Deprecated
   public ReferenceParams(@NonNull final ReferenceContext context) {
-    this.context = context;
+    this.context = Preconditions.<ReferenceContext>checkNotNull(context, "context");
   }
   
   @Pure
@@ -36,7 +49,7 @@ public class ReferenceParams extends TextDocumentPositionParams {
   }
   
   public void setContext(@NonNull final ReferenceContext context) {
-    this.context = context;
+    this.context = Preconditions.checkNotNull(context, "context");
   }
   
   @Override
@@ -44,6 +57,8 @@ public class ReferenceParams extends TextDocumentPositionParams {
   public String toString() {
     ToStringBuilder b = new ToStringBuilder(this);
     b.add("context", this.context);
+    b.add("partialResultToken", getPartialResultToken());
+    b.add("workDoneToken", getWorkDoneToken());
     b.add("textDocument", getTextDocument());
     b.add("uri", getUri());
     b.add("position", getPosition());
@@ -73,9 +88,6 @@ public class ReferenceParams extends TextDocumentPositionParams {
   @Override
   @Pure
   public int hashCode() {
-    final int prime = 31;
-    int result = super.hashCode();
-    result = prime * result + ((this.context== null) ? 0 : this.context.hashCode());
-    return result;
+    return 31 * super.hashCode() + ((this.context== null) ? 0 : this.context.hashCode());
   }
 }

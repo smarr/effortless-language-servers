@@ -1,9 +1,13 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
@@ -11,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.lsp4j.FileEvent;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
+import org.eclipse.lsp4j.util.Preconditions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
@@ -31,7 +36,7 @@ public class DidChangeWatchedFilesParams {
   }
   
   public DidChangeWatchedFilesParams(@NonNull final List<FileEvent> changes) {
-    this.changes = changes;
+    this.changes = Preconditions.<List<FileEvent>>checkNotNull(changes, "changes");
   }
   
   /**
@@ -47,7 +52,7 @@ public class DidChangeWatchedFilesParams {
    * The actual file events.
    */
   public void setChanges(@NonNull final List<FileEvent> changes) {
-    this.changes = changes;
+    this.changes = Preconditions.checkNotNull(changes, "changes");
   }
   
   @Override
@@ -79,9 +84,6 @@ public class DidChangeWatchedFilesParams {
   @Override
   @Pure
   public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((this.changes== null) ? 0 : this.changes.hashCode());
-    return result;
+    return 31 * 1 + ((this.changes== null) ? 0 : this.changes.hashCode());
   }
 }

@@ -1,14 +1,20 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
 import java.util.List;
 import org.eclipse.lsp4j.TextDocumentRegistrationOptions;
+import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
+import org.eclipse.lsp4j.util.Preconditions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
@@ -17,6 +23,7 @@ public class DocumentOnTypeFormattingRegistrationOptions extends TextDocumentReg
   /**
    * A character on which formatting should be triggered, like `}`.
    */
+  @NonNull
   private String firstTriggerCharacter;
   
   /**
@@ -27,8 +34,12 @@ public class DocumentOnTypeFormattingRegistrationOptions extends TextDocumentReg
   public DocumentOnTypeFormattingRegistrationOptions() {
   }
   
-  public DocumentOnTypeFormattingRegistrationOptions(final String firstTriggerCharacter, final List<String> moreTriggerCharacter) {
-    this.firstTriggerCharacter = firstTriggerCharacter;
+  public DocumentOnTypeFormattingRegistrationOptions(@NonNull final String firstTriggerCharacter) {
+    this.firstTriggerCharacter = Preconditions.<String>checkNotNull(firstTriggerCharacter, "firstTriggerCharacter");
+  }
+  
+  public DocumentOnTypeFormattingRegistrationOptions(@NonNull final String firstTriggerCharacter, final List<String> moreTriggerCharacter) {
+    this(firstTriggerCharacter);
     this.moreTriggerCharacter = moreTriggerCharacter;
   }
   
@@ -36,6 +47,7 @@ public class DocumentOnTypeFormattingRegistrationOptions extends TextDocumentReg
    * A character on which formatting should be triggered, like `}`.
    */
   @Pure
+  @NonNull
   public String getFirstTriggerCharacter() {
     return this.firstTriggerCharacter;
   }
@@ -43,8 +55,8 @@ public class DocumentOnTypeFormattingRegistrationOptions extends TextDocumentReg
   /**
    * A character on which formatting should be triggered, like `}`.
    */
-  public void setFirstTriggerCharacter(final String firstTriggerCharacter) {
-    this.firstTriggerCharacter = firstTriggerCharacter;
+  public void setFirstTriggerCharacter(@NonNull final String firstTriggerCharacter) {
+    this.firstTriggerCharacter = Preconditions.checkNotNull(firstTriggerCharacter, "firstTriggerCharacter");
   }
   
   /**
@@ -103,7 +115,6 @@ public class DocumentOnTypeFormattingRegistrationOptions extends TextDocumentReg
     final int prime = 31;
     int result = super.hashCode();
     result = prime * result + ((this.firstTriggerCharacter== null) ? 0 : this.firstTriggerCharacter.hashCode());
-    result = prime * result + ((this.moreTriggerCharacter== null) ? 0 : this.moreTriggerCharacter.hashCode());
-    return result;
+    return prime * result + ((this.moreTriggerCharacter== null) ? 0 : this.moreTriggerCharacter.hashCode());
   }
 }

@@ -1,37 +1,51 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
-import com.google.common.annotations.Beta;
+import org.eclipse.lsp4j.FileOperationsServerCapabilities;
 import org.eclipse.lsp4j.WorkspaceFoldersOptions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
 /**
- * Capabilities of the server regarding workspace.
- * 
- * This is an LSP <b>proposal</b>.
+ * Workspace specific server capabilities
  */
-@Beta
 @SuppressWarnings("all")
 public class WorkspaceServerCapabilities {
   /**
-   * Capabilities specific to the `workspace/didChangeWorkspaceFolders` notification.
-   * 
-   * This is an LSP <b>proposal</b>.
+   * The server supports workspace folder.
+   * <p>
+   * Since 3.6.0
    */
-  @Beta
   private WorkspaceFoldersOptions workspaceFolders;
   
   /**
-   * Capabilities specific to the `workspace/didChangeWorkspaceFolders` notification.
-   * 
-   * This is an LSP <b>proposal</b>.
+   * The server is interested in file notifications/requests.
+   * <p>
+   * Since 3.16.0
+   */
+  private FileOperationsServerCapabilities fileOperations;
+  
+  public WorkspaceServerCapabilities() {
+  }
+  
+  public WorkspaceServerCapabilities(final WorkspaceFoldersOptions workspaceFolders) {
+    this.workspaceFolders = workspaceFolders;
+  }
+  
+  /**
+   * The server supports workspace folder.
+   * <p>
+   * Since 3.6.0
    */
   @Pure
   public WorkspaceFoldersOptions getWorkspaceFolders() {
@@ -39,12 +53,31 @@ public class WorkspaceServerCapabilities {
   }
   
   /**
-   * Capabilities specific to the `workspace/didChangeWorkspaceFolders` notification.
-   * 
-   * This is an LSP <b>proposal</b>.
+   * The server supports workspace folder.
+   * <p>
+   * Since 3.6.0
    */
   public void setWorkspaceFolders(final WorkspaceFoldersOptions workspaceFolders) {
     this.workspaceFolders = workspaceFolders;
+  }
+  
+  /**
+   * The server is interested in file notifications/requests.
+   * <p>
+   * Since 3.16.0
+   */
+  @Pure
+  public FileOperationsServerCapabilities getFileOperations() {
+    return this.fileOperations;
+  }
+  
+  /**
+   * The server is interested in file notifications/requests.
+   * <p>
+   * Since 3.16.0
+   */
+  public void setFileOperations(final FileOperationsServerCapabilities fileOperations) {
+    this.fileOperations = fileOperations;
   }
   
   @Override
@@ -52,6 +85,7 @@ public class WorkspaceServerCapabilities {
   public String toString() {
     ToStringBuilder b = new ToStringBuilder(this);
     b.add("workspaceFolders", this.workspaceFolders);
+    b.add("fileOperations", this.fileOperations);
     return b.toString();
   }
   
@@ -70,6 +104,11 @@ public class WorkspaceServerCapabilities {
         return false;
     } else if (!this.workspaceFolders.equals(other.workspaceFolders))
       return false;
+    if (this.fileOperations == null) {
+      if (other.fileOperations != null)
+        return false;
+    } else if (!this.fileOperations.equals(other.fileOperations))
+      return false;
     return true;
   }
   
@@ -79,6 +118,6 @@ public class WorkspaceServerCapabilities {
     final int prime = 31;
     int result = 1;
     result = prime * result + ((this.workspaceFolders== null) ? 0 : this.workspaceFolders.hashCode());
-    return result;
+    return prime * result + ((this.fileOperations== null) ? 0 : this.fileOperations.hashCode());
   }
 }

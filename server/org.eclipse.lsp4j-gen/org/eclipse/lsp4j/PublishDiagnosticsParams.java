@@ -1,9 +1,13 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
@@ -11,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
+import org.eclipse.lsp4j.util.Preconditions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
@@ -31,14 +36,26 @@ public class PublishDiagnosticsParams {
   @NonNull
   private List<Diagnostic> diagnostics;
   
+  /**
+   * Optional the version number of the document the diagnostics are published for.
+   * <p>
+   * Since 3.15.0
+   */
+  private Integer version;
+  
   public PublishDiagnosticsParams() {
     ArrayList<Diagnostic> _arrayList = new ArrayList<Diagnostic>();
     this.diagnostics = _arrayList;
   }
   
   public PublishDiagnosticsParams(@NonNull final String uri, @NonNull final List<Diagnostic> diagnostics) {
-    this.uri = uri;
-    this.diagnostics = diagnostics;
+    this.uri = Preconditions.<String>checkNotNull(uri, "uri");
+    this.diagnostics = Preconditions.<List<Diagnostic>>checkNotNull(diagnostics, "diagnostics");
+  }
+  
+  public PublishDiagnosticsParams(@NonNull final String uri, @NonNull final List<Diagnostic> diagnostics, final Integer version) {
+    this(uri, diagnostics);
+    this.version = version;
   }
   
   /**
@@ -54,7 +71,7 @@ public class PublishDiagnosticsParams {
    * The URI for which diagnostic information is reported.
    */
   public void setUri(@NonNull final String uri) {
-    this.uri = uri;
+    this.uri = Preconditions.checkNotNull(uri, "uri");
   }
   
   /**
@@ -70,7 +87,26 @@ public class PublishDiagnosticsParams {
    * An array of diagnostic information items.
    */
   public void setDiagnostics(@NonNull final List<Diagnostic> diagnostics) {
-    this.diagnostics = diagnostics;
+    this.diagnostics = Preconditions.checkNotNull(diagnostics, "diagnostics");
+  }
+  
+  /**
+   * Optional the version number of the document the diagnostics are published for.
+   * <p>
+   * Since 3.15.0
+   */
+  @Pure
+  public Integer getVersion() {
+    return this.version;
+  }
+  
+  /**
+   * Optional the version number of the document the diagnostics are published for.
+   * <p>
+   * Since 3.15.0
+   */
+  public void setVersion(final Integer version) {
+    this.version = version;
   }
   
   @Override
@@ -79,6 +115,7 @@ public class PublishDiagnosticsParams {
     ToStringBuilder b = new ToStringBuilder(this);
     b.add("uri", this.uri);
     b.add("diagnostics", this.diagnostics);
+    b.add("version", this.version);
     return b.toString();
   }
   
@@ -102,6 +139,11 @@ public class PublishDiagnosticsParams {
         return false;
     } else if (!this.diagnostics.equals(other.diagnostics))
       return false;
+    if (this.version == null) {
+      if (other.version != null)
+        return false;
+    } else if (!this.version.equals(other.version))
+      return false;
     return true;
   }
   
@@ -112,6 +154,6 @@ public class PublishDiagnosticsParams {
     int result = 1;
     result = prime * result + ((this.uri== null) ? 0 : this.uri.hashCode());
     result = prime * result + ((this.diagnostics== null) ? 0 : this.diagnostics.hashCode());
-    return result;
+    return prime * result + ((this.version== null) ? 0 : this.version.hashCode());
   }
 }

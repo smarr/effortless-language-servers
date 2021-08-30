@@ -1,22 +1,29 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
+import com.google.gson.annotations.JsonAdapter;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.jsonrpc.json.adapters.JsonElementTypeAdapter;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
+import org.eclipse.lsp4j.util.Preconditions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
 /**
  * A code lens represents a command that should be shown along with source text, like the number of references,
  * a way to run tests, etc.
- * 
+ * <p>
  * A code lens is <em>unresolved</em> when no command is associated to it. For performance reasons the creation of a
  * code lens and resolving should be done to two stages.
  */
@@ -34,15 +41,16 @@ public class CodeLens {
   private Command command;
   
   /**
-   * An data entry field that is preserved on a code lens item between a code lens and a code lens resolve request.
+   * A data entry field that is preserved on a code lens item between a code lens and a code lens resolve request.
    */
+  @JsonAdapter(JsonElementTypeAdapter.Factory.class)
   private Object data;
   
   public CodeLens() {
   }
   
   public CodeLens(@NonNull final Range range) {
-    this.range = range;
+    this.range = Preconditions.<Range>checkNotNull(range, "range");
   }
   
   public CodeLens(@NonNull final Range range, final Command command, final Object data) {
@@ -64,7 +72,7 @@ public class CodeLens {
    * The range in which this code lens is valid. Should only span a single line.
    */
   public void setRange(@NonNull final Range range) {
-    this.range = range;
+    this.range = Preconditions.checkNotNull(range, "range");
   }
   
   /**
@@ -83,7 +91,7 @@ public class CodeLens {
   }
   
   /**
-   * An data entry field that is preserved on a code lens item between a code lens and a code lens resolve request.
+   * A data entry field that is preserved on a code lens item between a code lens and a code lens resolve request.
    */
   @Pure
   public Object getData() {
@@ -91,7 +99,7 @@ public class CodeLens {
   }
   
   /**
-   * An data entry field that is preserved on a code lens item between a code lens and a code lens resolve request.
+   * A data entry field that is preserved on a code lens item between a code lens and a code lens resolve request.
    */
   public void setData(final Object data) {
     this.data = data;
@@ -142,7 +150,6 @@ public class CodeLens {
     int result = 1;
     result = prime * result + ((this.range== null) ? 0 : this.range.hashCode());
     result = prime * result + ((this.command== null) ? 0 : this.command.hashCode());
-    result = prime * result + ((this.data== null) ? 0 : this.data.hashCode());
-    return result;
+    return prime * result + ((this.data== null) ? 0 : this.data.hashCode());
   }
 }

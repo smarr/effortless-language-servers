@@ -1,19 +1,37 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016-2018 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
 package org.eclipse.lsp4j;
 
 import java.util.List;
+import org.eclipse.lsp4j.WorkDoneProgressParams;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
+import org.eclipse.lsp4j.util.Preconditions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
+/**
+ * The workspace/executeCommand request is sent from the client to the server to trigger command
+ * execution on the server. In most cases the server creates a WorkspaceEdit structure and applies
+ * the changes to the workspace using the request workspace/applyEdit which is sent from the server
+ * to the client.
+ */
 @SuppressWarnings("all")
-public class ExecuteCommandParams {
+public class ExecuteCommandParams implements WorkDoneProgressParams {
+  /**
+   * An optional token that a server can use to report work done progress.
+   */
+  private Either<String, Integer> workDoneToken;
+  
   /**
    * The identifier of the actual command handler.
    */
@@ -31,8 +49,45 @@ public class ExecuteCommandParams {
   }
   
   public ExecuteCommandParams(@NonNull final String command, final List<Object> arguments) {
-    this.command = command;
+    this.command = Preconditions.<String>checkNotNull(command, "command");
     this.arguments = arguments;
+  }
+  
+  public ExecuteCommandParams(@NonNull final String command, final List<Object> arguments, final Either<String, Integer> workDoneToken) {
+    this(command, arguments);
+    this.workDoneToken = workDoneToken;
+  }
+  
+  /**
+   * An optional token that a server can use to report work done progress.
+   */
+  @Pure
+  @Override
+  public Either<String, Integer> getWorkDoneToken() {
+    return this.workDoneToken;
+  }
+  
+  /**
+   * An optional token that a server can use to report work done progress.
+   */
+  public void setWorkDoneToken(final Either<String, Integer> workDoneToken) {
+    this.workDoneToken = workDoneToken;
+  }
+  
+  public void setWorkDoneToken(final String workDoneToken) {
+    if (workDoneToken == null) {
+      this.workDoneToken = null;
+      return;
+    }
+    this.workDoneToken = Either.forLeft(workDoneToken);
+  }
+  
+  public void setWorkDoneToken(final Integer workDoneToken) {
+    if (workDoneToken == null) {
+      this.workDoneToken = null;
+      return;
+    }
+    this.workDoneToken = Either.forRight(workDoneToken);
   }
   
   /**
@@ -48,7 +103,7 @@ public class ExecuteCommandParams {
    * The identifier of the actual command handler.
    */
   public void setCommand(@NonNull final String command) {
-    this.command = command;
+    this.command = Preconditions.checkNotNull(command, "command");
   }
   
   /**
@@ -74,6 +129,7 @@ public class ExecuteCommandParams {
   @Pure
   public String toString() {
     ToStringBuilder b = new ToStringBuilder(this);
+    b.add("workDoneToken", this.workDoneToken);
     b.add("command", this.command);
     b.add("arguments", this.arguments);
     return b.toString();
@@ -89,6 +145,11 @@ public class ExecuteCommandParams {
     if (getClass() != obj.getClass())
       return false;
     ExecuteCommandParams other = (ExecuteCommandParams) obj;
+    if (this.workDoneToken == null) {
+      if (other.workDoneToken != null)
+        return false;
+    } else if (!this.workDoneToken.equals(other.workDoneToken))
+      return false;
     if (this.command == null) {
       if (other.command != null)
         return false;
@@ -107,8 +168,8 @@ public class ExecuteCommandParams {
   public int hashCode() {
     final int prime = 31;
     int result = 1;
+    result = prime * result + ((this.workDoneToken== null) ? 0 : this.workDoneToken.hashCode());
     result = prime * result + ((this.command== null) ? 0 : this.command.hashCode());
-    result = prime * result + ((this.arguments== null) ? 0 : this.arguments.hashCode());
-    return result;
+    return prime * result + ((this.arguments== null) ? 0 : this.arguments.hashCode());
   }
 }

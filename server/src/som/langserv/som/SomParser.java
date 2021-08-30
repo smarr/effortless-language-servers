@@ -1,6 +1,5 @@
 package som.langserv.som;
 
-import java.io.Reader;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
@@ -10,7 +9,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import bd.basic.ProgramDefinitionError;
 import bd.source.SourceCoordinate;
 import trufflesom.compiler.MethodGenerationContext;
-import trufflesom.compiler.Parser;
+import trufflesom.compiler.ParserAst;
 import trufflesom.interpreter.nodes.ExpressionNode;
 import trufflesom.vm.Universe;
 import trufflesom.vmobjects.SSymbol;
@@ -20,14 +19,14 @@ import trufflesom.vmobjects.SSymbol;
  * Extension of the normal SOM parser to record more structural information
  * that is useful for tooling.
  */
-public class SomParser extends Parser {
+public class SomParser extends ParserAst {
 
   private SomStructures              structuralProbe;
   private final Deque<SourceSection> sourceSections;
 
-  public SomParser(final Reader reader, final long fileSize, final Source source,
+  public SomParser(final String content, final Source source,
       final SomStructures structuralProbe, final Universe universe) {
-    super(reader, fileSize, source, structuralProbe, universe);
+    super(content, source, structuralProbe, universe);
     assert structuralProbe != null : "Needed for this extended parser.";
     this.structuralProbe = structuralProbe;
     sourceSections = new ArrayDeque<>();
@@ -53,10 +52,10 @@ public class SomParser extends Parser {
   }
 
   @Override
-  protected ExpressionNode unaryMessage(final ExpressionNode receiver)
-      throws ParseError {
+  protected ExpressionNode unaryMessage(final MethodGenerationContext mgenc,
+      final ExpressionNode receiver) throws ParseError {
     int stackHeight = sourceSections.size();
-    ExpressionNode result = super.unaryMessage(receiver);
+    ExpressionNode result = super.unaryMessage(mgenc, receiver);
     SourceSection selector = sourceSections.getLast();
     assert result.getSourceSection().getCharIndex() == selector.getCharIndex();
     structuralProbe.reportCall(result, sourceSections.removeLast());
@@ -127,9 +126,9 @@ public class SomParser extends Parser {
   }
 
   @Override
-  protected String assignment() throws ProgramDefinitionError {
+  protected SSymbol assignment() throws ParseError {
     SourceCoordinate coord = getCoordinate();
-    String result = super.assignment();
+    SSymbol result = super.assignment();
     sourceSections.addLast(getSource(coord));
     return result;
   }

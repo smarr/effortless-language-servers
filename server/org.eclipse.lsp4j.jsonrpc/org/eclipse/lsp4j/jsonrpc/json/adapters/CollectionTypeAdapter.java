@@ -1,10 +1,14 @@
-/*******************************************************************************
- * Copyright (c) 2016, 2017 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
+/******************************************************************************
+ * Copyright (c) 2016-2017 TypeFox and others.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0,
+ * or the Eclipse Distribution License v. 1.0 which is available at
+ * http://www.eclipse.org/org/documents/edl-v10.php.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
+ ******************************************************************************/
 package org.eclipse.lsp4j.jsonrpc.json.adapters;
 
 import java.io.IOException;
@@ -22,6 +26,7 @@ import java.util.TreeSet;
 import java.util.function.Supplier;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonParseException;
 import com.google.gson.TypeAdapter;
 import com.google.gson.TypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
@@ -45,9 +50,14 @@ public class CollectionTypeAdapter<E> extends TypeAdapter<Collection<E>> {
 			Type[] elementTypes = TypeUtils.getElementTypes(typeToken, Collection.class);
 			if (elementTypes.length != 1)
 				return null;
-			TypeAdapter<?> elementTypeAdapter = gson.getAdapter(TypeToken.get(elementTypes[0]));
+			Type elementType = elementTypes[0];
+			TypeAdapter<?> elementTypeAdapter;
+			if (elementType == Object.class)
+				elementTypeAdapter = new JsonElementTypeAdapter(gson);
+			else
+				elementTypeAdapter = gson.getAdapter(TypeToken.get(elementType));
 			Supplier<Collection<Object>> constructor = getConstructor((Class<Collection<Object>>) typeToken.getRawType());
-			return (TypeAdapter<T>) create(gson, elementTypes[0], elementTypeAdapter, constructor);
+			return (TypeAdapter<T>) create(gson, elementType, elementTypeAdapter, constructor);
 		}
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -55,36 +65,25 @@ public class CollectionTypeAdapter<E> extends TypeAdapter<Collection<E>> {
 			return new CollectionTypeAdapter(gson, elementType, elementTypeAdapter, constructor);
 		}
 
-		protected <E> Supplier<Collection<E>> getConstructor(Class<Collection<E>> rawType) {
+		protected <E> Supplier<Collection<E>> getConstructor(Class<? extends Collection<E>> rawType) {
 			try {
-				Constructor<Collection<E>> constructor = rawType.getDeclaredConstructor();
-				if (!constructor.isAccessible())
-					constructor.setAccessible(true);
+				Constructor<? extends Collection<E>> constructor = rawType.getDeclaredConstructor();
 				return () -> {
 					try {
 						return constructor.newInstance();
 					} catch (Exception e) {
-						throw new RuntimeException(e);
+						throw new JsonParseException(e);
 					}
 				};
-			} catch (NoSuchMethodException e) {
-				if (SortedSet.class.isAssignableFrom(rawType)) {
-					return () -> {
-						return new TreeSet<E>();
-					};
-				} else if (Set.class.isAssignableFrom(rawType)) {
-					return () -> {
-						return new LinkedHashSet<E>();
-					};
-				} else if (Queue.class.isAssignableFrom(rawType)) {
-					return () -> {
-						return new LinkedList<E>();
-					};
-				} else {
-					return () -> {
-						return new ArrayList<E>();
-					};
-				}
+			} catch (Exception e) {
+				if (SortedSet.class.isAssignableFrom(rawType))
+					return () -> new TreeSet<E>();
+				else if (Set.class.isAssignableFrom(rawType))
+					return () -> new LinkedHashSet<E>();
+				else if (Queue.class.isAssignableFrom(rawType))
+					return () -> new LinkedList<E>();
+				else
+					return () -> new ArrayList<E>();
 			}
 		}
 
