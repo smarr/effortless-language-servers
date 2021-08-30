@@ -1,12 +1,10 @@
 import { resolve as resolvePath } from "path";
 import { LanguageClient, StreamInfo, Disposable, ErrorHandler, ErrorAction, CloseAction } from "vscode-languageclient/node";
-import { startLanguageServer, CLIENT_OPTION } from "../src/extension";
+import { startLanguageServer, CLIENT_OPTION, deactivate } from "../src/extension";
 import * as vscode from "vscode";
 import { Message } from "vscode-languageserver-protocol";
 import { readFileSync } from "fs";
 import { expect } from "chai";
-
-let serverDisposable: Disposable;
 
 function resolvePathAbsolute(path: string): string {
   const result = resolvePath(__dirname + '/../../' + path);
@@ -16,8 +14,6 @@ function resolvePathAbsolute(path: string): string {
 function createLSPServer(): Promise<StreamInfo> {
   return new Promise((resolve, reject) => {
     startLanguageServer(resolvePathAbsolute, resolve, reject);
-    // serverDisposable = new vscode.Disposable(() => {});
-    // connectToLanguageServer(resolve, reject);
   });
 }
 
@@ -56,7 +52,7 @@ describe("Basic Tests", () => {
 
   after(done => {
     clientDisposable.dispose();
-    serverDisposable.dispose();
+    deactivate();
     done();
   });
 
