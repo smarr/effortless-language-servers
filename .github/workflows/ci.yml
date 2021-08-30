@@ -3,7 +3,7 @@ name: Tests
 on: [push, pull_request]
 
 jobs:
-  test_som:
+  build-and-test:
     runs-on: ubuntu-20.04 # ubuntu-latest
     steps:
       - name: Checkout
@@ -14,6 +14,10 @@ jobs:
       - name: NPM Install
         run: |
           npm install .
+
+      - name: NPM Tests
+        run: |
+          npm test
 
       # - name: CheckStyle
       #   run: |
