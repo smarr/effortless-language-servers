@@ -439,16 +439,12 @@ public class NewspeakAdapter extends LanguageAdapter<NewspeakStructures> {
   public List<Integer> getTokenPositions(final String documentUri) {
     String path;
     try {
-      path = docUriToNormalizedPath(documentUri);
+      path = docUriToNormalizedPath(documentUri); 
+        return getProbe(path).getTokenPositions();      
     } catch (URISyntaxException e) {
       return null;
     }
-
-    NewspeakStructures probe;
-    synchronized (path) {
-      probe = structuralProbes.get(path);
-    }
-    return structuralProbes.get(path).getTokenPositions();
+    
   }
 
   @Override
