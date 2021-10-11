@@ -164,6 +164,7 @@ public class NewspeakAdapter extends LanguageAdapter<NewspeakStructures> {
       synchronized (newProbe) {
         MixinDefinition def = compiler.compileModule(source, newProbe);
         Lint.checkModuleName(path, def, diagnostics);
+        Lint.checkLastChar(text, diagnostics);
       }
     } catch (ParseError e) {
       return toDiagnostics(e, diagnostics);
@@ -435,6 +436,18 @@ public class NewspeakAdapter extends LanguageAdapter<NewspeakStructures> {
   }
 
   @Override
+  public List<Integer> getTokenPositions(final String documentUri) {
+    String path;
+    try {
+      path = docUriToNormalizedPath(documentUri);
+      return getProbe(path).getTokenPositions();
+    } catch (URISyntaxException e) {
+      return null;
+    }
+
+  }
+
+  @Override
   public void getCodeLenses(final List<CodeLens> codeLenses, final String documentUri) {
     NewspeakStructures probe = getProbe(documentUri);
     if (probe == null) {
@@ -445,4 +458,5 @@ public class NewspeakAdapter extends LanguageAdapter<NewspeakStructures> {
       Minitest.checkForTests(c, codeLenses, documentUri);
     }
   }
+
 }
