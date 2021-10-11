@@ -435,24 +435,14 @@ public class NewspeakAdapter extends LanguageAdapter<NewspeakStructures> {
   }
 
   @Override
-  public void getCodeLenses(final List<CodeLens> codeLenses,
-      final String documentUri) {
-    String path;
-    try {
-      path = docUriToNormalizedPath(documentUri);
-    } catch (URISyntaxException e) {
+  public void getCodeLenses(final List<CodeLens> codeLenses, final String documentUri) {
+    NewspeakStructures probe = getProbe(documentUri);
+    if (probe == null) {
       return;
     }
 
-    NewspeakStructures probe;
-    synchronized (path) {
-      probe = structuralProbes.get(path);
-    }
-
-    if (probe != null) {
-      for (MixinDefinition c : probe.getClasses()) {
-        Minitest.checkForTests(c, codeLenses, documentUri);
-      }
+    for (MixinDefinition c : probe.getClasses()) {
+      Minitest.checkForTests(c, codeLenses, documentUri);
     }
   }
 }
