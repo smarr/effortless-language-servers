@@ -2,6 +2,7 @@ package som.langserv;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -34,6 +35,11 @@ import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.RenameParams;
+import org.eclipse.lsp4j.SemanticTokens;
+import org.eclipse.lsp4j.SemanticTokensLegend;
+import org.eclipse.lsp4j.SemanticTokensParams;
+import org.eclipse.lsp4j.SemanticTokensServerFull;
+import org.eclipse.lsp4j.SemanticTokensWithRegistrationOptions;
 import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
@@ -71,7 +77,7 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
   public CompletableFuture<InitializeResult> initialize(final InitializeParams params) {
     InitializeResult result = new InitializeResult();
     ServerCapabilities cap = new ServerCapabilities();
-
+    cap.setDocumentHighlightProvider(true);
     cap.setTextDocumentSync(TextDocumentSyncKind.Full);
     cap.setDocumentSymbolProvider(true);
     cap.setWorkspaceSymbolProvider(true);
@@ -89,6 +95,32 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
     completion.setResolveProvider(false); // TODO: look into that
 
     cap.setCompletionProvider(completion);
+
+    SemanticTokensWithRegistrationOptions semanticTokens =
+        new SemanticTokensWithRegistrationOptions();
+
+    semanticTokens.setDocumentSelector(null);
+    semanticTokens.setId(null);
+
+    List<String> tokenTypes = new ArrayList<String>();
+    tokenTypes.add("class");
+    tokenTypes.add("keyword");
+    tokenTypes.add("method");
+    tokenTypes.add("string");
+    tokenTypes.add("variable");
+    List<String> tokenModifiers = new ArrayList<String>();
+    SemanticTokensLegend legend = new SemanticTokensLegend(tokenTypes, tokenModifiers);
+
+    semanticTokens.setLegend(legend);
+    semanticTokens.setRange(false);
+
+    SemanticTokensServerFull serverFull = new SemanticTokensServerFull();
+
+    serverFull.setDelta(false);
+    semanticTokens.setFull(serverFull);
+
+    cap.setSemanticTokensProvider(semanticTokens);
+
     result.setCapabilities(cap);
 
     loadWorkspace(params);
@@ -139,6 +171,46 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
   @Override
   public WorkspaceService getWorkspaceService() {
     return workspace;
+  }
+
+  @Override
+  public CompletableFuture<SemanticTokens> semanticTokensFull(
+      final SemanticTokensParams params) {
+
+    String uri = params.getTextDocument().getUri();
+    for (LanguageAdapter<?> adapter : adapters) {
+      if (adapter.handlesUri(uri)) {
+        return CompletableFuture.completedFuture(
+            new SemanticTokens(configuretokens(adapter.getTokenPositions(uri))));
+
+      } else {
+
+      }
+    }
+    List<Integer> lista = Arrays.asList(0, 0, 0, 0, 0);
+    SemanticTokens tokens = new SemanticTokens(lista);
+    return CompletableFuture.completedFuture(tokens);
+
+    // String uri = params.getTextDocument().getUri();
+
+    // SemanticDefinitionsReader reader = new SemanticDefinitionsReader();
+    // try {
+    // List<Integer> list = reader.getSemanticTokenDefinition(uri);
+    // if (list.isEmpty() || list == null) {
+    // // this is just for tessting i need to look into how to send an empty token
+    // List<Integer> lista = Arrays.asList(0, 0, 0, 0, 0);
+    // SemanticTokens tokens = new SemanticTokens(lista);
+    // return CompletableFuture.completedFuture(tokens);
+    // }
+    // SemanticTokens tokens = new SemanticTokens(list);
+    // return CompletableFuture.completedFuture(tokens);
+    // } catch (Exception e) {
+    // // this is just for tessting i need to look into how to send an empty token
+    // List<Integer> lista = Arrays.asList(0, 0, 0, 0, 0);
+    // SemanticTokens tokens = new SemanticTokens(lista);
+    // return CompletableFuture.completedFuture(tokens);
+    // }
+
   }
 
   @Override
@@ -320,5 +392,31 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
       adapter.connect(client);
     }
     this.client = client;
+  }
+
+  private static List<Integer> configuretokens(final List<Integer> array) {
+    int tokenLine = array.get(array.size() - 5);
+    int tokenstart = array.get(array.size() - 4);
+    int linecount = 0;
+    int startcount = 0;
+
+    while (linecount + 5 != array.size()) {
+      tokenLine = array.get(array.size() - (5 + linecount));
+      int nextTokenLine = array.get(array.size() - (10 + linecount));
+      tokenLine = tokenLine - nextTokenLine;
+      if (tokenLine == 0) {
+        tokenstart = array.get(array.size() - (4 + startcount));
+        int nextTokenstart = array.get(array.size() - (9 + startcount));
+        tokenstart = tokenstart - nextTokenstart;
+      } else {
+        tokenstart = array.get(array.size() - (4 + startcount));
+      }
+      array.set(array.size() - (5 + linecount), tokenLine);
+      array.set(array.size() - (4 + startcount), tokenstart);
+      linecount = linecount + 5;
+      startcount = startcount + 5;
+    }
+
+    return array;
   }
 }

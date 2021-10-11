@@ -449,4 +449,10 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
     }
 
   }
+
+  @Override
+  public List<Integer> getTokenPositions(final String documentUri) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }

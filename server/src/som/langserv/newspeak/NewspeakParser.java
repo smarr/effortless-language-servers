@@ -1,7 +1,9 @@
 package som.langserv.newspeak;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
+import java.util.List;
 
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
@@ -12,6 +14,7 @@ import som.compiler.MethodBuilder;
 import som.compiler.Parser;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
 
@@ -23,6 +26,8 @@ public class NewspeakParser extends Parser {
 
   private NewspeakStructures         struturalProbe;
   private final Deque<SourceSection> sourceSections;
+  private List<Integer>              listOfVarsStartsLines;
+  private List<Integer>              listOfVarsStartsCol;
 
   public NewspeakParser(final String content, final long fileSize, final Source source,
       final NewspeakStructures structuralProbe, final SomLanguage lang) throws ParseError {
@@ -30,6 +35,8 @@ public class NewspeakParser extends Parser {
     // assert structuralProbe != null : "Needed for this extended parser.";
     this.struturalProbe = structuralProbe;
     sourceSections = new ArrayDeque<>();
+    listOfVarsStartsLines = new ArrayList();
+    listOfVarsStartsCol = new ArrayList();
   }
 
   @Override
@@ -102,6 +109,92 @@ public class NewspeakParser extends Parser {
     // assert stackHeight == sourceSections.size();
     return result;
   }
+
+  @Override
+  protected void storeClassNamePosition(final SourceCoordinate coord, final String name,
+      final SourceSection source) {
+    struturalProbe.addTokenPosition(coord.startLine, coord.startColumn - 6,
+        5, 1, 0);
+    struturalProbe.addTokenPosition(coord.startLine, coord.startColumn,
+        name.length(), 0, 0);
+
+  }
+
+  @Override
+  protected void storeMethodNamePosition(final SourceCoordinate coord,
+      final SInvokable method) {
+    struturalProbe.addTokenPosition(coord.startLine,
+        coord.startColumn,
+        method.getAccessModifier().toString().length() + 1, 1, 0);
+    struturalProbe.addTokenPosition(coord.startLine,
+        coord.startColumn + method.getAccessModifier().toString().length(),
+        method.getSignature().getString().length() + 1, 2, 0);
+
+  }
+
+  @Override
+  protected void storeLiteralStringPosition(final SourceCoordinate coord,
+      final String litString) {
+    struturalProbe.addTokenPosition(coord.startLine,
+        coord.startColumn, litString.length() + 2, 3, 0);
+    // plus 2 to the sting is for the two quotes
+  }
+
+  @Override
+  protected void storeLocalVariableDec(final SourceCoordinate coord,
+      final String length) {
+    if (!listOfVarsStartsLines.contains(coord.startLine)
+        && !listOfVarsStartsCol.contains(coord.startColumn)) {
+      struturalProbe.addTokenPosition(coord.startLine, coord.startColumn, length.length(), 4,
+          0);
+      listOfVarsStartsLines.add(coord.startLine);
+      listOfVarsStartsCol.add(coord.startColumn);
+    }
+  }
+
+  /*
+   * @Override
+   * protected void methodDeclaration(final AccessModifier accessModifier,
+   * final SourceCoordinate coord, final MixinBuilder mxnBuilder)
+   * throws ProgramDefinitionError {
+   * // SourceCoordinate coord = getCoordinate();
+   * struturalProbe.addTokenPosition(coord.startLine, coord.startColumn,
+   * mxnBuilder.getName().length() + accessModifier.toString().length(), 1, 0);
+   * super.methodDeclaration(accessModifier, coord, mxnBuilder);
+   *
+   * }
+   */
+
+  /*
+   * @Override
+   * protected MixinBuilder classDeclaration(final MixinBuilder outerBuilder,
+   * final AccessModifier accessModifier) throws ProgramDefinitionError {
+   * MixinBuilder result;
+   *
+   * if (outerBuilder == null) {
+   * SourceCoordinate coord = getCoordinate();
+   * startLine = coord.startLine;
+   * startCol = coord.startColumn;
+   * result = super.classDeclaration(outerBuilder, accessModifier);
+   * return result;
+   *
+   * }
+   *
+   * if (abouttorecurse == false) {
+   * struturalProbe.addTokenPosition(startLine, startCol,
+   * outerBuilder.getName().length() + 5, 0, 0);
+   * abouttorecurse = true;
+   * }
+   *
+   * // abouttorecurse = false;
+   * SourceCoordinate coord = getCoordinate();
+   * struturalProbe.addTokenPosition(coord.startLine, coord.startColumn,
+   * outerBuilder.getName().length() + accessModifier.toString().length(), 0, 0);
+   * result = super.classDeclaration(outerBuilder, accessModifier);
+   * return result;
+   *
+   * }
+   */
 
   @Override
   protected SSymbol unarySelector() throws ParseError {

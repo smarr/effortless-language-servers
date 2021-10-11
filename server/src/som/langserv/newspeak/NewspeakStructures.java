@@ -37,6 +37,8 @@ public class NewspeakStructures
 
   private final List<Call> calls;
 
+  private final List<Integer> tokenPosition;
+
   public static class Call {
     final SSymbol         selector;
     final SourceSection[] sections;
@@ -52,6 +54,7 @@ public class NewspeakStructures
     this.map = new ExpressionNode[source.getLength()];
     this.diagnostics = new ArrayList<>(0);
     this.calls = new ArrayList<>();
+    this.tokenPosition = new ArrayList<>();
   }
 
   public List<Call> getCalls() {
@@ -224,6 +227,20 @@ public class NewspeakStructures
     }
 
     return false;
+  }
+
+  public void addTokenPosition(final int lineNumber, final int startingChar, final int length,
+      final int tokenType, final int tokenMoifications) {
+    tokenPosition.add(lineNumber - 1);
+    tokenPosition.add(startingChar - 1);
+    tokenPosition.add(length);
+    tokenPosition.add(tokenType);
+    tokenPosition.add(tokenMoifications);
+
+  }
+
+  public List<Integer> getTokenPositions() {
+    return tokenPosition;
   }
 
   // REM:

@@ -230,6 +230,8 @@ public abstract class LanguageAdapter<Probe> {
     }
   }
 
+  public abstract List<Integer> getTokenPositions(final String documentUri);
+
   public abstract CompletionList getCompletions(final String docUri, final int line,
       final int character);
 

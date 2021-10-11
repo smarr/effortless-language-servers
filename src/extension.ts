@@ -7,7 +7,7 @@ import { workspace, ExtensionContext, window } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, StreamInfo } from 'vscode-languageclient/node';
 
 const LSPort = 8123;  // TODO: make configurable
-const EnableExtensionDebugging : boolean = <boolean> workspace.getConfiguration('somns').get('debugMode');
+const EnableExtensionDebugging : boolean = <boolean> workspace.getConfiguration('somns').get('debugMode') || true;
 
 export const CLIENT_OPTION: LanguageClientOptions = {
 	documentSelector: ['SOMns', 'SOM']

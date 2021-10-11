@@ -106,6 +106,7 @@ public class SomParser extends ParserAst {
     SourceCoordinate coord = getCoordinate();
     SSymbol result = super.binarySelector();
     sourceSections.addLast(getSource(coord));
+    
     return result;
   }
 
@@ -114,6 +115,7 @@ public class SomParser extends ParserAst {
     SourceCoordinate coord = getCoordinate();
     String result = super.keyword();
     sourceSections.addLast(getSource(coord));
+    
     return result;
   }
 

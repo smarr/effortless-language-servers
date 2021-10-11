@@ -128,7 +128,7 @@ public class NewspeakAdapter extends LanguageAdapter<NewspeakStructures> {
   }
 
   @Override
-  protected NewspeakStructures getProbe(final String documentUri) {
+  public NewspeakStructures getProbe(final String documentUri) {
     synchronized (structuralProbes) {
       try {
         return structuralProbes.get(docUriToNormalizedPath(documentUri));
@@ -164,6 +164,7 @@ public class NewspeakAdapter extends LanguageAdapter<NewspeakStructures> {
       synchronized (newProbe) {
         MixinDefinition def = compiler.compileModule(source, newProbe);
         Lint.checkModuleName(path, def, diagnostics);
+        Lint.checkLastChar(text, diagnostics);
       }
     } catch (ParseError e) {
       return toDiagnostics(e, diagnostics);
@@ -432,6 +433,22 @@ public class NewspeakAdapter extends LanguageAdapter<NewspeakStructures> {
               source, (NewspeakStructures) structuralProbe, language);
       return compile(parser, source);
     }
+  }
+
+  @Override
+  public List<Integer> getTokenPositions(final String documentUri) {
+    String path;
+    try {
+      path = docUriToNormalizedPath(documentUri);
+    } catch (URISyntaxException e) {
+      return null;
+    }
+
+    NewspeakStructures probe;
+    synchronized (path) {
+      probe = structuralProbes.get(path);
+    }
+    return structuralProbes.get(path).getTokenPositions();
   }
 
   @Override
