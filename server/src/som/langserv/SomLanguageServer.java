@@ -89,6 +89,33 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
     completion.setResolveProvider(false); // TODO: look into that
 
     cap.setCompletionProvider(completion);
+
+    SemanticTokensWithRegistrationOptions semanticTokens =
+        new SemanticTokensWithRegistrationOptions();
+
+    semanticTokens.setDocumentSelector(null);
+    semanticTokens.setId(null);
+
+    List<String> tokenTypes = new ArrayList<String>();
+    tokenTypes.add("class");
+    tokenTypes.add("keyword");
+    tokenTypes.add("method");
+    tokenTypes.add("string");
+    tokenTypes.add("variable");
+    tokenTypes.add("comment");
+    List<String> tokenModifiers = new ArrayList<String>();
+    SemanticTokensLegend legend = new SemanticTokensLegend(tokenTypes, tokenModifiers);
+
+    semanticTokens.setLegend(legend);
+    semanticTokens.setRange(false);
+
+    SemanticTokensServerFull serverFull = new SemanticTokensServerFull();
+
+    serverFull.setDelta(false);
+    semanticTokens.setFull(serverFull);
+
+    cap.setSemanticTokensProvider(semanticTokens);
+
     result.setCapabilities(cap);
 
     loadWorkspace(params);
