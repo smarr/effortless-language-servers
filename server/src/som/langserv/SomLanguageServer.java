@@ -108,6 +108,7 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
     tokenTypes.add("method");
     tokenTypes.add("string");
     tokenTypes.add("variable");
+    tokenTypes.add("comment");
     List<String> tokenModifiers = new ArrayList<String>();
     SemanticTokensLegend legend = new SemanticTokensLegend(tokenTypes, tokenModifiers);
 

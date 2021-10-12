@@ -152,6 +152,34 @@ public class NewspeakParser extends Parser {
     }
   }
 
+  @Override
+  protected void storeCommentPosition(final SourceCoordinate startCoords,
+      final SourceCoordinate endCoords,
+      final String commentLength) {
+    int amountLines = endCoords.startLine - startCoords.startLine;
+    if (amountLines != 0) {
+      int count = 0;
+      while (count + startCoords.startLine < endCoords.startLine) {
+        if (startCoords.startColumn == 0) {
+          struturalProbe.addTokenPosition(startCoords.startLine + count,
+              startCoords.startColumn + 1,
+              200, 5,
+              0);
+        } else {
+          struturalProbe.addTokenPosition(startCoords.startLine + count,
+              startCoords.startColumn,
+              200, 5,
+              0);
+        }
+        count++;
+      }
+    } else {
+      struturalProbe.addTokenPosition(startCoords.startLine, startCoords.startColumn,
+          commentLength.length(), 5,
+          0);
+    }
+  }
+
   /*
    * @Override
    * protected void methodDeclaration(final AccessModifier accessModifier,
