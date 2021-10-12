@@ -439,21 +439,15 @@ public class NewspeakAdapter extends LanguageAdapter<NewspeakStructures> {
   public List<Integer> getTokenPositions(final String documentUri) {
     String path;
     try {
-      path = docUriToNormalizedPath(documentUri); 
-        return getProbe(path).getTokenPositions();      
+      path = docUriToNormalizedPath(documentUri);
+      return getProbe(path).getTokenPositions();
     } catch (URISyntaxException e) {
       return null;
     }
-    
+
   }
 
   @Override
-  public void getCodeLenses(final List<CodeLens> codeLenses,
-      final String documentUri) {
-    String path;
-    try {
-      path = docUriToNormalizedPath(documentUri);
-    } catch (URISyntaxException e) {
   public void getCodeLenses(final List<CodeLens> codeLenses, final String documentUri) {
     NewspeakStructures probe = getProbe(documentUri);
     if (probe == null) {
@@ -464,4 +458,5 @@ public class NewspeakAdapter extends LanguageAdapter<NewspeakStructures> {
       Minitest.checkForTests(c, codeLenses, documentUri);
     }
   }
+
 }
