@@ -142,14 +142,12 @@ public class NewspeakParser extends Parser {
 
   @Override
   protected void storeLocalVariableDec(final SourceCoordinate coord,
-      final String length) {
-    if (!listOfVarsStartsLines.contains(coord.startLine)
-        && !listOfVarsStartsCol.contains(coord.startColumn)) {
-      struturalProbe.addTokenPosition(coord.startLine, coord.startColumn, length.length(), 4,
-          0);
-      listOfVarsStartsLines.add(coord.startLine);
-      listOfVarsStartsCol.add(coord.startColumn);
-    }
+      final String accessToken, final String name) {
+    struturalProbe.addTokenPosition(coord.startLine,
+        coord.startColumn, accessToken.length(), 1, 0);
+    struturalProbe.addTokenPosition(coord.startLine,
+        coord.startColumn + accessToken.length(), name.length() + 1, 4, 0);
+
   }
 
   @Override
