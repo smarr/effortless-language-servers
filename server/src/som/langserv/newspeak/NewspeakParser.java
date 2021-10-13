@@ -104,6 +104,46 @@ public class NewspeakParser extends Parser {
   }
 
   @Override
+  protected void storeClassNamePosition(final SourceCoordinate coord, final String name,
+      final SourceSection source) {
+    struturalProbe.addTokenPosition(coord.startLine, coord.startColumn - 6,
+        5, 1, 0);
+    struturalProbe.addTokenPosition(coord.startLine, coord.startColumn,
+        name.length(), 0, 0);
+
+  }
+
+  @Override
+  protected void storeMethodNamePosition(final SourceCoordinate coord,
+      final SInvokable method) {
+    struturalProbe.addTokenPosition(coord.startLine,
+        coord.startColumn,
+        method.getAccessModifier().toString().length() + 1, 1, 0);
+    struturalProbe.addTokenPosition(coord.startLine,
+        coord.startColumn + method.getAccessModifier().toString().length(),
+        method.getSignature().getString().length() + 1, 2, 0);
+
+  }
+
+  @Override
+  protected void storeLiteralStringPosition(final SourceCoordinate coord,
+      final String litString) {
+    struturalProbe.addTokenPosition(coord.startLine,
+        coord.startColumn, litString.length() + 2, 3, 0);
+    // plus 2 to the sting is for the two quotes
+  }
+
+  @Override
+  protected void storeLocalVariableDec(final SourceCoordinate coord,
+      final String accessToken, final String name) {
+    struturalProbe.addTokenPosition(coord.startLine,
+        coord.startColumn, accessToken.length(), 1, 0);
+    struturalProbe.addTokenPosition(coord.startLine,
+        coord.startColumn + accessToken.length(), name.length() + 1, 4, 0);
+
+  }
+
+  @Override
   protected void storeCommentPosition(final SourceCoordinate startCoords,
       final SourceCoordinate endCoords,
       final String commentLength) {

@@ -2,7 +2,10 @@ package som.langserv;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.lsp4j.CodeLens;
@@ -347,5 +350,83 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
       adapter.connect(client);
     }
     this.client = client;
+  }
+
+  private static List<Integer> configuretokens(List<Integer> array) {
+    array = sort(array);
+    int tokenLine = array.get(array.size() - 5);
+    int tokenstart = array.get(array.size() - 4);
+    int linecount = 0;
+    int startcount = 0;
+
+    while (linecount + 5 != array.size()) {
+      tokenLine = array.get(array.size() - (5 + linecount));
+      int nextTokenLine = array.get(array.size() - (10 + linecount));
+      tokenLine = tokenLine - nextTokenLine;
+      if (tokenLine == 0) {
+        tokenstart = array.get(array.size() - (4 + startcount));
+        int nextTokenstart = array.get(array.size() - (9 + startcount));
+        tokenstart = tokenstart - nextTokenstart;
+      } else {
+        tokenstart = array.get(array.size() - (4 + startcount));
+      }
+      array.set(array.size() - (5 + linecount), tokenLine);
+      array.set(array.size() - (4 + startcount), tokenstart);
+      linecount = linecount + 5;
+      startcount = startcount + 5;
+    }
+
+    return array;
+  }
+
+  public static <T> List<List<T>> chunk(final List<T> input, final int chunkSize) {
+
+    int inputSize = input.size();
+    int chunkCount = (int) Math.ceil(inputSize / (double) chunkSize);
+
+    Map<Integer, List<T>> map = new HashMap<>(chunkCount);
+    List<List<T>> chunks = new ArrayList<>(chunkCount);
+
+    for (int i = 0; i < inputSize; i++) {
+
+      map.computeIfAbsent(i / chunkSize, (ignore) -> {
+
+        List<T> chunk = new ArrayList<>();
+        chunks.add(chunk);
+        return chunk;
+
+      }).add(input.get(i));
+    }
+
+    return chunks;
+  }
+
+  private static <T> List<T> twoDArrayToList(final T[][] twoDArray) {
+    List<T> list = new ArrayList<T>();
+    for (T[] array : twoDArray) {
+      list.addAll(Arrays.asList(array));
+    }
+    return list;
+  }
+
+  private static List<Integer> sort(final List<Integer> in) {
+    List<List<Integer>> list2d = chunk(in, 5);
+    Integer[][] arr;
+
+    arr = list2d.stream().map(x -> x.toArray(new Integer[x.size()])).toArray(Integer[][]::new);
+
+    int n = arr.length;
+    for (int i = 0; i < n - 1; i++) {
+      for (int j = 0; j < n - i - 1; j++) {
+        if (arr[j][0] > arr[j + 1][0]) {
+
+          Integer temp[] = arr[j];
+          arr[j] = arr[j + 1];
+          arr[j + 1] = temp;
+        }
+      }
+    }
+    return twoDArrayToList(arr);
+
   }
 }
