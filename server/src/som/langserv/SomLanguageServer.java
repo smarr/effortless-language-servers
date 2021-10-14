@@ -353,7 +353,8 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
   }
 
   private static List<Integer> configuretokens(List<Integer> array) {
-    array = sort(array);
+    array = sortByLineNum(array);
+    array = sortByColNum(array);
     int tokenLine = array.get(array.size() - 5);
     int tokenstart = array.get(array.size() - 4);
     int linecount = 0;
@@ -409,7 +410,7 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
     return list;
   }
 
-  private static List<Integer> sort(final List<Integer> in) {
+  private static List<Integer> sortByLineNum(final List<Integer> in) {
     List<List<Integer>> list2d = chunk(in, 5);
     Integer[][] arr;
 
@@ -423,6 +424,30 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
           Integer temp[] = arr[j];
           arr[j] = arr[j + 1];
           arr[j + 1] = temp;
+        }
+      }
+    }
+    return twoDArrayToList(arr);
+
+  }
+
+  private static List<Integer> sortByColNum(final List<Integer> in) {
+    List<List<Integer>> list2d = chunk(in, 5);
+    Integer[][] arr;
+
+    arr = list2d.stream().map(x -> x.toArray(new Integer[x.size()])).toArray(Integer[][]::new);
+
+    int n = arr.length;
+    boolean didASwap = true;
+    for (int i = 0; i < n - 1 || didASwap == true; i++) {
+      didASwap = false;
+      for (int j = 0; j < n - i - 1; j++) {
+        if (arr[j][0] == arr[j + 1][0] && arr[j][1] > arr[j + 1][1]) {
+
+          Integer temp[] = arr[j];
+          arr[j] = arr[j + 1];
+          arr[j + 1] = temp;
+          didASwap = true;
         }
       }
     }
