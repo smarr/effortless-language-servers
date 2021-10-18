@@ -115,13 +115,11 @@ public class NewspeakParser extends Parser {
   protected void storeClassNamePosition(final SourceCoordinate coord, final String name,
       final SourceSection source, final AccessModifier accessModifier) {
 
-    /*
-     * if (coord.startColumn - 6 >= accessModifier.toString().length()) {
-     * struturalProbe.addTokenPosition(coord.startLine,
-     * coord.startColumn - (7 + accessModifier.toString().length()),
-     * accessModifier.toString().length(), 1, 0);
-     * }
-     */
+    if (coord.startColumn - 6 >= accessModifier.toString().length()) {
+      struturalProbe.addTokenPosition(coord.startLine,
+          coord.startColumn - (7 + accessModifier.toString().length()),
+          accessModifier.toString().length(), 1, 0);
+    }
 
     struturalProbe.addTokenPosition(coord.startLine, coord.startColumn - 6,
         5, 1, 0);
@@ -231,15 +229,13 @@ public class NewspeakParser extends Parser {
         0);
   }
 
-  /*
-   * @Override
-   * protected void storeUsingPosition(final SourceCoordinate coords,
-   * final String identifierLength) {
-   * struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
-   * identifierLength.length(), 1,
-   * 0);
-   * }
-   */
+  @Override
+  protected void storeUsingPosition(final SourceCoordinate coords,
+      final String identifierLength) {
+    struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
+        identifierLength.length(), 1,
+        0);
+  }
 
   /*
    * @Override
