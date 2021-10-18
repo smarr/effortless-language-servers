@@ -105,13 +105,18 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
     semanticTokens.setId(null);
 
     List<String> tokenTypes = new ArrayList<String>();
-    tokenTypes.add("class");
-    tokenTypes.add("keyword");
-    tokenTypes.add("method");
-    tokenTypes.add("string");
-    tokenTypes.add("variable");
-    tokenTypes.add("comment");
+    tokenTypes.add("class"); // 0
+    tokenTypes.add("keyword"); // 1
+    tokenTypes.add("method"); // 2
+    tokenTypes.add("string"); // 3
+    tokenTypes.add("variable"); // 4
+    tokenTypes.add("comment"); // 5
+    tokenTypes.add("type"); // 6
+    tokenTypes.add("property"); // 7
+    tokenTypes.add("operator"); // 8
     List<String> tokenModifiers = new ArrayList<String>();
+    tokenModifiers.add("declaration");
+    tokenModifiers.add("definition");
     SemanticTokensLegend legend = new SemanticTokensLegend(tokenTypes, tokenModifiers);
 
     semanticTokens.setLegend(legend);
@@ -464,7 +469,7 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
     int n = arr.length;
     for (int i = 0; i < n - 1; i++) {
       for (int j = 0; j < n - i - 1; j++) {
-        if (arr[j][0] > arr[j + 1][0]) {
+        if (arr[j][0].intValue() > arr[j + 1][0].intValue()) {
 
           Integer temp[] = arr[j];
           arr[j] = arr[j + 1];
@@ -487,7 +492,8 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
     for (int i = 0; i < n - 1 || didASwap == true; i++) {
       didASwap = false;
       for (int j = 0; j < n - i - 1; j++) {
-        if (arr[j][0] == arr[j + 1][0] && arr[j][1] > arr[j + 1][1]) {
+        if (arr[j][0].intValue() == arr[j + 1][0].intValue()
+            && arr[j][1].intValue() > arr[j + 1][1].intValue()) {
 
           Integer temp[] = arr[j];
           arr[j] = arr[j + 1];
