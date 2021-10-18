@@ -8,6 +8,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import bd.basic.ProgramDefinitionError;
 import bd.source.SourceCoordinate;
+import som.compiler.AccessModifier;
 import som.compiler.MethodBuilder;
 import som.compiler.Parser;
 import som.interpreter.SomLanguage;
@@ -105,7 +106,16 @@ public class NewspeakParser extends Parser {
 
   @Override
   protected void storeClassNamePosition(final SourceCoordinate coord, final String name,
-      final SourceSection source) {
+      final SourceSection source, final AccessModifier accessModifier) {
+
+    /*
+     * if (coord.startColumn - 6 >= accessModifier.toString().length()) {
+     * struturalProbe.addTokenPosition(coord.startLine,
+     * coord.startColumn - (7 + accessModifier.toString().length()),
+     * accessModifier.toString().length(), 1, 0);
+     * }
+     */
+
     struturalProbe.addTokenPosition(coord.startLine, coord.startColumn - 6,
         5, 1, 0);
     struturalProbe.addTokenPosition(coord.startLine, coord.startColumn,
@@ -116,11 +126,12 @@ public class NewspeakParser extends Parser {
   @Override
   protected void storeMethodNamePosition(final SourceCoordinate coord,
       final SInvokable method) {
+
     struturalProbe.addTokenPosition(coord.startLine,
         coord.startColumn,
         method.getAccessModifier().toString().length() + 1, 1, 0);
     struturalProbe.addTokenPosition(coord.startLine,
-        coord.startColumn + method.getAccessModifier().toString().length(),
+        coord.startColumn + method.getAccessModifier().toString().length() + 1,
         method.getSignature().getString().length() + 1, 2, 0);
 
   }
@@ -136,8 +147,10 @@ public class NewspeakParser extends Parser {
   @Override
   protected void storeLocalVariableDec(final SourceCoordinate coord,
       final String accessToken, final String name) {
+
     struturalProbe.addTokenPosition(coord.startLine,
         coord.startColumn, accessToken.length(), 1, 0);
+
     struturalProbe.addTokenPosition(coord.startLine,
         coord.startColumn + accessToken.length(), name.length() + 1, 4, 0);
 
@@ -171,47 +184,63 @@ public class NewspeakParser extends Parser {
     }
   }
 
+  @Override
+  protected void storeLocalPosition(final SourceCoordinate coords,
+      final String localLength) {
+    struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
+        localLength.length(), 4,
+        0);
+  }
+
+  @Override
+  protected void storeIdentifierPosition(final SourceCoordinate coords,
+      final String identifierLength) {
+    struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
+        identifierLength.length() + 1, 6,
+        0);
+  }
+
+  @Override
+  protected void storeimplicitUnaryMessagePositions(final SourceCoordinate coords,
+      final String identifierLength) {
+    struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
+        identifierLength.length() + 1, 4,
+        0);
+  }
+
+  @Override
+  protected void storeUnaryMessagesPositions(final SourceCoordinate coords,
+      final String identifierLength) {
+    struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
+        identifierLength.length(), 2,
+        0);
+  }
+
+  @Override
+  protected void storeReferencePositions(final SourceCoordinate coords,
+      final String identifierLength) {
+    struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
+        identifierLength.length(), 2,
+        0);
+  }
+
   /*
    * @Override
-   * protected void methodDeclaration(final AccessModifier accessModifier,
-   * final SourceCoordinate coord, final MixinBuilder mxnBuilder)
-   * throws ProgramDefinitionError {
-   * // SourceCoordinate coord = getCoordinate();
-   * struturalProbe.addTokenPosition(coord.startLine, coord.startColumn,
-   * mxnBuilder.getName().length() + accessModifier.toString().length(), 1, 0);
-   * super.methodDeclaration(accessModifier, coord, mxnBuilder);
-   *
+   * protected void storeUsingPosition(final SourceCoordinate coords,
+   * final String identifierLength) {
+   * struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
+   * identifierLength.length(), 1,
+   * 0);
    * }
    */
 
   /*
    * @Override
-   * protected MixinBuilder classDeclaration(final MixinBuilder outerBuilder,
-   * final AccessModifier accessModifier) throws ProgramDefinitionError {
-   * MixinBuilder result;
-   *
-   * if (outerBuilder == null) {
-   * SourceCoordinate coord = getCoordinate();
-   * startLine = coord.startLine;
-   * startCol = coord.startColumn;
-   * result = super.classDeclaration(outerBuilder, accessModifier);
-   * return result;
-   *
-   * }
-   *
-   * if (abouttorecurse == false) {
-   * struturalProbe.addTokenPosition(startLine, startCol,
-   * outerBuilder.getName().length() + 5, 0, 0);
-   * abouttorecurse = true;
-   * }
-   *
-   * // abouttorecurse = false;
-   * SourceCoordinate coord = getCoordinate();
-   * struturalProbe.addTokenPosition(coord.startLine, coord.startColumn,
-   * outerBuilder.getName().length() + accessModifier.toString().length(), 0, 0);
-   * result = super.classDeclaration(outerBuilder, accessModifier);
-   * return result;
-   *
+   * protected void storeSymbolPosition(final SourceCoordinate coords,
+   * final String identifierLength) {
+   * struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
+   * identifierLength.length() + 1, 8,
+   * 0);
    * }
    */
 
