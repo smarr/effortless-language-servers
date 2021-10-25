@@ -229,8 +229,17 @@ public class NewspeakStructures
     return false;
   }
 
-  public void addTokenPosition(final int lineNumber, final int startingChar, final int length,
+  public void addTokenPosition(int lineNumber, int startingChar, final int length,
       final int tokenType, final int tokenMoifications) {
+
+    // if a token fails ( less than 0 ) then i put it to the front of the line to be solved in
+    // furture version of semantic tokens
+    if (lineNumber <= 0) {
+      lineNumber = 1;
+    }
+    if (startingChar <= 0) {
+      startingChar = 1;
+    }
     tokenPosition.add(lineNumber - 1);
     tokenPosition.add(startingChar - 1);
     tokenPosition.add(length);
