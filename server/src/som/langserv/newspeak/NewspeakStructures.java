@@ -226,6 +226,29 @@ public class NewspeakStructures
     return false;
   }
 
+  public void addTokenPosition(int lineNumber, int startingChar, final int length,
+      final int tokenType, final int tokenMoifications) {
+
+    // if a token fails ( less than 0 ) then i put it to the front of the line to be solved in
+    // furture version of semantic tokens
+    if (lineNumber <= 0) {
+      lineNumber = 1;
+    }
+    if (startingChar <= 0) {
+      startingChar = 1;
+    }
+    tokenPosition.add(lineNumber - 1);
+    tokenPosition.add(startingChar - 1);
+    tokenPosition.add(length);
+    tokenPosition.add(tokenType);
+    tokenPosition.add(tokenMoifications);
+
+  }
+
+  public List<Integer> getTokenPositions() {
+    return tokenPosition;
+  }
+
   // REM:
   // how to continue with the support for the language server protocol?
   // - subclass the parser, and actively report more info to the structural probe subclass

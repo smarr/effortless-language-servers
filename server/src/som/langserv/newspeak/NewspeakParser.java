@@ -117,7 +117,7 @@ public class NewspeakParser extends Parser {
     struturalProbe.addTokenPosition(coord.startLine, coord.startColumn - 6,
         5, 1, 0);
     struturalProbe.addTokenPosition(coord.startLine, coord.startColumn,
-        name.length(), 0, 0);
+        name.length() + 1, 0, 0);
 
   }
 
