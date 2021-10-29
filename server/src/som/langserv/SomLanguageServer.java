@@ -195,29 +195,12 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
 
       }
     }
-    List<Integer> lista = Arrays.asList(0, 0, 0, 0, 0);
-    SemanticTokens tokens = new SemanticTokens(lista);
+
+    List<Integer> lista = Arrays.asList(1, 2, 6, 1, 0,
+        1, 9, 4, 2, 0,
+        1, 15, 4, 6, 0);
+    SemanticTokens tokens = new SemanticTokens(configuretokens(lista));
     return CompletableFuture.completedFuture(tokens);
-
-    // String uri = params.getTextDocument().getUri();
-
-    // SemanticDefinitionsReader reader = new SemanticDefinitionsReader();
-    // try {
-    // List<Integer> list = reader.getSemanticTokenDefinition(uri);
-    // if (list.isEmpty() || list == null) {
-    // // this is just for tessting i need to look into how to send an empty token
-    // List<Integer> lista = Arrays.asList(0, 0, 0, 0, 0);
-    // SemanticTokens tokens = new SemanticTokens(lista);
-    // return CompletableFuture.completedFuture(tokens);
-    // }
-    // SemanticTokens tokens = new SemanticTokens(list);
-    // return CompletableFuture.completedFuture(tokens);
-    // } catch (Exception e) {
-    // // this is just for tessting i need to look into how to send an empty token
-    // List<Integer> lista = Arrays.asList(0, 0, 0, 0, 0);
-    // SemanticTokens tokens = new SemanticTokens(lista);
-    // return CompletableFuture.completedFuture(tokens);
-    // }
 
   }
 
