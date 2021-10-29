@@ -177,6 +177,29 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
   }
 
   @Override
+  public CompletableFuture<SemanticTokens> semanticTokensFull(
+      final SemanticTokensParams params) {
+
+    String uri = params.getTextDocument().getUri();
+    for (LanguageAdapter<?> adapter : adapters) {
+      if (adapter.handlesUri(uri)) {
+        return CompletableFuture.completedFuture(
+            new SemanticTokens(configuretokens(adapter.getTokenPositions(uri))));
+
+      } else {
+
+      }
+    }
+
+    List<Integer> lista = Arrays.asList(1, 2, 6, 1, 0,
+        1, 9, 4, 2, 0,
+        1, 15, 4, 6, 0);
+    SemanticTokens tokens = new SemanticTokens(configuretokens(lista));
+    return CompletableFuture.completedFuture(tokens);
+
+  }
+
+  @Override
   public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(
       final CompletionParams position) {
     String uri = position.getTextDocument().getUri();
