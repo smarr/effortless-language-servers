@@ -43,6 +43,7 @@ public class NewspeakParser extends Parser {
   @Override
   protected ExpressionNode implicitUnaryMessage(final MethodBuilder meth,
       final SSymbol selector, final SourceSection section) {
+    SourceCoordinate coord = getCoordinate();
     ExpressionNode result = super.implicitUnaryMessage(meth, selector, section);
 
     SourceSection s = sourceSections.getLast();
@@ -124,7 +125,7 @@ public class NewspeakParser extends Parser {
     struturalProbe.addTokenPosition(coord.startLine, coord.startColumn - 6,
         5, 1, 0);
     struturalProbe.addTokenPosition(coord.startLine, coord.startColumn,
-        name.length() + 1, 0, 0);
+        name.length(), 0, 0);
 
   }
 
@@ -134,10 +135,10 @@ public class NewspeakParser extends Parser {
 
     struturalProbe.addTokenPosition(coord.startLine,
         coord.startColumn,
-        method.getAccessModifier().toString().length() + 1, 1, 0);
+        method.getAccessModifier().toString().length(), 1, 0);
     struturalProbe.addTokenPosition(coord.startLine,
         coord.startColumn + method.getAccessModifier().toString().length() + 1,
-        method.getSignature().getString().length() + 1, 2, 0);
+        method.getSignature().getString().length(), 2, 0);
 
   }
 
@@ -155,9 +156,9 @@ public class NewspeakParser extends Parser {
 
     struturalProbe.addTokenPosition(coord.startLine,
         coord.startColumn, accessToken.length(), 1, 0);
-
+    // justifications on why this goses wrong is due to the acess token before being 1 short
     struturalProbe.addTokenPosition(coord.startLine,
-        coord.startColumn + accessToken.length(), name.length() + 1, 4, 0);
+        coord.startColumn + accessToken.length() + 1, name.length() + 1, 4, 0);
 
   }
 
@@ -199,9 +200,10 @@ public class NewspeakParser extends Parser {
 
   @Override
   protected void storeIdentifierPosition(final SourceCoordinate coords,
-      final String identifierLength) {
+      final String identifier) {
+    // this is unque and has been changed at call
     struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
-        identifierLength.length() + 1, 6,
+        identifier.length(), 6,
         0);
   }
 
@@ -209,8 +211,9 @@ public class NewspeakParser extends Parser {
   protected void storeimplicitUnaryMessagePositions(final SourceCoordinate coords,
       final String identifierLength) {
     struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
-        identifierLength.length() + 1, 4,
+        identifierLength.length(), 4,
         0);
+    // if this goses wrong look at how its called. it might be wrong
   }
 
   @Override
@@ -224,8 +227,10 @@ public class NewspeakParser extends Parser {
   @Override
   protected void storeReferencePositions(final SourceCoordinate coords,
       final String identifierLength) {
+    // i think that all referneces have a colon : so thats where the minus 1 comes from
+    // if this is wrong do a string split
     struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
-        identifierLength.length(), 2,
+        identifierLength.length() - 1, 2,
         0);
   }
 
@@ -233,10 +238,26 @@ public class NewspeakParser extends Parser {
   protected void storeUsingPosition(final SourceCoordinate coords,
       final String identifierLength) {
     struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
-        identifierLength.length(), 1,
+        identifierLength.length() - 1, 1,
         0);
   }
 
+  @Override
+  protected void storeBlockPatternPositions(final SourceCoordinate coords,
+      final String identifier) {
+    struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
+        identifier.length(), 9,
+        0);
+  }
+
+  @Override
+  protected void storeBooleanPositions(final SourceCoordinate coords,
+      final String identifier) {
+    // atm the true false and nil are keyword untill i can find somthing better
+    struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
+        identifier.length(), 1,
+        0);
+  }
   /*
    * @Override
    * protected void storeSymbolPosition(final SourceCoordinate coords,
