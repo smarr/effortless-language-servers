@@ -233,7 +233,13 @@ public class NewspeakStructures
     // furture version of semantic tokens
     if (lineNumber <= 0) {
       lineNumber = 1;
+
     }
+    /*
+     * if (lineNumber == 1) {
+     * startingChar += 1;
+     * }
+     */
     if (startingChar <= 0) {
       startingChar = 1;
     }
