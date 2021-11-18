@@ -151,6 +151,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
         structuralProbes.put(path, newProbe);
       }
     }
+
     return diagnostics;
   }
 
@@ -424,6 +425,36 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
       }
     }
     return null;
+  }
+
+  private final class TruffleSomCompiler extends SourcecodeCompiler {
+
+    public TruffleSomCompiler(final SomLanguage language) {
+      super(language);
+    }
+
+    public SClass compileClass(final String text, final Source source, final Universe universe,
+        final StructuralProbe<SSymbol, SClass, SInvokable, Field, Variable> structuralProbe)
+        throws ProgramDefinitionError {
+      SomParser parser =
+          new SomParser(text, source, (SomStructures) structuralProbe, universe);
+
+      SClass s = compile(parser, null, universe);
+      parser.storeAllComments();
+      return s;
+    }
+
+  }
+
+  @Override
+  public List<Integer> getTokenPositions(final String documentUri) {
+    String path;
+    try {
+      path = docUriToNormalizedPath(documentUri);
+      return getProbe(path).getTokenPositions();
+    } catch (URISyntaxException e) {
+      return null;
+    }
   }
 
   public static SClass compileClass(final String text, final Source source,

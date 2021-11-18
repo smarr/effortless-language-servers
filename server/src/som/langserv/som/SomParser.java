@@ -29,6 +29,7 @@ public class SomParser extends ParserAst {
     assert structuralProbe != null : "Needed for this extended parser.";
     this.structuralProbe = structuralProbe;
     sourceSections = new ArrayDeque<>();
+
   }
 
   @Override
@@ -104,7 +105,8 @@ public class SomParser extends ParserAst {
   protected SSymbol binarySelector() throws ParseError {
     int coord = getStartIndex();
     SSymbol result = super.binarySelector();
-    recordSourceSection(coord);
+    sourceSections.addLast(getSource(coord));
+
     return result;
   }
 
@@ -112,7 +114,8 @@ public class SomParser extends ParserAst {
   protected String keyword() throws ParseError {
     int coord = getStartIndex();
     String result = super.keyword();
-    recordSourceSection(coord);
+    sourceSections.addLast(getSource(coord));
+
     return result;
   }
 
@@ -160,4 +163,69 @@ public class SomParser extends ParserAst {
       sourceSections.removeLast();
     }
   }
+
+  @Override
+  protected void storeClassPosition(final SourceCoordinate coords, final String className) {
+    structuralProbe.addTokenPosition(coords.startLine, coords.startColumn,
+        className.length(), 0, 0);
+  }
+
+  @Override
+  protected void storeMethodPosition(final SourceCoordinate coords, final String methodName) {
+    structuralProbe.addTokenPosition(coords.startLine, coords.startColumn,
+        methodName.length(), 2, 0);
+  }
+
+  @Override
+  protected void storeLocalsPosition(final SourceCoordinate coords, final String localName) {
+    structuralProbe.addTokenPosition(coords.startLine, coords.startColumn,
+        localName.length(), 4, 0);
+  }
+
+  @Override
+  protected void storeLiteralStringPosition(final SourceCoordinate coords,
+      final String string) {
+    // needs a + 2 to the length because of the quotes
+    structuralProbe.addTokenPosition(coords.startLine, coords.startColumn,
+        string.length() + 2, 3, 0);
+  }
+
+  @Override
+  protected void storeVariablePosition(final SourceCoordinate coords,
+      final String identifier) {
+    structuralProbe.addTokenPosition(coords.startLine, coords.startColumn,
+        identifier.length(), 4, 0);
+  }
+
+  @Override
+  protected void storeUnaryMessagesPositions(final SourceCoordinate coords,
+      final String identifierLength) {
+    structuralProbe.addTokenPosition(coords.startLine, coords.startColumn,
+        identifierLength.length(), 2,
+        0);
+  }
+
+  @Override
+  protected void storeKeywordPosition(final SourceCoordinate coords,
+      final String keyword) {
+    structuralProbe.addTokenPosition(coords.startLine, coords.startColumn,
+        keyword.length(), 1,
+        0);
+  }
+
+  @Override
+  protected void storePrimitivePosition(final SourceCoordinate coords,
+      final String string) {
+    structuralProbe.addTokenPosition(coords.startLine, coords.startColumn,
+        string.length(), 1,
+        0);
+  }
+
+  protected void storeAllComments() {
+    // why dose this work out of order?
+    // i check all tokens are in the right order later on and makre sure they are
+    structuralProbe.addTokenPosition(this.lexer.getCommentsPositions());
+
+  }
+
 }
