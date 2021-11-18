@@ -158,6 +158,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
         structuralProbes.put(path, newProbe);
       }
     }
+
     return diagnostics;
   }
 
@@ -445,14 +446,21 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
       SomParser parser =
           new SomParser(text, source, (SomStructures) structuralProbe, universe);
 
-      return compile(parser, null, universe);
+      SClass s = compile(parser, null, universe);
+      parser.storeAllComments();
+      return s;
     }
 
   }
 
   @Override
   public List<Integer> getTokenPositions(final String documentUri) {
-    // TODO Auto-generated method stub
-    return null;
+    String path;
+    try {
+      path = docUriToNormalizedPath(documentUri);
+      return getProbe(path).getTokenPositions();
+    } catch (URISyntaxException e) {
+      return null;
+    }
   }
 }
