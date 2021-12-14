@@ -23,7 +23,8 @@
 	},
 	"activationEvents": [
 		"onLanguage:SOMns",
-		"onLanguage:SOM"
+		"onLanguage:SOM",
+		"onLanguage:simple"
 	],
 	"main": "./out/src/extension",
 	"icon": "resources/logo.png",
@@ -46,6 +47,16 @@
 				],
 				"aliases": [
 					"SOM"
+				],
+				"configuration": "./language-configuration.json"
+			},
+			{
+				"id": "simple",
+				"extensions": [
+					".sl"
+				],
+				"aliases": [
+					"simple"
 				],
 				"configuration": "./language-configuration.json"
 			}

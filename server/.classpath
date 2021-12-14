@@ -22,5 +22,6 @@
 	<classpathentry kind="src" path="/TruffleSOM"/>
 	<classpathentry kind="lib" path="libs/java-json.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry kind="src" path="/com.oracle.truffle.sl"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

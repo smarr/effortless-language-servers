@@ -1,0 +1,2 @@
+Error(s) parsing script:
+-- line 16 col 9: mismatched input '=' expecting {';', '||', '&&', '<', '<=', '>', '>=', '==', '!=', '+', '-', '*', '/'}

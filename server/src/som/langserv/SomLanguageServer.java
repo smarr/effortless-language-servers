@@ -60,6 +60,7 @@ import com.google.common.collect.Lists;
 
 import som.langserv.newspeak.Minitest;
 import som.langserv.newspeak.NewspeakAdapter;
+import som.langserv.simple.SimpleAdapter;
 import som.langserv.som.SomAdapter;
 
 
@@ -71,7 +72,8 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
   private LanguageClient           client;
 
   public SomLanguageServer() {
-    adapters = new LanguageAdapter[] {new NewspeakAdapter(), new SomAdapter()};
+    adapters =
+        new LanguageAdapter[] {new NewspeakAdapter(), new SomAdapter(), new SimpleAdapter()};
     workspace = new SomWorkspace(adapters);
   }
 
@@ -115,6 +117,9 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
     tokenTypes.add("property"); // 7
     tokenTypes.add("operator"); // 8
     tokenTypes.add("parameter"); // 9
+    tokenTypes.add("function"); // 10
+    tokenTypes.add("number"); // 11
+
     List<String> tokenModifiers = new ArrayList<String>();
     tokenModifiers.add("declaration");
     tokenModifiers.add("definition");
