@@ -3,6 +3,7 @@
 This is a VS code extension for the [SOMns][SOMns] research language.
 The extension provides support for:
 
+ - semantic highlighting
  - syntax highlighting
  - parse errors
  - code navigation
