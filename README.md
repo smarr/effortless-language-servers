@@ -3,6 +3,7 @@
 This is a VS code extension for the [SOMns][SOMns] research language.
 The extension provides support for:
 
+ - semantic highlighting (Som, Newspeak, Simple Language)
  - syntax highlighting
  - parse errors
  - code navigation
@@ -10,6 +11,11 @@ The extension provides support for:
  - basic linting
  - CodeLens for running minitests
  - and debugging of SOMns programs
+
+#### Screenshot of SOMns Semantic Highlighting
+
+![Screencast of SOMns Semantic Highlighting](https://raw.githubusercontent.com/HumphreyHCB/SOMns-vscode/master/resources/SomHighlighting.PNG)
+
 
 #### Screenshot of SOMns Syntax Highlighting
 
