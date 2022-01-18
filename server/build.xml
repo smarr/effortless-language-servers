@@ -4,6 +4,7 @@
     <property name="lib.dir"     value="libs" />
     <property name="somns.dir"     value="${lib.dir}/SOMns" />
     <property name="som.dir"     value="${lib.dir}/TruffleSOM" />
+	<property name="simple.dir"     value="${lib.dir}/simplelanguage" />
     <property name="bd.dir"      value="${somns.dir}/libs/black-diamonds" />
     <property name="truffle.dir" value="${somns.dir}/libs/truffle/truffle" />
     <property name="truffle.build" value="${truffle.dir}/mxbuild/dists/jdk1.8" />
@@ -13,8 +14,10 @@
     <property name="som.jar"     location="${som.dir}/build/som.jar" />
 
     <property name="mvn.repo"    value="https://repo1.maven.org/maven2" />
-
-    <property name="checkstyle.version" value="8.11" />
+	
+	<!-- <property name="local.mvn" value="/home/hburchell/.m2/repository/" /> -->
+	
+	<property name="checkstyle.version" value="8.11" />
     <property name="guava.version"      value="19.0" />
     <property name="gson.version"      value="2.8.6" />
     <property name="xtend.version"  value="2.24.0" />
@@ -28,7 +31,12 @@
         <pathelement location="${lib.dir}/org.eclipse.xtext.xbase.lib-${xtend.version}.jar" />
         <pathelement location="${lib.dir}/org.eclipse.xtend.lib-${xtend.version}.jar" />
         <pathelement location="${lib.dir}/org.eclipse.xtend.lib.macro-${xtend.version}.jar" />
-
+    	<pathelement location="${somns.dir}/libs/truffle/truffle/src/com.oracle.truffle.sl.jar" />
+    	
+    	 <pathelement location="/home/hburchell/.m2/repository/com/oracle/simplelanguage/21.3.0/simplelanguage-21.3.0.jar" /> 
+    	<pathelement location="/home/hburchell/.m2/repository/org/antlr/antlr4-runtime/4.7/antlr4-runtime-4.7.jar" />
+    	
+    	
         <pathelement location="${sdk.build}/graal-sdk.jar" />
 
         <pathelement location="${truffle.build}/truffle-api.jar" />
@@ -39,6 +47,7 @@
         <pathelement location="${somns.dir}/libs/jna-platform.jar" />
         <pathelement location="${somns.dir}/libs/jna.jar" />
         <pathelement location="${bd.dir}/build/black-diamonds.jar" />
+    	<pathelement location="/home/hburchell/.m2/repository/org/antlr" />
     </path>
 
     <path id="project.classpath">
@@ -72,7 +81,14 @@
       </exec>
       <jar destfile="${bd.dir}/build/black-diamonds.jar" basedir="${bd.dir}/build/classes" />
     </target>
-
+	
+    <target name="simple" depends="somns-submodule">
+      <exec executable="mvn" dir="${simple.dir}">
+          <arg value="package" />
+          
+      </exec>
+    </target>
+	
     <target name="trufflesom" depends="somns-submodule">
       <exec executable="ant" dir="${som.dir}">
           <arg value="-Dskip.graal=true" />
@@ -80,7 +96,7 @@
       </exec>
     </target>
 
-    <target name="libs" depends="somns,trufflesom">
+    <target name="libs" depends="somns,trufflesom,simple">
         <get src="${mvn.repo}/com/google/code/gson/gson/${gson.version}/gson-${gson.version}.jar"
             usetimestamp="true"
             dest="${lib.dir}/gson-${gson.version}.jar" />
@@ -122,6 +138,7 @@
           <src path="org.eclipse.lsp4j-gen" />
           <src path="org.eclipse.lsp4j.generator" />
           <src path="org.eclipse.lsp4j.jsonrpc" />
+          
           <classpath refid="project.classpath" />
           <compilerarg line="-XDignore.symbol.file" />
           <compilerarg line="-Xlint:all" />

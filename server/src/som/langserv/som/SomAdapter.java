@@ -448,6 +448,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
 
       SClass s = compile(parser, null, universe);
       parser.storeAllComments();
+
       return s;
     }
 

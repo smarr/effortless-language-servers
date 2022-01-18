@@ -267,8 +267,8 @@ com/oracle/truffle/sl/builtins/SLNewObjectBuiltinFactory.class
 com/oracle/truffle/sl/builtins/PrimitiveValueWrapperGen$ReflectionLibraryExports$Uncached.class
 com/oracle/truffle/sl/parser/SLParseErrorGen$InteropLibraryExports.class
 com/oracle/truffle/sl/builtins/SLJavaTypeBuiltinFactory.class
-com/oracle/truffle/sl/nodes/SLStatementNode.class
 com/oracle/truffle/sl/nodes/local/ArgumentsObjectGen$InteropLibraryExports$Cached.class
+com/oracle/truffle/sl/nodes/SLStatementNode.class
 com/oracle/truffle/sl/runtime/SLFunctionGen$1.class
 com/oracle/truffle/sl/nodes/local/SLScopedNode$VariablesObject$ExistsMember.class
 com/oracle/truffle/sl/nodes/interop/NodeObjectDescriptorKeysGen$InteropLibraryExports.class
