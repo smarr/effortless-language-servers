@@ -18,9 +18,11 @@ import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.graalvm.polyglot.Context;
 
+import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.sl.SLLanguage;
+import com.oracle.truffle.sl.parser.SLParseError;
 import com.oracle.truffle.sl.parser.SimpleLanguageLexer;
 
 import bd.source.SourceCoordinate;
@@ -81,10 +83,12 @@ public class SimpleAdapter extends LanguageAdapter<SimpleStructures> {
       }
     } catch (ParseError e) {
       return toDiagnostics(e, diagnostics);
+    } catch (SLParseError e) {
+      return toDiagnostics(e, diagnostics);
     } catch (SemanticDefinitionError e) {
       return toDiagnostics(e, diagnostics);
     } catch (Throwable e) {
-      return toDiagnostics(e.getMessage(), diagnostics);
+      return toDiagnostics(e, diagnostics);
     } finally {
       // set new probe once done with everything
       synchronized (structuralProbes) {
@@ -122,12 +126,34 @@ public class SimpleAdapter extends LanguageAdapter<SimpleStructures> {
     return diagnostics;
   }
 
-  private List<Diagnostic> toDiagnostics(final String msg,
+  private List<Diagnostic> toDiagnostics(final SLParseError e,
+      final List<Diagnostic> diagnostics) {
+    SourceSection source;
+    Diagnostic d = new Diagnostic();
+    try {
+      source = e.getSourceSection();
+      d.setRange(toRange(source));
+    } catch (UnsupportedMessageException e1) {
+      // TODO Auto-generated catch block
+      e1.printStackTrace();
+    }
+
+    d.setSeverity(DiagnosticSeverity.Error);
+
+    d.setMessage(e.getMessage());
+    d.setSource("Parser");
+
+    diagnostics.add(d);
+    return diagnostics;
+  }
+
+  private List<Diagnostic> toDiagnostics(final Throwable e,
       final List<Diagnostic> diagnostics) {
     Diagnostic d = new Diagnostic();
     d.setSeverity(DiagnosticSeverity.Error);
 
-    d.setMessage(msg);
+    d.setMessage(e.getMessage());
+
     d.setSource("Parser");
 
     diagnostics.add(d);
@@ -198,6 +224,19 @@ public class SimpleAdapter extends LanguageAdapter<SimpleStructures> {
   public void getCodeLenses(final List<CodeLens> codeLenses, final String documentUri) {
     // TODO Auto-generated method stub
 
+  }
+
+  @Override
+  public List<Diagnostic> getDiagnostics(final String documentUri) {
+    String path;
+    try {
+      path = docUriToNormalizedPath(documentUri);
+      return getProbe(path).getDiagnostics();
+    } catch (URISyntaxException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+      return null;
+    }
   }
 
 }

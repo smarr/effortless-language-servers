@@ -187,7 +187,7 @@ public class NewspeakAdapter extends LanguageAdapter<NewspeakStructures> {
     d.setSeverity(DiagnosticSeverity.Error);
 
     SourceCoordinate coord = e.getSourceCoordinate();
-    d.setRange(toRangeMax(coord.startLine, coord.startColumn));
+    d.setRange(toRangeMax(coord.startLine + 1, coord.startColumn));
     d.setMessage(e.getMessage());
     d.setSource("Parser");
 
@@ -456,6 +456,19 @@ public class NewspeakAdapter extends LanguageAdapter<NewspeakStructures> {
 
     for (MixinDefinition c : probe.getClasses()) {
       Minitest.checkForTests(c, codeLenses, documentUri);
+    }
+  }
+
+  @Override
+  public List<Diagnostic> getDiagnostics(final String documentUri) {
+    String path;
+    try {
+      path = docUriToNormalizedPath(documentUri);
+      return getProbe(path).getDiagnostics();
+    } catch (URISyntaxException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+      return null;
     }
   }
 

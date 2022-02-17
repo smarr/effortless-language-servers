@@ -8,7 +8,6 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import bd.basic.ProgramDefinitionError;
 import bd.source.SourceCoordinate;
-import som.compiler.AccessModifier;
 import som.compiler.MethodBuilder;
 import som.compiler.Parser;
 import som.interpreter.SomLanguage;
@@ -106,53 +105,10 @@ public class NewspeakParser extends Parser {
   }
 
   @Override
-  protected void storeClassNamePosition(final SourceCoordinate coord, final String name,
-      final SourceSection source, final AccessModifier accessModifier) {
-
-    if (coord.startColumn - 6 >= accessModifier.toString().length()) {
-      struturalProbe.addTokenPosition(coord.startLine,
-          coord.startColumn - (7 + accessModifier.toString().length()),
-          accessModifier.toString().length(), 1, 0);
-    }
-
-    struturalProbe.addTokenPosition(coord.startLine, coord.startColumn - 6,
-        5, 1, 0);
-    struturalProbe.addTokenPosition(coord.startLine, coord.startColumn,
-        name.length(), 0, 0);
-
-  }
-
-  @Override
-  protected void storeMethodNamePosition(final SourceCoordinate coord,
-      final SInvokable method) {
-
-    struturalProbe.addTokenPosition(coord.startLine,
-        coord.startColumn,
-        method.getAccessModifier().toString().length(), 1, 0);
-    struturalProbe.addTokenPosition(coord.startLine,
-        coord.startColumn + method.getAccessModifier().toString().length() + 1,
-        method.getSignature().getString().length(), 2, 0);
-
-  }
-
-  @Override
-  protected void storeLiteralStringPosition(final SourceCoordinate coord,
-      final String litString) {
-    struturalProbe.addTokenPosition(coord.startLine,
-        coord.startColumn, litString.length() + 2, 3, 0);
-    // plus 2 to the sting is for the two quotes
-  }
-
-  @Override
-  protected void storeLocalVariableDec(final SourceCoordinate coord,
-      final String accessToken, final String name) {
-
-    struturalProbe.addTokenPosition(coord.startLine,
-        coord.startColumn, accessToken.length(), 1, 0);
-    // justifications on why this goses wrong is due to the acess token before being 1 short
-    struturalProbe.addTokenPosition(coord.startLine,
-        coord.startColumn + accessToken.length() + 1, name.length() + 1, 4, 0);
-
+  protected void storePosition(final SourceCoordinate coords, final String length,
+      final int tokenTypevalue) {
+    struturalProbe.addTokenPosition(coords.startLine,
+        coords.startColumn, length.length(), tokenTypevalue, 0);
   }
 
   @Override
@@ -183,74 +139,74 @@ public class NewspeakParser extends Parser {
     }
   }
 
-  @Override
-  protected void storeLocalPosition(final SourceCoordinate coords,
-      final String localLength) {
-    struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
-        localLength.length(), 4,
-        0);
-  }
-
-  @Override
-  protected void storeIdentifierPosition(final SourceCoordinate coords,
-      final String identifier) {
-    // this is unque and has been changed at call
-    struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
-        identifier.length(), 6,
-        0);
-  }
-
-  @Override
-  protected void storeimplicitUnaryMessagePositions(final SourceCoordinate coords,
-      final String identifierLength) {
-    struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
-        identifierLength.length(), 4,
-        0);
-    // if this goses wrong look at how its called. it might be wrong
-  }
-
-  @Override
-  protected void storeUnaryMessagesPositions(final SourceCoordinate coords,
-      final String identifierLength) {
-    struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
-        identifierLength.length(), 2,
-        0);
-  }
-
-  @Override
-  protected void storeReferencePositions(final SourceCoordinate coords,
-      final String identifierLength) {
-    // i think that all referneces have a colon : so thats where the minus 1 comes from
-    // if this is wrong do a string split
-    struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
-        identifierLength.length() - 1, 2,
-        0);
-  }
-
-  @Override
-  protected void storeUsingPosition(final SourceCoordinate coords,
-      final String identifierLength) {
-    struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
-        identifierLength.length() - 1, 1,
-        0);
-  }
-
-  @Override
-  protected void storeBlockPatternPositions(final SourceCoordinate coords,
-      final String identifier) {
-    struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
-        identifier.length(), 9,
-        0);
-  }
-
-  @Override
-  protected void storeBooleanPositions(final SourceCoordinate coords,
-      final String identifier) {
-    // atm the true false and nil are keyword untill i can find somthing better
-    struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
-        identifier.length(), 1,
-        0);
-  }
+  // @Override
+  // protected void storeLocalPosition(final SourceCoordinate coords,
+  // final String localLength) {
+  // struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
+  // localLength.length(), 4,
+  // 0);
+  // }
+  //
+  // @Override
+  // protected void storeIdentifierPosition(final SourceCoordinate coords,
+  // final String identifier) {
+  // // this is unque and has been changed at call
+  // struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
+  // identifier.length(), 6,
+  // 0);
+  // }
+  //
+  // @Override
+  // protected void storeimplicitUnaryMessagePositions(final SourceCoordinate coords,
+  // final String identifierLength) {
+  // struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
+  // identifierLength.length(), 4,
+  // 0);
+  // // if this goses wrong look at how its called. it might be wrong
+  // }
+  //
+  // @Override
+  // protected void storeUnaryMessagesPositions(final SourceCoordinate coords,
+  // final String identifierLength) {
+  // struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
+  // identifierLength.length(), 2,
+  // 0);
+  // }
+  //
+  // @Override
+  // protected void storeReferencePositions(final SourceCoordinate coords,
+  // final String identifierLength) {
+  // // i think that all referneces have a colon : so thats where the minus 1 comes from
+  // // if this is wrong do a string split
+  // struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
+  // identifierLength.length() , 2,
+  // 0);
+  // }
+  //
+  // @Override
+  // protected void storeUsingPosition(final SourceCoordinate coords,
+  // final String identifierLength) {
+  // struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
+  // identifierLength.length() , 1,
+  // 0);
+  // }
+  //
+  // @Override
+  // protected void storeBlockPatternPositions(final SourceCoordinate coords,
+  // final String identifier) {
+  // struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
+  // identifier.length(), 9,
+  // 0);
+  // }
+  //
+  // @Override
+  // protected void storeBooleanPositions(final SourceCoordinate coords,
+  // final String identifier) {
+  // // atm the true false and nil are keyword untill i can find somthing better
+  // struturalProbe.addTokenPosition(coords.startLine, coords.startColumn,
+  // identifier.length(), 1,
+  // 0);
+  // }
   /*
    * @Override
    * protected void storeSymbolPosition(final SourceCoordinate coords,
