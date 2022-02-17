@@ -455,6 +455,19 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
   }
 
   @Override
+  public List<Diagnostic> getDiagnostics(final String documentUri) {
+    String path;
+    try {
+      path = docUriToNormalizedPath(documentUri);
+      return getProbe(path).getDiagnostics();
+    } catch (URISyntaxException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+      return null;
+    }
+  }
+
+  @Override
   public List<Integer> getTokenPositions(final String documentUri) {
     String path;
     try {

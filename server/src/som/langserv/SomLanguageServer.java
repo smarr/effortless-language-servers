@@ -68,14 +68,15 @@ import som.langserv.som.SomAdapter;
 public class SomLanguageServer implements LanguageServer, TextDocumentService,
     LanguageClientAware {
 
-  private final SomWorkspace       workspace;
-  private final LanguageAdapter<?> adapters[];
-  private LanguageClient           client;
+  private final SomWorkspace             workspace;
+  private final LanguageAdapter<?>       adapters[];
+  private LanguageClient                 client;
+  private HashMap<String, List<Integer>> tokenCache;
 
   public SomLanguageServer() {
     adapters =
         new LanguageAdapter[] {new NewspeakAdapter(), new SomAdapter(), new SimpleAdapter()};
-    // new SimpleAdapter()
+    tokenCache = new HashMap<String, List<Integer>>();
     workspace = new SomWorkspace(adapters);
   }
 
@@ -196,6 +197,23 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
     String uri = params.getTextDocument().getUri();
     for (LanguageAdapter<?> adapter : adapters) {
       if (adapter.handlesUri(uri)) {
+        try {
+          if (adapter.getDiagnostics(uri).get(0).getSeverity().name().equals("Error")) {
+            if (tokenCache.containsKey(uri)) {
+              return CompletableFuture.completedFuture(
+                  new SemanticTokens(configuretokens(
+                      excludingSort(adapter.getDiagnostics(uri).get(0), tokenCache.get(uri),
+                          adapter.getTokenPositions(uri)))));
+            }
+          }
+        } catch (Exception e) {
+          // TODO: handle exception
+        }
+        if (tokenCache.containsKey(uri)) {
+          tokenCache.replace(uri, adapter.getTokenPositions(uri));
+        } else {
+          tokenCache.put(uri, adapter.getTokenPositions(uri));
+        }
 
         return CompletableFuture.completedFuture(
             new SemanticTokens(configuretokens(adapter.getTokenPositions(uri))));
@@ -391,8 +409,8 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
   }
 
   private static List<Integer> configuretokens(List<Integer> array) {
-    array = sortByLineNum(array);
-    array = sortByColNum(array);
+    array = sort(array);
+
     int tokenLine = array.get(array.size() - 5);
     int tokenstart = array.get(array.size() - 4);
     int linecount = 0;
@@ -418,6 +436,97 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
     return array;
   }
 
+  private static List<Integer> sort(final List<Integer> in) {
+    List<List<Integer>> list2d = Lists.partition(in, 5);
+    Integer[][] arr;
+
+    arr = list2d.stream().map(x -> x.toArray(new Integer[x.size()])).toArray(Integer[][]::new);
+    // sort by line
+    int n = arr.length;
+    for (int i = 0; i < n - 1; i++) {
+      for (int j = 0; j < n - i - 1; j++) {
+        if (arr[j][0].intValue() > arr[j + 1][0].intValue()) {
+
+          Integer temp[] = arr[j];
+          arr[j] = arr[j + 1];
+          arr[j + 1] = temp;
+        }
+      }
+    }
+    // sort by col
+    boolean didASwap = true;
+    Integer temp[];
+    for (int i = 0; i < n - 1 || didASwap == true; i++) {
+      didASwap = false;
+      for (int j = 0; j < n - i - 1; j++) {
+        if (arr[j][0].intValue() == arr[j + 1][0].intValue()
+            && arr[j][1].intValue() > arr[j + 1][1].intValue()) {
+          temp = arr[j];
+          arr[j] = arr[j + 1];
+          arr[j + 1] = temp;
+          didASwap = true;
+        }
+      }
+    }
+    List<Integer> list = new ArrayList<Integer>();
+    for (Integer[] array : arr) {
+      list.addAll(Arrays.asList(array));
+    }
+    return list;
+
+  }
+
+  private static List<Integer> excludingSort(final Diagnostic diag,
+      final List<Integer> orginal,
+      final List<Integer> newtokens) {
+    int brokenTokenLineNUmber;
+    if (newtokens.isEmpty()) {
+
+      brokenTokenLineNUmber = diag.getRange().getStart().getLine();
+      return removeByLine(orginal, brokenTokenLineNUmber);
+
+    }
+    List<List<Integer>> differences = new ArrayList<>(chunk(orginal, 5));
+    differences.removeAll(chunk(newtokens, 5));
+    brokenTokenLineNUmber = differences.remove(0).get(0);
+
+    List<Integer> list = new ArrayList<Integer>();
+    Integer[][] arr = differences.stream().map(x -> x.toArray(new Integer[x.size()]))
+                                 .toArray(Integer[][]::new);
+    for (Integer[] array : arr) {
+      list.addAll(Arrays.asList(array));
+    }
+    newtokens.addAll(removeByLine(list, brokenTokenLineNUmber));
+    return newtokens;
+
+  }
+
+  private static List<Integer> removeByLine(final List<Integer> in, final int Line) {
+    List<List<Integer>> list2d = Lists.partition(in, 5);
+    Integer[][] arr;
+
+    arr = list2d.stream().map(x -> x.toArray(new Integer[x.size()])).toArray(Integer[][]::new);
+    // sort by line
+    int n = arr.length;
+    for (int i = 0; i < n - 1; i++) {
+      for (int j = 0; j < n - i - 1; j++) {
+        if (arr[j][0].intValue() == Line) {
+          for (int j2 = 0; j2 < 5; j2++) {
+            arr[j][j2] = 99999;
+
+          }
+        }
+      }
+    }
+
+    List<Integer> list = new ArrayList<Integer>();
+    for (Integer[] array : arr) {
+      list.addAll(Arrays.asList(array));
+    }
+    return list;
+
+  }
+
   public static <T> List<List<T>> chunk(final List<T> input, final int chunkSize) {
 
     int inputSize = input.size();
@@ -438,59 +547,5 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
     }
 
     return chunks;
-  }
-
-  private static <T> List<T> twoDArrayToList(final T[][] twoDArray) {
-    List<T> list = new ArrayList<T>();
-    for (T[] array : twoDArray) {
-      list.addAll(Arrays.asList(array));
-    }
-    return list;
-  }
-
-  private static List<Integer> sortByLineNum(final List<Integer> in) {
-    List<List<Integer>> list2d = chunk(in, 5);
-    Integer[][] arr;
-
-    arr = list2d.stream().map(x -> x.toArray(new Integer[x.size()])).toArray(Integer[][]::new);
-
-    int n = arr.length;
-    for (int i = 0; i < n - 1; i++) {
-      for (int j = 0; j < n - i - 1; j++) {
-        if (arr[j][0].intValue() > arr[j + 1][0].intValue()) {
-
-          Integer temp[] = arr[j];
-          arr[j] = arr[j + 1];
-          arr[j + 1] = temp;
-        }
-      }
-    }
-    return twoDArrayToList(arr);
-
-  }
-
-  private static List<Integer> sortByColNum(final List<Integer> in) {
-    List<List<Integer>> list2d = chunk(in, 5);
-    Integer[][] arr;
-
-    arr = list2d.stream().map(x -> x.toArray(new Integer[x.size()])).toArray(Integer[][]::new);
-
-    int n = arr.length;
-    boolean didASwap = true;
-    for (int i = 0; i < n - 1 || didASwap == true; i++) {
-      didASwap = false;
-      for (int j = 0; j < n - i - 1; j++) {
-        if (arr[j][0].intValue() == arr[j + 1][0].intValue()
-            && arr[j][1].intValue() > arr[j + 1][1].intValue()) {
-
-          Integer temp[] = arr[j];
-          arr[j] = arr[j + 1];
-          arr[j + 1] = temp;
-          didASwap = true;
-        }
-      }
-    }
-    return twoDArrayToList(arr);
-
   }
 }

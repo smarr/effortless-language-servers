@@ -1,8 +1,6 @@
-class Hello usingPlatform: platform = Value ()(
-  public main: args = (
+class Hello usingPlatform: platform = ()(
+  public main: platform args: args = (
     'Hello World!' println.
-    args from: 2 to: args size do: [ :arg | arg print. ' ' print ].
-    '' println.
     ^ 0
   )
 )
