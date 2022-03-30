@@ -51,7 +51,7 @@ public abstract class LanguageAdapter<Probe> {
     File workspace = new File(workspaceUri);
     assert workspace.isDirectory();
 
-    // new Thread(() -> loadWorkspaceAndLint(workspace)).start();
+    new Thread(() -> loadWorkspaceAndLint(workspace)).start();
   }
 
   private void loadWorkspaceAndLint(final File workspace) {

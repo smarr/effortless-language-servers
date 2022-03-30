@@ -14,13 +14,13 @@ import java.util.Collection;
 public final class SLInstrumentLegacyTestEarlyReturnLegacyInstrumentProvider implements Provider {
 
     @Override
-    public String getInstrumentClassName() {
-        return "com.oracle.truffle.sl.test.SLInstrumentLegacyTest$EarlyReturnLegacyInstrument";
+    public TruffleInstrument create() {
+        return new EarlyReturnLegacyInstrument();
     }
 
     @Override
-    public TruffleInstrument create() {
-        return new EarlyReturnLegacyInstrument();
+    public String getInstrumentClassName() {
+        return "com.oracle.truffle.sl.test.SLInstrumentLegacyTest$EarlyReturnLegacyInstrument";
     }
 
     @Override

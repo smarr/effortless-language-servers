@@ -67,6 +67,48 @@ final class SLTypeGen {
                 return receiver instanceof SLType;
             }
 
+            @Override
+            public boolean hasLanguage(Object receiver) {
+                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
+                assert assertAdopted();
+                return (((SLType) receiver)).hasLanguage();
+            }
+
+            @Override
+            public Class<? extends TruffleLanguage<?>> getLanguage(Object receiver) throws UnsupportedMessageException {
+                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
+                assert assertAdopted();
+                return (((SLType) receiver)).getLanguage();
+            }
+
+            @Override
+            public boolean isMetaObject(Object receiver) {
+                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
+                assert assertAdopted();
+                return (((SLType) receiver)).isMetaObject();
+            }
+
+            @Override
+            public Object getMetaQualifiedName(Object receiver) throws UnsupportedMessageException {
+                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
+                assert assertAdopted();
+                return (((SLType) receiver)).getName();
+            }
+
+            @Override
+            public Object getMetaSimpleName(Object receiver) throws UnsupportedMessageException {
+                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
+                assert assertAdopted();
+                return (((SLType) receiver)).getName();
+            }
+
+            @Override
+            public Object toDisplayString(Object receiver, boolean allowSideEffects) {
+                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
+                assert assertAdopted();
+                return (((SLType) receiver)).toDisplayString(allowSideEffects);
+            }
+
             @ExplodeLoop
             @Override
             public boolean isMetaInstance(Object arg0Value_, Object arg1Value) throws UnsupportedMessageException {
@@ -159,48 +201,6 @@ final class SLTypeGen {
                 return NodeCost.POLYMORPHIC;
             }
 
-            @Override
-            public boolean hasLanguage(Object receiver) {
-                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
-                assert assertAdopted();
-                return (((SLType) receiver)).hasLanguage();
-            }
-
-            @Override
-            public Class<? extends TruffleLanguage<?>> getLanguage(Object receiver) throws UnsupportedMessageException {
-                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
-                assert assertAdopted();
-                return (((SLType) receiver)).getLanguage();
-            }
-
-            @Override
-            public boolean isMetaObject(Object receiver) {
-                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
-                assert assertAdopted();
-                return (((SLType) receiver)).isMetaObject();
-            }
-
-            @Override
-            public Object getMetaQualifiedName(Object receiver) throws UnsupportedMessageException {
-                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
-                assert assertAdopted();
-                return (((SLType) receiver)).getName();
-            }
-
-            @Override
-            public Object getMetaSimpleName(Object receiver) throws UnsupportedMessageException {
-                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
-                assert assertAdopted();
-                return (((SLType) receiver)).getName();
-            }
-
-            @Override
-            public Object toDisplayString(Object receiver, boolean allowSideEffects) {
-                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
-                assert assertAdopted();
-                return (((SLType) receiver)).toDisplayString(allowSideEffects);
-            }
-
             @GeneratedBy(SLType.class)
             private static final class CachedData extends Node {
 
@@ -244,15 +244,6 @@ final class SLTypeGen {
             @Override
             public NodeCost getCost() {
                 return NodeCost.MEGAMORPHIC;
-            }
-
-            @TruffleBoundary
-            @Override
-            public boolean isMetaInstance(Object arg0Value_, Object arg1Value) {
-                // declared: true
-                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
-                SLType arg0Value = ((SLType) arg0Value_);
-                return IsMetaInstance.doGeneric(arg0Value, arg1Value);
             }
 
             @TruffleBoundary
@@ -301,6 +292,15 @@ final class SLTypeGen {
                 // declared: true
                 assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
                 return ((SLType) receiver) .toDisplayString(allowSideEffects);
+            }
+
+            @TruffleBoundary
+            @Override
+            public boolean isMetaInstance(Object arg0Value_, Object arg1Value) {
+                // declared: true
+                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
+                SLType arg0Value = ((SLType) arg0Value_);
+                return IsMetaInstance.doGeneric(arg0Value, arg1Value);
             }
 
         }

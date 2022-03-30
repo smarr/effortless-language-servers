@@ -62,11 +62,11 @@ final class ArgumentsObjectGen {
 
             @CompilationFinal private volatile int state_0_;
             @CompilationFinal private volatile int exclude_;
+            @CompilationFinal private SLRootNode acceptsNode__accepts_cachedRoot_;
             @CompilationFinal private ExistsMemberCachedData existsMember_cached_cache;
             @CompilationFinal private ModifiableMemberCachedData modifiableMember_cached_cache;
             @CompilationFinal private ReadMemberCachedData readMember_cached_cache;
             @CompilationFinal private WriteMemberCachedData writeMember_cached_cache;
-            @CompilationFinal private SLRootNode acceptsNode__accepts_cachedRoot_;
 
             protected Cached(Object receiver) {
                 ArgumentsObject castReceiver = ((ArgumentsObject) receiver) ;
@@ -77,6 +77,72 @@ final class ArgumentsObjectGen {
             public boolean accepts(Object receiver) {
                 assert !(receiver instanceof ArgumentsObject) || DYNAMIC_DISPATCH_LIBRARY_.getUncached().dispatch(receiver) == null : "Invalid library export. Exported receiver with dynamic dispatch found but not expected.";
                 return receiver instanceof ArgumentsObject && accepts_(receiver);
+            }
+
+            private boolean accepts_(Object arg0Value_) {
+                ArgumentsObject arg0Value = ((ArgumentsObject) arg0Value_);
+                return arg0Value.accepts(this.acceptsNode__accepts_cachedRoot_);
+            }
+
+            @Override
+            public NodeCost getCost() {
+                return NodeCost.MONOMORPHIC;
+            }
+
+            @Override
+            public boolean isScope(Object receiver) {
+                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
+                assert assertAdopted();
+                return (((ArgumentsObject) receiver)).isScope();
+            }
+
+            @Override
+            public boolean hasLanguage(Object receiver) {
+                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
+                assert assertAdopted();
+                return (((ArgumentsObject) receiver)).hasLanguage();
+            }
+
+            @Override
+            public Class<? extends TruffleLanguage<?>> getLanguage(Object receiver) throws UnsupportedMessageException {
+                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
+                assert assertAdopted();
+                return (((ArgumentsObject) receiver)).getLanguage();
+            }
+
+            @Override
+            public Object toDisplayString(Object receiver, boolean allowSideEffects) {
+                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
+                assert assertAdopted();
+                return (((ArgumentsObject) receiver)).toDisplayString(allowSideEffects);
+            }
+
+            @Override
+            public boolean hasSourceLocation(Object receiver) {
+                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
+                assert assertAdopted();
+                return (((ArgumentsObject) receiver)).hasSourceLocation();
+            }
+
+            @Override
+            public SourceSection getSourceLocation(Object receiver) throws UnsupportedMessageException {
+                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
+                assert assertAdopted();
+                return (((ArgumentsObject) receiver)).getSourceLocation();
+            }
+
+            @Override
+            public boolean hasMembers(Object receiver) {
+                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
+                assert assertAdopted();
+                return (((ArgumentsObject) receiver)).hasMembers();
+            }
+
+            @Override
+            public Object getMembers(Object receiver, boolean includeInternal) throws UnsupportedMessageException {
+                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
+                assert assertAdopted();
+                return (((ArgumentsObject) receiver)).getMembers(includeInternal);
             }
 
             @ExplodeLoop
@@ -154,22 +220,6 @@ final class ArgumentsObjectGen {
                 }
             }
 
-            @Override
-            public NodeCost getCost() {
-                int state_0 = this.state_0_;
-                if ((state_0 & 0b11) == 0) {
-                    return NodeCost.UNINITIALIZED;
-                } else {
-                    if (((state_0 & 0b11) & ((state_0 & 0b11) - 1)) == 0 /* is-single-state_0  */) {
-                        ExistsMemberCachedData s0_ = this.existsMember_cached_cache;
-                        if ((s0_ == null || s0_.next_ == null)) {
-                            return NodeCost.MONOMORPHIC;
-                        }
-                    }
-                }
-                return NodeCost.POLYMORPHIC;
-            }
-
             @ExplodeLoop
             @Override
             public boolean isMemberModifiable(Object arg0Value_, String arg1Value) {
@@ -243,6 +293,13 @@ final class ArgumentsObjectGen {
                         lock.unlock();
                     }
                 }
+            }
+
+            @Override
+            public boolean isMemberInsertable(Object receiver, String member) {
+                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
+                assert assertAdopted();
+                return (((ArgumentsObject) receiver)).isMemberInsertable(member);
             }
 
             @ExplodeLoop
@@ -400,74 +457,6 @@ final class ArgumentsObjectGen {
                 }
             }
 
-            private boolean accepts_(Object arg0Value_) {
-                ArgumentsObject arg0Value = ((ArgumentsObject) arg0Value_);
-                return arg0Value.accepts(this.acceptsNode__accepts_cachedRoot_);
-            }
-
-            @Override
-            public boolean isScope(Object receiver) {
-                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
-                assert assertAdopted();
-                return (((ArgumentsObject) receiver)).isScope();
-            }
-
-            @Override
-            public boolean hasLanguage(Object receiver) {
-                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
-                assert assertAdopted();
-                return (((ArgumentsObject) receiver)).hasLanguage();
-            }
-
-            @Override
-            public Class<? extends TruffleLanguage<?>> getLanguage(Object receiver) throws UnsupportedMessageException {
-                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
-                assert assertAdopted();
-                return (((ArgumentsObject) receiver)).getLanguage();
-            }
-
-            @Override
-            public Object toDisplayString(Object receiver, boolean allowSideEffects) {
-                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
-                assert assertAdopted();
-                return (((ArgumentsObject) receiver)).toDisplayString(allowSideEffects);
-            }
-
-            @Override
-            public boolean hasSourceLocation(Object receiver) {
-                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
-                assert assertAdopted();
-                return (((ArgumentsObject) receiver)).hasSourceLocation();
-            }
-
-            @Override
-            public SourceSection getSourceLocation(Object receiver) throws UnsupportedMessageException {
-                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
-                assert assertAdopted();
-                return (((ArgumentsObject) receiver)).getSourceLocation();
-            }
-
-            @Override
-            public boolean hasMembers(Object receiver) {
-                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
-                assert assertAdopted();
-                return (((ArgumentsObject) receiver)).hasMembers();
-            }
-
-            @Override
-            public Object getMembers(Object receiver, boolean includeInternal) throws UnsupportedMessageException {
-                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
-                assert assertAdopted();
-                return (((ArgumentsObject) receiver)).getMembers(includeInternal);
-            }
-
-            @Override
-            public boolean isMemberInsertable(Object receiver, String member) {
-                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
-                assert assertAdopted();
-                return (((ArgumentsObject) receiver)).isMemberInsertable(member);
-            }
-
             @GeneratedBy(ArgumentsObject.class)
             private static final class ExistsMemberCachedData {
 
@@ -542,43 +531,6 @@ final class ArgumentsObjectGen {
 
             @TruffleBoundary
             @Override
-            public boolean isMemberReadable(Object arg0Value_, String arg1Value) {
-                // declared: true
-                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
-                ArgumentsObject arg0Value = ((ArgumentsObject) arg0Value_);
-                return ExistsMember.doGeneric(arg0Value, arg1Value);
-            }
-
-            @TruffleBoundary
-            @Override
-            public boolean isMemberModifiable(Object arg0Value_, String arg1Value) {
-                // declared: true
-                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
-                ArgumentsObject arg0Value = ((ArgumentsObject) arg0Value_);
-                return ModifiableMember.doGeneric(arg0Value, arg1Value);
-            }
-
-            @TruffleBoundary
-            @Override
-            public Object readMember(Object arg0Value_, String arg1Value) throws UnknownIdentifierException {
-                // declared: true
-                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
-                ArgumentsObject arg0Value = ((ArgumentsObject) arg0Value_);
-                return ReadMember.doGeneric(arg0Value, arg1Value);
-            }
-
-            @TruffleBoundary
-            @Override
-            public void writeMember(Object arg0Value_, String arg1Value, Object arg2Value) throws UnknownIdentifierException, UnsupportedMessageException {
-                // declared: true
-                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
-                ArgumentsObject arg0Value = ((ArgumentsObject) arg0Value_);
-                WriteMember.doGeneric(arg0Value, arg1Value, arg2Value);
-                return;
-            }
-
-            @TruffleBoundary
-            @Override
             public boolean isScope(Object receiver) {
                 // declared: true
                 assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
@@ -643,10 +595,47 @@ final class ArgumentsObjectGen {
 
             @TruffleBoundary
             @Override
+            public boolean isMemberReadable(Object arg0Value_, String arg1Value) {
+                // declared: true
+                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
+                ArgumentsObject arg0Value = ((ArgumentsObject) arg0Value_);
+                return ExistsMember.doGeneric(arg0Value, arg1Value);
+            }
+
+            @TruffleBoundary
+            @Override
+            public boolean isMemberModifiable(Object arg0Value_, String arg1Value) {
+                // declared: true
+                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
+                ArgumentsObject arg0Value = ((ArgumentsObject) arg0Value_);
+                return ModifiableMember.doGeneric(arg0Value, arg1Value);
+            }
+
+            @TruffleBoundary
+            @Override
             public boolean isMemberInsertable(Object receiver, String member) {
                 // declared: true
                 assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
                 return ((ArgumentsObject) receiver) .isMemberInsertable(member);
+            }
+
+            @TruffleBoundary
+            @Override
+            public Object readMember(Object arg0Value_, String arg1Value) throws UnknownIdentifierException {
+                // declared: true
+                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
+                ArgumentsObject arg0Value = ((ArgumentsObject) arg0Value_);
+                return ReadMember.doGeneric(arg0Value, arg1Value);
+            }
+
+            @TruffleBoundary
+            @Override
+            public void writeMember(Object arg0Value_, String arg1Value, Object arg2Value) throws UnknownIdentifierException, UnsupportedMessageException {
+                // declared: true
+                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
+                ArgumentsObject arg0Value = ((ArgumentsObject) arg0Value_);
+                WriteMember.doGeneric(arg0Value, arg1Value, arg2Value);
+                return;
             }
 
             @TruffleBoundary

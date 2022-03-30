@@ -78,6 +78,55 @@ final class SLFunctionGen {
             }
 
             @Override
+            public boolean hasLanguage(Object receiver) {
+                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
+                assert assertAdopted();
+                return (((SLFunction) receiver)).hasLanguage();
+            }
+
+            @Override
+            public Class<? extends TruffleLanguage<?>> getLanguage(Object receiver) throws UnsupportedMessageException {
+                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
+                assert assertAdopted();
+                return (((SLFunction) receiver)).getLanguage();
+            }
+
+            @Override
+            public SourceSection getSourceLocation(Object receiver) throws UnsupportedMessageException {
+                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
+                assert assertAdopted();
+                return (((SLFunction) receiver)).getSourceLocation();
+            }
+
+            @Override
+            public boolean hasSourceLocation(Object receiver) {
+                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
+                assert assertAdopted();
+                return (((SLFunction) receiver)).hasSourceLocation();
+            }
+
+            @Override
+            public boolean isExecutable(Object receiver) {
+                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
+                assert assertAdopted();
+                return (((SLFunction) receiver)).isExecutable();
+            }
+
+            @Override
+            public boolean hasMetaObject(Object receiver) {
+                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
+                assert assertAdopted();
+                return (((SLFunction) receiver)).hasMetaObject();
+            }
+
+            @Override
+            public Object getMetaObject(Object receiver) throws UnsupportedMessageException {
+                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
+                assert assertAdopted();
+                return (((SLFunction) receiver)).getMetaObject();
+            }
+
+            @Override
             protected TriState isIdenticalOrUndefined(Object arg0Value_, Object arg1Value) {
                 assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
                 assert assertAdopted();
@@ -133,6 +182,20 @@ final class SLFunctionGen {
                     }
                 }
                 return NodeCost.POLYMORPHIC;
+            }
+
+            @Override
+            public int identityHashCode(Object receiver) throws UnsupportedMessageException {
+                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
+                assert assertAdopted();
+                return SLFunction.identityHashCode((((SLFunction) receiver)));
+            }
+
+            @Override
+            public Object toDisplayString(Object receiver, boolean allowSideEffects) {
+                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
+                assert assertAdopted();
+                return (((SLFunction) receiver)).toDisplayString(allowSideEffects);
             }
 
             @ExplodeLoop
@@ -281,69 +344,6 @@ final class SLFunctionGen {
                 }
             }
 
-            @Override
-            public boolean hasLanguage(Object receiver) {
-                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
-                assert assertAdopted();
-                return (((SLFunction) receiver)).hasLanguage();
-            }
-
-            @Override
-            public Class<? extends TruffleLanguage<?>> getLanguage(Object receiver) throws UnsupportedMessageException {
-                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
-                assert assertAdopted();
-                return (((SLFunction) receiver)).getLanguage();
-            }
-
-            @Override
-            public SourceSection getSourceLocation(Object receiver) throws UnsupportedMessageException {
-                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
-                assert assertAdopted();
-                return (((SLFunction) receiver)).getSourceLocation();
-            }
-
-            @Override
-            public boolean hasSourceLocation(Object receiver) {
-                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
-                assert assertAdopted();
-                return (((SLFunction) receiver)).hasSourceLocation();
-            }
-
-            @Override
-            public boolean isExecutable(Object receiver) {
-                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
-                assert assertAdopted();
-                return (((SLFunction) receiver)).isExecutable();
-            }
-
-            @Override
-            public boolean hasMetaObject(Object receiver) {
-                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
-                assert assertAdopted();
-                return (((SLFunction) receiver)).hasMetaObject();
-            }
-
-            @Override
-            public Object getMetaObject(Object receiver) throws UnsupportedMessageException {
-                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
-                assert assertAdopted();
-                return (((SLFunction) receiver)).getMetaObject();
-            }
-
-            @Override
-            public int identityHashCode(Object receiver) throws UnsupportedMessageException {
-                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
-                assert assertAdopted();
-                return SLFunction.identityHashCode((((SLFunction) receiver)));
-            }
-
-            @Override
-            public Object toDisplayString(Object receiver, boolean allowSideEffects) {
-                assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
-                assert assertAdopted();
-                return (((SLFunction) receiver)).toDisplayString(allowSideEffects);
-            }
-
             private static boolean isIdenticalOrUndefinedFallbackGuard_(int state_0, SLFunction arg0Value, Object arg1Value) {
                 if (((state_0 & 0b1)) == 0 /* is-not-state_0 doSLFunction(SLFunction, SLFunction) */ && arg1Value instanceof SLFunction) {
                     return false;
@@ -396,28 +396,6 @@ final class SLFunctionGen {
             @Override
             public NodeCost getCost() {
                 return NodeCost.MEGAMORPHIC;
-            }
-
-            @TruffleBoundary
-            @Override
-            public TriState isIdenticalOrUndefined(Object arg0Value_, Object arg1Value) {
-                // declared: true
-                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
-                SLFunction arg0Value = ((SLFunction) arg0Value_);
-                if (arg1Value instanceof SLFunction) {
-                    SLFunction arg1Value_ = (SLFunction) arg1Value;
-                    return IsIdenticalOrUndefined.doSLFunction(arg0Value, arg1Value_);
-                }
-                return IsIdenticalOrUndefined.doOther(arg0Value, arg1Value);
-            }
-
-            @TruffleBoundary
-            @Override
-            public Object execute(Object arg0Value_, Object... arg1Value) {
-                // declared: true
-                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
-                SLFunction arg0Value = ((SLFunction) arg0Value_);
-                return Execute.doIndirect(arg0Value, arg1Value, (IndirectCallNode.getUncached()));
             }
 
             @TruffleBoundary
@@ -478,6 +456,19 @@ final class SLFunctionGen {
 
             @TruffleBoundary
             @Override
+            public TriState isIdenticalOrUndefined(Object arg0Value_, Object arg1Value) {
+                // declared: true
+                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
+                SLFunction arg0Value = ((SLFunction) arg0Value_);
+                if (arg1Value instanceof SLFunction) {
+                    SLFunction arg1Value_ = (SLFunction) arg1Value;
+                    return IsIdenticalOrUndefined.doSLFunction(arg0Value, arg1Value_);
+                }
+                return IsIdenticalOrUndefined.doOther(arg0Value, arg1Value);
+            }
+
+            @TruffleBoundary
+            @Override
             public int identityHashCode(Object receiver) throws UnsupportedMessageException {
                 // declared: true
                 assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
@@ -490,6 +481,15 @@ final class SLFunctionGen {
                 // declared: true
                 assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
                 return ((SLFunction) receiver) .toDisplayString(allowSideEffects);
+            }
+
+            @TruffleBoundary
+            @Override
+            public Object execute(Object arg0Value_, Object... arg1Value) {
+                // declared: true
+                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
+                SLFunction arg0Value = ((SLFunction) arg0Value_);
+                return Execute.doIndirect(arg0Value, arg1Value, (IndirectCallNode.getUncached()));
             }
 
         }

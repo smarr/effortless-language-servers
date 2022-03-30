@@ -14,13 +14,13 @@ import java.util.Collection;
 public final class SLInstrumentTestIncreaseArgOnErrorInstrumentProvider implements Provider {
 
     @Override
-    public String getInstrumentClassName() {
-        return "com.oracle.truffle.sl.test.SLInstrumentTest$IncreaseArgOnErrorInstrument";
+    public TruffleInstrument create() {
+        return new IncreaseArgOnErrorInstrument();
     }
 
     @Override
-    public TruffleInstrument create() {
-        return new IncreaseArgOnErrorInstrument();
+    public String getInstrumentClassName() {
+        return "com.oracle.truffle.sl.test.SLInstrumentTest$IncreaseArgOnErrorInstrument";
     }
 
     @Override

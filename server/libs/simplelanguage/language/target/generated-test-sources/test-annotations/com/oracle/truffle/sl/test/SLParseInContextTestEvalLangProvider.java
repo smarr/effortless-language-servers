@@ -16,11 +16,6 @@ import java.util.List;
 public final class SLParseInContextTestEvalLangProvider implements Provider {
 
     @Override
-    public String getLanguageClassName() {
-        return "com.oracle.truffle.sl.test.SLParseInContextTest$EvalLang";
-    }
-
-    @Override
     public TruffleLanguage<?> create() {
         return new EvalLang();
     }
@@ -28,6 +23,11 @@ public final class SLParseInContextTestEvalLangProvider implements Provider {
     @Override
     public List<FileTypeDetector> createFileTypeDetectors() {
         return Collections.emptyList();
+    }
+
+    @Override
+    public String getLanguageClassName() {
+        return "com.oracle.truffle.sl.test.SLParseInContextTest$EvalLang";
     }
 
     @Override

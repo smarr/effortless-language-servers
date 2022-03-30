@@ -14,13 +14,13 @@ import java.util.Collection;
 public final class SLInstrumentTestNewReplacedInstrumentProvider implements Provider {
 
     @Override
-    public String getInstrumentClassName() {
-        return "com.oracle.truffle.sl.test.SLInstrumentTest$NewReplacedInstrument";
+    public TruffleInstrument create() {
+        return new NewReplacedInstrument();
     }
 
     @Override
-    public TruffleInstrument create() {
-        return new NewReplacedInstrument();
+    public String getInstrumentClassName() {
+        return "com.oracle.truffle.sl.test.SLInstrumentTest$NewReplacedInstrument";
     }
 
     @Override

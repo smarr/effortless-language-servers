@@ -14,13 +14,13 @@ import java.util.Collection;
 public final class SLSharedCodeSeparatedEnvTestCaptureOutputProvider implements Provider {
 
     @Override
-    public String getInstrumentClassName() {
-        return "com.oracle.truffle.sl.test.SLSharedCodeSeparatedEnvTest$CaptureOutput";
+    public TruffleInstrument create() {
+        return new CaptureOutput();
     }
 
     @Override
-    public TruffleInstrument create() {
-        return new CaptureOutput();
+    public String getInstrumentClassName() {
+        return "com.oracle.truffle.sl.test.SLSharedCodeSeparatedEnvTest$CaptureOutput";
     }
 
     @Override

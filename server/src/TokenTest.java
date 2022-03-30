@@ -3,7 +3,9 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,9 +17,10 @@ import org.junit.Test;
 
 import som.langserv.LanguageAdapter;
 import som.langserv.newspeak.NewspeakAdapter;
+import som.langserv.som.SomAdapter;
 
 
-public class TokenTest {
+public class TokenTest extends Benchmark {
 
   @Test
   public void test() throws IOException, URISyntaxException {
@@ -45,29 +48,11 @@ public class TokenTest {
     List<Integer> tokens = adapter.getTokenPositions(testFilePath);
 
     List<Integer> exspectedTokens =
-        Arrays.asList(0, 0, 5, 1, 0,
-            0, 6, 5, 0, 0,
-            0, 12, 13, 1, 0,
-            0, 27, 8, 6, 0,
-            0, 38, 5, 2, 0,
-            1, 2, 6, 1, 0,
-            1, 9, 4, 1, 0,
-            1, 15, 4, 6, 0,
-            2, 4, 14, 3, 0,
-            2, 19, 7, 2, 0,
-            3, 4, 4, 4, 0,
-            3, 9, 4, 2, 0,
-            3, 17, 2, 2, 0,
-            3, 21, 4, 4, 0,
-            3, 26, 4, 2, 0,
-            3, 31, 2, 2, 0,
-            3, 38, 3, 9, 0,
-            3, 44, 3, 4, 0,
-            3, 48, 5, 2, 0,
-            3, 55, 3, 3, 0,
-            3, 59, 5, 2, 0,
-            4, 4, 2, 3, 0,
-            4, 7, 7, 2, 0);
+        Arrays.asList(0, 0, 5, 1, 0, 0, 6, 5, 0, 0, 0, 12, 14, 1, 0, 0, 27, 8, 6, 0, 0, 38, 5,
+            2, 0, 1, 1, 6, 1, 0, 1, 8, 5, 1, 0, 1, 8, 5, 2, 0, 1, 14, 4, 6, 0, 2, 1, 14, 3, 0,
+            2, 16, 7, 2, 0, 3, 1, 4, 2, 0, 3, 6, 5, 1, 0, 3, 14, 3, 1, 0, 3, 18, 4, 2, 0, 3,
+            23, 4, 2, 0, 3, 28, 3, 1, 0, 3, 35, 3, 9, 0, 3, 41, 3, 2, 0, 3, 45, 5, 2, 0, 3, 52,
+            3, 3, 0, 3, 56, 5, 2, 0, 4, 1, 2, 3, 0, 4, 4, 7, 2, 0);
     tokens = sortByColNum(sortByLineNum(tokens));
     List<List<Integer>> differences = new ArrayList<>(chunk(exspectedTokens, 5));
     differences.removeAll(chunk(tokens, 5));
@@ -153,6 +138,140 @@ public class TokenTest {
       list.addAll(Arrays.asList(array));
     }
     return list;
+  }
+
+  // @Override
+  // public Object NewSpeakbenchmark() {
+  // LanguageAdapter adapter = new NewspeakAdapter();
+  // String testFilePath =
+  // "/home/hburchell/vscode/SOMns-vscode/server/libs/SOMns/core-lib/Hello.ns";
+  //
+  // try {
+  // List<String> lines = Files.readAllLines(Paths.get(testFilePath),
+  // Charset.defaultCharset());
+  //
+  // adapter.parse(
+  // "class Hello usingPlatform: platform = Value ()(\n" +
+  // " public main: args = (\n" +
+  // " 'Hello World!' println.\n" +
+  // " args from: 2 to: args size do: [ :arg | arg print. ' ' print ].\n" +
+  // " '' println.\n" +
+  // " ^ 0\n" +
+  // " )\n" +
+  // ")\n" +
+  // "",
+  // testFilePath);
+  //
+  // List<Integer> tokens = adapter.getTokenPositions(testFilePath);
+  //
+  // List<Integer> exspectedTokens =
+  // Arrays.asList(0, 0, 5, 1, 0, 0, 6, 5, 0, 0, 0, 12, 14, 1, 0, 0, 27, 8, 6, 0, 0, 38,
+  // 5,
+  // 2, 0, 1, 1, 6, 1, 0, 1, 8, 5, 1, 0, 1, 8, 5, 2, 0, 1, 14, 4, 6, 0, 2, 1, 14, 3,
+  // 0,
+  // 2, 16, 7, 2, 0, 3, 1, 4, 2, 0, 3, 6, 5, 1, 0, 3, 14, 3, 1, 0, 3, 18, 4, 2, 0, 3,
+  // 23, 4, 2, 0, 3, 28, 3, 1, 0, 3, 35, 3, 9, 0, 3, 41, 3, 2, 0, 3, 45, 5, 2, 0, 3,
+  // 52,
+  // 3, 3, 0, 3, 56, 5, 2, 0, 4, 1, 2, 3, 0, 4, 4, 7, 2, 0);
+  // tokens = sortByColNum(sortByLineNum(tokens));
+  // List<List<Integer>> differences = new ArrayList<>(chunk(exspectedTokens, 5));
+  // differences.removeAll(chunk(tokens, 5));
+  // return differences.size();
+  // } catch (IOException e) {
+  // // TODO Auto-generated catch block
+  // e.printStackTrace();
+  // return null;
+  // } catch (URISyntaxException e) {
+  // // TODO Auto-generated catch block
+  // e.printStackTrace();
+  // return null;
+  // }
+  //
+  // }
+
+  // @Override
+  // public Object NewSpeakbenchmark() {
+  // LanguageAdapter adapter = new NewspeakAdapter();
+  // String testFilePath =
+  // "/home/hburchell/vscode/SOMns-vscode/server/libs/SOMns/core-lib/Hello.ns";
+  //
+  // try {
+  // List<String> lines = Files.readAllLines(Paths.get(testFilePath),
+  // Charset.defaultCharset());
+  // } catch (IOException e) {
+  // // TODO Auto-generated catch block
+  // e.printStackTrace();
+  // }
+  //
+  // try {
+  // adapter.parse(
+  // "class Hello usingPlatform: platform = Value ()(\n" +
+  // " public main: args = (\n" +
+  // " 'Hello World!' println.\n" +
+  // " args from: 2 to: args size do: [ :arg | arg print. ' ' print ].\n" +
+  // " '' println.\n" +
+  // " ^ 0\n" +
+  // " )\n" +
+  // ")\n" +
+  // "",
+  // testFilePath);
+  // } catch (URISyntaxException e) {
+  // // TODO Auto-generated catch block
+  // e.printStackTrace();
+  // }
+  // return 0;
+  //
+  // }
+
+  @Override
+  public Object benchmark() {
+    LanguageAdapter adapter = new SomAdapter();
+    String testFilePath =
+        "/home/hburchell/vscode/SOMns-vscode/server/tokenTests/Simple/HelloWorld.sl";
+
+    try {
+      List<String> lines = Files.readAllLines(Paths.get(testFilePath),
+          Charset.defaultCharset());
+      Path path = Paths.get(testFilePath);
+      byte[] content = Files.readAllBytes(path);
+      String str = new String(content, StandardCharsets.UTF_8);
+      adapter.parse(
+          "function main() {  \n" +
+              "  println(\"Hello World!\");  \n" +
+              "}  ",
+          testFilePath);
+
+      List<Integer> tokens = adapter.getTokenPositions(testFilePath);
+
+      List<Integer> exspectedTokens =
+          Arrays.asList(0, 0, 5, 1, 0, 0, 6, 5, 0, 0, 0, 12, 14, 1, 0, 0, 27, 8, 6, 0, 0, 38,
+              5,
+              2, 0, 1, 1, 6, 1, 0, 1, 8, 5, 1, 0, 1, 8, 5, 2, 0, 1, 14, 4, 6, 0, 2, 1, 14, 3,
+              0,
+              2, 16, 7, 2, 0, 3, 1, 4, 2, 0, 3, 6, 5, 1, 0, 3, 14, 3, 1, 0, 3, 18, 4, 2, 0, 3,
+              23, 4, 2, 0, 3, 28, 3, 1, 0, 3, 35, 3, 9, 0, 3, 41, 3, 2, 0, 3, 45, 5, 2, 0, 3,
+              52,
+              3, 3, 0, 3, 56, 5, 2, 0, 4, 1, 2, 3, 0, 4, 4, 7, 2, 0);
+      tokens = sortByColNum(sortByLineNum(tokens));
+      List<List<Integer>> differences = new ArrayList<>(chunk(exspectedTokens, 5));
+      differences.removeAll(chunk(tokens, 5));
+      return differences.size();
+    } catch (IOException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+      return null;
+    } catch (URISyntaxException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+      return null;
+    }
+
+  }
+
+  @Override
+  public boolean verifyResult(final Object result) {
+    // TODO Auto-generated method stub
+    return result.equals(0);
   }
 
 }

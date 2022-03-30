@@ -66,12 +66,12 @@ final class VariablesObjectGen {
             @CompilationFinal private volatile int exclude_;
             @CompilationFinal private SLBlockNode block;
             @CompilationFinal private Node parentBlock;
+            @CompilationFinal private SLScopedNode acceptsNode__accepts_cachedNode_;
+            @CompilationFinal private boolean acceptsNode__accepts_cachedNodeEnter_;
             @CompilationFinal private ExistsMemberCachedData existsMember_cached_cache;
             @CompilationFinal private ModifiableMemberCachedData modifiableMember_cached_cache;
             @CompilationFinal private ReadMemberCachedData readMember_cached_cache;
             @Child private WriteMemberCachedData writeMember_cached_cache;
-            @CompilationFinal private SLScopedNode acceptsNode__accepts_cachedNode_;
-            @CompilationFinal private boolean acceptsNode__accepts_cachedNodeEnter_;
             @Child private GetMembersNode_GetMembersData getMembersNode__getMembers_cache;
 
             protected Cached(Object receiver) {
@@ -86,330 +86,14 @@ final class VariablesObjectGen {
                 return receiver instanceof VariablesObject && accepts_(receiver);
             }
 
-            @ExplodeLoop
-            @Override
-            public boolean isMemberReadable(Object arg0Value_, String arg1Value) {
-                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
-                assert assertAdopted();
+            private boolean accepts_(Object arg0Value_) {
                 VariablesObject arg0Value = ((VariablesObject) arg0Value_);
-                int state_0 = this.state_0_;
-                if ((state_0 & 0b11) != 0 /* is-state_0 doCached(VariablesObject, String, String, boolean) || doGeneric(VariablesObject, String) */) {
-                    if ((state_0 & 0b1) != 0 /* is-state_0 doCached(VariablesObject, String, String, boolean) */) {
-                        ExistsMemberCachedData s0_ = this.existsMember_cached_cache;
-                        while (s0_ != null) {
-                            if ((s0_.cachedMember_.equals(arg1Value))) {
-                                return ExistsMember.doCached(arg0Value, arg1Value, s0_.cachedMember_, s0_.cachedResult_);
-                            }
-                            s0_ = s0_.next_;
-                        }
-                    }
-                    if ((state_0 & 0b10) != 0 /* is-state_0 doGeneric(VariablesObject, String) */) {
-                        return ExistsMember.doGeneric(arg0Value, arg1Value);
-                    }
-                }
-                CompilerDirectives.transferToInterpreterAndInvalidate();
-                return existsMemberAndSpecialize(arg0Value, arg1Value);
-            }
-
-            private boolean existsMemberAndSpecialize(VariablesObject arg0Value, String arg1Value) {
-                Lock lock = getLock();
-                boolean hasLock = true;
-                lock.lock();
-                try {
-                    int state_0 = this.state_0_;
-                    int exclude = this.exclude_;
-                    if (((exclude & 0b1)) == 0 /* is-not-exclude doCached(VariablesObject, String, String, boolean) */) {
-                        int count0_ = 0;
-                        ExistsMemberCachedData s0_ = this.existsMember_cached_cache;
-                        if ((state_0 & 0b1) != 0 /* is-state_0 doCached(VariablesObject, String, String, boolean) */) {
-                            while (s0_ != null) {
-                                if ((s0_.cachedMember_.equals(arg1Value))) {
-                                    break;
-                                }
-                                s0_ = s0_.next_;
-                                count0_++;
-                            }
-                        }
-                        if (s0_ == null) {
-                            // assert (s0_.cachedMember_.equals(arg1Value));
-                            if (count0_ < (VariablesObject.LIMIT)) {
-                                s0_ = new ExistsMemberCachedData(existsMember_cached_cache);
-                                s0_.cachedMember_ = (arg1Value);
-                                s0_.cachedResult_ = (ExistsMember.doGeneric(arg0Value, arg1Value));
-                                MemoryFence.storeStore();
-                                this.existsMember_cached_cache = s0_;
-                                this.state_0_ = state_0 = state_0 | 0b1 /* add-state_0 doCached(VariablesObject, String, String, boolean) */;
-                            }
-                        }
-                        if (s0_ != null) {
-                            lock.unlock();
-                            hasLock = false;
-                            return ExistsMember.doCached(arg0Value, arg1Value, s0_.cachedMember_, s0_.cachedResult_);
-                        }
-                    }
-                    this.exclude_ = exclude = exclude | 0b1 /* add-exclude doCached(VariablesObject, String, String, boolean) */;
-                    this.existsMember_cached_cache = null;
-                    state_0 = state_0 & 0xfffffffe /* remove-state_0 doCached(VariablesObject, String, String, boolean) */;
-                    this.state_0_ = state_0 = state_0 | 0b10 /* add-state_0 doGeneric(VariablesObject, String) */;
-                    lock.unlock();
-                    hasLock = false;
-                    return ExistsMember.doGeneric(arg0Value, arg1Value);
-                } finally {
-                    if (hasLock) {
-                        lock.unlock();
-                    }
-                }
+                return arg0Value.accepts(this.acceptsNode__accepts_cachedNode_, this.acceptsNode__accepts_cachedNodeEnter_);
             }
 
             @Override
             public NodeCost getCost() {
-                int state_0 = this.state_0_;
-                if ((state_0 & 0b11) == 0) {
-                    return NodeCost.UNINITIALIZED;
-                } else {
-                    if (((state_0 & 0b11) & ((state_0 & 0b11) - 1)) == 0 /* is-single-state_0  */) {
-                        ExistsMemberCachedData s0_ = this.existsMember_cached_cache;
-                        if ((s0_ == null || s0_.next_ == null)) {
-                            return NodeCost.MONOMORPHIC;
-                        }
-                    }
-                }
-                return NodeCost.POLYMORPHIC;
-            }
-
-            @ExplodeLoop
-            @Override
-            public boolean isMemberModifiable(Object arg0Value_, String arg1Value) {
-                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
-                assert assertAdopted();
-                VariablesObject arg0Value = ((VariablesObject) arg0Value_);
-                int state_0 = this.state_0_;
-                if ((state_0 & 0b1100) != 0 /* is-state_0 doCached(VariablesObject, String, String, boolean) || doGeneric(VariablesObject, String) */) {
-                    if ((state_0 & 0b100) != 0 /* is-state_0 doCached(VariablesObject, String, String, boolean) */) {
-                        ModifiableMemberCachedData s0_ = this.modifiableMember_cached_cache;
-                        while (s0_ != null) {
-                            if ((s0_.cachedMember_.equals(arg1Value))) {
-                                return ModifiableMember.doCached(arg0Value, arg1Value, s0_.cachedMember_, s0_.cachedResult_);
-                            }
-                            s0_ = s0_.next_;
-                        }
-                    }
-                    if ((state_0 & 0b1000) != 0 /* is-state_0 doGeneric(VariablesObject, String) */) {
-                        return ModifiableMember.doGeneric(arg0Value, arg1Value);
-                    }
-                }
-                CompilerDirectives.transferToInterpreterAndInvalidate();
-                return modifiableMemberAndSpecialize(arg0Value, arg1Value);
-            }
-
-            private boolean modifiableMemberAndSpecialize(VariablesObject arg0Value, String arg1Value) {
-                Lock lock = getLock();
-                boolean hasLock = true;
-                lock.lock();
-                try {
-                    int state_0 = this.state_0_;
-                    int exclude = this.exclude_;
-                    if (((exclude & 0b10)) == 0 /* is-not-exclude doCached(VariablesObject, String, String, boolean) */) {
-                        int count0_ = 0;
-                        ModifiableMemberCachedData s0_ = this.modifiableMember_cached_cache;
-                        if ((state_0 & 0b100) != 0 /* is-state_0 doCached(VariablesObject, String, String, boolean) */) {
-                            while (s0_ != null) {
-                                if ((s0_.cachedMember_.equals(arg1Value))) {
-                                    break;
-                                }
-                                s0_ = s0_.next_;
-                                count0_++;
-                            }
-                        }
-                        if (s0_ == null) {
-                            // assert (s0_.cachedMember_.equals(arg1Value));
-                            if (count0_ < (VariablesObject.LIMIT)) {
-                                s0_ = new ModifiableMemberCachedData(modifiableMember_cached_cache);
-                                s0_.cachedMember_ = (arg1Value);
-                                s0_.cachedResult_ = (arg0Value.hasWriteNode(arg1Value));
-                                MemoryFence.storeStore();
-                                this.modifiableMember_cached_cache = s0_;
-                                this.state_0_ = state_0 = state_0 | 0b100 /* add-state_0 doCached(VariablesObject, String, String, boolean) */;
-                            }
-                        }
-                        if (s0_ != null) {
-                            lock.unlock();
-                            hasLock = false;
-                            return ModifiableMember.doCached(arg0Value, arg1Value, s0_.cachedMember_, s0_.cachedResult_);
-                        }
-                    }
-                    this.exclude_ = exclude = exclude | 0b10 /* add-exclude doCached(VariablesObject, String, String, boolean) */;
-                    this.modifiableMember_cached_cache = null;
-                    state_0 = state_0 & 0xfffffffb /* remove-state_0 doCached(VariablesObject, String, String, boolean) */;
-                    this.state_0_ = state_0 = state_0 | 0b1000 /* add-state_0 doGeneric(VariablesObject, String) */;
-                    lock.unlock();
-                    hasLock = false;
-                    return ModifiableMember.doGeneric(arg0Value, arg1Value);
-                } finally {
-                    if (hasLock) {
-                        lock.unlock();
-                    }
-                }
-            }
-
-            @ExplodeLoop
-            @Override
-            public Object readMember(Object arg0Value_, String arg1Value) throws UnsupportedMessageException, UnknownIdentifierException {
-                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
-                assert assertAdopted();
-                VariablesObject arg0Value = ((VariablesObject) arg0Value_);
-                int state_0 = this.state_0_;
-                if ((state_0 & 0b110000) != 0 /* is-state_0 doCached(VariablesObject, String, String, FrameSlot) || doGeneric(VariablesObject, String) */) {
-                    if ((state_0 & 0b10000) != 0 /* is-state_0 doCached(VariablesObject, String, String, FrameSlot) */) {
-                        ReadMemberCachedData s0_ = this.readMember_cached_cache;
-                        while (s0_ != null) {
-                            if ((s0_.cachedMember_.equals(arg1Value))) {
-                                return ReadMember.doCached(arg0Value, arg1Value, s0_.cachedMember_, s0_.slot_);
-                            }
-                            s0_ = s0_.next_;
-                        }
-                    }
-                    if ((state_0 & 0b100000) != 0 /* is-state_0 doGeneric(VariablesObject, String) */) {
-                        return ReadMember.doGeneric(arg0Value, arg1Value);
-                    }
-                }
-                CompilerDirectives.transferToInterpreterAndInvalidate();
-                return readMemberAndSpecialize(arg0Value, arg1Value);
-            }
-
-            private Object readMemberAndSpecialize(VariablesObject arg0Value, String arg1Value) throws UnknownIdentifierException {
-                Lock lock = getLock();
-                boolean hasLock = true;
-                lock.lock();
-                try {
-                    int state_0 = this.state_0_;
-                    int exclude = this.exclude_;
-                    if (((exclude & 0b100)) == 0 /* is-not-exclude doCached(VariablesObject, String, String, FrameSlot) */) {
-                        int count0_ = 0;
-                        ReadMemberCachedData s0_ = this.readMember_cached_cache;
-                        if ((state_0 & 0b10000) != 0 /* is-state_0 doCached(VariablesObject, String, String, FrameSlot) */) {
-                            while (s0_ != null) {
-                                if ((s0_.cachedMember_.equals(arg1Value))) {
-                                    break;
-                                }
-                                s0_ = s0_.next_;
-                                count0_++;
-                            }
-                        }
-                        if (s0_ == null) {
-                            // assert (s0_.cachedMember_.equals(arg1Value));
-                            if (count0_ < (VariablesObject.LIMIT)) {
-                                s0_ = new ReadMemberCachedData(readMember_cached_cache);
-                                s0_.cachedMember_ = (arg1Value);
-                                s0_.slot_ = (arg0Value.findSlot(arg1Value));
-                                MemoryFence.storeStore();
-                                this.readMember_cached_cache = s0_;
-                                this.state_0_ = state_0 = state_0 | 0b10000 /* add-state_0 doCached(VariablesObject, String, String, FrameSlot) */;
-                            }
-                        }
-                        if (s0_ != null) {
-                            lock.unlock();
-                            hasLock = false;
-                            return ReadMember.doCached(arg0Value, arg1Value, s0_.cachedMember_, s0_.slot_);
-                        }
-                    }
-                    this.exclude_ = exclude = exclude | 0b100 /* add-exclude doCached(VariablesObject, String, String, FrameSlot) */;
-                    this.readMember_cached_cache = null;
-                    state_0 = state_0 & 0xffffffef /* remove-state_0 doCached(VariablesObject, String, String, FrameSlot) */;
-                    this.state_0_ = state_0 = state_0 | 0b100000 /* add-state_0 doGeneric(VariablesObject, String) */;
-                    lock.unlock();
-                    hasLock = false;
-                    return ReadMember.doGeneric(arg0Value, arg1Value);
-                } finally {
-                    if (hasLock) {
-                        lock.unlock();
-                    }
-                }
-            }
-
-            @ExplodeLoop
-            @Override
-            public void writeMember(Object arg0Value_, String arg1Value, Object arg2Value) throws UnsupportedMessageException, UnknownIdentifierException, UnsupportedTypeException {
-                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
-                assert assertAdopted();
-                VariablesObject arg0Value = ((VariablesObject) arg0Value_);
-                int state_0 = this.state_0_;
-                if ((state_0 & 0b11000000) != 0 /* is-state_0 doCached(VariablesObject, String, Object, String, SLWriteLocalVariableNode) || doGeneric(VariablesObject, String, Object) */) {
-                    if ((state_0 & 0b1000000) != 0 /* is-state_0 doCached(VariablesObject, String, Object, String, SLWriteLocalVariableNode) */) {
-                        WriteMemberCachedData s0_ = this.writeMember_cached_cache;
-                        while (s0_ != null) {
-                            if ((s0_.cachedMember_.equals(arg1Value))) {
-                                WriteMember.doCached(arg0Value, arg1Value, arg2Value, s0_.cachedMember_, s0_.writeNode_);
-                                return;
-                            }
-                            s0_ = s0_.next_;
-                        }
-                    }
-                    if ((state_0 & 0b10000000) != 0 /* is-state_0 doGeneric(VariablesObject, String, Object) */) {
-                        WriteMember.doGeneric(arg0Value, arg1Value, arg2Value);
-                        return;
-                    }
-                }
-                CompilerDirectives.transferToInterpreterAndInvalidate();
-                writeMemberAndSpecialize(arg0Value, arg1Value, arg2Value);
-                return;
-            }
-
-            private void writeMemberAndSpecialize(VariablesObject arg0Value, String arg1Value, Object arg2Value) throws UnknownIdentifierException, UnsupportedMessageException {
-                Lock lock = getLock();
-                boolean hasLock = true;
-                lock.lock();
-                try {
-                    int state_0 = this.state_0_;
-                    int exclude = this.exclude_;
-                    if (((exclude & 0b1000)) == 0 /* is-not-exclude doCached(VariablesObject, String, Object, String, SLWriteLocalVariableNode) */) {
-                        int count0_ = 0;
-                        WriteMemberCachedData s0_ = this.writeMember_cached_cache;
-                        if ((state_0 & 0b1000000) != 0 /* is-state_0 doCached(VariablesObject, String, Object, String, SLWriteLocalVariableNode) */) {
-                            while (s0_ != null) {
-                                if ((s0_.cachedMember_.equals(arg1Value))) {
-                                    break;
-                                }
-                                s0_ = s0_.next_;
-                                count0_++;
-                            }
-                        }
-                        if (s0_ == null) {
-                            // assert (s0_.cachedMember_.equals(arg1Value));
-                            if (count0_ < (VariablesObject.LIMIT)) {
-                                s0_ = super.insert(new WriteMemberCachedData(writeMember_cached_cache));
-                                s0_.cachedMember_ = (arg1Value);
-                                s0_.writeNode_ = (arg0Value.findWriteNode(arg1Value));
-                                MemoryFence.storeStore();
-                                this.writeMember_cached_cache = s0_;
-                                this.state_0_ = state_0 = state_0 | 0b1000000 /* add-state_0 doCached(VariablesObject, String, Object, String, SLWriteLocalVariableNode) */;
-                            }
-                        }
-                        if (s0_ != null) {
-                            lock.unlock();
-                            hasLock = false;
-                            WriteMember.doCached(arg0Value, arg1Value, arg2Value, s0_.cachedMember_, s0_.writeNode_);
-                            return;
-                        }
-                    }
-                    this.exclude_ = exclude = exclude | 0b1000 /* add-exclude doCached(VariablesObject, String, Object, String, SLWriteLocalVariableNode) */;
-                    this.writeMember_cached_cache = null;
-                    state_0 = state_0 & 0xffffffbf /* remove-state_0 doCached(VariablesObject, String, Object, String, SLWriteLocalVariableNode) */;
-                    this.state_0_ = state_0 = state_0 | 0b10000000 /* add-state_0 doGeneric(VariablesObject, String, Object) */;
-                    lock.unlock();
-                    hasLock = false;
-                    WriteMember.doGeneric(arg0Value, arg1Value, arg2Value);
-                    return;
-                } finally {
-                    if (hasLock) {
-                        lock.unlock();
-                    }
-                }
-            }
-
-            private boolean accepts_(Object arg0Value_) {
-                VariablesObject arg0Value = ((VariablesObject) arg0Value_);
-                return arg0Value.accepts(this.acceptsNode__accepts_cachedNode_, this.acceptsNode__accepts_cachedNodeEnter_);
+                return NodeCost.MONOMORPHIC;
             }
 
             @Override
@@ -439,7 +123,7 @@ final class VariablesObjectGen {
                 assert assertAdopted();
                 VariablesObject arg0Value = ((VariablesObject) arg0Value_);
                 int state_0 = this.state_0_;
-                if ((state_0 & 0b100000000) != 0 /* is-state_0 toDisplayString(VariablesObject, boolean, SLBlockNode, Node) */) {
+                if ((state_0 & 0b1) != 0 /* is-state_0 toDisplayString(VariablesObject, boolean, SLBlockNode, Node) */) {
                     return arg0Value.toDisplayString(arg1Value, this.block, this.parentBlock);
                 }
                 CompilerDirectives.transferToInterpreterAndInvalidate();
@@ -454,7 +138,7 @@ final class VariablesObjectGen {
                     int state_0 = this.state_0_;
                     this.block = this.block == null ? ((arg0Value.block)) : this.block;
                     this.parentBlock = this.parentBlock == null ? ((arg0Value.block.findBlock())) : this.parentBlock;
-                    this.state_0_ = state_0 = state_0 | 0b100000000 /* add-state_0 toDisplayString(VariablesObject, boolean, SLBlockNode, Node) */;
+                    this.state_0_ = state_0 = state_0 | 0b1 /* add-state_0 toDisplayString(VariablesObject, boolean, SLBlockNode, Node) */;
                     lock.unlock();
                     hasLock = false;
                     return arg0Value.toDisplayString(arg1Value, this.block, this.parentBlock);
@@ -471,7 +155,7 @@ final class VariablesObjectGen {
                 assert assertAdopted();
                 VariablesObject arg0Value = ((VariablesObject) arg0Value_);
                 int state_0 = this.state_0_;
-                if ((state_0 & 0b1000000000) != 0 /* is-state_0 hasScopeParent(VariablesObject, SLBlockNode, Node) */) {
+                if ((state_0 & 0b10) != 0 /* is-state_0 hasScopeParent(VariablesObject, SLBlockNode, Node) */) {
                     return arg0Value.hasScopeParent(this.block, this.parentBlock);
                 }
                 CompilerDirectives.transferToInterpreterAndInvalidate();
@@ -486,7 +170,7 @@ final class VariablesObjectGen {
                     int state_0 = this.state_0_;
                     this.block = this.block == null ? ((arg0Value.block)) : this.block;
                     this.parentBlock = this.parentBlock == null ? ((arg0Value.block.findBlock())) : this.parentBlock;
-                    this.state_0_ = state_0 = state_0 | 0b1000000000 /* add-state_0 hasScopeParent(VariablesObject, SLBlockNode, Node) */;
+                    this.state_0_ = state_0 = state_0 | 0b10 /* add-state_0 hasScopeParent(VariablesObject, SLBlockNode, Node) */;
                     lock.unlock();
                     hasLock = false;
                     return arg0Value.hasScopeParent(this.block, this.parentBlock);
@@ -503,7 +187,7 @@ final class VariablesObjectGen {
                 assert assertAdopted();
                 VariablesObject arg0Value = ((VariablesObject) arg0Value_);
                 int state_0 = this.state_0_;
-                if ((state_0 & 0b10000000000) != 0 /* is-state_0 getScopeParent(VariablesObject, SLBlockNode, Node) */) {
+                if ((state_0 & 0b100) != 0 /* is-state_0 getScopeParent(VariablesObject, SLBlockNode, Node) */) {
                     return arg0Value.getScopeParent(this.block, this.parentBlock);
                 }
                 CompilerDirectives.transferToInterpreterAndInvalidate();
@@ -518,7 +202,7 @@ final class VariablesObjectGen {
                     int state_0 = this.state_0_;
                     this.block = this.block == null ? ((arg0Value.block)) : this.block;
                     this.parentBlock = this.parentBlock == null ? ((arg0Value.block.findBlock())) : this.parentBlock;
-                    this.state_0_ = state_0 = state_0 | 0b10000000000 /* add-state_0 getScopeParent(VariablesObject, SLBlockNode, Node) */;
+                    this.state_0_ = state_0 = state_0 | 0b100 /* add-state_0 getScopeParent(VariablesObject, SLBlockNode, Node) */;
                     lock.unlock();
                     hasLock = false;
                     return arg0Value.getScopeParent(this.block, this.parentBlock);
@@ -550,11 +234,316 @@ final class VariablesObjectGen {
                 return (((VariablesObject) receiver)).hasMembers();
             }
 
+            @ExplodeLoop
+            @Override
+            public boolean isMemberReadable(Object arg0Value_, String arg1Value) {
+                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
+                assert assertAdopted();
+                VariablesObject arg0Value = ((VariablesObject) arg0Value_);
+                int state_0 = this.state_0_;
+                if ((state_0 & 0b11000) != 0 /* is-state_0 doCached(VariablesObject, String, String, boolean) || doGeneric(VariablesObject, String) */) {
+                    if ((state_0 & 0b1000) != 0 /* is-state_0 doCached(VariablesObject, String, String, boolean) */) {
+                        ExistsMemberCachedData s0_ = this.existsMember_cached_cache;
+                        while (s0_ != null) {
+                            if ((s0_.cachedMember_.equals(arg1Value))) {
+                                return ExistsMember.doCached(arg0Value, arg1Value, s0_.cachedMember_, s0_.cachedResult_);
+                            }
+                            s0_ = s0_.next_;
+                        }
+                    }
+                    if ((state_0 & 0b10000) != 0 /* is-state_0 doGeneric(VariablesObject, String) */) {
+                        return ExistsMember.doGeneric(arg0Value, arg1Value);
+                    }
+                }
+                CompilerDirectives.transferToInterpreterAndInvalidate();
+                return existsMemberAndSpecialize(arg0Value, arg1Value);
+            }
+
+            private boolean existsMemberAndSpecialize(VariablesObject arg0Value, String arg1Value) {
+                Lock lock = getLock();
+                boolean hasLock = true;
+                lock.lock();
+                try {
+                    int state_0 = this.state_0_;
+                    int exclude = this.exclude_;
+                    if (((exclude & 0b1)) == 0 /* is-not-exclude doCached(VariablesObject, String, String, boolean) */) {
+                        int count0_ = 0;
+                        ExistsMemberCachedData s0_ = this.existsMember_cached_cache;
+                        if ((state_0 & 0b1000) != 0 /* is-state_0 doCached(VariablesObject, String, String, boolean) */) {
+                            while (s0_ != null) {
+                                if ((s0_.cachedMember_.equals(arg1Value))) {
+                                    break;
+                                }
+                                s0_ = s0_.next_;
+                                count0_++;
+                            }
+                        }
+                        if (s0_ == null) {
+                            // assert (s0_.cachedMember_.equals(arg1Value));
+                            if (count0_ < (VariablesObject.LIMIT)) {
+                                s0_ = new ExistsMemberCachedData(existsMember_cached_cache);
+                                s0_.cachedMember_ = (arg1Value);
+                                s0_.cachedResult_ = (ExistsMember.doGeneric(arg0Value, arg1Value));
+                                MemoryFence.storeStore();
+                                this.existsMember_cached_cache = s0_;
+                                this.state_0_ = state_0 = state_0 | 0b1000 /* add-state_0 doCached(VariablesObject, String, String, boolean) */;
+                            }
+                        }
+                        if (s0_ != null) {
+                            lock.unlock();
+                            hasLock = false;
+                            return ExistsMember.doCached(arg0Value, arg1Value, s0_.cachedMember_, s0_.cachedResult_);
+                        }
+                    }
+                    this.exclude_ = exclude = exclude | 0b1 /* add-exclude doCached(VariablesObject, String, String, boolean) */;
+                    this.existsMember_cached_cache = null;
+                    state_0 = state_0 & 0xfffffff7 /* remove-state_0 doCached(VariablesObject, String, String, boolean) */;
+                    this.state_0_ = state_0 = state_0 | 0b10000 /* add-state_0 doGeneric(VariablesObject, String) */;
+                    lock.unlock();
+                    hasLock = false;
+                    return ExistsMember.doGeneric(arg0Value, arg1Value);
+                } finally {
+                    if (hasLock) {
+                        lock.unlock();
+                    }
+                }
+            }
+
+            @ExplodeLoop
+            @Override
+            public boolean isMemberModifiable(Object arg0Value_, String arg1Value) {
+                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
+                assert assertAdopted();
+                VariablesObject arg0Value = ((VariablesObject) arg0Value_);
+                int state_0 = this.state_0_;
+                if ((state_0 & 0b1100000) != 0 /* is-state_0 doCached(VariablesObject, String, String, boolean) || doGeneric(VariablesObject, String) */) {
+                    if ((state_0 & 0b100000) != 0 /* is-state_0 doCached(VariablesObject, String, String, boolean) */) {
+                        ModifiableMemberCachedData s0_ = this.modifiableMember_cached_cache;
+                        while (s0_ != null) {
+                            if ((s0_.cachedMember_.equals(arg1Value))) {
+                                return ModifiableMember.doCached(arg0Value, arg1Value, s0_.cachedMember_, s0_.cachedResult_);
+                            }
+                            s0_ = s0_.next_;
+                        }
+                    }
+                    if ((state_0 & 0b1000000) != 0 /* is-state_0 doGeneric(VariablesObject, String) */) {
+                        return ModifiableMember.doGeneric(arg0Value, arg1Value);
+                    }
+                }
+                CompilerDirectives.transferToInterpreterAndInvalidate();
+                return modifiableMemberAndSpecialize(arg0Value, arg1Value);
+            }
+
+            private boolean modifiableMemberAndSpecialize(VariablesObject arg0Value, String arg1Value) {
+                Lock lock = getLock();
+                boolean hasLock = true;
+                lock.lock();
+                try {
+                    int state_0 = this.state_0_;
+                    int exclude = this.exclude_;
+                    if (((exclude & 0b10)) == 0 /* is-not-exclude doCached(VariablesObject, String, String, boolean) */) {
+                        int count0_ = 0;
+                        ModifiableMemberCachedData s0_ = this.modifiableMember_cached_cache;
+                        if ((state_0 & 0b100000) != 0 /* is-state_0 doCached(VariablesObject, String, String, boolean) */) {
+                            while (s0_ != null) {
+                                if ((s0_.cachedMember_.equals(arg1Value))) {
+                                    break;
+                                }
+                                s0_ = s0_.next_;
+                                count0_++;
+                            }
+                        }
+                        if (s0_ == null) {
+                            // assert (s0_.cachedMember_.equals(arg1Value));
+                            if (count0_ < (VariablesObject.LIMIT)) {
+                                s0_ = new ModifiableMemberCachedData(modifiableMember_cached_cache);
+                                s0_.cachedMember_ = (arg1Value);
+                                s0_.cachedResult_ = (arg0Value.hasWriteNode(arg1Value));
+                                MemoryFence.storeStore();
+                                this.modifiableMember_cached_cache = s0_;
+                                this.state_0_ = state_0 = state_0 | 0b100000 /* add-state_0 doCached(VariablesObject, String, String, boolean) */;
+                            }
+                        }
+                        if (s0_ != null) {
+                            lock.unlock();
+                            hasLock = false;
+                            return ModifiableMember.doCached(arg0Value, arg1Value, s0_.cachedMember_, s0_.cachedResult_);
+                        }
+                    }
+                    this.exclude_ = exclude = exclude | 0b10 /* add-exclude doCached(VariablesObject, String, String, boolean) */;
+                    this.modifiableMember_cached_cache = null;
+                    state_0 = state_0 & 0xffffffdf /* remove-state_0 doCached(VariablesObject, String, String, boolean) */;
+                    this.state_0_ = state_0 = state_0 | 0b1000000 /* add-state_0 doGeneric(VariablesObject, String) */;
+                    lock.unlock();
+                    hasLock = false;
+                    return ModifiableMember.doGeneric(arg0Value, arg1Value);
+                } finally {
+                    if (hasLock) {
+                        lock.unlock();
+                    }
+                }
+            }
+
             @Override
             public boolean isMemberInsertable(Object receiver, String member) {
                 assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
                 assert assertAdopted();
                 return (((VariablesObject) receiver)).isMemberInsertable(member);
+            }
+
+            @ExplodeLoop
+            @Override
+            public Object readMember(Object arg0Value_, String arg1Value) throws UnsupportedMessageException, UnknownIdentifierException {
+                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
+                assert assertAdopted();
+                VariablesObject arg0Value = ((VariablesObject) arg0Value_);
+                int state_0 = this.state_0_;
+                if ((state_0 & 0b110000000) != 0 /* is-state_0 doCached(VariablesObject, String, String, FrameSlot) || doGeneric(VariablesObject, String) */) {
+                    if ((state_0 & 0b10000000) != 0 /* is-state_0 doCached(VariablesObject, String, String, FrameSlot) */) {
+                        ReadMemberCachedData s0_ = this.readMember_cached_cache;
+                        while (s0_ != null) {
+                            if ((s0_.cachedMember_.equals(arg1Value))) {
+                                return ReadMember.doCached(arg0Value, arg1Value, s0_.cachedMember_, s0_.slot_);
+                            }
+                            s0_ = s0_.next_;
+                        }
+                    }
+                    if ((state_0 & 0b100000000) != 0 /* is-state_0 doGeneric(VariablesObject, String) */) {
+                        return ReadMember.doGeneric(arg0Value, arg1Value);
+                    }
+                }
+                CompilerDirectives.transferToInterpreterAndInvalidate();
+                return readMemberAndSpecialize(arg0Value, arg1Value);
+            }
+
+            private Object readMemberAndSpecialize(VariablesObject arg0Value, String arg1Value) throws UnknownIdentifierException {
+                Lock lock = getLock();
+                boolean hasLock = true;
+                lock.lock();
+                try {
+                    int state_0 = this.state_0_;
+                    int exclude = this.exclude_;
+                    if (((exclude & 0b100)) == 0 /* is-not-exclude doCached(VariablesObject, String, String, FrameSlot) */) {
+                        int count0_ = 0;
+                        ReadMemberCachedData s0_ = this.readMember_cached_cache;
+                        if ((state_0 & 0b10000000) != 0 /* is-state_0 doCached(VariablesObject, String, String, FrameSlot) */) {
+                            while (s0_ != null) {
+                                if ((s0_.cachedMember_.equals(arg1Value))) {
+                                    break;
+                                }
+                                s0_ = s0_.next_;
+                                count0_++;
+                            }
+                        }
+                        if (s0_ == null) {
+                            // assert (s0_.cachedMember_.equals(arg1Value));
+                            if (count0_ < (VariablesObject.LIMIT)) {
+                                s0_ = new ReadMemberCachedData(readMember_cached_cache);
+                                s0_.cachedMember_ = (arg1Value);
+                                s0_.slot_ = (arg0Value.findSlot(arg1Value));
+                                MemoryFence.storeStore();
+                                this.readMember_cached_cache = s0_;
+                                this.state_0_ = state_0 = state_0 | 0b10000000 /* add-state_0 doCached(VariablesObject, String, String, FrameSlot) */;
+                            }
+                        }
+                        if (s0_ != null) {
+                            lock.unlock();
+                            hasLock = false;
+                            return ReadMember.doCached(arg0Value, arg1Value, s0_.cachedMember_, s0_.slot_);
+                        }
+                    }
+                    this.exclude_ = exclude = exclude | 0b100 /* add-exclude doCached(VariablesObject, String, String, FrameSlot) */;
+                    this.readMember_cached_cache = null;
+                    state_0 = state_0 & 0xffffff7f /* remove-state_0 doCached(VariablesObject, String, String, FrameSlot) */;
+                    this.state_0_ = state_0 = state_0 | 0b100000000 /* add-state_0 doGeneric(VariablesObject, String) */;
+                    lock.unlock();
+                    hasLock = false;
+                    return ReadMember.doGeneric(arg0Value, arg1Value);
+                } finally {
+                    if (hasLock) {
+                        lock.unlock();
+                    }
+                }
+            }
+
+            @ExplodeLoop
+            @Override
+            public void writeMember(Object arg0Value_, String arg1Value, Object arg2Value) throws UnsupportedMessageException, UnknownIdentifierException, UnsupportedTypeException {
+                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
+                assert assertAdopted();
+                VariablesObject arg0Value = ((VariablesObject) arg0Value_);
+                int state_0 = this.state_0_;
+                if ((state_0 & 0b11000000000) != 0 /* is-state_0 doCached(VariablesObject, String, Object, String, SLWriteLocalVariableNode) || doGeneric(VariablesObject, String, Object) */) {
+                    if ((state_0 & 0b1000000000) != 0 /* is-state_0 doCached(VariablesObject, String, Object, String, SLWriteLocalVariableNode) */) {
+                        WriteMemberCachedData s0_ = this.writeMember_cached_cache;
+                        while (s0_ != null) {
+                            if ((s0_.cachedMember_.equals(arg1Value))) {
+                                WriteMember.doCached(arg0Value, arg1Value, arg2Value, s0_.cachedMember_, s0_.writeNode_);
+                                return;
+                            }
+                            s0_ = s0_.next_;
+                        }
+                    }
+                    if ((state_0 & 0b10000000000) != 0 /* is-state_0 doGeneric(VariablesObject, String, Object) */) {
+                        WriteMember.doGeneric(arg0Value, arg1Value, arg2Value);
+                        return;
+                    }
+                }
+                CompilerDirectives.transferToInterpreterAndInvalidate();
+                writeMemberAndSpecialize(arg0Value, arg1Value, arg2Value);
+                return;
+            }
+
+            private void writeMemberAndSpecialize(VariablesObject arg0Value, String arg1Value, Object arg2Value) throws UnknownIdentifierException, UnsupportedMessageException {
+                Lock lock = getLock();
+                boolean hasLock = true;
+                lock.lock();
+                try {
+                    int state_0 = this.state_0_;
+                    int exclude = this.exclude_;
+                    if (((exclude & 0b1000)) == 0 /* is-not-exclude doCached(VariablesObject, String, Object, String, SLWriteLocalVariableNode) */) {
+                        int count0_ = 0;
+                        WriteMemberCachedData s0_ = this.writeMember_cached_cache;
+                        if ((state_0 & 0b1000000000) != 0 /* is-state_0 doCached(VariablesObject, String, Object, String, SLWriteLocalVariableNode) */) {
+                            while (s0_ != null) {
+                                if ((s0_.cachedMember_.equals(arg1Value))) {
+                                    break;
+                                }
+                                s0_ = s0_.next_;
+                                count0_++;
+                            }
+                        }
+                        if (s0_ == null) {
+                            // assert (s0_.cachedMember_.equals(arg1Value));
+                            if (count0_ < (VariablesObject.LIMIT)) {
+                                s0_ = super.insert(new WriteMemberCachedData(writeMember_cached_cache));
+                                s0_.cachedMember_ = (arg1Value);
+                                s0_.writeNode_ = (arg0Value.findWriteNode(arg1Value));
+                                MemoryFence.storeStore();
+                                this.writeMember_cached_cache = s0_;
+                                this.state_0_ = state_0 = state_0 | 0b1000000000 /* add-state_0 doCached(VariablesObject, String, Object, String, SLWriteLocalVariableNode) */;
+                            }
+                        }
+                        if (s0_ != null) {
+                            lock.unlock();
+                            hasLock = false;
+                            WriteMember.doCached(arg0Value, arg1Value, arg2Value, s0_.cachedMember_, s0_.writeNode_);
+                            return;
+                        }
+                    }
+                    this.exclude_ = exclude = exclude | 0b1000 /* add-exclude doCached(VariablesObject, String, Object, String, SLWriteLocalVariableNode) */;
+                    this.writeMember_cached_cache = null;
+                    state_0 = state_0 & 0xfffffdff /* remove-state_0 doCached(VariablesObject, String, Object, String, SLWriteLocalVariableNode) */;
+                    this.state_0_ = state_0 = state_0 | 0b10000000000 /* add-state_0 doGeneric(VariablesObject, String, Object) */;
+                    lock.unlock();
+                    hasLock = false;
+                    WriteMember.doGeneric(arg0Value, arg1Value, arg2Value);
+                    return;
+                } finally {
+                    if (hasLock) {
+                        lock.unlock();
+                    }
+                }
             }
 
             @Override
@@ -691,43 +680,6 @@ final class VariablesObjectGen {
 
             @TruffleBoundary
             @Override
-            public boolean isMemberReadable(Object arg0Value_, String arg1Value) {
-                // declared: true
-                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
-                VariablesObject arg0Value = ((VariablesObject) arg0Value_);
-                return ExistsMember.doGeneric(arg0Value, arg1Value);
-            }
-
-            @TruffleBoundary
-            @Override
-            public boolean isMemberModifiable(Object arg0Value_, String arg1Value) {
-                // declared: true
-                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
-                VariablesObject arg0Value = ((VariablesObject) arg0Value_);
-                return ModifiableMember.doGeneric(arg0Value, arg1Value);
-            }
-
-            @TruffleBoundary
-            @Override
-            public Object readMember(Object arg0Value_, String arg1Value) throws UnknownIdentifierException {
-                // declared: true
-                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
-                VariablesObject arg0Value = ((VariablesObject) arg0Value_);
-                return ReadMember.doGeneric(arg0Value, arg1Value);
-            }
-
-            @TruffleBoundary
-            @Override
-            public void writeMember(Object arg0Value_, String arg1Value, Object arg2Value) throws UnknownIdentifierException, UnsupportedMessageException {
-                // declared: true
-                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
-                VariablesObject arg0Value = ((VariablesObject) arg0Value_);
-                WriteMember.doGeneric(arg0Value, arg1Value, arg2Value);
-                return;
-            }
-
-            @TruffleBoundary
-            @Override
             public boolean isScope(Object receiver) {
                 // declared: true
                 assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
@@ -803,10 +755,47 @@ final class VariablesObjectGen {
 
             @TruffleBoundary
             @Override
+            public boolean isMemberReadable(Object arg0Value_, String arg1Value) {
+                // declared: true
+                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
+                VariablesObject arg0Value = ((VariablesObject) arg0Value_);
+                return ExistsMember.doGeneric(arg0Value, arg1Value);
+            }
+
+            @TruffleBoundary
+            @Override
+            public boolean isMemberModifiable(Object arg0Value_, String arg1Value) {
+                // declared: true
+                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
+                VariablesObject arg0Value = ((VariablesObject) arg0Value_);
+                return ModifiableMember.doGeneric(arg0Value, arg1Value);
+            }
+
+            @TruffleBoundary
+            @Override
             public boolean isMemberInsertable(Object receiver, String member) {
                 // declared: true
                 assert this.accepts(receiver) : "Invalid library usage. Library does not accept given receiver.";
                 return ((VariablesObject) receiver) .isMemberInsertable(member);
+            }
+
+            @TruffleBoundary
+            @Override
+            public Object readMember(Object arg0Value_, String arg1Value) throws UnknownIdentifierException {
+                // declared: true
+                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
+                VariablesObject arg0Value = ((VariablesObject) arg0Value_);
+                return ReadMember.doGeneric(arg0Value, arg1Value);
+            }
+
+            @TruffleBoundary
+            @Override
+            public void writeMember(Object arg0Value_, String arg1Value, Object arg2Value) throws UnknownIdentifierException, UnsupportedMessageException {
+                // declared: true
+                assert this.accepts(arg0Value_) : "Invalid library usage. Library does not accept given receiver.";
+                VariablesObject arg0Value = ((VariablesObject) arg0Value_);
+                WriteMember.doGeneric(arg0Value, arg1Value, arg2Value);
+                return;
             }
 
             @TruffleBoundary
