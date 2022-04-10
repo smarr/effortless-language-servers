@@ -28,7 +28,7 @@ import trufflesom.vmobjects.SSymbol;
 public class SomStructures
     extends StructuralProbe<SSymbol, SClass, SInvokable, Field, Variable> {
 
-  private final Source           source;
+  protected final Source         source;
   private final ExpressionNode[] map;
 
   private final List<Diagnostic> diagnostics;
