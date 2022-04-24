@@ -67,7 +67,6 @@
 
     <target name="somns" depends="somns-submodule">
       <exec executable="ant" dir="${somns.dir}">
-          <arg value="-Dskip.graal=true" />
           <arg value="jar"/>
       </exec>
       <jar destfile="${bd.dir}/build/black-diamonds.jar" basedir="${bd.dir}/build/classes" />
@@ -75,7 +74,6 @@
 
     <target name="trufflesom" depends="somns-submodule">
       <exec executable="ant" dir="${som.dir}">
-          <arg value="-Dskip.graal=true" />
           <arg value="jar"/>
       </exec>
     </target>
