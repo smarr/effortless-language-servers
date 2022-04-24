@@ -6,8 +6,8 @@ import java.util.Deque;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
-import bd.basic.ProgramDefinitionError;
-import bd.source.SourceCoordinate;
+import bdt.basic.ProgramDefinitionError;
+import bdt.source.SourceCoordinate;
 import trufflesom.compiler.MethodGenerationContext;
 import trufflesom.compiler.ParserAst;
 import trufflesom.interpreter.nodes.ExpressionNode;

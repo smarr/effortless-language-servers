@@ -14,8 +14,8 @@ import org.eclipse.lsp4j.Location;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
-import bd.tools.nodes.Invocation;
-import bd.tools.structure.StructuralProbe;
+import bdt.tools.nodes.Invocation;
+import bdt.tools.structure.StructuralProbe;
 import som.langserv.LanguageAdapter;
 import trufflesom.compiler.Field;
 import trufflesom.compiler.Variable;

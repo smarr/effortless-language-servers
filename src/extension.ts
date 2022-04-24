@@ -53,6 +53,7 @@ function getServerOptions(asAbsolutePath: PathConverter, enableDebug:
 	let javaArgs = [
 		'-cp', javaClassPath.join(':'),
 		somLib, somnsLib,
+		'-Dpolyglot.engine.WarnInterpreterOnly=false', // to disable warnings on stdout/stderr
 		'som.langserv.ServerLauncher'];
 
 	if (enableDebug) {

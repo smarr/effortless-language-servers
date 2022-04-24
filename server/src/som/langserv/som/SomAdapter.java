@@ -27,9 +27,9 @@ import org.graalvm.polyglot.Context.Builder;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
-import bd.basic.ProgramDefinitionError;
-import bd.tools.nodes.Invocation;
-import bd.tools.structure.StructuralProbe;
+import bdt.basic.ProgramDefinitionError;
+import bdt.tools.nodes.Invocation;
+import bdt.tools.structure.StructuralProbe;
 import som.langserv.LanguageAdapter;
 import som.langserv.ServerLauncher;
 import trufflesom.compiler.Field;
