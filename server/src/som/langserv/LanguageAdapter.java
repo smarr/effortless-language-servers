@@ -26,7 +26,10 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.services.LanguageClient;
 
+import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
+
+import bd.source.SourceCoordinate;
 
 
 public abstract class LanguageAdapter<Probe> {
@@ -156,6 +159,10 @@ public abstract class LanguageAdapter<Probe> {
     return null;
   }
 
+  public static Range toRange(final Source source, final long coord) {
+    return toRange(SourceCoordinate.createSourceSection(source, coord));
+  }
+
   public static Range toRange(final SourceSection ss) {
     Range range = new Range();
     range.setStart(pos(ss.getStartLine(), ss.getStartColumn()));
@@ -168,6 +175,13 @@ public abstract class LanguageAdapter<Probe> {
     range.setStart(pos(startLine, startColumn));
     range.setEnd(pos(startLine, Integer.MAX_VALUE));
     return range;
+  }
+
+  public static Location getLocation(final Source source, final long coord) {
+    Location loc = new Location();
+    loc.setUri(source.getURI().toString());
+    loc.setRange(toRange(source, coord));
+    return loc;
   }
 
   public static Location getLocation(final SourceSection ss) {

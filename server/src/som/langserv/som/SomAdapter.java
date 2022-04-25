@@ -27,10 +27,9 @@ import org.graalvm.polyglot.Context.Builder;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
-import bd.basic.ProgramDefinitionError;
-import bd.source.SourceCoordinate;
-import bd.tools.nodes.Invocation;
-import bd.tools.structure.StructuralProbe;
+import bdt.basic.ProgramDefinitionError;
+import bdt.tools.nodes.Invocation;
+import bdt.tools.structure.StructuralProbe;
 import som.langserv.LanguageAdapter;
 import som.langserv.ServerLauncher;
 import trufflesom.compiler.Field;
@@ -55,13 +54,10 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
       System.getProperty("som.langserv.som-core-lib");
 
   private final Map<String, SomStructures> structuralProbes;
-  private final TruffleSomCompiler         compiler;
-  private final Universe                   universe;
 
   public SomAdapter() {
     this.structuralProbes = new HashMap<>();
-    this.universe = initializePolyglot();
-    this.compiler = new TruffleSomCompiler(universe.getLanguage());
+    initializePolyglot();
   }
 
   @Override
@@ -69,7 +65,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
     return ".som";
   }
 
-  private Universe initializePolyglot() {
+  private void initializePolyglot() {
     if (CORE_LIB_PATH == null) {
       throw new IllegalArgumentException(
           "The trufflesom.langserv.som-core-lib system property needs to be set. For instance: -Dtrufflesom.langserv.core-lib=/TruffleSOM/core-lib");
@@ -83,17 +79,14 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
     context.eval(SomLanguage.INIT);
     context.enter();
 
-    Universe universe = SomLanguage.getCurrent().getUniverse();
-    universe.setupClassPath(CORE_LIB_PATH + "/Smalltalk");
+    Universe.setupClassPath(CORE_LIB_PATH + "/Smalltalk");
 
     SomStructures systemClassProbe = new SomStructures(
         Source.newBuilder(SomLanguage.LANG_ID, "systemClasses", null).internal(true).build());
-    universe.setSystemClassProbe(systemClassProbe);
+    Universe.setStructuralProbe(systemClassProbe);
     structuralProbes.put("systemClasses", systemClassProbe);
 
-    universe.initializeObjectSystem();
-
-    return universe;
+    Universe.initializeObjectSystem();
   }
 
   @Override
@@ -144,7 +137,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
       }
       synchronized (newProbe) {
         try {
-          SClass def = compiler.compileClass(text, source, universe, newProbe);
+          SClass def = compileClass(text, source, newProbe);
           // SomLint.checkModuleName(path, def, diagnostics);
         } catch (ParseError e) {
           return toDiagnostics(e, diagnostics);
@@ -184,7 +177,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
       EconomicSet<Field> fields = probe.getSlots();
       for (Field f : fields) {
         if (matchQuery(query, f)) {
-          results.add(getSymbolInfo(f));
+          results.add(getSymbolInfo(probe.source, f));
         }
       }
 
@@ -195,7 +188,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
           continue;
         }
         if (matchQuery(query, v)) {
-          results.add(getSymbolInfo(v));
+          results.add(getSymbolInfo(probe.source, v));
         }
       }
     }
@@ -255,9 +248,11 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
       SSymbol name = ((Invocation<SSymbol>) node).getInvocationIdentifier();
       addAllDefinitions(result, name);
     } else if (node instanceof LocalVariableNode) {
-      result.add(getLocation(((LocalVariableNode) node).getLocal().source));
+      LocalVariableNode local = (LocalVariableNode) node;
+      result.add(getLocation(local.getSource(), local.getLocal().coord));
     } else if (node instanceof NonLocalVariableNode) {
-      result.add(getLocation(((NonLocalVariableNode) node).getLocal().source));
+      NonLocalVariableNode local = (NonLocalVariableNode) node;
+      result.add(getLocation(local.getSource(), local.getLocal().coord));
     } else if (node instanceof FieldWriteNode) {
       Method method = (Method) node.getRootNode();
       SInvokable si = getEncompassingInvokable(method, probe.getMethods());
@@ -266,7 +261,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
       }
       int fieldIndex = ((FieldWriteNode) node).getFieldIndex();
       Field field = si.getHolder().getInstanceFieldDefinitions()[fieldIndex];
-      result.add(getLocation(field.getSourceSection()));
+      result.add(getLocation(si.getSource(), field.getSourceCoordinate()));
     } else {
       if (ServerLauncher.DEBUG) {
         reportError("GET DEFINITION, unsupported node: " + node.getClass().getSimpleName());
@@ -333,9 +328,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
       final List<Diagnostic> diagnostics) {
     Diagnostic d = new Diagnostic();
     d.setSeverity(DiagnosticSeverity.Error);
-
-    SourceCoordinate coord = e.getSourceCoordinate();
-    d.setRange(toRangeMax(coord.startLine, coord.startColumn));
+    d.setRange(toRangeMax(e.getLine(), e.getColumn()));
     d.setMessage(e.toString());
     d.setSource("Parser");
 
@@ -369,19 +362,19 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
   // return sym;
   // }
 
-  private static SymbolInformation getSymbolInfo(final Field f) {
+  private static SymbolInformation getSymbolInfo(final Source source, final Field f) {
     SymbolInformation sym = new SymbolInformation();
     sym.setName(f.getName().getString());
     sym.setKind(SymbolKind.Field);
-    sym.setLocation(getLocation(f.getSourceSection()));
+    sym.setLocation(getLocation(source, f.getSourceCoordinate()));
     return sym;
   }
 
-  private static SymbolInformation getSymbolInfo(final Variable v) {
+  private static SymbolInformation getSymbolInfo(final Source source, final Variable v) {
     SymbolInformation sym = new SymbolInformation();
     sym.setName(v.name.getString());
     sym.setKind(SymbolKind.Variable);
-    sym.setLocation(getLocation(v.source));
+    sym.setLocation(getLocation(source, v.coord));
     return sym;
   }
 
@@ -433,20 +426,12 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
     return null;
   }
 
-  private final class TruffleSomCompiler extends SourcecodeCompiler {
+  public static SClass compileClass(final String text, final Source source,
+      final StructuralProbe<SSymbol, SClass, SInvokable, Field, Variable> structuralProbe)
+      throws ProgramDefinitionError {
+    SomParser parser =
+        new SomParser(text, source, (SomStructures) structuralProbe);
 
-    public TruffleSomCompiler(final SomLanguage language) {
-      super(language);
-    }
-
-    public SClass compileClass(final String text, final Source source, final Universe universe,
-        final StructuralProbe<SSymbol, SClass, SInvokable, Field, Variable> structuralProbe)
-        throws ProgramDefinitionError {
-      SomParser parser =
-          new SomParser(text, source, (SomStructures) structuralProbe, universe);
-
-      return compile(parser, null, universe);
-    }
-
+    return SourcecodeCompiler.compile(parser, null);
   }
 }
