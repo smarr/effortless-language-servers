@@ -11,15 +11,18 @@ jobs:
         with:
           submodules: true
 
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       - name: NPM Install
         run: |
-          export JAVA_HOME=$JAVA_HOME_17_X64
           npm install .
 
       - name: NPM Tests
         run: |
           sudo apt-get install xvfb
-          export JAVA_HOME=$JAVA_HOME_17_X64
           xvfb-run --auto-servernum npm test
 
       # - name: CheckStyle
