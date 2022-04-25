@@ -104,7 +104,20 @@ export function startLanguageServer(asAbsolutePath: PathConverter,
 	console.log(`[SOM-EXT] spawn '${cmd}'`);
 	const lsProc = spawn(serverOptions.run.command, serverOptions.run.args);
 
-	lsProc.on('exit', code => { console.log(`[SOM-EXT] Server processes exited with code: ${code}`) });
+	let stderr = '';
+
+	lsProc.stderr.on('data', data => {
+		stderr += data.toString();
+	});
+
+	lsProc.on('exit', code => {
+		if (code !== 0) {
+			console.log(`[SOM-EXT] Server processes exited with code: ${code}
+	-------
+	stderr: ${stderr}
+	-------`);
+		}
+	});
 
 	resolve({
 		reader: lsProc.stdout,
