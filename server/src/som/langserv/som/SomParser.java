@@ -163,7 +163,6 @@ public class SomParser extends ParserAst {
     }
   }
 
-  @Override
   protected void storePosition(final SourceCoordinate coords, final String className,
       final int tokenTypevalue) {
     structuralProbe.addTokenPosition(coords.startLine, coords.startColumn,

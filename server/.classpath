@@ -5,6 +5,7 @@
 	<classpathentry kind="src" path="org.eclipse.lsp4j-gen"/>
 	<classpathentry kind="src" path="org.eclipse.lsp4j.jsonrpc"/>
 	<classpathentry kind="src" path="org.eclipse.lsp4j.generator"/>
+	<classpathentry kind="src" path="tests"/>
 	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
 		<attributes>
 			<attribute name="module" value="true"/>
@@ -15,13 +16,10 @@
 	<classpathentry kind="lib" path="libs/org.eclipse.xtend.lib-2.24.0.jar"/>
 	<classpathentry kind="lib" path="libs/org.eclipse.xtext.xbase.lib-2.24.0.jar"/>
 	<classpathentry kind="lib" path="libs/org.eclipse.xtend.lib.macro-2.24.0.jar"/>
-	<classpathentry kind="lib" path="libs/java-json.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/SOMns"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/TruffleSOM"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/com.oracle.truffle.api.instrumentation"/>
-	<classpathentry kind="src" path="/com.oracle.truffle.api.benchmark"/>
 	<classpathentry kind="src" path="/BlackDiamonds"/>
-	<classpathentry kind="src" path="/com.oracle.truffle.sl"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

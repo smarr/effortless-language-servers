@@ -1,3 +1,4 @@
+package som.langserv.benchmarks;
 
 /* This code is based on the SOM class library.
 *

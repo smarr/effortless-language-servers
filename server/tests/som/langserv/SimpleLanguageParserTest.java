@@ -1,3 +1,4 @@
+package som.langserv;
 public class SimpleLanguageParserTest {
 
   // @Test

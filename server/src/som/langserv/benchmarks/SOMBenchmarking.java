@@ -1,3 +1,4 @@
+package som.langserv.benchmarks;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -18,18 +19,18 @@ import org.eclipse.lsp4j.Diagnostic;
 import com.google.common.collect.Lists;
 
 import som.langserv.LanguageAdapter;
-import som.langserv.simple.SimpleAdapter;
+import som.langserv.som.SomAdapter;
 
 
-public class SimpleBenchmarking extends Benchmark {
+public class SOMBenchmarking extends Benchmark {
   LanguageAdapter adapter;
 
   @Override
   public Object benchmark() {
-    adapter = new SimpleAdapter();
+    adapter = new SomAdapter();
     try {
       return loadWorkspace(
-          "file:///home/hburchell/vscode/SOMns-vscode/server/libs/simplelanguage/language/tests");
+          "file:///home/hburchell/vscode/SOMns-vscode/server/libs/TruffleSOM/core-lib/Examples/Benchmarks");
     } catch (URISyntaxException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
@@ -54,7 +55,7 @@ public class SimpleBenchmarking extends Benchmark {
     for (File f : folder.listFiles()) {
       if (f.isDirectory()) {
         loadFolder(f);
-      } else if (f.getName().endsWith(".sl")) {
+      } else if (f.getName().endsWith(".som")) {
         try {
           byte[] content = Files.readAllBytes(f.toPath());
           String str = new String(content, StandardCharsets.UTF_8);
@@ -79,9 +80,9 @@ public class SimpleBenchmarking extends Benchmark {
   }
 
   public Object withoutTokens() {
-    LanguageAdapter adapter = new SimpleAdapter();
+    LanguageAdapter adapter = new SomAdapter();
     String testFilePath =
-        "/home/hburchell/vscode/SOMns-vscode/server/tokenTests/newspeak/HelloWorld.sl";
+        "/home/hburchell/vscode/SOMns-vscode/server/tokenTests/Som/BenchmarkFile1000.som";
 
     try {
       Path path = Paths.get(testFilePath);
@@ -101,9 +102,9 @@ public class SimpleBenchmarking extends Benchmark {
   }
 
   public Object withTokens() {
-    LanguageAdapter adapter = new SimpleAdapter();
+    LanguageAdapter adapter = new SomAdapter();
     String testFilePath =
-        "/home/hburchell/vscode/SOMns-vscode/server/tokenTests/Simple/HelloWorld.sl";
+        "/home/hburchell/vscode/SOMns-vscode/server/tokenTests/Som/BenchmarkFile1000.som";
 
     try {
       Path path = Paths.get(testFilePath);

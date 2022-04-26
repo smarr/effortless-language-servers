@@ -1,3 +1,4 @@
+package som.langserv;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -16,6 +17,7 @@ import java.util.Map;
 import org.junit.Test;
 
 import som.langserv.LanguageAdapter;
+import som.langserv.benchmarks.Benchmark;
 import som.langserv.newspeak.NewspeakAdapter;
 import som.langserv.som.SomAdapter;
 
@@ -24,7 +26,7 @@ public class TokenTest extends Benchmark {
 
   @Test
   public void test() throws IOException, URISyntaxException {
-    LanguageAdapter adapter = new NewspeakAdapter();
+    var adapter = new NewspeakAdapter();
     // NewspeakAdapter na = new NewspeakAdapter();
     // what vs code tels you as the line and col needs to be - 1
     String testFilePath =

@@ -110,14 +110,12 @@ public class NewspeakParser extends Parser {
     return result;
   }
 
-  @Override
   protected void storePosition(final SourceCoordinate coords, final String length,
       final int tokenTypevalue) {
     struturalProbe.addTokenPosition(coords.startLine,
         coords.startColumn, length.length(), tokenTypevalue, 0);
   }
 
-  @Override
   protected void storeCommentPosition(final SourceCoordinate startCoords,
       final SourceCoordinate endCoords,
       final String commentLength) {

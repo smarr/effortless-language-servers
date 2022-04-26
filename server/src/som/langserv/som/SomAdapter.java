@@ -427,26 +427,6 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
     return null;
   }
 
-  private final class TruffleSomCompiler extends SourcecodeCompiler {
-
-    public TruffleSomCompiler(final SomLanguage language) {
-      super(language);
-    }
-
-    public SClass compileClass(final String text, final Source source, final Universe universe,
-        final StructuralProbe<SSymbol, SClass, SInvokable, Field, Variable> structuralProbe)
-        throws ProgramDefinitionError {
-      SomParser parser =
-          new SomParser(text, source, (SomStructures) structuralProbe, universe);
-
-      SClass s = compile(parser, null, universe);
-      parser.storeAllComments();
-
-      return s;
-    }
-
-  }
-
   @Override
   public List<Diagnostic> getDiagnostics(final String documentUri) {
     String path;
@@ -477,6 +457,8 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
     SomParser parser =
         new SomParser(text, source, (SomStructures) structuralProbe);
 
-    return SourcecodeCompiler.compile(parser, null);
+    SClass s = SourcecodeCompiler.compile(parser, null);
+    parser.storeAllComments();
+    return s;
   }
 }
