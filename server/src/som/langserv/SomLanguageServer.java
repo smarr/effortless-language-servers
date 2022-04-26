@@ -37,6 +37,11 @@ import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.RenameParams;
+import org.eclipse.lsp4j.SemanticTokens;
+import org.eclipse.lsp4j.SemanticTokensLegend;
+import org.eclipse.lsp4j.SemanticTokensParams;
+import org.eclipse.lsp4j.SemanticTokensServerFull;
+import org.eclipse.lsp4j.SemanticTokensWithRegistrationOptions;
 import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
@@ -79,7 +84,7 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
   public CompletableFuture<InitializeResult> initialize(final InitializeParams params) {
     InitializeResult result = new InitializeResult();
     ServerCapabilities cap = new ServerCapabilities();
-
+    cap.setDocumentHighlightProvider(true);
     cap.setTextDocumentSync(TextDocumentSyncKind.Full);
     cap.setDocumentSymbolProvider(true);
     cap.setWorkspaceSymbolProvider(true);

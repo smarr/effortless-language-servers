@@ -106,8 +106,7 @@ public class SomParser extends ParserAst {
   protected SSymbol binarySelector() throws ParseError {
     int coord = getStartIndex();
     SSymbol result = super.binarySelector();
-    sourceSections.addLast(getSource(coord));
-
+    recordSourceSection(coord);
     return result;
   }
 
@@ -115,8 +114,7 @@ public class SomParser extends ParserAst {
   protected String keyword() throws ParseError {
     int coord = getStartIndex();
     String result = super.keyword();
-    sourceSections.addLast(getSource(coord));
-
+    recordSourceSection(coord);
     return result;
   }
 

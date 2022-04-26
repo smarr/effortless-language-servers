@@ -53,6 +53,17 @@ public class Lint {
           "File name does not use the .ns extension.", DiagnosticSeverity.Hint, LINT_NAME));
     }
   }
+  public static void checkLastChar(final String text , final List<Diagnostic> diagnostics) {
+    int finalCharPos = text.length() - 1;
+    if (text.charAt(finalCharPos) != '\n' ) {
+      
+      diagnostics.add(new Diagnostic(
+        new Range(LanguageAdapter.pos(finalCharPos - 1, finalCharPos - 1), LanguageAdapter.pos(finalCharPos, finalCharPos)),
+        "You must end on a new line.",
+        DiagnosticSeverity.Information, LINT_NAME));
+    }
+ 
+  }
 
   public static void checkSends(final Map<String, NewspeakStructures> structuralProbes,
       final NewspeakStructures newProbe, final List<Diagnostic> diagnostics) {

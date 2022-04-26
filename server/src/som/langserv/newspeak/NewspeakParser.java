@@ -1,7 +1,9 @@
 package som.langserv.newspeak;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
+import java.util.List;
 
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
@@ -23,6 +25,8 @@ public class NewspeakParser extends Parser {
 
   private NewspeakStructures         struturalProbe;
   private final Deque<SourceSection> sourceSections;
+  private List<Integer>              listOfVarsStartsLines;
+  private List<Integer>              listOfVarsStartsCol;
 
   public NewspeakParser(final String content, final Source source,
       final NewspeakStructures structuralProbe, final SomLanguage lang) throws ParseError {
@@ -30,6 +34,8 @@ public class NewspeakParser extends Parser {
     // assert structuralProbe != null : "Needed for this extended parser.";
     this.struturalProbe = structuralProbe;
     sourceSections = new ArrayDeque<>();
+    listOfVarsStartsLines = new ArrayList();
+    listOfVarsStartsCol = new ArrayList();
   }
 
   @Override
