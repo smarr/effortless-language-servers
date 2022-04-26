@@ -10,7 +10,7 @@ const LSPort = 8123;  // TODO: make configurable
 const EnableExtensionDebugging : boolean = <boolean> workspace.getConfiguration('somns').get('debugMode');
 
 export const CLIENT_OPTION: LanguageClientOptions = {
-	documentSelector: ['SOMns', 'SOM']
+	documentSelector: ['SOMns', 'SOM','simple']
 }
 
 type PathConverter = (path: string) => string;
