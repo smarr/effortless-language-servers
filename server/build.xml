@@ -1,170 +1,173 @@
 <project name="som-language-server" default="compile">
 
-    <property name="src.dir"     value="src"/>
-    <property name="lib.dir"     value="libs" />
-    <property name="somns.dir"     value="${lib.dir}/SOMns" />
-    <property name="som.dir"     value="${lib.dir}/TruffleSOM" />
-	<property name="simple.dir"     value="${lib.dir}/simplelanguage" />
-    <property name="bd.dir"      value="${somns.dir}/libs/black-diamonds" />
-    <property name="truffle.dir" value="${somns.dir}/libs/truffle/truffle" />
-    <property name="truffle.build" value="${truffle.dir}/mxbuild/dists" />
-    <property name="sdk.build"   value="${somns.dir}/libs/truffle/sdk/mxbuild/dists" />
-    <property name="svm.build"   value="${somns.dir}/libs/truffle/substratevm/mxbuild/dists" />
-    <property name="somns.jar"   location="${somns.dir}/build/som.jar" />
-    <property name="som.jar"     location="${som.dir}/build/som.jar" />
+	<property name="src.dir"       value="src"/>
+	<property name="lib.dir"       value="libs" />
+	<property name="somns.dir"     value="${lib.dir}/SOMns" />
+	<property name="som.dir"       value="${lib.dir}/TruffleSOM" />
+	<property name="simple.dir"    value="${lib.dir}/simplelanguage" />
+	<property name="simple.build"  value="${simple.dir}/language/target" />
+	<property name="bd.dir"        value="${somns.dir}/libs/black-diamonds" />
+	<property name="truffle.dir"   value="${somns.dir}/libs/truffle/truffle" />
+	<property name="truffle.build" value="${truffle.dir}/mxbuild/dists" />
+	<property name="sdk.build"     value="${somns.dir}/libs/truffle/sdk/mxbuild/dists" />
+	<property name="svm.build"     value="${somns.dir}/libs/truffle/substratevm/mxbuild/dists" />
+	<property name="somns.jar"     location="${somns.dir}/build/som.jar" />
+	<property name="som.jar"       location="${som.dir}/build/som.jar" />
 
-    <property name="mvn.repo"    value="https://repo1.maven.org/maven2" />
-	
-	<!-- <property name="local.mvn" value="/home/hburchell/.m2/repository/" /> -->
-	
+	<property name="mvn.repo"      value="https://repo1.maven.org/maven2" />
+
+	<exec executable="sh" dir="${simple.dir}" outputproperty="mvn.home">
+		<arg value="-c" />
+		<arg line='"mvn help:evaluate -Dexpression=settings.localRepository | grep -v \"[INFO]\""' />
+	</exec>
+
+	<echo>mvn.home: ${mvn.home}</echo>
+
 	<property name="checkstyle.version" value="8.11" />
-    <property name="guava.version"      value="19.0" />
-    <property name="gson.version"      value="2.8.6" />
-    <property name="xtend.version"  value="2.24.0" />
+	<property name="guava.version"  value="19.0" />
+	<property name="gson.version"   value="2.8.6" />
+	<property name="xtend.version"  value="2.24.0" />
 
-    <property name="build.dir"   value="bin"/>
-    <property name="classes.dir" value="${build.dir}"/>
+	<property name="build.dir"   value="bin"/>
+	<property name="classes.dir" value="${build.dir}"/>
 
-    <path id="jar.classpath">
-        <pathelement location="${lib.dir}/gson-${gson.version}.jar" />
-        <pathelement location="${lib.dir}/guava-${guava.version}.jar" />
-        <pathelement location="${lib.dir}/org.eclipse.xtext.xbase.lib-${xtend.version}.jar" />
-        <pathelement location="${lib.dir}/org.eclipse.xtend.lib-${xtend.version}.jar" />
-        <pathelement location="${lib.dir}/org.eclipse.xtend.lib.macro-${xtend.version}.jar" />
-    	<pathelement location="${somns.dir}/libs/truffle/truffle/src/com.oracle.truffle.sl.jar" />
-    	
-    	 <pathelement location="/home/hburchell/.m2/repository/com/oracle/simplelanguage/21.3.0/simplelanguage-21.3.0.jar" /> 
-    	<pathelement location="/home/hburchell/.m2/repository/org/antlr/antlr4-runtime/4.7/antlr4-runtime-4.7.jar" />
-    	
-    	
-        <pathelement location="${sdk.build}/graal-sdk.jar" />
+	<path id="jar.classpath">
+		<pathelement location="${lib.dir}/gson-${gson.version}.jar" />
+		<pathelement location="${lib.dir}/guava-${guava.version}.jar" />
+		<pathelement location="${lib.dir}/org.eclipse.xtext.xbase.lib-${xtend.version}.jar" />
+		<pathelement location="${lib.dir}/org.eclipse.xtend.lib-${xtend.version}.jar" />
+		<pathelement location="${lib.dir}/org.eclipse.xtend.lib.macro-${xtend.version}.jar" />
+		<pathelement location="${somns.dir}/libs/truffle/truffle/src/com.oracle.truffle.sl.jar" />
 
-        <pathelement location="${truffle.build}/truffle-api.jar" />
-        <pathelement location="${somns.dir}/libs/somns-deps.jar" />
-        <pathelement location="${somns.dir}/libs/affinity.jar" />
-        <pathelement location="${somns.dir}/libs/slf4j-api.jar" />
-        <pathelement location="${somns.dir}/libs/slf4j-simple.jar" />
-        <pathelement location="${somns.dir}/libs/jna-platform.jar" />
-        <pathelement location="${somns.dir}/libs/jna.jar" />
-        <pathelement location="${bd.dir}/build/black-diamonds.jar" />
-    	<pathelement location="/home/hburchell/.m2/repository/org/antlr" />
-    </path>
+		<pathelement location="${simple.build}/simplelanguage-22.0.0.2.jar" />
+		<pathelement location="${mvn.home}/org/antlr/antlr4-runtime/4.9.2/antlr4-runtime-4.9.2.jar" />
 
-    <path id="project.classpath">
-        <path refid="jar.classpath" />
-        <pathelement location="${classes.dir}" />
-        <pathelement location="${som.jar}" />
-        <pathelement location="${somns.jar}" />
-    </path>
+		<pathelement location="${sdk.build}/graal-sdk.jar" />
 
-    <target name="clean" description="Remove build directories and generated code">
-        <delete dir="${build.dir}"/>
-    </target>
+		<pathelement location="${truffle.build}/truffle-api.jar" />
+		<pathelement location="${somns.dir}/libs/somns-deps.jar" />
+		<pathelement location="${somns.dir}/libs/affinity.jar" />
+		<pathelement location="${somns.dir}/libs/slf4j-api.jar" />
+		<pathelement location="${somns.dir}/libs/slf4j-simple.jar" />
+		<pathelement location="${somns.dir}/libs/jna-platform.jar" />
+		<pathelement location="${somns.dir}/libs/jna.jar" />
+		<pathelement location="${bd.dir}/build/black-diamonds.jar" />
+	</path>
 
-    <target name="check-somns-available">
-        <available file="libs/SOMns/.git" property="somns.present"/>
-    </target>
-    <target name="somns-submodule" depends="check-somns-available"
-            unless="somns.present">
-        <exec executable="git">
-          <arg value="submodule" />
-          <arg value="update" />
-          <arg value="--init" />
-          <arg value="--recursive" />
-        </exec>
-    </target>
+	<path id="project.classpath">
+		<path refid="jar.classpath" />
+		<pathelement location="${classes.dir}" />
+		<pathelement location="${som.jar}" />
+		<pathelement location="${somns.jar}" />
+	</path>
 
-    <target name="somns" depends="somns-submodule">
-      <exec executable="ant" dir="${somns.dir}">
-          <arg value="jar"/>
-      </exec>
-      <jar destfile="${bd.dir}/build/black-diamonds.jar" basedir="${bd.dir}/build/classes" />
-    </target>
-	
-    <target name="simple" depends="somns-submodule">
-      <exec executable="mvn" dir="${simple.dir}">
-          <arg value="package" />
-          
-      </exec>
-    </target>
-	
-    <target name="trufflesom" depends="somns-submodule">
-      <exec executable="ant" dir="${som.dir}">
-          <arg value="jar"/>
-      </exec>
-    </target>
+	<target name="clean" description="Remove build directories and generated code">
+		<delete dir="${build.dir}"/>
+	</target>
 
-    <target name="libs" depends="somns,trufflesom,simple">
-        <get src="${mvn.repo}/com/google/code/gson/gson/${gson.version}/gson-${gson.version}.jar"
-            usetimestamp="true"
-            dest="${lib.dir}/gson-${gson.version}.jar" />
-        <get src="${mvn.repo}/com/google/guava/guava/${guava.version}/guava-${guava.version}.jar"
-            usetimestamp="true"
-            dest="${lib.dir}/guava-${guava.version}.jar" />
-        <get src="${mvn.repo}/org/eclipse/xtext/org.eclipse.xtext.xbase.lib/${xtend.version}/org.eclipse.xtext.xbase.lib-${xtend.version}.jar"
-            usetimestamp="true"
-            dest="${lib.dir}/org.eclipse.xtext.xbase.lib-${xtend.version}.jar" />
-        <get src="${mvn.repo}/org/eclipse/xtend/org.eclipse.xtend.lib/${xtend.version}/org.eclipse.xtend.lib-${xtend.version}.jar"
-            usetimestamp="true"
-            dest="${lib.dir}/org.eclipse.xtend.lib-${xtend.version}.jar" />
-        <get src="${mvn.repo}/org/eclipse/xtend/org.eclipse.xtend.lib.macro/${xtend.version}/org.eclipse.xtend.lib.macro-${xtend.version}.jar"
-            usetimestamp="true"
-            dest="${lib.dir}/org.eclipse.xtend.lib.macro-${xtend.version}.jar" />
-    </target>
+	<target name="check-somns-available">
+		<available file="libs/SOMns/.git" property="somns.present"/>
+	</target>
 
-    <target name="checkstyle-jar">
-        <get src="https://github.com/checkstyle/checkstyle/releases/download/checkstyle-${checkstyle.version}/checkstyle-${checkstyle.version}-all.jar"
-            usetimestamp="true"
-            dest="${lib.dir}/checkstyle-${checkstyle.version}-all.jar" />
-    </target>
+	<target name="somns-submodule" depends="check-somns-available" unless="somns.present">
+		<exec executable="git">
+			<arg value="submodule" />
+			<arg value="update" />
+			<arg value="--init" />
+			<arg value="--recursive" />
+		</exec>
+	</target>
 
-    <target name="checkstyle" depends="checkstyle-jar" description="Check Code with Checkstyle">
-        <taskdef resource="com/puppycrawl/tools/checkstyle/ant/checkstyle-ant-task.properties" classpath="${lib.dir}/checkstyle-${checkstyle.version}-all.jar" />
-        <checkstyle config=".checkstyle_checks.xml">
-          <fileset dir="src" includes="**/*.java"/>
-          <formatter type="plain"/>
-        </checkstyle>
-    </target>
+	<target name="somns" depends="somns-submodule">
+		<exec executable="ant" dir="${somns.dir}">
+			<arg value="jar"/>
+		</exec>
+		<jar destfile="${bd.dir}/build/black-diamonds.jar" basedir="${bd.dir}/build/classes" />
+	</target>
 
-    <target name="compile" depends="libs" description="Compile TruffleSOM">
-        <mkdir dir="${build.dir}"/>
-        <mkdir dir="${classes.dir}" />
+	<target name="simple" depends="somns-submodule">
+		<exec executable="mvn" dir="${simple.dir}">
+			<arg line="-pl '!native' package" />
+		</exec>
+	</target>
 
-        <javac includeantruntime="false" destdir="${classes.dir}" debug="true">
-          <src path="${src.dir}" />
-          <src path="org.eclipse.lsp4j" />
-          <src path="org.eclipse.lsp4j-gen" />
-          <src path="org.eclipse.lsp4j.generator" />
-          <src path="org.eclipse.lsp4j.jsonrpc" />
-          
-          <classpath refid="project.classpath" />
-          <compilerarg line="-XDignore.symbol.file" />
-          <compilerarg line="-Xlint:all" />
-        </javac>
-    </target>
+	<target name="trufflesom" depends="somns-submodule">
+		<exec executable="ant" dir="${som.dir}">
+			<arg value="jar"/>
+		</exec>
+	</target>
 
-    <target name="jar" depends="compile" description="Package as JAR">
-        <jar destfile="som-language-server.jar" basedir="${classes.dir}"></jar>
-    </target>
+	<target name="libs" depends="somns,trufflesom,simple">
+		<get src="${mvn.repo}/com/google/code/gson/gson/${gson.version}/gson-${gson.version}.jar"
+				usetimestamp="true"
+				dest="${lib.dir}/gson-${gson.version}.jar" />
+		<get src="${mvn.repo}/com/google/guava/guava/${guava.version}/guava-${guava.version}.jar"
+				usetimestamp="true"
+				dest="${lib.dir}/guava-${guava.version}.jar" />
+		<get src="${mvn.repo}/org/eclipse/xtext/org.eclipse.xtext.xbase.lib/${xtend.version}/org.eclipse.xtext.xbase.lib-${xtend.version}.jar"
+				usetimestamp="true"
+				dest="${lib.dir}/org.eclipse.xtext.xbase.lib-${xtend.version}.jar" />
+		<get src="${mvn.repo}/org/eclipse/xtend/org.eclipse.xtend.lib/${xtend.version}/org.eclipse.xtend.lib-${xtend.version}.jar"
+				usetimestamp="true"
+				dest="${lib.dir}/org.eclipse.xtend.lib-${xtend.version}.jar" />
+		<get src="${mvn.repo}/org/eclipse/xtend/org.eclipse.xtend.lib.macro/${xtend.version}/org.eclipse.xtend.lib.macro-${xtend.version}.jar"
+				usetimestamp="true"
+				dest="${lib.dir}/org.eclipse.xtend.lib.macro-${xtend.version}.jar" />
+	</target>
 
-    <target name="deploy" depends="jar" description="Deploy Language Server files to client">
-        <mkdir dir="../out/server"/>
-        <copy todir="../out/server" flatten="true">
-          <path>
-            <pathelement path="som-language-server.jar"/>
-            <path refid="jar.classpath" />
-          </path>
-        </copy>
-        <!-- since the som.jar files have the same name, we copy them separately -->
-        <copy file="${som.jar}" tofile="../out/server/som.jar" />
-        <copy file="${somns.jar}" tofile="../out/server/somns.jar" />
+	<target name="checkstyle-jar">
+		<get src="https://github.com/checkstyle/checkstyle/releases/download/checkstyle-${checkstyle.version}/checkstyle-${checkstyle.version}-all.jar"
+				usetimestamp="true"
+				dest="${lib.dir}/checkstyle-${checkstyle.version}-all.jar" />
+	</target>
 
-        <!-- copy the core libs -->
-        <copy todir="../out/server/somns-core-lib">
-          <fileset dir="${somns.dir}/core-lib"/>
-        </copy>
-        <copy todir="../out/server/som-core-lib">
-          <fileset dir="${som.dir}/core-lib"/>
-        </copy>
-    </target>
+	<target name="checkstyle" depends="checkstyle-jar" description="Check Code with Checkstyle">
+		<taskdef resource="com/puppycrawl/tools/checkstyle/ant/checkstyle-ant-task.properties" classpath="${lib.dir}/checkstyle-${checkstyle.version}-all.jar" />
+		<checkstyle config=".checkstyle_checks.xml">
+			<fileset dir="src" includes="**/*.java"/>
+			<formatter type="plain"/>
+		</checkstyle>
+	</target>
+
+	<target name="compile" depends="libs,compile-ls" description="Compile">
+	</target>
+
+	<target name="compile-ls" description="Compile Language Server">
+		<mkdir dir="${build.dir}"/>
+		<mkdir dir="${classes.dir}" />
+		<javac includeantruntime="false" destdir="${classes.dir}" debug="true">
+			<src path="${src.dir}" />
+			<src path="org.eclipse.lsp4j" />
+			<src path="org.eclipse.lsp4j-gen" />
+			<src path="org.eclipse.lsp4j.generator" />
+			<src path="org.eclipse.lsp4j.jsonrpc" />
+			<classpath refid="project.classpath" />
+			<compilerarg line="-XDignore.symbol.file" />
+			<compilerarg line="-Xlint:all" />
+		</javac>
+	</target>
+
+	<target name="jar" depends="compile" description="Package as JAR">
+		<jar destfile="som-language-server.jar" basedir="${classes.dir}"></jar>
+	</target>
+
+	<target name="deploy" depends="jar" description="Deploy Language Server files to client">
+		<mkdir dir="../out/server"/>
+		<copy todir="../out/server" flatten="true">
+			<path>
+				<pathelement path="som-language-server.jar"/>
+				<path refid="jar.classpath" />
+			</path>
+		</copy>
+		<!-- since the som.jar files have the same name, we copy them separately -->
+		<copy file="${som.jar}" tofile="../out/server/som.jar" />
+		<copy file="${somns.jar}" tofile="../out/server/somns.jar" />
+		<!-- copy the core libs -->
+		<copy todir="../out/server/somns-core-lib">
+			<fileset dir="${somns.dir}/core-lib"/>
+		</copy>
+		<copy todir="../out/server/som-core-lib">
+			<fileset dir="${som.dir}/core-lib"/>
+		</copy>
+	</target>
 </project>
