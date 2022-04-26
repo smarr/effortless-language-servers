@@ -4,3 +4,6 @@
 [submodule "server/libs/TruffleSOM"]
 	path = server/libs/TruffleSOM
 	url = https://github.com/SOM-st/TruffleSOM.git
+[submodule "server/libs/simplelanguage"]
+	path = server/libs/simplelanguage
+	url = https://github.com/smarr/simplelanguage.git
