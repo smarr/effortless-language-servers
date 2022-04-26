@@ -18,7 +18,7 @@
 
 	<exec executable="sh" dir="${simple.dir}" outputproperty="mvn.home">
 		<arg value="-c" />
-		<arg line='"mvn help:evaluate -Dexpression=settings.localRepository | grep -v \"[INFO]\""' />
+		<arg line='"mvn help:evaluate -Dexpression=settings.localRepository | grep -v [INFO]"' />
 	</exec>
 
 	<echo>mvn.home: ${mvn.home}</echo>
