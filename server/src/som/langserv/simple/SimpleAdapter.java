@@ -138,8 +138,9 @@ public class SimpleAdapter extends LanguageAdapter<SimpleStructures> {
       throws bd.basic.ProgramDefinitionError {
     SimpleLanguageLexer lexer =
         new SimpleLanguageLexer(CharStreams.fromString(source.getCharacters().toString()));
-    SimpleParser parser = new SimpleParser(new CommonTokenStream(lexer));
-    parser.parse(Probe, currentSLLanguageInstence, source);
+    SimpleParser parser = new SimpleParser(new CommonTokenStream(lexer), Probe,
+        currentSLLanguageInstence, source);
+    // parser.parse(Probe, currentSLLanguageInstence, source);
 
   }
 

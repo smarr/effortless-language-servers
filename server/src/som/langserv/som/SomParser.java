@@ -8,6 +8,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import bdt.basic.ProgramDefinitionError;
 import bdt.source.SourceCoordinate;
+//import som.langserv.SemanticTokenType;
 import trufflesom.compiler.MethodGenerationContext;
 import trufflesom.compiler.ParserAst;
 import trufflesom.interpreter.nodes.ExpressionNode;
@@ -165,61 +166,76 @@ public class SomParser extends ParserAst {
   }
 
   @Override
-  protected void storeClassPosition(final SourceCoordinate coords, final String className) {
+  protected void storePosition(final SourceCoordinate coords, final String className,
+      final int tokenTypevalue) {
     structuralProbe.addTokenPosition(coords.startLine, coords.startColumn,
-        className.length(), 0, 0);
+        className.length(), tokenTypevalue, 0);
   }
+  // @Override
+  // protected void storePosition(final SourceCoordinate coords, final String className,
+  // final int tokenTypevalue) {
+  // structuralProbe.addTokenPosition(coords.startLine, coords.startColumn,
+  // className.length(), tokenTypevalue, 0);
+  // }
 
-  @Override
-  protected void storeMethodPosition(final SourceCoordinate coords, final String methodName) {
-    structuralProbe.addTokenPosition(coords.startLine, coords.startColumn,
-        methodName.length(), 2, 0);
-  }
+  // @Override
+  // protected void storeClassPosition(final SourceCoordinate coords, final String className) {
+  // structuralProbe.addTokenPosition(coords.startLine, coords.startColumn,
+  // className.length(), 0, 0);
+  // }
+  //
+  // @Override
+  // protected void storeMethodPosition(final SourceCoordinate coords, final String methodName)
+  // {
+  // structuralProbe.addTokenPosition(coords.startLine, coords.startColumn,
+  // methodName.length(), 2, 0);
+  // }
+  //
+  // @Override
+  // protected void storeLocalsPosition(final SourceCoordinate coords, final String localName)
+  // {
+  // structuralProbe.addTokenPosition(coords.startLine, coords.startColumn,
+  // localName.length(), 4, 0);
+  // }
 
-  @Override
-  protected void storeLocalsPosition(final SourceCoordinate coords, final String localName) {
-    structuralProbe.addTokenPosition(coords.startLine, coords.startColumn,
-        localName.length(), 4, 0);
-  }
+  // @Override
+  // protected void storeLiteralStringPosition(final SourceCoordinate coords,
+  // final String string) {
+  // // needs a + 2 to the length because of the quotes
+  // structuralProbe.addTokenPosition(coords.startLine, coords.startColumn,
+  // string.length(), 3, 0);
+  // }
 
-  @Override
-  protected void storeLiteralStringPosition(final SourceCoordinate coords,
-      final String string) {
-    // needs a + 2 to the length because of the quotes
-    structuralProbe.addTokenPosition(coords.startLine, coords.startColumn,
-        string.length() + 2, 3, 0);
-  }
-
-  @Override
-  protected void storeVariablePosition(final SourceCoordinate coords,
-      final String identifier) {
-    structuralProbe.addTokenPosition(coords.startLine, coords.startColumn,
-        identifier.length(), 4, 0);
-  }
-
-  @Override
-  protected void storeUnaryMessagesPositions(final SourceCoordinate coords,
-      final String identifierLength) {
-    structuralProbe.addTokenPosition(coords.startLine, coords.startColumn,
-        identifierLength.length(), 2,
-        0);
-  }
-
-  @Override
-  protected void storeKeywordPosition(final SourceCoordinate coords,
-      final String keyword) {
-    structuralProbe.addTokenPosition(coords.startLine, coords.startColumn,
-        keyword.length(), 1,
-        0);
-  }
-
-  @Override
-  protected void storePrimitivePosition(final SourceCoordinate coords,
-      final String string) {
-    structuralProbe.addTokenPosition(coords.startLine, coords.startColumn,
-        string.length(), 1,
-        0);
-  }
+  // @Override
+  // protected void storeVariablePosition(final SourceCoordinate coords,
+  // final String identifier) {
+  // structuralProbe.addTokenPosition(coords.startLine, coords.startColumn,
+  // identifier.length(), 4, 0);
+  // }
+  //
+  // @Override
+  // protected void storeUnaryMessagesPositions(final SourceCoordinate coords,
+  // final String identifierLength) {
+  // structuralProbe.addTokenPosition(coords.startLine, coords.startColumn,
+  // identifierLength.length(), 2,
+  // 0);
+  // }
+  //
+  // @Override
+  // protected void storeKeywordPosition(final SourceCoordinate coords,
+  // final String keyword) {
+  // structuralProbe.addTokenPosition(coords.startLine, coords.startColumn,
+  // keyword.length(), 1,
+  // 0);
+  // }
+  //
+  // @Override
+  // protected void storePrimitivePosition(final SourceCoordinate coords,
+  // final String string) {
+  // structuralProbe.addTokenPosition(coords.startLine, coords.startColumn,
+  // string.length(), 1,
+  // 0);
+  // }
 
   protected void storeAllComments() {
     // why dose this work out of order?

@@ -56,6 +56,7 @@ import com.google.common.collect.Lists;
 import som.langserv.newspeak.Minitest;
 import som.langserv.newspeak.NewspeakAdapter;
 import som.langserv.simple.SimpleAdapter;
+//import som.langserv.simple.SimpleAdapter;
 import som.langserv.som.SomAdapter;
 
 
@@ -69,6 +70,7 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
   public SomLanguageServer() {
     adapters =
         new LanguageAdapter[] {new NewspeakAdapter(), new SomAdapter(), new SimpleAdapter()};
+    // new SimpleAdapter()
     workspace = new SomWorkspace(adapters);
   }
 
