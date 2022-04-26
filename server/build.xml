@@ -7,8 +7,8 @@
 	<property name="simple.dir"     value="${lib.dir}/simplelanguage" />
     <property name="bd.dir"      value="${somns.dir}/libs/black-diamonds" />
     <property name="truffle.dir" value="${somns.dir}/libs/truffle/truffle" />
-    <property name="truffle.build" value="${truffle.dir}/mxbuild/dists/jdk1.8" />
-    <property name="sdk.build"   value="${somns.dir}/libs/truffle/sdk/mxbuild/dists/jdk1.8" />
+    <property name="truffle.build" value="${truffle.dir}/mxbuild/dists" />
+    <property name="sdk.build"   value="${somns.dir}/libs/truffle/sdk/mxbuild/dists" />
     <property name="svm.build"   value="${somns.dir}/libs/truffle/substratevm/mxbuild/dists" />
     <property name="somns.jar"   location="${somns.dir}/build/som.jar" />
     <property name="som.jar"     location="${som.dir}/build/som.jar" />
@@ -76,7 +76,6 @@
 
     <target name="somns" depends="somns-submodule">
       <exec executable="ant" dir="${somns.dir}">
-          <arg value="-Dskip.graal=true" />
           <arg value="jar"/>
       </exec>
       <jar destfile="${bd.dir}/build/black-diamonds.jar" basedir="${bd.dir}/build/classes" />
@@ -91,7 +90,6 @@
 	
     <target name="trufflesom" depends="somns-submodule">
       <exec executable="ant" dir="${som.dir}">
-          <arg value="-Dskip.graal=true" />
           <arg value="jar"/>
       </exec>
     </target>

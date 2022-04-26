@@ -429,8 +429,8 @@ public class NewspeakAdapter extends LanguageAdapter<NewspeakStructures> {
         final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe)
         throws bd.basic.ProgramDefinitionError {
       NewspeakParser parser =
-          new NewspeakParser(source.getCharacters().toString(), source.getLength(),
-              source, (NewspeakStructures) structuralProbe, language);
+          new NewspeakParser(source.getCharacters().toString(), source,
+              (NewspeakStructures) structuralProbe, language);
       return compile(parser, source);
     }
   }

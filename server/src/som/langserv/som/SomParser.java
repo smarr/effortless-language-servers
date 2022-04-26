@@ -6,13 +6,11 @@ import java.util.Deque;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
-import bd.basic.ProgramDefinitionError;
-import bd.source.SourceCoordinate;
-//import som.langserv.SemanticTokenType;
+import bdt.basic.ProgramDefinitionError;
+import bdt.source.SourceCoordinate;
 import trufflesom.compiler.MethodGenerationContext;
 import trufflesom.compiler.ParserAst;
 import trufflesom.interpreter.nodes.ExpressionNode;
-import trufflesom.vm.Universe;
 import trufflesom.vmobjects.SSymbol;
 
 
@@ -26,8 +24,8 @@ public class SomParser extends ParserAst {
   private final Deque<SourceSection> sourceSections;
 
   public SomParser(final String content, final Source source,
-      final SomStructures structuralProbe, final Universe universe) {
-    super(content, source, structuralProbe, universe);
+      final SomStructures structuralProbe) {
+    super(content, source, structuralProbe);
     assert structuralProbe != null : "Needed for this extended parser.";
     this.structuralProbe = structuralProbe;
     sourceSections = new ArrayDeque<>();
@@ -47,9 +45,9 @@ public class SomParser extends ParserAst {
 
   @Override
   protected ExpressionNode variableRead(final MethodGenerationContext mgenc,
-      final SSymbol variableName, final SourceSection source) {
-    ExpressionNode result = super.variableRead(mgenc, variableName, source);
-    structuralProbe.reportCall(result, source);
+      final SSymbol variableName, final long coord) {
+    ExpressionNode result = super.variableRead(mgenc, variableName, coord);
+    structuralProbe.reportCall(result, SourceCoordinate.createSourceSection(source, coord));
     return result;
   }
 
@@ -97,28 +95,31 @@ public class SomParser extends ParserAst {
 
   @Override
   protected SSymbol unarySelector() throws ParseError {
-    SourceCoordinate coord = getCoordinate();
+    int coord = getStartIndex();
     SSymbol result = super.unarySelector();
-    sourceSections.addLast(getSource(coord));
+    recordSourceSection(coord);
     return result;
   }
 
   @Override
   protected SSymbol binarySelector() throws ParseError {
-    SourceCoordinate coord = getCoordinate();
+    int coord = getStartIndex();
     SSymbol result = super.binarySelector();
-    sourceSections.addLast(getSource(coord));
-
+    recordSourceSection(coord);
     return result;
   }
 
   @Override
   protected String keyword() throws ParseError {
-    SourceCoordinate coord = getCoordinate();
+    int coord = getStartIndex();
     String result = super.keyword();
-    sourceSections.addLast(getSource(coord));
-
+    recordSourceSection(coord);
     return result;
+  }
+
+  protected void recordSourceSection(final int coord) {
+    sourceSections.addLast(
+        SourceCoordinate.createSourceSection(source, getCoordWithLength(coord)));
   }
 
   @Override
@@ -131,9 +132,9 @@ public class SomParser extends ParserAst {
 
   @Override
   protected SSymbol assignment() throws ParseError {
-    SourceCoordinate coord = getCoordinate();
+    int coord = getStartIndex();
     SSymbol result = super.assignment();
-    sourceSections.addLast(getSource(coord));
+    recordSourceSection(coord);
     return result;
   }
 

@@ -28,9 +28,9 @@ public class NewspeakParser extends Parser {
   private List<Integer>              listOfVarsStartsLines;
   private List<Integer>              listOfVarsStartsCol;
 
-  public NewspeakParser(final String content, final long fileSize, final Source source,
+  public NewspeakParser(final String content, final Source source,
       final NewspeakStructures structuralProbe, final SomLanguage lang) throws ParseError {
-    super(content, fileSize, source, structuralProbe, lang);
+    super(content, source, structuralProbe, lang);
     // assert structuralProbe != null : "Needed for this extended parser.";
     this.struturalProbe = structuralProbe;
     sourceSections = new ArrayDeque<>();

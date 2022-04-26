@@ -2,9 +2,9 @@
 
 import { spawn, ChildProcess } from 'child_process';
 import { BreakpointEvent, DebugSession, Handles, InitializedEvent, Scope,
-  Source as VSSource, StackFrame, StoppedEvent, Variable, OutputEvent,
-  TerminatedEvent } from 'vscode-debugadapter';
-import { DebugProtocol } from 'vscode-debugprotocol';
+  Source as VSSource, StackFrame, StoppedEvent, OutputEvent,
+  TerminatedEvent } from '@vscode/debugadapter';
+import { DebugProtocol } from '@vscode/debugprotocol';
 import * as WebSocket from 'ws';
 
 import { BreakpointData, Source as WDSource, Respond,

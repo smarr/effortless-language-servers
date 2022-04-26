@@ -1,6 +1,6 @@
 [submodule "server/libs/SOMns"]
 	path = server/libs/SOMns
-	url = https://github.com/smarr/SOMns.git
+	url = https://github.com/HumphreyHCB/SOMns.git
 [submodule "server/libs/TruffleSOM"]
 	path = server/libs/TruffleSOM
-	url = https://github.com/SOM-st/TruffleSOM.git
+	url = https://github.com/HumphreyHCB/TruffleSOM.git

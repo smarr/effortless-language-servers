@@ -20,7 +20,7 @@ let serverProcess: ChildProcess = null;
 
 function getServerOptions(asAbsolutePath: PathConverter, enableDebug:
 	  boolean, enableTcp: boolean): ServerOptions {
-	const javaCmd = '/usr/bin/java';
+	const javaCmd = 'java';
 
   const javaClassPath = [
 		asAbsolutePath('out/server/som.jar'),
@@ -53,6 +53,7 @@ function getServerOptions(asAbsolutePath: PathConverter, enableDebug:
 	let javaArgs = [
 		'-cp', javaClassPath.join(':'),
 		somLib, somnsLib,
+		'-Dpolyglot.engine.WarnInterpreterOnly=false', // to disable warnings on stdout/stderr
 		'som.langserv.ServerLauncher'];
 
 	if (enableDebug) {
@@ -76,7 +77,7 @@ function startLanguageServerAndConnectTCP(context: ExtensionContext,
 													   resolve: (value?: StreamInfo | PromiseLike<StreamInfo>) => void,
 														 reject: (reason?: any) => void): void {
 	const serverOptions: any = getServerOptions(context.asAbsolutePath, true, true);
-	const lsProc = spawn(serverOptions.run.command, serverOptions.run.args);
+	const lsProc = spawn(serverOptions.run.command, serverOptions.run.args, {shell: true});
 	let sawServerStarted = false;
 	lsProc.stdout.on('data', data => {
 		if (!sawServerStarted && data.toString().includes('Server started and waiting')) {
@@ -101,9 +102,22 @@ export function startLanguageServer(asAbsolutePath: PathConverter,
 
 	const cmd = `${serverOptions.run.command} ${serverOptions.run.args.join(" ")}`;
 	console.log(`[SOM-EXT] spawn '${cmd}'`);
-	const lsProc = spawn(serverOptions.run.command, serverOptions.run.args);
+	const lsProc = spawn(serverOptions.run.command, serverOptions.run.args, {shell: true});
 
-	lsProc.on('exit', code => { console.log(`[SOM-EXT] Server processes exited with code: ${code}`) });
+	let stderr = '';
+
+	lsProc.stderr.on('data', data => {
+		stderr += data.toString();
+	});
+
+	lsProc.on('exit', code => {
+		if (code !== 0) {
+			console.log(`[SOM-EXT] Server processes exited with code: ${code}
+	-------
+	stderr: ${stderr}
+	-------`);
+		}
+	});
 
 	resolve({
 		reader: lsProc.stdout,
