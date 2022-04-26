@@ -202,7 +202,7 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
             }
           }
         } catch (Exception e) {
-          // TODO: handle exception
+
         }
         if (tokenCache.containsKey(uri)) {
           tokenCache.replace(uri, adapter.getTokenPositions(uri));

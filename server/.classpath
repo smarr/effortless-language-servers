@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="src"/>
+	<classpathentry excluding="Benchmarking/" kind="src" path="src"/>
 	<classpathentry kind="src" path="org.eclipse.lsp4j"/>
 	<classpathentry kind="src" path="org.eclipse.lsp4j-gen"/>
 	<classpathentry kind="src" path="org.eclipse.lsp4j.jsonrpc"/>

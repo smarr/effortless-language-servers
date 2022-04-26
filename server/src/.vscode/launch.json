@@ -1,0 +1,36 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Launch Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "Launch Harness",
+            "request": "launch",
+            "mainClass": "Harness",
+            "projectName": "src_ab19fce8",
+            "args": "example 20000"
+        },
+        {
+            "type": "java",
+            "name": "Launch example",
+            "request": "launch",
+            "mainClass": "example",
+            "projectName": "src_ab19fce8"
+        },
+        {
+            "type": "java",
+            "name": "Launch ServerLauncher",
+            "request": "launch",
+            "mainClass": "som.langserv.ServerLauncher",
+            "projectName": "src_ab19fce8"
+        }
+    ]
+}

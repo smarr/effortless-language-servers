@@ -228,7 +228,6 @@ public class NewspeakStructures
 
   public void addTokenPosition(final int lineNumber, int startingChar, final int length,
       final int tokenType, final int tokenMoifications) {
-
     if (startingChar <= 0) {
       startingChar = 1;
     }

@@ -173,8 +173,6 @@ public class SomParser extends ParserAst {
   }
 
   protected void storeAllComments() {
-    // why dose this work out of order?
-    // i check all tokens are in the right order later on and makre sure they are
     structuralProbe.addTokenPosition(this.lexer.getCommentsPositions());
 
   }
