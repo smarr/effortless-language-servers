@@ -2,6 +2,8 @@ package som.langserv.som;
 
 import static som.langserv.Matcher.fuzzyMatch;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -142,7 +144,11 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
         } catch (ParseError e) {
           return toDiagnostics(e, diagnostics);
         } catch (Throwable e) {
-          return toDiagnostics(e.getMessage(), diagnostics);
+          String msg = e.getMessage();
+          if (msg == null) {
+            msg = getStackTrace(e);
+          }
+          return toDiagnostics(msg, diagnostics);
         }
       }
     } finally {
@@ -153,6 +159,13 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
     }
 
     return diagnostics;
+  }
+
+  private String getStackTrace(final Throwable e) {
+    StringWriter sw = new StringWriter();
+    PrintWriter pw = new PrintWriter(sw);
+    e.printStackTrace(pw);
+    return sw.toString();
   }
 
   @Override
@@ -344,6 +357,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
 
     d.setMessage(msg == null ? "" : msg);
     d.setSource("Parser");
+    d.setRange(toRangeMax(1, 1));
 
     diagnostics.add(d);
     return diagnostics;
