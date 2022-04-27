@@ -17,6 +17,8 @@ import com.oracle.truffle.api.source.SourceSection;
 import bdt.tools.nodes.Invocation;
 import bdt.tools.structure.StructuralProbe;
 import som.langserv.LanguageAdapter;
+import som.langserv.SemanticTokenModifier;
+import som.langserv.SemanticTokenType;
 import trufflesom.compiler.Field;
 import trufflesom.compiler.Variable;
 import trufflesom.interpreter.nodes.ExpressionNode;
@@ -180,21 +182,25 @@ public class SomStructures
   }
 
   public void addTokenPosition(final int lineNumber, int startingChar, final int length,
-      final int tokenType, final int tokenMoifications) {
-
+      final SemanticTokenType tokenType, final SemanticTokenModifier... tokenModifiers) {
     if (startingChar <= 0) {
       startingChar = 1;
     }
+
     tokenPosition.add(lineNumber - 1);
     tokenPosition.add(startingChar - 1);
     tokenPosition.add(length);
-    tokenPosition.add(tokenType);
-    tokenPosition.add(tokenMoifications);
+    tokenPosition.add(tokenType.ordinal());
 
+    if (tokenModifiers != null && tokenModifiers.length > 0) {
+      throw new RuntimeException(
+          "Not yet implemented. Need to turn the array into setting bits on a integer. See description after https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#semanticTokensLegend");
+    } else {
+      tokenPosition.add(0);
+    }
   }
 
   public void addTokenPosition(final List<Integer> list) {
-
     tokenPosition.addAll(list);
   }
 

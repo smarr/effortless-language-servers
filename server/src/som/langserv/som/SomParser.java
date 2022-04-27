@@ -1,5 +1,7 @@
 package som.langserv.som;
 
+import static trufflesom.compiler.Symbol.Primitive;
+
 import java.util.ArrayDeque;
 import java.util.Deque;
 
@@ -8,6 +10,10 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import bdt.basic.ProgramDefinitionError;
 import bdt.source.SourceCoordinate;
+import som.langserv.SemanticTokenModifier;
+import som.langserv.SemanticTokenType;
+import trufflesom.compiler.ClassGenerationContext;
+import trufflesom.compiler.Lexer;
 //import som.langserv.SemanticTokenType;
 import trufflesom.compiler.MethodGenerationContext;
 import trufflesom.compiler.ParserAst;
@@ -30,7 +36,34 @@ public class SomParser extends ParserAst {
     assert structuralProbe != null : "Needed for this extended parser.";
     this.structuralProbe = structuralProbe;
     sourceSections = new ArrayDeque<>();
+  }
 
+  @Override
+  protected Lexer createLexer(final String content) {
+    return new SomLexer(content);
+  }
+
+  @Override
+  protected void className(final ClassGenerationContext cgenc, final int coord)
+      throws ParseError {
+    super.className(cgenc, coord);
+    storePosition(coord, cgenc.getName().getString(), SemanticTokenType.CLASS);
+  }
+
+  @Override
+  public ExpressionNode method(final MethodGenerationContext mgenc)
+      throws ProgramDefinitionError {
+    int coord = getStartIndex();
+    var result = super.method(mgenc);
+    storePosition(coord, mgenc.getSignature().getString(), SemanticTokenType.METHOD);
+    return result;
+  }
+
+  @Override
+  protected void primitiveBlock() throws ParseError {
+    int coord = getStartIndex();
+    storePosition(coord, Primitive.toString(), SemanticTokenType.KEYWORD);
+    super.primitiveBlock();
   }
 
   @Override
@@ -99,6 +132,7 @@ public class SomParser extends ParserAst {
     int coord = getStartIndex();
     SSymbol result = super.unarySelector();
     recordSourceSection(coord);
+    storePosition(coord, result.getString(), SemanticTokenType.METHOD);
     return result;
   }
 
@@ -115,7 +149,24 @@ public class SomParser extends ParserAst {
     int coord = getStartIndex();
     String result = super.keyword();
     recordSourceSection(coord);
+    storePosition(coord, result, SemanticTokenType.KEYWORD);
     return result;
+  }
+
+  @Override
+  protected SSymbol argument() throws ProgramDefinitionError {
+    int coord = getStartIndex();
+    SSymbol s = variable();
+    storePosition(coord, s.getString(), SemanticTokenType.PARAMETER);
+    return s;
+  }
+
+  @Override
+  protected SSymbol local() throws ProgramDefinitionError {
+    int coord = getStartIndex();
+    SSymbol s = variable();
+    storePosition(coord, s.getString(), SemanticTokenType.VARIABLE);
+    return s;
   }
 
   protected void recordSourceSection(final int coord) {
@@ -137,6 +188,14 @@ public class SomParser extends ParserAst {
     SSymbol result = super.assignment();
     recordSourceSection(coord);
     return result;
+  }
+
+  @Override
+  protected String string() throws ParseError {
+    int coord = getStartIndex();
+    String s = super.string();
+    storePosition(coord, "'" + s + "'", SemanticTokenType.STRING);
+    return s;
   }
 
   @Override
@@ -163,15 +222,19 @@ public class SomParser extends ParserAst {
     }
   }
 
-  protected void storePosition(final SourceCoordinate coords, final String className,
-      final int tokenTypevalue) {
-    structuralProbe.addTokenPosition(coords.startLine, coords.startColumn,
-        className.length(), tokenTypevalue, 0);
+  protected void storePosition(final int startCoord, final String token,
+      final SemanticTokenType type) {
+    storePosition(startCoord, token, type, (SemanticTokenModifier[]) null);
+  }
+
+  protected void storePosition(final int startCoord, final String token,
+      final SemanticTokenType type, final SemanticTokenModifier... modifiers) {
+    int line = SourceCoordinate.getLine(source, startCoord);
+    int column = SourceCoordinate.getColumn(source, startCoord);
+    structuralProbe.addTokenPosition(line, column, token.length(), type, modifiers);
   }
 
   protected void storeAllComments() {
-    structuralProbe.addTokenPosition(this.lexer.getCommentsPositions());
-
+    structuralProbe.addTokenPosition(((SomLexer) lexer).getCommentsPositions());
   }
-
 }
