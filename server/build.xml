@@ -16,9 +16,8 @@
 
 	<property name="mvn.repo"      value="https://repo1.maven.org/maven2" />
 
-	<exec executable="sh" dir="${simple.dir}" outputproperty="mvn.home">
-		<arg value="-c" />
-		<arg line='"mvn help:evaluate -Dexpression=settings.localRepository | grep -v [INFO]"' />
+	<exec executable="mvn" dir="${simple.dir}" outputproperty="mvn.home">
+		<arg line='help:evaluate -Dexpression=settings.localRepository -q -DforceStdout' />
 	</exec>
 
 	<echo>mvn.home: ${mvn.home}</echo>
