@@ -87,7 +87,7 @@
 
 	<target name="simple" depends="somns-submodule">
 		<exec executable="mvn" dir="${simple.dir}">
-			<arg line="-pl '!native' package" />
+			<arg line="--no-transfer-progress -pl '!native' package" />
 		</exec>
 	</target>
 

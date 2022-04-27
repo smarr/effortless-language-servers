@@ -184,7 +184,7 @@
 		]
 	},
 	"scripts": {
-		"compile:server": "cd server && ant deploy",
+		"compile:server": "cd server && ant -e deploy",
 		"vscode:prepublish": "npm run compile",
 		"pretest": "npm run compile",
 		"watch": "tsc --build --watch",
