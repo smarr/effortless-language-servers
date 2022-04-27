@@ -47,7 +47,7 @@ public class SimpleAdapter extends LanguageAdapter<SimpleStructures> {
                              .options(new HashMap<>()).build();
     context.enter();
     context.eval("sl", "function main() {}");
-    return SLLanguage.returnInstence();
+    return SLLanguage.current();
   }
 
   @Override
