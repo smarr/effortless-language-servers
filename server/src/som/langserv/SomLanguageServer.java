@@ -103,6 +103,16 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
 
     cap.setCompletionProvider(completion);
 
+    cap.setSemanticTokensProvider(createSemantikTokenProviderConfig());
+
+    result.setCapabilities(cap);
+
+    loadWorkspace(params);
+
+    return CompletableFuture.completedFuture(result);
+  }
+
+  private SemanticTokensWithRegistrationOptions createSemantikTokenProviderConfig() {
     SemanticTokensWithRegistrationOptions semanticTokens =
         new SemanticTokensWithRegistrationOptions();
 
@@ -110,22 +120,15 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
     semanticTokens.setId(null);
 
     List<String> tokenTypes = new ArrayList<String>();
-    tokenTypes.add("class"); // 0
-    tokenTypes.add("keyword"); // 1
-    tokenTypes.add("method"); // 2
-    tokenTypes.add("string"); // 3
-    tokenTypes.add("variable"); // 4
-    tokenTypes.add("comment"); // 5
-    tokenTypes.add("type"); // 6
-    tokenTypes.add("property"); // 7
-    tokenTypes.add("operator"); // 8
-    tokenTypes.add("parameter"); // 9
-    tokenTypes.add("function"); // 10
-    tokenTypes.add("number"); // 11
+    for (var t : SemanticTokenType.values()) {
+      tokenTypes.add(t.name);
+    }
 
     List<String> tokenModifiers = new ArrayList<String>();
-    tokenModifiers.add("declaration");
-    tokenModifiers.add("definition");
+    for (var m : SemanticTokenModifier.values()) {
+      tokenModifiers.add(m.name);
+    }
+
     SemanticTokensLegend legend = new SemanticTokensLegend(tokenTypes, tokenModifiers);
 
     semanticTokens.setLegend(legend);
@@ -136,13 +139,7 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
     serverFull.setDelta(false);
     semanticTokens.setFull(serverFull);
 
-    cap.setSemanticTokensProvider(semanticTokens);
-
-    result.setCapabilities(cap);
-
-    loadWorkspace(params);
-
-    return CompletableFuture.completedFuture(result);
+    return semanticTokens;
   }
 
   private void loadWorkspace(final InitializeParams params) {
