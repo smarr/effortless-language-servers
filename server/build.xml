@@ -36,7 +36,6 @@
 		<pathelement location="${lib.dir}/org.eclipse.xtext.xbase.lib-${xtend.version}.jar" />
 		<pathelement location="${lib.dir}/org.eclipse.xtend.lib-${xtend.version}.jar" />
 		<pathelement location="${lib.dir}/org.eclipse.xtend.lib.macro-${xtend.version}.jar" />
-		<pathelement location="${somns.dir}/libs/truffle/truffle/src/com.oracle.truffle.sl.jar" />
 
 		<pathelement location="${simple.build}/simplelanguage-22.0.0.2.jar" />
 		<pathelement location="${mvn.home}/org/antlr/antlr4-runtime/4.9.2/antlr4-runtime-4.9.2.jar" />
@@ -152,7 +151,10 @@
 		<jar destfile="som-language-server.jar" basedir="${classes.dir}"></jar>
 	</target>
 
-	<target name="deploy" depends="jar" description="Deploy Language Server files to client">
+	<target name="deploy" depends="jar,copy-jars" description="Deploy Language Server files to client">
+	</target>
+
+	<target name="copy-jars">
 		<mkdir dir="../out/server"/>
 		<copy todir="../out/server" flatten="true">
 			<path>
@@ -160,9 +162,11 @@
 				<path refid="jar.classpath" />
 			</path>
 		</copy>
+
 		<!-- since the som.jar files have the same name, we copy them separately -->
 		<copy file="${som.jar}" tofile="../out/server/som.jar" />
 		<copy file="${somns.jar}" tofile="../out/server/somns.jar" />
+
 		<!-- copy the core libs -->
 		<copy todir="../out/server/somns-core-lib">
 			<fileset dir="${somns.dir}/core-lib"/>
