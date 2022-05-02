@@ -91,7 +91,8 @@ public class SomParser extends ParserAst {
     int stackHeight = sourceSections.size();
     ExpressionNode result = super.unaryMessage(mgenc, receiver);
     SourceSection selector = sourceSections.getLast();
-    assert result.getSourceSection().getCharIndex() == selector.getCharIndex();
+    // Can't access the ss from the result, because parent pointers are not set on nodes:
+    // assert result.getSourceSection().getCharIndex() == selector.getCharIndex();
     structuralProbe.reportCall(result, sourceSections.removeLast());
     assert stackHeight == sourceSections.size();
     return result;
@@ -103,7 +104,8 @@ public class SomParser extends ParserAst {
     int stackHeight = sourceSections.size();
     ExpressionNode result = super.binaryMessage(mgenc, receiver);
     SourceSection selector = sourceSections.getLast();
-    assert result.getSourceSection().getCharIndex() == selector.getCharIndex();
+    // Can't access the ss from the result, because parent pointers are not set on nodes:
+    // assert result.getSourceSection().getCharIndex() == selector.getCharIndex();
     structuralProbe.reportCall(result, sourceSections.removeLast());
     assert stackHeight == sourceSections.size();
     return result;
