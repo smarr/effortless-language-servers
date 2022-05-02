@@ -17,6 +17,7 @@ import trufflesom.compiler.Lexer;
 //import som.langserv.SemanticTokenType;
 import trufflesom.compiler.MethodGenerationContext;
 import trufflesom.compiler.ParserAst;
+import trufflesom.compiler.Symbol;
 import trufflesom.interpreter.nodes.ExpressionNode;
 import trufflesom.vmobjects.SSymbol;
 
@@ -68,12 +69,15 @@ public class SomParser extends ParserAst {
 
   @Override
   protected SSymbol selector() throws ParseError {
+    var prevSym = sym;
     SSymbol sel = super.selector();
-    if (sel.getNumberOfSignatureArguments() <= 2) {
-      // in this case, we called binarySelector() or unarySelector() and put a
-      // source section on the stack that we need to remove
+    if (prevSym != Symbol.Keyword && prevSym != Symbol.KeywordSequence) {
+      // we don't override the keywordSelector to capture the source section
+      // so, we only need to ignore the source section of unary and binary literal symbols
+      // which is what selector() parses.
       sourceSections.removeLast();
     }
+
     return sel;
   }
 
