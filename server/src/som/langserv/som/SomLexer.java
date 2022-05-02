@@ -3,6 +3,7 @@ package som.langserv.som;
 import java.util.ArrayList;
 import java.util.List;
 
+import som.langserv.SemanticTokenType;
 import trufflesom.compiler.Lexer;
 
 
@@ -37,8 +38,8 @@ public class SomLexer extends Lexer {
     commentTokens.add(line);
     commentTokens.add(col);
     commentTokens.add(length);
-    commentTokens.add(5);
-    commentTokens.add(0);
+    commentTokens.add(SemanticTokenType.COMMENT.ordinal()); // token type
+    commentTokens.add(0); // token modifiers
   }
 
   public List<Integer> getCommentsPositions() {
