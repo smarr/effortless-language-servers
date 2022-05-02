@@ -57,7 +57,7 @@ public abstract class LanguageAdapter<Probe> {
     new Thread(() -> loadWorkspaceAndLint(workspace)).start();
   }
 
-  private void loadWorkspaceAndLint(final File workspace) {
+  public void loadWorkspaceAndLint(final File workspace) {
     Map<String, List<Diagnostic>> allDiagnostics = new HashMap<>();
     loadFolder(workspace, allDiagnostics);
 
@@ -75,23 +75,28 @@ public abstract class LanguageAdapter<Probe> {
     }
   }
 
-  private void loadFolder(final File folder,
+  public void loadFolder(final File folder,
       final Map<String, List<Diagnostic>> allDiagnostics) {
     for (File f : folder.listFiles()) {
       if (f.isDirectory()) {
         loadFolder(f, allDiagnostics);
       } else if (f.getName().endsWith(getFileEnding())) {
         try {
-          byte[] content = Files.readAllBytes(f.toPath());
-          String str = new String(content, StandardCharsets.UTF_8);
+          List<Diagnostic> diagnostics = loadFile(f);
           String uri = f.toURI().toString();
-          List<Diagnostic> diagnostics = parse(str, uri);
           allDiagnostics.put(uri, diagnostics);
         } catch (IOException | URISyntaxException e) {
           // if loading fails, we don't do anything, just move on to the next file
         }
       }
     }
+  }
+
+  public List<Diagnostic> loadFile(final File f) throws IOException, URISyntaxException {
+    byte[] content = Files.readAllBytes(f.toPath());
+    String str = new String(content, StandardCharsets.UTF_8);
+    String uri = f.toURI().toString();
+    return parse(str, uri);
   }
 
   public abstract void lintSends(final String docUri, final List<Diagnostic> diagnostics)
