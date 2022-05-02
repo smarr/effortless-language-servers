@@ -2,6 +2,7 @@ package som.langserv.som;
 
 import static som.langserv.Matcher.fuzzyMatch;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URI;
@@ -81,7 +82,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
     context.eval(SomLanguage.INIT);
     context.enter();
 
-    Universe.setupClassPath(CORE_LIB_PATH + "/Smalltalk");
+    Universe.setupClassPath(constructClassPath(CORE_LIB_PATH));
 
     SomStructures systemClassProbe = new SomStructures(
         Source.newBuilder(SomLanguage.LANG_ID, "systemClasses", null).internal(true).build());
@@ -89,6 +90,35 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
     structuralProbes.put("systemClasses", systemClassProbe);
 
     Universe.initializeObjectSystem();
+  }
+
+  private String constructClassPath(final String rootPath) {
+    List<File> allFolders = new ArrayList<>();
+
+    File root = new File(rootPath);
+    findClassPathFolders(root, allFolders);
+
+    StringBuilder builder = new StringBuilder();
+    boolean first = true;
+    for (File f : allFolders) {
+      if (first) {
+        first = false;
+      } else {
+        builder.append(File.pathSeparator);
+      }
+      builder.append(f.toPath().toString());
+    }
+
+    return builder.toString();
+  }
+
+  private void findClassPathFolders(final File root, final List<File> allFolders) {
+    for (File f : root.listFiles()) {
+      if (f.isDirectory()) {
+        allFolders.add(f);
+        findClassPathFolders(f, allFolders);
+      }
+    }
   }
 
   @Override
