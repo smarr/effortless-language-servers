@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.concurrent.ForkJoinTask;
 
 import org.junit.Test;
 
@@ -23,12 +24,14 @@ public class SomTests {
   }
 
   @Test
-  public void testLoadingSomWorkspace() {
+  public void testLoadingSomWorkspace() throws URISyntaxException {
     var adapter = new SomAdapter();
     var client = new TestLanguageClient();
 
     adapter.connect(client);
-    adapter.loadWorkspaceAndLint(new File(SomAdapter.CORE_LIB_PATH));
+    ForkJoinTask<?> task = adapter.loadWorkspace("file:" + SomAdapter.CORE_LIB_PATH);
+    task.join();
+
     // there are currently two known parse errors in the core lib:
     // - Self.som, where super is assigned to
     // - Examples/Benchmarks/DeltaBlue/SortedCollection.som where we trigger "Currently #dnu

@@ -45,19 +45,21 @@ public abstract class LanguageAdapter<Probe> {
     this.client = client;
   }
 
-  public void loadWorkspace(final String uri) throws URISyntaxException {
+  public Object loadWorkspace(final String uri) throws URISyntaxException {
     if (uri == null) {
-      return;
+      return null;
     }
 
     URI workspaceUri = new URI(uri);
     File workspace = new File(workspaceUri);
     assert workspace.isDirectory();
 
-    new Thread(() -> loadWorkspaceAndLint(workspace)).start();
+    Thread t = new Thread(() -> loadWorkspaceAndLint(workspace));
+    t.start();
+    return t;
   }
 
-  public void loadWorkspaceAndLint(final File workspace) {
+  protected void loadWorkspaceAndLint(final File workspace) {
     Map<String, List<Diagnostic>> allDiagnostics = new HashMap<>();
     loadFolder(workspace, allDiagnostics);
 

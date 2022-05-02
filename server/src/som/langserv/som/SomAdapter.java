@@ -3,10 +3,13 @@ package som.langserv.som;
 import static som.langserv.Matcher.fuzzyMatch;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -14,6 +17,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
 
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CompletionItem;
@@ -31,6 +37,7 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bdt.basic.ProgramDefinitionError;
+import bdt.source.SourceCoordinate;
 import bdt.tools.nodes.Invocation;
 import bdt.tools.structure.StructuralProbe;
 import som.langserv.LanguageAdapter;
@@ -57,9 +64,14 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
 
   private final Map<String, SomStructures> structuralProbes;
 
+  private Context context;
+
+  private final ForkJoinPool pool;
+
   public SomAdapter() {
     this.structuralProbes = new HashMap<>();
-    initializePolyglot();
+    this.pool = new ForkJoinPool(1);
+    this.pool.submit(() -> initializePolyglot());
   }
 
   @Override
@@ -77,9 +89,13 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
 
     Builder builder = Universe.createContextBuilder();
     builder.arguments(SomLanguage.LANG_ID, args);
-    Context context = builder.build();
+    context = builder.build();
 
     context.eval(SomLanguage.INIT);
+
+    Universe.selfSource = SomLanguage.getSyntheticSource("self", "self");
+    Universe.selfCoord = SourceCoordinate.createEmpty();
+
     context.enter();
 
     Universe.setupClassPath(constructClassPath(CORE_LIB_PATH));
@@ -90,6 +106,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
     structuralProbes.put("systemClasses", systemClassProbe);
 
     Universe.initializeObjectSystem();
+    context.leave();
   }
 
   private String constructClassPath(final String rootPath) {
@@ -152,7 +169,56 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
   }
 
   @Override
-  public List<Diagnostic> parse(final String text, final String sourceUri)
+  public ForkJoinTask<?> loadWorkspace(final String uri) throws URISyntaxException {
+    if (uri == null) {
+      return null;
+    }
+
+    URI workspaceUri = new URI(uri);
+    File workspace = new File(workspaceUri);
+    assert workspace.isDirectory();
+
+    return pool.submit(() -> loadWorkspaceAndLint(workspace));
+  }
+
+  @Override
+  protected void loadWorkspaceAndLint(final File workspace) {
+    context.enter();
+    try {
+      super.loadWorkspaceAndLint(workspace);
+    } finally {
+      context.leave();
+    }
+  }
+
+  @Override
+  public List<Diagnostic> loadFile(final File f) throws IOException, URISyntaxException {
+    byte[] content = Files.readAllBytes(f.toPath());
+    String str = new String(content, StandardCharsets.UTF_8);
+    String uri = f.toURI().toString();
+    return parseSync(str, uri);
+  }
+
+  @Override
+  public List<Diagnostic> parse(final String text, final String sourceUri) {
+    try {
+      return pool.submit(() -> parseEnterLeave(text, sourceUri)).get();
+    } catch (InterruptedException | ExecutionException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public List<Diagnostic> parseEnterLeave(final String text, final String sourceUri)
+      throws URISyntaxException {
+    try {
+      context.enter();
+      return parseSync(text, sourceUri);
+    } finally {
+      context.leave();
+    }
+  }
+
+  public List<Diagnostic> parseSync(final String text, final String sourceUri)
       throws URISyntaxException {
     String path = docUriToNormalizedPath(sourceUri);
     Source source =
@@ -167,19 +233,18 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
       synchronized (structuralProbes) {
         structuralProbes.remove(path);
       }
-      synchronized (newProbe) {
-        try {
-          SClass def = compileClass(text, source, newProbe);
-          // SomLint.checkModuleName(path, def, diagnostics);
-        } catch (ParseError e) {
-          return toDiagnostics(e, diagnostics);
-        } catch (Throwable e) {
-          String msg = e.getMessage();
-          if (msg == null) {
-            msg = getStackTrace(e);
-          }
-          return toDiagnostics(msg, diagnostics);
+
+      try {
+        SClass def = compileClass(text, source, newProbe);
+        // SomLint.checkModuleName(path, def, diagnostics);
+      } catch (ParseError e) {
+        return toDiagnostics(e, diagnostics);
+      } catch (Throwable e) {
+        String msg = e.getMessage();
+        if (msg == null) {
+          msg = getStackTrace(e);
         }
+        return toDiagnostics(msg, diagnostics);
       }
     } finally {
       // set new probe once done with everything
