@@ -19,7 +19,9 @@ public class TestLanguageClient implements LanguageClient {
 
   @Override
   public void publishDiagnostics(final PublishDiagnosticsParams diagnostics) {
-    this.diagnostics.add(diagnostics);
+    if (!diagnostics.getDiagnostics().isEmpty()) {
+      this.diagnostics.add(diagnostics);
+    }
   }
 
   @Override

@@ -243,7 +243,7 @@ public abstract class LanguageAdapter<Probe> {
 
   public void reportDiagnostics(final List<Diagnostic> diagnostics,
       final String documentUri) {
-    if (diagnostics != null && !diagnostics.isEmpty()) {
+    if (diagnostics != null) {
       PublishDiagnosticsParams result = new PublishDiagnosticsParams();
       result.setDiagnostics(diagnostics);
       result.setUri(documentUri);
