@@ -51,9 +51,8 @@ import trufflesom.vmobjects.SSymbol;
 
 
 public class SomAdapter extends LanguageAdapter<SomStructures> {
-
-  public final static String CORE_LIB_PATH =
-      System.getProperty("som.langserv.som-core-lib");
+  private final static String CORE_LIB_PROP = "som.langserv.som-core-lib";
+  public final static String  CORE_LIB_PATH = System.getProperty(CORE_LIB_PROP);
 
   private final Map<String, SomStructures> structuralProbes;
 
@@ -70,7 +69,8 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
   private void initializePolyglot() {
     if (CORE_LIB_PATH == null) {
       throw new IllegalArgumentException(
-          "The trufflesom.langserv.som-core-lib system property needs to be set. For instance: -Dtrufflesom.langserv.core-lib=/TruffleSOM/core-lib");
+          "The " + CORE_LIB_PROP + " system property needs to be set. For instance: -D"
+              + CORE_LIB_PROP + "=/TruffleSOM/core-lib");
     }
     String[] args = new String[] {"-cp", CORE_LIB_PATH + "/Smalltalk"};
 

@@ -60,7 +60,8 @@ import som.vmobjects.SSymbol;
  */
 public class NewspeakAdapter extends LanguageAdapter<NewspeakStructures> {
 
-  public final static String CORE_LIB_PATH = System.getProperty("som.langserv.somns-core-lib");
+  private final static String CORE_LIB_PROP = "som.langserv.somns-core-lib";
+  public final static String  CORE_LIB_PATH = System.getProperty(CORE_LIB_PROP);
 
   private final Map<String, NewspeakStructures> structuralProbes;
   private final SomCompiler                     compiler;
@@ -97,7 +98,8 @@ public class NewspeakAdapter extends LanguageAdapter<NewspeakStructures> {
     String coreLib = CORE_LIB_PATH;
     if (coreLib == null) {
       throw new IllegalArgumentException(
-          "The som.langserv.core-lib system property needs to be set. For instance: -Dsom.langserv.core-lib=/SOMns/core-lib");
+          "The " + CORE_LIB_PROP + " system property needs to be set. For instance: -D"
+              + CORE_LIB_PROP + "=/SOMns/core-lib");
     }
 
     String[] args = new String[] {"--kernel", coreLib + "/Kernel.ns",
