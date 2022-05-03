@@ -176,9 +176,17 @@ public class SomParser extends ParserAst {
   }
 
   @Override
+  protected SSymbol field() throws ParseError {
+    int coord = getStartIndex();
+    SSymbol result = super.field();
+    storePosition(coord, result.getString(), SemanticTokenType.PROPERTY);
+    return result;
+  }
+
+  @Override
   protected SSymbol argument() throws ProgramDefinitionError {
     int coord = getStartIndex();
-    SSymbol s = variable();
+    SSymbol s = super.argument();
     storePosition(coord, s.getString(), SemanticTokenType.PARAMETER);
     return s;
   }
