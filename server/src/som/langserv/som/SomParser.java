@@ -31,6 +31,8 @@ public class SomParser extends ParserAst {
   private SomStructures              structuralProbe;
   private final Deque<SourceSection> sourceSections;
 
+  private boolean parsingLiteralSymbol;
+
   public SomParser(final String content, final Source source,
       final SomStructures structuralProbe) {
     super(content, source, structuralProbe);
@@ -134,11 +136,25 @@ public class SomParser extends ParserAst {
   }
 
   @Override
+  protected SSymbol literalSymbol() throws ParseError {
+    int coord = getStartIndex();
+    parsingLiteralSymbol = true;
+
+    SSymbol result = super.literalSymbol();
+    storePosition(coord, result.getString() + 1, SemanticTokenType.STRING);
+
+    parsingLiteralSymbol = false;
+    return result;
+  }
+
+  @Override
   protected SSymbol unarySelector() throws ParseError {
     int coord = getStartIndex();
     SSymbol result = super.unarySelector();
     recordSourceSection(coord);
-    storePosition(coord, result.getString(), SemanticTokenType.METHOD);
+    if (!parsingLiteralSymbol) {
+      storePosition(coord, result.getString(), SemanticTokenType.METHOD);
+    }
     return result;
   }
 
