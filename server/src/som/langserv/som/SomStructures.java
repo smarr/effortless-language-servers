@@ -76,6 +76,15 @@ public class SomStructures
   // TODO: split into getMethodsFor
   public synchronized void getDefinitionsFor(final SSymbol name,
       final ArrayList<Location> results) {
+    for (SClass c : classes) {
+      if (c.getName() == name) {
+        SourceSection ss = c.getSourceSection();
+        if (ss != null) {
+          results.add(LanguageAdapter.getLocation(ss));
+        }
+      }
+    }
+
     for (SInvokable m : methods.getValues()) {
       if (m.getSignature() == name) {
         results.add(LanguageAdapter.getLocation(m.getSourceSection()));
