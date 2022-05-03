@@ -18,7 +18,13 @@ import trufflesom.compiler.Lexer;
 import trufflesom.compiler.MethodGenerationContext;
 import trufflesom.compiler.ParserAst;
 import trufflesom.compiler.Symbol;
+import trufflesom.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
+import trufflesom.interpreter.nodes.ArgumentReadNode.NonLocalArgumentReadNode;
 import trufflesom.interpreter.nodes.ExpressionNode;
+import trufflesom.interpreter.nodes.FieldNode.FieldReadNode;
+import trufflesom.interpreter.nodes.GlobalNode;
+import trufflesom.interpreter.nodes.LocalVariableNode.LocalVariableReadNode;
+import trufflesom.interpreter.nodes.NonLocalVariableNode.NonLocalVariableReadNode;
 import trufflesom.vmobjects.SSymbol;
 
 
@@ -87,7 +93,20 @@ public class SomParser extends ParserAst {
   protected ExpressionNode variableRead(final MethodGenerationContext mgenc,
       final SSymbol variableName, final long coord) {
     ExpressionNode result = super.variableRead(mgenc, variableName, coord);
-    structuralProbe.reportCall(result, SourceCoordinate.createSourceSection(source, coord));
+    SourceSection sourceSection = SourceCoordinate.createSourceSection(source, coord);
+    structuralProbe.reportCall(result, sourceSection);
+
+    if (result instanceof LocalArgumentReadNode
+        || result instanceof NonLocalArgumentReadNode) {
+      storePosition(sourceSection, SemanticTokenType.PARAMETER);
+    } else if (result instanceof LocalVariableReadNode
+        || result instanceof NonLocalVariableReadNode) {
+      storePosition(sourceSection, SemanticTokenType.VARIABLE);
+    } else if (result instanceof FieldReadNode) {
+      storePosition(sourceSection, SemanticTokenType.PROPERTY);
+    } else if (result instanceof GlobalNode) {
+      storePosition(sourceSection, SemanticTokenType.CLASS);
+    }
     return result;
   }
 
@@ -262,6 +281,11 @@ public class SomParser extends ParserAst {
     int line = SourceCoordinate.getLine(source, startCoord);
     int column = SourceCoordinate.getColumn(source, startCoord);
     structuralProbe.addTokenPosition(line, column, token.length(), type, modifiers);
+  }
+
+  protected void storePosition(final SourceSection section, final SemanticTokenType type) {
+    structuralProbe.addTokenPosition(section.getStartLine(), section.getStartColumn(),
+        section.getCharLength(), type, (SemanticTokenModifier[]) null);
   }
 
   protected void storeAllComments() {
