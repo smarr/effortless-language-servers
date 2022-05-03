@@ -171,7 +171,7 @@ public class SomParser extends ParserAst {
     int coord = getStartIndex();
     String result = super.keyword();
     recordSourceSection(coord);
-    storePosition(coord, result, SemanticTokenType.KEYWORD);
+    storePosition(coord, result, SemanticTokenType.METHOD);
     return result;
   }
 
