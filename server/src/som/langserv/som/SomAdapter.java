@@ -71,7 +71,8 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
   public SomAdapter() {
     this.structuralProbes = new HashMap<>();
     this.pool = new ForkJoinPool(1);
-    this.pool.submit(() -> initializePolyglot());
+    ForkJoinTask<?> task = this.pool.submit(() -> initializePolyglot());
+    task.join();
   }
 
   @Override
