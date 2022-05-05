@@ -28,4 +28,8 @@ public enum SemanticTokenType {
   private SemanticTokenType(final String name) {
     this.name = name;
   }
+
+  public static SemanticTokenType from(final int ordinal) {
+    return values()[ordinal];
+  }
 }

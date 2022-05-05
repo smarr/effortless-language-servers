@@ -280,11 +280,11 @@ public class SomParser extends ParserAst {
       final SemanticTokenType type, final SemanticTokenModifier... modifiers) {
     int line = SourceCoordinate.getLine(source, startCoord);
     int column = SourceCoordinate.getColumn(source, startCoord);
-    structuralProbe.addTokenPosition(line, column, token.length(), type, modifiers);
+    structuralProbe.addSemanticToken(line, column, token.length(), type, modifiers);
   }
 
   protected void storePosition(final SourceSection section, final SemanticTokenType type) {
-    structuralProbe.addTokenPosition(section.getStartLine(), section.getStartColumn(),
+    structuralProbe.addSemanticToken(section.getStartLine(), section.getStartColumn(),
         section.getCharLength(), type, (SemanticTokenModifier[]) null);
   }
 

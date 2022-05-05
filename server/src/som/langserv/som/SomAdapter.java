@@ -550,11 +550,11 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
   }
 
   @Override
-  public List<Integer> getTokenPositions(final String documentUri) {
+  public List<int[]> getSemanticTokens(final String documentUri) {
     String path;
     try {
       path = docUriToNormalizedPath(documentUri);
-      return getProbe(path).getTokenPositions();
+      return getProbe(path).getSemanticTokens();
     } catch (URISyntaxException e) {
       return null;
     }
