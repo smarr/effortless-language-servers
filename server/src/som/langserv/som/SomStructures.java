@@ -17,8 +17,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import bdt.tools.nodes.Invocation;
 import bdt.tools.structure.StructuralProbe;
 import som.langserv.LanguageAdapter;
-import som.langserv.SemanticTokenModifier;
-import som.langserv.SemanticTokenType;
+import som.langserv.SemanticTokens;
 import trufflesom.compiler.Field;
 import trufflesom.compiler.Variable;
 import trufflesom.interpreter.nodes.ExpressionNode;
@@ -28,15 +27,17 @@ import trufflesom.vmobjects.SSymbol;
 
 
 public class SomStructures
-    extends StructuralProbe<SSymbol, SClass, SInvokable, Field, Variable> {
+    extends StructuralProbe<SSymbol, SClass, SInvokable, Field, Variable>
+    implements SemanticTokens {
 
   protected final Source         source;
   private final ExpressionNode[] map;
 
   private final List<Diagnostic> diagnostics;
 
-  private final List<Call>    calls;
-  private final List<Integer> tokenPosition;
+  private final List<Call> calls;
+
+  private final List<int[]> semanticTokens;
 
   public static class Call {
     final SSymbol         selector;
@@ -53,7 +54,7 @@ public class SomStructures
     this.map = new ExpressionNode[source.getLength()];
     this.diagnostics = new ArrayList<>(0);
     this.calls = new ArrayList<>();
-    this.tokenPosition = new ArrayList<>();
+    this.semanticTokens = new ArrayList<>();
   }
 
   public List<Call> getCalls() {

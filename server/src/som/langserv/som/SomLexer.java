@@ -1,6 +1,5 @@
 package som.langserv.som;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import som.langserv.SemanticTokenType;
@@ -8,10 +7,11 @@ import trufflesom.compiler.Lexer;
 
 
 public class SomLexer extends Lexer {
-  private List<Integer> commentTokens = new ArrayList<Integer>();
+  private final List<int[]> semanticTokens;
 
-  protected SomLexer(final String content) {
+  protected SomLexer(final String content, final List<int[]> semanticTokens) {
     super(content);
+    this.semanticTokens = semanticTokens;
   }
 
   @Override
@@ -22,27 +22,22 @@ public class SomLexer extends Lexer {
       do {
         length++;
         if (currentChar() == '\n') {
-          addCoordsToTokens(state.lineNumber - 1, 0, length);
+          addCoordsToTokens(state.lineNumber, 1, length);
           state.lineNumber += 1;
           state.lastLineEnd = state.ptr;
           length = 0;
         }
         state.incPtr();
       } while (currentChar() != '"');
-      addCoordsToTokens(state.lineNumber - 1, col - 1, length + 1);
+      addCoordsToTokens(state.lineNumber, col, length + 1);
       state.incPtr();
     }
   }
 
   private void addCoordsToTokens(final int line, final int col, final int length) {
-    commentTokens.add(line);
-    commentTokens.add(col);
-    commentTokens.add(length);
-    commentTokens.add(SemanticTokenType.COMMENT.ordinal()); // token type
-    commentTokens.add(0); // token modifiers
-  }
-
-  public List<Integer> getCommentsPositions() {
-    return commentTokens;
+    int[] tuple = {line, col - 1, length, // ~
+        SemanticTokenType.COMMENT.ordinal(), // ~
+        0 /* token modifier */};
+    semanticTokens.add(tuple);
   }
 }

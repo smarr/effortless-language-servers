@@ -49,7 +49,7 @@ public class SomParser extends ParserAst {
 
   @Override
   protected Lexer createLexer(final String content) {
-    return new SomLexer(content);
+    return new SomLexer(content, ((SomStructures) super.structuralProbe).getSemanticTokens());
   }
 
   @Override
@@ -286,9 +286,5 @@ public class SomParser extends ParserAst {
   protected void storePosition(final SourceSection section, final SemanticTokenType type) {
     structuralProbe.addSemanticToken(section.getStartLine(), section.getStartColumn(),
         section.getCharLength(), type, (SemanticTokenModifier[]) null);
-  }
-
-  protected void storeAllComments() {
-    structuralProbe.addTokenPosition(((SomLexer) lexer).getCommentsPositions());
   }
 }
