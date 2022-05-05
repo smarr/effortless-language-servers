@@ -191,31 +191,8 @@ public class SomStructures
     return false;
   }
 
-  public void addTokenPosition(final int lineNumber, int startingChar, final int length,
-      final SemanticTokenType tokenType, final SemanticTokenModifier... tokenModifiers) {
-    if (startingChar <= 0) {
-      startingChar = 1;
-    }
-
-    tokenPosition.add(lineNumber - 1);
-    tokenPosition.add(startingChar - 1);
-    tokenPosition.add(length);
-    tokenPosition.add(tokenType.ordinal());
-
-    if (tokenModifiers != null && tokenModifiers.length > 0) {
-      throw new RuntimeException(
-          "Not yet implemented. Need to turn the array into setting bits on a integer. See description after https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#semanticTokensLegend");
-    } else {
-      tokenPosition.add(0);
-    }
+  @Override
+  public List<int[]> getSemanticTokens() {
+    return semanticTokens;
   }
-
-  public void addTokenPosition(final List<Integer> list) {
-    tokenPosition.addAll(list);
-  }
-
-  public List<Integer> getTokenPositions() {
-    return tokenPosition;
-  }
-
 }
