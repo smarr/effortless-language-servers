@@ -60,15 +60,6 @@ public class SomParser extends ParserAst {
   }
 
   @Override
-  public ExpressionNode method(final MethodGenerationContext mgenc)
-      throws ProgramDefinitionError {
-    int coord = getStartIndex();
-    var result = super.method(mgenc);
-    storePosition(coord, mgenc.getSignature().getString(), SemanticTokenType.METHOD);
-    return result;
-  }
-
-  @Override
   protected void primitiveBlock() throws ParseError {
     int coord = getStartIndex();
     storePosition(coord, Primitive.toString(), SemanticTokenType.KEYWORD);
