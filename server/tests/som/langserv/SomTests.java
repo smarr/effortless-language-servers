@@ -1,10 +1,13 @@
 package som.langserv;
 
 import static org.junit.Assert.assertEquals;
+import static som.langserv.Helpers.assertToken;
+import static som.langserv.Helpers.printAllToken;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.concurrent.ForkJoinTask;
 
 import org.junit.Test;
@@ -37,5 +40,29 @@ public class SomTests {
     // - Examples/Benchmarks/DeltaBlue/SortedCollection.som where we trigger "Currently #dnu
     // with super sent is not yet implemented. "
     assertEquals(2, client.diagnostics.size());
+  }
+
+  @Test
+  public void testSemanticHighlightingInSmallExample() throws URISyntaxException {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    adapter.parse("Hello = (\n"
+        + "    \"The 'run' method is called when initializing the system\"\n"
+        + "    run = ('Hello, World from SOM' println )\n"
+        + ")\n", path);
+
+    List<int[]> tokens = adapter.getSemanticTokens(path);
+    printAllToken(tokens);
+
+    assertToken(1, 0, "Hello", SemanticTokenType.CLASS, tokens.get(0));
+    assertToken(2, 4, "\"The 'run' method is called when initializing the system\"",
+        SemanticTokenType.COMMENT, tokens.get(1));
+
+    assertToken(3, 4, "run", SemanticTokenType.METHOD, tokens.get(2));
+    assertToken(3, 11, "'Hello, World from SOM'", SemanticTokenType.STRING,
+        tokens.get(3));
+    assertToken(3, 35, "println", SemanticTokenType.METHOD, tokens.get(4));
+
+    assertEquals(5, tokens.size());
   }
 }
