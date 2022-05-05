@@ -25,6 +25,7 @@ import trufflesom.interpreter.nodes.FieldNode.FieldReadNode;
 import trufflesom.interpreter.nodes.GlobalNode;
 import trufflesom.interpreter.nodes.LocalVariableNode.LocalVariableReadNode;
 import trufflesom.interpreter.nodes.NonLocalVariableNode.NonLocalVariableReadNode;
+import trufflesom.vm.SymbolTable;
 import trufflesom.vmobjects.SSymbol;
 
 
@@ -89,7 +90,11 @@ public class SomParser extends ParserAst {
 
     if (result instanceof LocalArgumentReadNode
         || result instanceof NonLocalArgumentReadNode) {
-      storePosition(sourceSection, SemanticTokenType.PARAMETER);
+      if (variableName == SymbolTable.symSelf && sourceSection.getCharLength() == 0) {
+        // skip, this is a synthetic self read, at the end of a block
+      } else {
+        storePosition(sourceSection, SemanticTokenType.PARAMETER);
+      }
     } else if (result instanceof LocalVariableReadNode
         || result instanceof NonLocalVariableReadNode) {
       storePosition(sourceSection, SemanticTokenType.VARIABLE);
