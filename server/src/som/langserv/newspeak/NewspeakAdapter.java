@@ -29,7 +29,6 @@ import org.graalvm.polyglot.Value;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
-import bd.source.SourceCoordinate;
 import bd.tools.nodes.Invocation;
 import bd.tools.structure.StructuralProbe;
 import som.Launcher;
@@ -188,8 +187,7 @@ public class NewspeakAdapter extends LanguageAdapter<NewspeakStructures> {
     Diagnostic d = new Diagnostic();
     d.setSeverity(DiagnosticSeverity.Error);
 
-    SourceCoordinate coord = e.getSourceCoordinate();
-    d.setRange(toRangeMax(coord.startLine + 1, coord.startColumn));
+    d.setRange(toRangeMax(e.getLine(), e.getColumn()));
     d.setMessage(e.getMessage());
     d.setSource("Parser");
 

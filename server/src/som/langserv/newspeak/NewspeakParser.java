@@ -41,7 +41,6 @@ public class NewspeakParser extends Parser {
   @Override
   protected ExpressionNode implicitUnaryMessage(final MethodBuilder meth,
       final SSymbol selector, final SourceSection section) {
-    SourceCoordinate coord = getCoordinate();
     ExpressionNode result = super.implicitUnaryMessage(meth, selector, section);
 
     SourceSection s = sourceSections.getLast();
@@ -145,7 +144,7 @@ public class NewspeakParser extends Parser {
 
   @Override
   protected SSymbol unarySelector() throws ParseError {
-    SourceCoordinate coord = getCoordinate();
+    int coord = getStartIndex();
     SSymbol result = super.unarySelector();
     sourceSections.addLast(getSource(coord));
     return result;
@@ -153,7 +152,7 @@ public class NewspeakParser extends Parser {
 
   @Override
   protected SSymbol binarySelector() throws ParseError {
-    SourceCoordinate coord = getCoordinate();
+    int coord = getStartIndex();
     SSymbol result = super.binarySelector();
     sourceSections.addLast(getSource(coord));
     return result;
@@ -161,7 +160,7 @@ public class NewspeakParser extends Parser {
 
   @Override
   protected String keyword() throws ParseError {
-    SourceCoordinate coord = getCoordinate();
+    int coord = getStartIndex();
     String result = super.keyword();
     sourceSections.addLast(getSource(coord));
     return result;
@@ -177,7 +176,7 @@ public class NewspeakParser extends Parser {
 
   @Override
   protected String setterKeyword() throws ParseError {
-    SourceCoordinate coord = getCoordinate();
+    int coord = getStartIndex();
     String result = super.setterKeyword();
     sourceSections.addLast(getSource(coord));
     return result;
