@@ -1,11 +1,13 @@
 package som.langserv;
 
+import static som.langserv.SemanticTokens.combineTokensRemovingErroneousLine;
+import static som.langserv.SemanticTokens.makeRelativeTo11;
+import static som.langserv.SemanticTokens.sort;
+
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.lsp4j.CodeLens;
@@ -17,6 +19,7 @@ import org.eclipse.lsp4j.CompletionOptions;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.DefinitionParams;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
@@ -35,6 +38,7 @@ import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
+import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.SemanticTokens;
@@ -68,15 +72,15 @@ import som.langserv.som.SomAdapter;
 public class SomLanguageServer implements LanguageServer, TextDocumentService,
     LanguageClientAware {
 
-  private final SomWorkspace             workspace;
-  private final LanguageAdapter<?>       adapters[];
-  private LanguageClient                 client;
-  private HashMap<String, List<Integer>> tokenCache;
+  private final SomWorkspace           workspace;
+  private final LanguageAdapter<?>     adapters[];
+  private LanguageClient               client;
+  private HashMap<String, List<int[]>> tokenCache;
 
   public SomLanguageServer() {
     adapters =
         new LanguageAdapter[] {new NewspeakAdapter(), new SomAdapter(), new SimpleAdapter()};
-    tokenCache = new HashMap<String, List<Integer>>();
+    tokenCache = new HashMap<>();
     workspace = new SomWorkspace(adapters);
   }
 
@@ -187,41 +191,48 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
     return workspace;
   }
 
+  private Diagnostic getErrorOrNull(final List<Diagnostic> diagnostics) {
+    for (Diagnostic d : diagnostics) {
+      if (d.getSeverity() == DiagnosticSeverity.Error) {
+        return d;
+      }
+    }
+    return null;
+  }
+
+  private Position to1based(final Position p) {
+    return new Position(p.getLine() + 1, p.getCharacter() + 1);
+  }
+
   @Override
   public CompletableFuture<SemanticTokens> semanticTokensFull(
       final SemanticTokensParams params) {
-
     String uri = params.getTextDocument().getUri();
     for (LanguageAdapter<?> adapter : adapters) {
       if (adapter.handlesUri(uri)) {
-        try {
-          if (adapter.getDiagnostics(uri).get(0).getSeverity().name().equals("Error")) {
-            if (tokenCache.containsKey(uri)) {
-              return CompletableFuture.completedFuture(
-                  new SemanticTokens(configuretokens(
-                      excludingSort(adapter.getDiagnostics(uri).get(0), tokenCache.get(uri),
-                          adapter.getTokenPositions(uri)))));
-            }
-          }
-        } catch (Exception e) {
+        List<int[]> sortedTokenList = sort(adapter.getSemanticTokens(uri));
 
+        Diagnostic error = getErrorOrNull(adapter.getDiagnostics(uri));
+        if (error != null) {
+          List<int[]> prevTokens = tokenCache.get(uri);
+
+          if (prevTokens != null) {
+            List<int[]> withOldAndWithoutError =
+                combineTokensRemovingErroneousLine(
+                    to1based(error.getRange().getStart()), prevTokens, sortedTokenList);
+            List<Integer> tokens = makeRelativeTo11(withOldAndWithoutError);
+            return CompletableFuture.completedFuture(new SemanticTokens(tokens));
+          }
         }
-        if (tokenCache.containsKey(uri)) {
-          tokenCache.replace(uri, adapter.getTokenPositions(uri));
-        } else {
-          tokenCache.put(uri, adapter.getTokenPositions(uri));
-        }
+
+        tokenCache.put(uri, sortedTokenList);
 
         return CompletableFuture.completedFuture(
-            new SemanticTokens(configuretokens(adapter.getTokenPositions(uri))));
-
-      } else {
-
+            new SemanticTokens(makeRelativeTo11(sortedTokenList)));
       }
     }
 
     return null;
-
   }
 
   @Override
