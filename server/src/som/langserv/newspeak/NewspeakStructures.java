@@ -23,12 +23,14 @@ import som.compiler.Variable;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.langserv.LanguageAdapter;
+import som.langserv.SemanticTokens;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
 
 public class NewspeakStructures
-    extends StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> {
+    extends StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable>
+    implements SemanticTokens {
 
   private final Source           source;
   private final ExpressionNode[] map;
@@ -37,7 +39,7 @@ public class NewspeakStructures
 
   private final List<Call> calls;
 
-  private final List<Integer> tokenPosition;
+  private final List<int[]> semanticTokens;
 
   public static class Call {
     final SSymbol         selector;
@@ -54,7 +56,12 @@ public class NewspeakStructures
     this.map = new ExpressionNode[source.getLength()];
     this.diagnostics = new ArrayList<>(0);
     this.calls = new ArrayList<>();
-    this.tokenPosition = new ArrayList<>();
+    this.semanticTokens = new ArrayList<>();
+  }
+
+  @Override
+  public List<int[]> getSemanticTokens() {
+    return semanticTokens;
   }
 
   public List<Call> getCalls() {
@@ -228,35 +235,4 @@ public class NewspeakStructures
 
     return false;
   }
-
-  public void addTokenPosition(final int lineNumber, int startingChar, final int length,
-      final int tokenType, final int tokenMoifications) {
-    if (startingChar <= 0) {
-      startingChar = 1;
-    }
-    tokenPosition.add(lineNumber);
-    tokenPosition.add(startingChar - 1);
-    tokenPosition.add(length);
-    tokenPosition.add(tokenType);
-    tokenPosition.add(tokenMoifications);
-
-  }
-
-  public List<Integer> getTokenPositions() {
-    return tokenPosition;
-  }
-
-  // REM:
-  // how to continue with the support for the language server protocol?
-  // - subclass the parser, and actively report more info to the structural probe subclass
-  // - main idea is that we do not want to reconstruct imprecise info
-  // - instead, we have direct access to the info in the parser,
-  // - however, we also need to link up the lexical info with the runtime
-  // structures, and need to resolve them in a later step
-  // - how to do later resolution:
-  // - potentially with a future
-  // - or another data structure, like a stack, to associate for instance
-  // the class name with a class/mixin data structure
-  // - should take 'private' semantics into account and bind definition and usage tightly
-  // together
 }
