@@ -57,13 +57,13 @@ public class SomParser extends ParserAst {
   protected void className(final ClassGenerationContext cgenc, final int coord)
       throws ParseError {
     super.className(cgenc, coord);
-    storePosition(coord, cgenc.getName().getString(), SemanticTokenType.CLASS);
+    recordTokenSemantics(coord, cgenc.getName().getString(), SemanticTokenType.CLASS);
   }
 
   @Override
   protected void primitiveBlock() throws ParseError {
     int coord = getStartIndex();
-    storePosition(coord, Primitive.toString(), SemanticTokenType.KEYWORD);
+    recordTokenSemantics(coord, Primitive.toString(), SemanticTokenType.KEYWORD);
     super.primitiveBlock();
   }
 
@@ -93,15 +93,15 @@ public class SomParser extends ParserAst {
       if (variableName == SymbolTable.symSelf && sourceSection.getCharLength() == 0) {
         // skip, this is a synthetic self read, at the end of a block
       } else {
-        storePosition(sourceSection, SemanticTokenType.PARAMETER);
+        recordTokenSemantics(sourceSection, SemanticTokenType.PARAMETER);
       }
     } else if (result instanceof LocalVariableReadNode
         || result instanceof NonLocalVariableReadNode) {
-      storePosition(sourceSection, SemanticTokenType.VARIABLE);
+      recordTokenSemantics(sourceSection, SemanticTokenType.VARIABLE);
     } else if (result instanceof FieldReadNode) {
-      storePosition(sourceSection, SemanticTokenType.PROPERTY);
+      recordTokenSemantics(sourceSection, SemanticTokenType.PROPERTY);
     } else if (result instanceof GlobalNode) {
-      storePosition(sourceSection, SemanticTokenType.CLASS);
+      recordTokenSemantics(sourceSection, SemanticTokenType.CLASS);
     }
     return result;
   }
@@ -156,7 +156,7 @@ public class SomParser extends ParserAst {
     parsingLiteralSymbol = true;
 
     SSymbol result = super.literalSymbol();
-    storePosition(coord, result.getString() + 1, SemanticTokenType.STRING);
+    recordTokenSemantics(coord, result.getString() + 1, SemanticTokenType.STRING);
 
     parsingLiteralSymbol = false;
     return result;
@@ -168,7 +168,7 @@ public class SomParser extends ParserAst {
     SSymbol result = super.unarySelector();
     recordSourceSection(coord);
     if (!parsingLiteralSymbol) {
-      storePosition(coord, result.getString(), SemanticTokenType.METHOD);
+      recordTokenSemantics(coord, result.getString(), SemanticTokenType.METHOD);
     }
     return result;
   }
@@ -186,7 +186,7 @@ public class SomParser extends ParserAst {
     int coord = getStartIndex();
     String result = super.keyword();
     recordSourceSection(coord);
-    storePosition(coord, result, SemanticTokenType.METHOD);
+    recordTokenSemantics(coord, result, SemanticTokenType.METHOD);
     return result;
   }
 
@@ -194,7 +194,7 @@ public class SomParser extends ParserAst {
   protected SSymbol field() throws ParseError {
     int coord = getStartIndex();
     SSymbol result = super.field();
-    storePosition(coord, result.getString(), SemanticTokenType.PROPERTY);
+    recordTokenSemantics(coord, result.getString(), SemanticTokenType.PROPERTY);
     return result;
   }
 
@@ -202,7 +202,7 @@ public class SomParser extends ParserAst {
   protected SSymbol argument() throws ProgramDefinitionError {
     int coord = getStartIndex();
     SSymbol s = super.argument();
-    storePosition(coord, s.getString(), SemanticTokenType.PARAMETER);
+    recordTokenSemantics(coord, s.getString(), SemanticTokenType.PARAMETER);
     return s;
   }
 
@@ -210,7 +210,7 @@ public class SomParser extends ParserAst {
   protected SSymbol local() throws ProgramDefinitionError {
     int coord = getStartIndex();
     SSymbol s = variable();
-    storePosition(coord, s.getString(), SemanticTokenType.VARIABLE);
+    recordTokenSemantics(coord, s.getString(), SemanticTokenType.VARIABLE);
     return s;
   }
 
@@ -239,7 +239,7 @@ public class SomParser extends ParserAst {
   protected String string() throws ParseError {
     int coord = getStartIndex();
     String s = super.string();
-    storePosition(coord, "'" + s + "'", SemanticTokenType.STRING);
+    recordTokenSemantics(coord, "'" + s + "'", SemanticTokenType.STRING);
     return s;
   }
 
@@ -267,19 +267,19 @@ public class SomParser extends ParserAst {
     }
   }
 
-  protected void storePosition(final int startCoord, final String token,
+  protected void recordTokenSemantics(final int startCoord, final String token,
       final SemanticTokenType type) {
-    storePosition(startCoord, token, type, (SemanticTokenModifier[]) null);
+    recordTokenSemantics(startCoord, token, type, (SemanticTokenModifier[]) null);
   }
 
-  protected void storePosition(final int startCoord, final String token,
+  protected void recordTokenSemantics(final int startCoord, final String token,
       final SemanticTokenType type, final SemanticTokenModifier... modifiers) {
     int line = SourceCoordinate.getLine(source, startCoord);
     int column = SourceCoordinate.getColumn(source, startCoord);
     structuralProbe.addSemanticToken(line, column, token.length(), type, modifiers);
   }
 
-  protected void storePosition(final SourceSection section, final SemanticTokenType type) {
+  protected void recordTokenSemantics(final SourceSection section, final SemanticTokenType type) {
     structuralProbe.addSemanticToken(section.getStartLine(), section.getStartColumn(),
         section.getCharLength(), type, (SemanticTokenModifier[]) null);
   }

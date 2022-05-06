@@ -44,7 +44,7 @@ public class NewspeakParser extends Parser {
   protected String className() throws ParseError {
     int coord = getStartIndex();
     var name = super.className();
-    storePosition(coord, name, SemanticTokenType.CLASS);
+    recordTokenSemantics(coord, name, SemanticTokenType.CLASS);
     return name;
   }
 
@@ -58,10 +58,10 @@ public class NewspeakParser extends Parser {
           case "private":
           case "public":
           case "protected":
-            storePosition(coord, identifier, SemanticTokenType.MODIFIER);
+            recordTokenSemantics(coord, identifier, SemanticTokenType.MODIFIER);
             break;
           default:
-            storePosition(coord, identifier, SemanticTokenType.KEYWORD);
+            recordTokenSemantics(coord, identifier, SemanticTokenType.KEYWORD);
             break;
         }
       } else if (tag == LiteralTag.class) {
@@ -70,7 +70,7 @@ public class NewspeakParser extends Parser {
           case "false":
           case "nil":
           case "objL":
-            storePosition(coord, identifier, SemanticTokenType.KEYWORD);
+            recordTokenSemantics(coord, identifier, SemanticTokenType.KEYWORD);
         }
       }
     }
@@ -148,18 +148,18 @@ public class NewspeakParser extends Parser {
     return result;
   }
 
-  protected void storePosition(final int coords, final String length,
+  protected void recordTokenSemantics(final int coords, final String length,
       final SemanticTokenType tokenType) {
-    storePosition(coords, length, tokenType, (SemanticTokenModifier[]) null);
+    recordTokenSemantics(coords, length, tokenType, (SemanticTokenModifier[]) null);
   }
 
-  protected void storePosition(final int coords, final String length,
+  protected void recordTokenSemantics(final int coords, final String length,
       final SemanticTokenType tokenType, final SemanticTokenModifier... modifiers) {
     struturalProbe.addSemanticToken(source.getLineNumber(coords),
         source.getColumnNumber(coords), length.length(), tokenType, modifiers);
   }
 
-  protected void storePosition(final SourceSection source,
+  protected void recordTokenSemantics(final SourceSection source,
       final SemanticTokenType tokenType) {
     struturalProbe.addSemanticToken(source.getStartLine(),
         source.getStartColumn(), source.getCharLength(), tokenType);
@@ -170,7 +170,7 @@ public class NewspeakParser extends Parser {
     int coord = getStartIndex();
     SSymbol result = super.unarySelector();
     sourceSections.addLast(getSource(coord));
-    storePosition(coord, result.getString(), SemanticTokenType.METHOD);
+    recordTokenSemantics(coord, result.getString(), SemanticTokenType.METHOD);
     return result;
   }
 
@@ -178,7 +178,7 @@ public class NewspeakParser extends Parser {
   protected SSymbol binarySelector() throws ParseError {
     int coord = getStartIndex();
     SSymbol result = super.binarySelector();
-    storePosition(coord, result.getString(), SemanticTokenType.METHOD);
+    recordTokenSemantics(coord, result.getString(), SemanticTokenType.METHOD);
     sourceSections.addLast(getSource(coord));
     return result;
   }
@@ -187,7 +187,7 @@ public class NewspeakParser extends Parser {
   protected String keyword() throws ParseError {
     int coord = getStartIndex();
     String result = super.keyword();
-    storePosition(coord, result, SemanticTokenType.METHOD);
+    recordTokenSemantics(coord, result, SemanticTokenType.METHOD);
     sourceSections.addLast(getSource(coord));
     return result;
   }
@@ -235,7 +235,7 @@ public class NewspeakParser extends Parser {
     int coord = getStartIndex();
     var slotName = super.slotDecl();
 
-    storePosition(coord, slotName, SemanticTokenType.PROPERTY);
+    recordTokenSemantics(coord, slotName, SemanticTokenType.PROPERTY);
 
     return slotName;
   }
@@ -246,7 +246,7 @@ public class NewspeakParser extends Parser {
 
     var localName = super.localDecl();
 
-    storePosition(coord, localName, SemanticTokenType.VARIABLE);
+    recordTokenSemantics(coord, localName, SemanticTokenType.VARIABLE);
 
     return localName;
   }
@@ -257,7 +257,7 @@ public class NewspeakParser extends Parser {
     var result = super.literalNumber();
 
     SourceSection source = getSource(coord);
-    storePosition(source, SemanticTokenType.NUMBER);
+    recordTokenSemantics(source, SemanticTokenType.NUMBER);
 
     return result;
   }
@@ -266,7 +266,7 @@ public class NewspeakParser extends Parser {
   protected LiteralNode literalSymbol() throws ParseError {
     var result = super.literalSymbol();
 
-    storePosition(result.getSourceSection(), SemanticTokenType.STRING);
+    recordTokenSemantics(result.getSourceSection(), SemanticTokenType.STRING);
     return result;
   }
 
@@ -274,7 +274,7 @@ public class NewspeakParser extends Parser {
   protected LiteralNode literalString() throws ParseError {
     var result = super.literalString();
 
-    storePosition(result.getSourceSection(), SemanticTokenType.STRING);
+    recordTokenSemantics(result.getSourceSection(), SemanticTokenType.STRING);
     return result;
   }
 
@@ -282,7 +282,7 @@ public class NewspeakParser extends Parser {
   protected LiteralNode literalChar() throws ParseError {
     var result = super.literalChar();
 
-    storePosition(result.getSourceSection(), SemanticTokenType.STRING);
+    recordTokenSemantics(result.getSourceSection(), SemanticTokenType.STRING);
     return result;
   }
 
@@ -290,11 +290,11 @@ public class NewspeakParser extends Parser {
   protected void reportSyntaxElement(final Class<? extends Tag> type,
       final SourceSection source) {
     if (type == CommentTag.class) {
-      storePosition(source, SemanticTokenType.COMMENT);
+      recordTokenSemantics(source, SemanticTokenType.COMMENT);
     } else if (type == LocalVariableTag.class) {
-      storePosition(source, SemanticTokenType.VARIABLE);
+      recordTokenSemantics(source, SemanticTokenType.VARIABLE);
     } else if (type == ArgumentTag.class) {
-      storePosition(source, SemanticTokenType.PARAMETER);
+      recordTokenSemantics(source, SemanticTokenType.PARAMETER);
     }
   }
 }
