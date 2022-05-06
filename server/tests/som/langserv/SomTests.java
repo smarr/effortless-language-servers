@@ -54,14 +54,14 @@ public class SomTests {
     List<int[]> tokens = adapter.getSemanticTokens(path);
     printAllToken(tokens);
 
-    assertToken(1, 0, "Hello", SemanticTokenType.CLASS, tokens.get(0));
-    assertToken(2, 4, "\"The 'run' method is called when initializing the system\"",
+    assertToken(1, 1, "Hello", SemanticTokenType.CLASS, tokens.get(0));
+    assertToken(2, 5, "\"The 'run' method is called when initializing the system\"",
         SemanticTokenType.COMMENT, tokens.get(1));
 
-    assertToken(3, 4, "run", SemanticTokenType.METHOD, tokens.get(2));
-    assertToken(3, 11, "'Hello, World from SOM'", SemanticTokenType.STRING,
+    assertToken(3, 5, "run", SemanticTokenType.METHOD, tokens.get(2));
+    assertToken(3, 12, "'Hello, World from SOM'", SemanticTokenType.STRING,
         tokens.get(3));
-    assertToken(3, 35, "println", SemanticTokenType.METHOD, tokens.get(4));
+    assertToken(3, 36, "println", SemanticTokenType.METHOD, tokens.get(4));
 
     assertEquals(5, tokens.size());
   }
