@@ -568,7 +568,6 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
         new SomParser(text, source, (SomStructures) structuralProbe);
 
     SClass s = SourcecodeCompiler.compile(parser, null);
-    parser.storeAllComments();
     return s;
   }
 }
