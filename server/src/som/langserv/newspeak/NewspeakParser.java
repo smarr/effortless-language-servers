@@ -1,20 +1,26 @@
 package som.langserv.newspeak;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Deque;
-import java.util.List;
 
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.basic.ProgramDefinitionError;
-import bd.source.SourceCoordinate;
 import som.compiler.MethodBuilder;
 import som.compiler.Parser;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.literals.LiteralNode;
+import som.langserv.SemanticTokenModifier;
+import som.langserv.SemanticTokenType;
 import som.vmobjects.SSymbol;
+import tools.debugger.Tags.ArgumentTag;
+import tools.debugger.Tags.CommentTag;
+import tools.debugger.Tags.KeywordTag;
+import tools.debugger.Tags.LiteralTag;
+import tools.debugger.Tags.LocalVariableTag;
 
 
 /**
@@ -25,8 +31,6 @@ public class NewspeakParser extends Parser {
 
   private NewspeakStructures         struturalProbe;
   private final Deque<SourceSection> sourceSections;
-  private List<Integer>              listOfVarsStartsLines;
-  private List<Integer>              listOfVarsStartsCol;
 
   public NewspeakParser(final String content, final Source source,
       final NewspeakStructures structuralProbe, final SomLanguage lang) throws ParseError {
@@ -34,8 +38,43 @@ public class NewspeakParser extends Parser {
     // assert structuralProbe != null : "Needed for this extended parser.";
     this.struturalProbe = structuralProbe;
     sourceSections = new ArrayDeque<>();
-    listOfVarsStartsLines = new ArrayList();
-    listOfVarsStartsCol = new ArrayList();
+  }
+
+  @Override
+  protected String className() throws ParseError {
+    int coord = getStartIndex();
+    var name = super.className();
+    storePosition(coord, name, SemanticTokenType.CLASS);
+    return name;
+  }
+
+  @Override
+  protected boolean acceptIdentifier(final String identifier, final Class<? extends Tag> tag) {
+    int coord = getStartIndex();
+    boolean result = super.acceptIdentifier(identifier, tag);
+    if (result) {
+      if (tag == KeywordTag.class) {
+        switch (identifier) {
+          case "private":
+          case "public":
+          case "protected":
+            storePosition(coord, identifier, SemanticTokenType.MODIFIER);
+            break;
+          default:
+            storePosition(coord, identifier, SemanticTokenType.KEYWORD);
+            break;
+        }
+      } else if (tag == LiteralTag.class) {
+        switch (identifier) {
+          case "true":
+          case "false":
+          case "nil":
+          case "objL":
+            storePosition(coord, identifier, SemanticTokenType.KEYWORD);
+        }
+      }
+    }
+    return result;
   }
 
   @Override
@@ -109,37 +148,21 @@ public class NewspeakParser extends Parser {
     return result;
   }
 
-  protected void storePosition(final SourceCoordinate coords, final String length,
-      final int tokenTypevalue) {
-    struturalProbe.addTokenPosition(coords.startLine,
-        coords.startColumn, length.length(), tokenTypevalue, 0);
+  protected void storePosition(final int coords, final String length,
+      final SemanticTokenType tokenType) {
+    storePosition(coords, length, tokenType, (SemanticTokenModifier[]) null);
   }
 
-  protected void storeCommentPosition(final SourceCoordinate startCoords,
-      final SourceCoordinate endCoords,
-      final String commentLength) {
-    int amountLines = endCoords.startLine - startCoords.startLine;
-    if (amountLines != 0) {
-      int count = 0;
-      while (count + startCoords.startLine < endCoords.startLine) {
-        if (startCoords.startColumn == 0) {
-          struturalProbe.addTokenPosition(startCoords.startLine + count,
-              startCoords.startColumn + 1,
-              200, 5,
-              0);
-        } else {
-          struturalProbe.addTokenPosition(startCoords.startLine + count,
-              startCoords.startColumn,
-              200, 5,
-              0);
-        }
-        count++;
-      }
-    } else {
-      struturalProbe.addTokenPosition(startCoords.startLine, startCoords.startColumn,
-          commentLength.length(), 5,
-          0);
-    }
+  protected void storePosition(final int coords, final String length,
+      final SemanticTokenType tokenType, final SemanticTokenModifier... modifiers) {
+    struturalProbe.addSemanticToken(source.getLineNumber(coords),
+        source.getColumnNumber(coords), length.length(), tokenType, modifiers);
+  }
+
+  protected void storePosition(final SourceSection source,
+      final SemanticTokenType tokenType) {
+    struturalProbe.addSemanticToken(source.getStartLine(),
+        source.getStartColumn(), source.getCharLength(), tokenType);
   }
 
   @Override
@@ -147,6 +170,7 @@ public class NewspeakParser extends Parser {
     int coord = getStartIndex();
     SSymbol result = super.unarySelector();
     sourceSections.addLast(getSource(coord));
+    storePosition(coord, result.getString(), SemanticTokenType.METHOD);
     return result;
   }
 
@@ -154,6 +178,7 @@ public class NewspeakParser extends Parser {
   protected SSymbol binarySelector() throws ParseError {
     int coord = getStartIndex();
     SSymbol result = super.binarySelector();
+    storePosition(coord, result.getString(), SemanticTokenType.METHOD);
     sourceSections.addLast(getSource(coord));
     return result;
   }
@@ -162,6 +187,7 @@ public class NewspeakParser extends Parser {
   protected String keyword() throws ParseError {
     int coord = getStartIndex();
     String result = super.keyword();
+    storePosition(coord, result, SemanticTokenType.METHOD);
     sourceSections.addLast(getSource(coord));
     return result;
   }
@@ -201,6 +227,74 @@ public class NewspeakParser extends Parser {
     // remove one less than number of arguments
     for (int i = 1; i < builder.getSignature().getNumberOfSignatureArguments(); i += 1) {
       sourceSections.removeLast();
+    }
+  }
+
+  @Override
+  protected String slotDecl() throws ParseError {
+    int coord = getStartIndex();
+    var slotName = super.slotDecl();
+
+    storePosition(coord, slotName, SemanticTokenType.PROPERTY);
+
+    return slotName;
+  }
+
+  @Override
+  protected String localDecl() throws ParseError {
+    int coord = getStartIndex();
+
+    var localName = super.localDecl();
+
+    storePosition(coord, localName, SemanticTokenType.VARIABLE);
+
+    return localName;
+  }
+
+  @Override
+  protected LiteralNode literalNumber() throws ParseError {
+    int coord = getStartIndex();
+    var result = super.literalNumber();
+
+    SourceSection source = getSource(coord);
+    storePosition(source, SemanticTokenType.NUMBER);
+
+    return result;
+  }
+
+  @Override
+  protected LiteralNode literalSymbol() throws ParseError {
+    var result = super.literalSymbol();
+
+    storePosition(result.getSourceSection(), SemanticTokenType.STRING);
+    return result;
+  }
+
+  @Override
+  protected LiteralNode literalString() throws ParseError {
+    var result = super.literalString();
+
+    storePosition(result.getSourceSection(), SemanticTokenType.STRING);
+    return result;
+  }
+
+  @Override
+  protected LiteralNode literalChar() throws ParseError {
+    var result = super.literalChar();
+
+    storePosition(result.getSourceSection(), SemanticTokenType.STRING);
+    return result;
+  }
+
+  @Override
+  protected void reportSyntaxElement(final Class<? extends Tag> type,
+      final SourceSection source) {
+    if (type == CommentTag.class) {
+      storePosition(source, SemanticTokenType.COMMENT);
+    } else if (type == LocalVariableTag.class) {
+      storePosition(source, SemanticTokenType.VARIABLE);
+    } else if (type == ArgumentTag.class) {
+      storePosition(source, SemanticTokenType.PARAMETER);
     }
   }
 }
