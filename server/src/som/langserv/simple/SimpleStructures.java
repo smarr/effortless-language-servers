@@ -3,6 +3,7 @@ package som.langserv.simple;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Location;
 
@@ -15,12 +16,15 @@ import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Variable;
 import som.interpreter.nodes.ExpressionNode;
 import som.langserv.LanguageAdapter;
+import som.langserv.SemanticTokenType;
+import som.langserv.SemanticTokens;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
 
 public class SimpleStructures
-    extends StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> {
+    extends StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable>
+    implements SemanticTokens {
 
   private final Source           source;
   private final ExpressionNode[] map;
@@ -29,7 +33,9 @@ public class SimpleStructures
 
   private final List<Call> calls;
 
-  private final List<Integer> tokenPosition;
+  private final List<int[]> semanticTokens;
+
+  private final SimpleNodeFactory nodeFactory;
 
   public static class Call {
     final SSymbol         selector;
@@ -41,12 +47,18 @@ public class SimpleStructures
     }
   }
 
-  public SimpleStructures(final Source source) {
-    this.source = source;
-    this.map = new ExpressionNode[source.getLength()];
+  public SimpleStructures(final int length) {
+    this.source = null;
+
+    this.map = new ExpressionNode[length];
     this.diagnostics = new ArrayList<>(0);
     this.calls = new ArrayList<>();
-    this.tokenPosition = new ArrayList<>();
+    this.semanticTokens = new ArrayList<>();
+    this.nodeFactory = new SimpleNodeFactory(this);
+  }
+
+  public SimpleNodeFactory getFactory() {
+    return nodeFactory;
   }
 
   public List<Call> getCalls() {
@@ -93,25 +105,14 @@ public class SimpleStructures
     }
   }
 
-  public void addTokenPosition(final int lineNumber, int startingChar, final int length,
-      final int tokenType, final int tokenMoifications) {
-
-    if (startingChar <= 0) {
-      startingChar = 1;
-    }
-    tokenPosition.add(lineNumber);
-    tokenPosition.add(startingChar - 1);
-    tokenPosition.add(length);
-    tokenPosition.add(tokenType);
-    tokenPosition.add(tokenMoifications);
-
+  @Override
+  public List<int[]> getSemanticTokens() {
+    return semanticTokens;
   }
 
-  public void addAllTokenPosition(final List<Integer> tokens) {
-    tokenPosition.addAll(tokens);
-  }
-
-  public List<Integer> getTokenPositions() {
-    return tokenPosition;
+  public void addSemanticToken(final Token token, final SemanticTokenType type) {
+    addSemanticToken(
+        token.getLine(), token.getCharPositionInLine(), token.getText().length(),
+        type);
   }
 }

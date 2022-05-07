@@ -1,32 +1,48 @@
 package som.langserv.simple;
 
-import java.util.List;
+import java.lang.reflect.Field;
 
-import org.antlr.v4.runtime.TokenStream;
+import org.antlr.v4.runtime.CommonTokenStream;
 
-import com.oracle.truffle.api.source.Source;
-import com.oracle.truffle.sl.SLLanguage;
-import com.oracle.truffle.sl.parser.SimpleLanguageParser;
+import simple.SLNodeFactory;
+import simple.SimpleLanguageLexer;
+import simple.SimpleLanguageParser;
 
 
 public class SimpleParser extends SimpleLanguageParser {
 
-  private SimpleStructures struturalProbe;
+  private final SimpleStructures struturalProbe;
 
-  public SimpleParser(final TokenStream input, final SimpleStructures structuralProbe,
-      final SLLanguage language,
-      final Source source) {
-    // this.struturalProbe = structuralProbe;
-    super(input);
+  public SimpleParser(final SimpleLanguageLexer lexer,
+      final SimpleStructures structuralProbe) {
+    super(new CommonTokenStream(lexer));
     this.struturalProbe = structuralProbe;
-    super.parseSL(language, source);
-    addTokenPositions(getlocalTokenPositions());
-    // TODO Auto-generated constructor stub
+    addParseListener(new SimpleTokenCollector(structuralProbe));
+    setFactory(structuralProbe.getFactory());
+
+    lexer.removeErrorListeners();
+    removeErrorListeners();
+
+    // TODO: add error listener to have specific error with the details we need for a
+    // diagnostic
+    // BailoutErrorListener listener = new BailoutErrorListener(source);
+    // lexer.addErrorListener(listener);
+    // parser.addErrorListener(listener)
   }
 
-  protected void addTokenPositions(final List<Integer> tokens) {
-    struturalProbe.addAllTokenPosition(tokens);
-
+  private void setFactory(final SLNodeFactory factory) {
+    Field factoryField;
+    try {
+      factoryField = SimpleLanguageParser.class.getDeclaredField("factory");
+      factoryField.setAccessible(true);
+      factoryField.set(this, factory);
+    } catch (NoSuchFieldException | SecurityException | IllegalArgumentException
+        | IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
   }
 
+  public void parse() {
+    simplelanguage();
+  }
 }

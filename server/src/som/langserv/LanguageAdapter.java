@@ -177,6 +177,13 @@ public abstract class LanguageAdapter<Probe> {
     return range;
   }
 
+  public static Range toRange(final int line, final int col, final int length) {
+    Range range = new Range();
+    range.setStart(pos(line, col));
+    range.setEnd(pos(line, col + length));
+    return range;
+  }
+
   public static Range toRangeMax(final int startLine, final int startColumn) {
     Range range = new Range();
     range.setStart(pos(startLine, startColumn));

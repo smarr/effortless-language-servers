@@ -1,6 +1,5 @@
 package som.langserv.simple;
 
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -9,45 +8,26 @@ import java.util.List;
 import java.util.Map;
 
 import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.SymbolInformation;
-import org.graalvm.polyglot.Context;
 
-import com.oracle.truffle.api.interop.UnsupportedMessageException;
-import com.oracle.truffle.api.source.Source;
-import com.oracle.truffle.api.source.SourceSection;
-import com.oracle.truffle.sl.SLLanguage;
 import com.oracle.truffle.sl.parser.SLParseError;
-import com.oracle.truffle.sl.parser.SimpleLanguageLexer;
 
-import bd.source.SourceCoordinate;
-import som.compiler.Parser.ParseError;
-import som.compiler.SemanticDefinitionError;
+import simple.SimpleLanguageLexer;
 import som.langserv.LanguageAdapter;
+import som.langserv.SemanticTokens;
 
 
 public class SimpleAdapter extends LanguageAdapter<SimpleStructures> {
 
-  private final SLLanguage                    currentSLLanguageInstence;
   private final Map<String, SimpleStructures> structuralProbes;
 
   public SimpleAdapter() {
-    currentSLLanguageInstence = initializePolyglot();
     this.structuralProbes = new HashMap<>();
-
-  }
-
-  private SLLanguage initializePolyglot() {
-    Context context = Context.newBuilder("sl").in(System.in).out(System.out)
-                             .options(new HashMap<>()).build();
-    context.enter();
-    context.eval("sl", "function main() {}");
-    return SLLanguage.current();
   }
 
   @Override
@@ -66,11 +46,8 @@ public class SimpleAdapter extends LanguageAdapter<SimpleStructures> {
   public List<Diagnostic> parse(final String text, final String sourceUri)
       throws URISyntaxException {
     String path = docUriToNormalizedPath(sourceUri);
-    Source source = Source.newBuilder(SLLanguage.ID, text, path)
-                          .mimeType(SLLanguage.MIME_TYPE)
-                          .uri(new URI(sourceUri).normalize()).build();
 
-    SimpleStructures newProbe = new SimpleStructures(source);
+    SimpleStructures newProbe = new SimpleStructures(text.length());
     List<Diagnostic> diagnostics = newProbe.getDiagnostics();
     try {
       // clean out old structural data
@@ -78,14 +55,9 @@ public class SimpleAdapter extends LanguageAdapter<SimpleStructures> {
         structuralProbes.remove(path);
       }
       synchronized (newProbe) {
-        compileModule(source, newProbe);
-
+        parse(text, newProbe);
       }
-    } catch (ParseError e) {
-      return toDiagnostics(e, diagnostics);
     } catch (SLParseError e) {
-      return toDiagnostics(e, diagnostics);
-    } catch (SemanticDefinitionError e) {
       return toDiagnostics(e, diagnostics);
     } catch (Throwable e) {
       return toDiagnostics(e, diagnostics);
@@ -98,49 +70,17 @@ public class SimpleAdapter extends LanguageAdapter<SimpleStructures> {
     return diagnostics;
   }
 
-  private List<Diagnostic> toDiagnostics(final ParseError e,
-      final List<Diagnostic> diagnostics) {
-    Diagnostic d = new Diagnostic();
-    d.setSeverity(DiagnosticSeverity.Error);
-
-    SourceCoordinate coord = e.getSourceCoordinate();
-    d.setRange(toRangeMax(coord.startLine, coord.startColumn));
-    d.setMessage(e.getMessage());
-    d.setSource("Parser");
-
-    diagnostics.add(d);
-    return diagnostics;
-  }
-
-  private List<Diagnostic> toDiagnostics(final SemanticDefinitionError e,
-      final List<Diagnostic> diagnostics) {
-    SourceSection source = e.getSourceSection();
-
-    Diagnostic d = new Diagnostic();
-    d.setSeverity(DiagnosticSeverity.Error);
-    d.setRange(toRange(source));
-    d.setMessage(e.getMessage());
-    d.setSource("Parser");
-
-    diagnostics.add(d);
-    return diagnostics;
-  }
-
   private List<Diagnostic> toDiagnostics(final SLParseError e,
       final List<Diagnostic> diagnostics) {
-    SourceSection source;
+    String[] msgParts = e.format.split(":");
+    String msg = msgParts[2].trim();
+
     Diagnostic d = new Diagnostic();
-    try {
-      source = e.getSourceSection();
-      d.setRange(toRange(source));
-    } catch (UnsupportedMessageException e1) {
-      // TODO Auto-generated catch block
-      e1.printStackTrace();
-    }
+    d.setRange(toRange(e.line, e.col, e.length));
 
     d.setSeverity(DiagnosticSeverity.Error);
 
-    d.setMessage(e.getMessage());
+    d.setMessage(msg);
     d.setSource("Parser");
 
     diagnostics.add(d);
@@ -160,14 +100,12 @@ public class SimpleAdapter extends LanguageAdapter<SimpleStructures> {
     return diagnostics;
   }
 
-  public void compileModule(final Source source, final SimpleStructures Probe)
-      throws bd.basic.ProgramDefinitionError {
+  public void parse(final String source, final SimpleStructures probe) {
     SimpleLanguageLexer lexer =
-        new SimpleLanguageLexer(CharStreams.fromString(source.getCharacters().toString()));
-    SimpleParser parser = new SimpleParser(new CommonTokenStream(lexer), Probe,
-        currentSLLanguageInstence, source);
-    // parser.parse(Probe, currentSLLanguageInstence, source);
+        new SimpleLanguageLexer(CharStreams.fromString(source));
+    SimpleParser parser = new SimpleParser(lexer, probe);
 
+    parser.parse();
   }
 
   @Override
@@ -203,14 +141,19 @@ public class SimpleAdapter extends LanguageAdapter<SimpleStructures> {
   }
 
   @Override
-  public List<Integer> getTokenPositions(final String documentUri) {
+  public List<int[]> getSemanticTokens(final String documentUri) {
     String path;
     try {
       path = docUriToNormalizedPath(documentUri);
-      return getProbe(path).getTokenPositions();
+      return getProbe(path).getSemanticTokens();
     } catch (URISyntaxException e) {
       return null;
     }
+  }
+
+  @Override
+  public List<Integer> makeRelative(final List<int[]> tokens) {
+    return SemanticTokens.makeRelative(tokens, 1, 0);
   }
 
   @Override
