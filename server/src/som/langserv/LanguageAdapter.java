@@ -255,6 +255,8 @@ public abstract class LanguageAdapter<Probe> {
 
   public abstract List<int[]> getSemanticTokens(final String documentUri);
 
+  public abstract List<Integer> makeRelative(List<int[]> tokens);
+
   public abstract CompletionList getCompletions(final String docUri, final int line,
       final int character);
 

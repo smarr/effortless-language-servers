@@ -1,7 +1,6 @@
 package som.langserv;
 
 import static som.langserv.SemanticTokens.combineTokensRemovingErroneousLine;
-import static som.langserv.SemanticTokens.makeRelativeTo11;
 import static som.langserv.SemanticTokens.sort;
 
 import java.net.URISyntaxException;
@@ -65,7 +64,6 @@ import com.google.common.collect.Lists;
 import som.langserv.newspeak.Minitest;
 import som.langserv.newspeak.NewspeakAdapter;
 import som.langserv.simple.SimpleAdapter;
-//import som.langserv.simple.SimpleAdapter;
 import som.langserv.som.SomAdapter;
 
 
@@ -220,7 +218,7 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
             List<int[]> withOldAndWithoutError =
                 combineTokensRemovingErroneousLine(
                     to1based(error.getRange().getStart()), prevTokens, sortedTokenList);
-            List<Integer> tokens = makeRelativeTo11(withOldAndWithoutError);
+            List<Integer> tokens = adapter.makeRelative(withOldAndWithoutError);
             return CompletableFuture.completedFuture(new SemanticTokens(tokens));
           }
         }
@@ -228,7 +226,7 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
         tokenCache.put(uri, sortedTokenList);
 
         return CompletableFuture.completedFuture(
-            new SemanticTokens(makeRelativeTo11(sortedTokenList)));
+            new SemanticTokens(adapter.makeRelative(sortedTokenList)));
       }
     }
 

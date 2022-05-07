@@ -48,6 +48,7 @@ import som.interpreter.nodes.NonLocalVariableNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.objectstorage.StorageAccessor;
 import som.langserv.LanguageAdapter;
+import som.langserv.SemanticTokens;
 import som.langserv.ServerLauncher;
 import som.vm.Primitives;
 import som.vmobjects.SInvokable;
@@ -472,4 +473,8 @@ public class NewspeakAdapter extends LanguageAdapter<NewspeakStructures> {
     }
   }
 
+  @Override
+  public List<Integer> makeRelative(final List<int[]> tokens) {
+    return SemanticTokens.makeRelativeTo11(tokens);
+  }
 }

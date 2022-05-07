@@ -41,6 +41,7 @@ import bdt.source.SourceCoordinate;
 import bdt.tools.nodes.Invocation;
 import bdt.tools.structure.StructuralProbe;
 import som.langserv.LanguageAdapter;
+import som.langserv.SemanticTokens;
 import som.langserv.ServerLauncher;
 import trufflesom.compiler.Field;
 import trufflesom.compiler.Parser.ParseError;
@@ -559,6 +560,11 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
     } catch (URISyntaxException e) {
       return null;
     }
+  }
+
+  @Override
+  public List<Integer> makeRelative(final List<int[]> tokens) {
+    return SemanticTokens.makeRelativeTo11(tokens);
   }
 
   public static SClass compileClass(final String text, final Source source,
