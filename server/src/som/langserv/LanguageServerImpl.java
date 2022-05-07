@@ -67,7 +67,7 @@ import som.langserv.simple.SimpleAdapter;
 import som.langserv.som.SomAdapter;
 
 
-public class SomLanguageServer implements LanguageServer, TextDocumentService,
+public class LanguageServerImpl implements LanguageServer, TextDocumentService,
     LanguageClientAware {
 
   private final SomWorkspace           workspace;
@@ -75,7 +75,7 @@ public class SomLanguageServer implements LanguageServer, TextDocumentService,
   private LanguageClient               client;
   private HashMap<String, List<int[]>> tokenCache;
 
-  public SomLanguageServer() {
+  public LanguageServerImpl() {
     adapters =
         new LanguageAdapter[] {new NewspeakAdapter(), new SomAdapter(), new SimpleAdapter()};
     tokenCache = new HashMap<>();
