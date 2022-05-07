@@ -10,15 +10,11 @@ public interface SemanticTokens {
 
   public List<int[]> getSemanticTokens();
 
-  public default void addSemanticToken(final int lineNumber, int startingChar,
+  public default void addSemanticToken(final int lineNumber, final int startingChar,
       final int length, final SemanticTokenType tokenType,
       final SemanticTokenModifier... tokenModifiers) {
     List<int[]> tokenList = getSemanticTokens();
     assert tokenList != null;
-
-    if (startingChar <= 0) {
-      startingChar = 1;
-    }
 
     int[] tuple = new int[5];
 
