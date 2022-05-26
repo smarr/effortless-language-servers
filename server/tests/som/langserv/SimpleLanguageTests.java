@@ -2,6 +2,7 @@ package som.langserv;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static som.langserv.Helpers.assertRange;
 import static som.langserv.Helpers.assertToken;
 import static som.langserv.Helpers.printAllToken;
@@ -15,6 +16,7 @@ import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SignatureHelp;
 import org.junit.Test;
 
 import simple.SimpleLanguageParser;
@@ -223,5 +225,42 @@ public class SimpleLanguageTests {
 
     assertEquals("plaintext", hover.getContents().getRight().getKind());
     assertEquals("loop(n)\n", hover.getContents().getRight().getValue());
+  }
+
+  @Test
+  public void testSignatureHelp() throws URISyntaxException {
+    var adapter = new SimpleAdapter();
+    String path = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test.sl";
+    adapter.parse(
+        "function loop(  n  ) {\n"
+            + "  i = 0;\n"
+            + "  return i;\n"
+            + "}\n"
+            + "function main(  ) {\n"
+            + "  i = 0;\n"
+            + "  println(loop(1000));  \n"
+            + "}",
+        path);
+
+    SignatureHelp help = adapter.signatureHelp(path, new Position(7, 12), null);
+    assertNotNull(help);
+
+    assertNull(help.getActiveSignature());
+
+    var signatures = help.getSignatures();
+    assertNotNull(signatures);
+    assertEquals(1, signatures.size());
+
+    var sig = signatures.get(0);
+    assertNotNull(sig);
+
+    assertEquals("loop(n)", sig.getLabel());
+
+    var params = sig.getParameters();
+    assertNotNull(params);
+    assertEquals(1, params.size());
+
+    var param = params.get(0);
+    assertEquals("n", param.getLabel().getLeft());
   }
 }

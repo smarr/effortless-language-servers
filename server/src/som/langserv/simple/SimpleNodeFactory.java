@@ -7,7 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.antlr.v4.runtime.Token;
+import org.eclipse.lsp4j.ParameterInformation;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SignatureInformation;
 import org.eclipse.lsp4j.SymbolKind;
 
 import com.oracle.truffle.sl.nodes.SLBlock;
@@ -63,16 +65,25 @@ public class SimpleNodeFactory extends SLNodeFactory {
     String details = currentFunction.getName() + "(";
     int i = 0;
 
+    List<ParameterInformation> params = new ArrayList<>(paramNames.size());
+
     for (String param : paramNames) {
       if (i > 0) {
         details += ", ";
       }
       details += param;
       i += 1;
+
+      params.add(new ParameterInformation(param));
     }
 
     details += ")";
     currentFunction.setDetail(details);
+
+    SignatureInformation info = new SignatureInformation(details);
+    info.setParameters(params);
+
+    currentFunction.setSignature(info);
   }
 
   @Override

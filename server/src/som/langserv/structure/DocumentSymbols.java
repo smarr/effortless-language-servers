@@ -12,6 +12,9 @@ import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SignatureHelp;
+import org.eclipse.lsp4j.SignatureHelpContext;
+import org.eclipse.lsp4j.SignatureInformation;
 import org.eclipse.lsp4j.SymbolKind;
 
 
@@ -131,35 +134,84 @@ public class DocumentSymbols {
       return null;
     }
 
-    if (symbol instanceof LanguageElement) {
-      LanguageElement e = (LanguageElement) symbol;
-      Hover hover = new Hover();
-      hover.setRange(e.getSelectionRange());
-      MarkupContent content = new MarkupContent("plaintext", e.getDetail());
-      hover.setContents(content);
+    if (symbol instanceof LanguageElement e) {
+      return createHover(e);
+    } else if (symbol instanceof Reference ref) {
+      var similar = lookup(ref);
+      if (similar == null) {
+        return null;
+      }
+      return createHover(ref, similar);
+    } else {
+      throw new RuntimeException("Not yet implemented for " + symbol.getClass());
+    }
+  }
 
-      return hover;
-    } else if (symbol instanceof Reference) {
-      Reference ref = (Reference) symbol;
+  private Hover createHover(final LanguageElement e) {
+    Hover hover = new Hover();
+    hover.setRange(e.getSelectionRange());
+    MarkupContent content = new MarkupContent("plaintext", e.getDetail());
+    hover.setContents(content);
+
+    return hover;
+  }
+
+  private Hover createHover(final Reference ref, final Set<LanguageElement> similar) {
+    Hover hover = new Hover();
+    hover.setRange(ref.getRange());
+
+    StringBuilder sb = new StringBuilder();
+
+    for (LanguageElement i : similar) {
+      sb.append(i.getDetail());
+      sb.append('\n');
+    }
+
+    MarkupContent content = new MarkupContent("plaintext", sb.toString());
+    hover.setContents(content);
+
+    return hover;
+  }
+
+  public SignatureHelp getSignatureHelp(final Position position,
+      final SignatureHelpContext context) {
+    WithRange symbol = getMostPrecise(position, rootSymbols);
+    if (symbol == null) {
+      return null;
+    }
+
+    if (symbol instanceof LanguageElement e) {
+      if (e.getSignature() == null) {
+        return null;
+      }
+
+      SignatureHelp help = new SignatureHelp();
+      var sigs = new ArrayList<SignatureInformation>(1);
+      sigs.add(e.getSignature());
+      help.setSignatures(sigs);
+      return help;
+    } else if (symbol instanceof Reference ref) {
       var similar = lookup(ref);
       if (similar == null) {
         return null;
       }
 
-      Hover hover = new Hover();
-      hover.setRange(ref.getRange());
+      SignatureHelp help = new SignatureHelp();
+      var sigs = new ArrayList<SignatureInformation>(similar.size());
 
-      StringBuilder sb = new StringBuilder();
-
-      for (LanguageElement i : similar) {
-        sb.append(i.getDetail());
-        sb.append('\n');
+      for (LanguageElement e : similar) {
+        var sig = e.getSignature();
+        if (sig != null) {
+          sigs.add(sig);
+        }
       }
 
-      MarkupContent content = new MarkupContent("plaintext", sb.toString());
-      hover.setContents(content);
+      if (sigs.isEmpty()) {
+        return null;
+      }
 
-      return hover;
+      help.setSignatures(sigs);
+      return help;
     } else {
       throw new RuntimeException("Not yet implemented for " + symbol.getClass());
     }
@@ -231,4 +283,5 @@ public class DocumentSymbols {
     // so, we are not before the range, and not after it
     return true;
   }
+
 }

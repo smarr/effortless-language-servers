@@ -32,8 +32,11 @@ import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensParams;
+import org.eclipse.lsp4j.SignatureHelp;
+import org.eclipse.lsp4j.SignatureHelpParams;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
+import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.TextDocumentService;
 
@@ -214,27 +217,49 @@ public class DocumentServiceImpl implements TextDocumentService {
 
   @Override
   public CompletableFuture<List<? extends CodeLens>> codeLens(final CodeLensParams params) {
-    String uri = params.getTextDocument().getUri();
-    for (LanguageAdapter<?> adapter : adapters) {
-      if (adapter.handlesUri(uri)) {
-        List<CodeLens> result = new ArrayList<>();
-        adapter.getCodeLenses(result, uri);
-        return CompletableFuture.completedFuture(result);
-      }
+    var adapter = getResponsibleAdapter(params.getTextDocument());
+    if (adapter != null) {
+      List<CodeLens> result = new ArrayList<>();
+      String uri = params.getTextDocument().getUri();
+      adapter.getCodeLenses(result, uri);
+      return CompletableFuture.completedFuture(result);
     }
-    return CompletableFuture.completedFuture(new ArrayList<CodeLens>());
+    return CompletableFuture.completedFuture(null);
   }
 
   @Override
   public CompletableFuture<Hover> hover(final HoverParams params) {
-    String uri = params.getTextDocument().getUri();
-    for (LanguageAdapter<?> adapter : adapters) {
-      if (adapter.handlesUri(uri)) {
-        Hover result = adapter.hover(uri, params.getPosition());
-        return CompletableFuture.completedFuture(result);
-      }
+    var adapter = getResponsibleAdapter(params.getTextDocument());
+    if (adapter != null) {
+      String uri = params.getTextDocument().getUri();
+      Hover result = adapter.hover(uri, params.getPosition());
+      return CompletableFuture.completedFuture(result);
     }
 
     return CompletableFuture.completedFuture(null);
+  }
+
+  @Override
+  public CompletableFuture<SignatureHelp> signatureHelp(final SignatureHelpParams params) {
+    var adapter = getResponsibleAdapter(params.getTextDocument());
+    if (adapter != null) {
+      String uri = params.getTextDocument().getUri();
+      SignatureHelp help =
+          adapter.signatureHelp(uri, params.getPosition(), params.getContext());
+      return CompletableFuture.completedFuture(help);
+    }
+
+    return CompletableFuture.completedFuture(null);
+  }
+
+  private LanguageAdapter<?> getResponsibleAdapter(final TextDocumentIdentifier docId) {
+    String uri = docId.getUri();
+    for (LanguageAdapter<?> adapter : adapters) {
+      if (adapter.handlesUri(uri)) {
+        return adapter;
+      }
+    }
+
+    return null;
   }
 }

@@ -24,6 +24,8 @@ import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
+import org.eclipse.lsp4j.SignatureHelp;
+import org.eclipse.lsp4j.SignatureHelpContext;
 import org.eclipse.lsp4j.services.LanguageClient;
 
 import som.langserv.structure.DocumentData;
@@ -218,5 +220,11 @@ public abstract class LanguageAdapter<Probe> {
   public final Hover hover(final String uri, final Position position) {
     Probe probe = getProbe(uri);
     return ((DocumentData) probe).getHover(position);
+  }
+
+  public SignatureHelp signatureHelp(final String uri, final Position position,
+      final SignatureHelpContext context) {
+    Probe probe = getProbe(uri);
+    return ((DocumentData) probe).getSignatureHelp(position, context);
   }
 }

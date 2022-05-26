@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SignatureInformation;
 import org.eclipse.lsp4j.SymbolKind;
 
 
@@ -13,6 +14,8 @@ public class LanguageElement extends DocumentSymbol implements WithRange {
   private LanguageElementId id;
 
   private List<Reference> containedReferences;
+
+  private SignatureInformation signature;
 
   public LanguageElement(final String name, final SymbolKind kind,
       final LanguageElementId id, final Range identifierRange) {
@@ -59,5 +62,13 @@ public class LanguageElement extends DocumentSymbol implements WithRange {
 
   public LanguageElementId getId() {
     return id;
+  }
+
+  public SignatureInformation getSignature() {
+    return signature;
+  }
+
+  public void setSignature(final SignatureInformation sig) {
+    signature = sig;
   }
 }

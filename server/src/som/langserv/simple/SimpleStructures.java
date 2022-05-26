@@ -9,6 +9,8 @@ import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.SignatureHelp;
+import org.eclipse.lsp4j.SignatureHelpContext;
 
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
@@ -132,5 +134,11 @@ public class SimpleStructures
   @Override
   public Hover getHover(final Position position) {
     return symbols.getHover(position);
+  }
+
+  @Override
+  public SignatureHelp getSignatureHelp(final Position position,
+      final SignatureHelpContext context) {
+    return symbols.getSignatureHelp(position, context);
   }
 }
