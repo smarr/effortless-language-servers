@@ -372,10 +372,10 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
       addAllDefinitions(result, name);
     } else if (node instanceof LocalVariableNode) {
       LocalVariableNode local = (LocalVariableNode) node;
-      result.add(getLocation(local.getSource(), local.getLocal().coord));
+      result.add(PositionConversion.getLocation(local.getSource(), local.getLocal().coord));
     } else if (node instanceof NonLocalVariableNode) {
       NonLocalVariableNode local = (NonLocalVariableNode) node;
-      result.add(getLocation(local.getSource(), local.getLocal().coord));
+      result.add(PositionConversion.getLocation(local.getSource(), local.getLocal().coord));
     } else if (node instanceof FieldWriteNode) {
       Method method = (Method) node.getRootNode();
       SInvokable si = getEncompassingInvokable(method, probe.getMethods());
@@ -384,7 +384,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
       }
       int fieldIndex = ((FieldWriteNode) node).getFieldIndex();
       Field field = si.getHolder().getInstanceFieldDefinitions()[fieldIndex];
-      result.add(getLocation(si.getSource(), field.getSourceCoordinate()));
+      result.add(PositionConversion.getLocation(si.getSource(), field.getSourceCoordinate()));
     } else {
       if (ServerLauncher.DEBUG) {
         reportError("GET DEFINITION, unsupported node: " + node.getClass().getSimpleName());
@@ -451,7 +451,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
       final List<Diagnostic> diagnostics) {
     Diagnostic d = new Diagnostic();
     d.setSeverity(DiagnosticSeverity.Error);
-    d.setRange(toRangeMax(e.getLine(), e.getColumn()));
+    d.setRange(PositionConversion.toRangeMax(e.getLine(), e.getColumn()));
     d.setMessage(e.toString());
     d.setSource("Parser");
 
@@ -466,7 +466,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
 
     d.setMessage(msg == null ? "" : msg);
     d.setSource("Parser");
-    d.setRange(toRangeMax(1, 1));
+    d.setRange(PositionConversion.toRangeMax(1, 1));
 
     diagnostics.add(d);
     return diagnostics;
@@ -490,7 +490,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
     DocumentSymbol sym = new DocumentSymbol();
     sym.setName(f.getName().getString());
     sym.setKind(SymbolKind.Field);
-    sym.setRange(toRange(source, f.getSourceCoordinate()));
+    sym.setRange(PositionConversion.toRange(source, f.getSourceCoordinate()));
     return sym;
   }
 
@@ -498,7 +498,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
     DocumentSymbol sym = new DocumentSymbol();
     sym.setName(v.name.getString());
     sym.setKind(SymbolKind.Variable);
-    sym.setRange(toRange(source, v.coord));
+    sym.setRange(PositionConversion.toRange(source, v.coord));
     return sym;
   }
 
@@ -507,7 +507,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
     sym.setName(d.getSignature().toString());
     sym.setKind(SymbolKind.Method);
     if (null != d.getSourceSection()) {
-      sym.setRange(toRange(d.getSourceSection()));
+      sym.setRange(PositionConversion.toRange(d.getSourceSection()));
     }
     if (null != d.getHolder()) {
       String holderName = d.getHolder().getName().getString();
@@ -524,7 +524,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
     sym.setName(c.getName().getString());
     sym.setKind(SymbolKind.Module);
     if (c.getSourceSection() != null) {
-      sym.setRange(toRange(c.getSourceSection()));
+      sym.setRange(PositionConversion.toRange(c.getSourceSection()));
     }
     // MixinDefinition outer = c.getOuterMixinDefinition();
     // if (outer != null) {

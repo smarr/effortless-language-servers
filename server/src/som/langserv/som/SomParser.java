@@ -1,6 +1,8 @@
 package som.langserv.som;
 
-import static som.langserv.LanguageAdapter.toRange;
+import static som.langserv.som.PositionConversion.getEnd;
+import static som.langserv.som.PositionConversion.getStart;
+import static som.langserv.som.PositionConversion.toRange;
 import static trufflesom.compiler.Symbol.Primitive;
 import static trufflesom.vm.SymbolTable.symbolFor;
 
@@ -22,7 +24,6 @@ import som.langserv.structure.SemanticTokenModifier;
 import som.langserv.structure.SemanticTokenType;
 import trufflesom.compiler.ClassGenerationContext;
 import trufflesom.compiler.Lexer;
-//import som.langserv.SemanticTokenType;
 import trufflesom.compiler.MethodGenerationContext;
 import trufflesom.compiler.ParserAst;
 import trufflesom.compiler.Symbol;
@@ -343,16 +344,11 @@ public class SomParser extends ParserAst {
 
   private LanguageElement startSymbol(final String name, final SymbolKind kind,
       final int startCoord, final LanguageElementId id) {
-    int line = SourceCoordinate.getLine(source, startCoord);
-    int column = SourceCoordinate.getColumn(source, startCoord);
-
-    return symbols.startSymbol(name, kind, id, toRange(line, column, name.length()));
+    return symbols.startSymbol(name, kind, id, toRange(source, startCoord, name.length()));
   }
 
   private Range getRange(final int startCoord, final String name) {
-    int line = SourceCoordinate.getLine(source, startCoord);
-    int column = SourceCoordinate.getColumn(source, startCoord);
-    return toRange(line, column, name.length());
+    return toRange(source, startCoord, name.length());
   }
 
   private LanguageElement startSymbol(final SymbolKind kind) {
@@ -361,20 +357,13 @@ public class SomParser extends ParserAst {
 
   private LanguageElement startSymbol(final String name, final SymbolKind kind,
       final long coordWithLength, final LanguageElementId id) {
-    int line = SourceCoordinate.getLine(source, coordWithLength);
-    int column = SourceCoordinate.getColumn(source, coordWithLength);
-    int length = SourceCoordinate.getLength(coordWithLength);
-
-    return symbols.startSymbol(name, kind, id, toRange(line, column, length));
+    return symbols.startSymbol(name, kind, id, toRange(source, coordWithLength));
   }
 
   private void completeSymbol(final LanguageElement symbol, final Position start,
       final int endCoord, final int endLength) {
-    int line = SourceCoordinate.getLine(source, endCoord);
-    int column = SourceCoordinate.getColumn(source, endCoord);
-
     symbols.completeSymbol(symbol,
-        new Range(start, new Position(line, column + endLength)));
+        new Range(start, getEnd(source, endCoord, endLength)));
   }
 
   private void completeSymbol(final LanguageElement symbol, final long coord) {
@@ -384,20 +373,12 @@ public class SomParser extends ParserAst {
 
   private void recordSymbolDefinition(final String string, final LanguageElementId id,
       final SymbolKind kind, final int startCoord) {
-    int line = SourceCoordinate.getLine(source, startCoord);
-    int column = SourceCoordinate.getColumn(source, startCoord);
-    symbols.recordDefinition(string, id, kind,
-        toRange(line, column, string.length()));
+    symbols.recordDefinition(string, id, kind, toRange(source, startCoord, string.length()));
   }
 
   private void recordSymbolDefinition(final String string, final LanguageElementId id,
       final SymbolKind kind, final long coordWithLength) {
-    int line = SourceCoordinate.getLine(source, coordWithLength);
-    int column = SourceCoordinate.getColumn(source, coordWithLength);
-    int length = SourceCoordinate.getLength(coordWithLength);
-    assert length == string.length();
-    symbols.recordDefinition(string, id, kind,
-        toRange(line, column, string.length()));
+    symbols.recordDefinition(string, id, kind, toRange(source, coordWithLength));
   }
 
   private void referenceSymbol(final LanguageElementId id, final SourceSection sourceSection) {
@@ -406,8 +387,6 @@ public class SomParser extends ParserAst {
 
   private void referenceSymbol(final LanguageElementId id, final int startCoord,
       final int length) {
-    int line = SourceCoordinate.getLine(source, startCoord);
-    int column = SourceCoordinate.getColumn(source, startCoord);
-    symbols.referenceSymbol(id, toRange(line, column, length));
+    symbols.referenceSymbol(id, toRange(source, startCoord, length));
   }
 }

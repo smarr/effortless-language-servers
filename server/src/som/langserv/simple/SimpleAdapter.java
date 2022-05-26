@@ -78,7 +78,7 @@ public class SimpleAdapter extends LanguageAdapter<SimpleStructures> {
     String msg = msgParts[2].trim();
 
     Diagnostic d = new Diagnostic();
-    d.setRange(toRange(e.line, e.col, e.length));
+    d.setRange(som.langserv.som.PositionConversion.toRange(e.line, e.col, e.length));
 
     d.setSeverity(DiagnosticSeverity.Error);
 

@@ -24,13 +24,8 @@ import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
-import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.services.LanguageClient;
 
-import com.oracle.truffle.api.source.Source;
-import com.oracle.truffle.api.source.SourceSection;
-
-import bd.source.SourceCoordinate;
 import som.langserv.structure.DocumentData;
 
 
@@ -115,13 +110,6 @@ public abstract class LanguageAdapter<Probe> {
   public abstract List<Diagnostic> parse(final String text, final String sourceUri)
       throws URISyntaxException;
 
-  public static Position pos(final int startLine, final int startChar) {
-    Position pos = new Position();
-    pos.setLine(startLine - 1);
-    pos.setCharacter(startChar - 1);
-    return pos;
-  }
-
   public DocumentHighlight getHighlight(final String documentUri,
       final int line, final int character) {
     // TODO: this is wrong, it should be something entierly different.
@@ -166,45 +154,6 @@ public abstract class LanguageAdapter<Probe> {
     // highlight.setRange(range);
     // return highlight;
     return null;
-  }
-
-  public static Range toRange(final Source source, final long coord) {
-    return toRange(SourceCoordinate.createSourceSection(source, coord));
-  }
-
-  public static Range toRange(final SourceSection ss) {
-    Range range = new Range();
-    range.setStart(pos(ss.getStartLine(), ss.getStartColumn()));
-    range.setEnd(pos(ss.getEndLine(), ss.getEndColumn() + 1));
-    return range;
-  }
-
-  public static Range toRange(final int line, final int col, final int length) {
-    Range range = new Range();
-    range.setStart(pos(line, col));
-    range.setEnd(pos(line, col + length));
-    return range;
-  }
-
-  public static Range toRangeMax(final int startLine, final int startColumn) {
-    Range range = new Range();
-    range.setStart(pos(startLine, startColumn));
-    range.setEnd(pos(startLine, Integer.MAX_VALUE));
-    return range;
-  }
-
-  public static Location getLocation(final Source source, final long coord) {
-    Location loc = new Location();
-    loc.setUri(source.getURI().toString());
-    loc.setRange(toRange(source, coord));
-    return loc;
-  }
-
-  public static Location getLocation(final SourceSection ss) {
-    Location loc = new Location();
-    loc.setUri(ss.getSource().getURI().toString());
-    loc.setRange(toRange(ss));
-    return loc;
   }
 
   protected abstract Probe getProbe(String documentUri);

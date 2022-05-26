@@ -1,6 +1,9 @@
 package som.langserv.newspeak;
 
 import static som.langserv.Matcher.fuzzyMatch;
+import static som.langserv.som.PositionConversion.getLocation;
+import static som.langserv.som.PositionConversion.toRange;
+import static som.langserv.som.PositionConversion.toRangeMax;
 
 import java.net.URI;
 import java.net.URISyntaxException;

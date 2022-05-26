@@ -1,7 +1,7 @@
 package som.langserv.som;
 
-import static som.langserv.LanguageAdapter.toRange;
 import static som.langserv.Matcher.fuzzyMatch;
+import static som.langserv.som.PositionConversion.toRange;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +22,6 @@ import com.oracle.truffle.api.source.SourceSection;
 import bdt.source.SourceCoordinate;
 import bdt.tools.nodes.Invocation;
 import bdt.tools.structure.StructuralProbe;
-import som.langserv.LanguageAdapter;
 import som.langserv.structure.DocumentData;
 import som.langserv.structure.DocumentSymbols;
 import som.langserv.structure.SemanticTokenModifier;
@@ -99,7 +98,7 @@ public class SomStructures
     int length = SourceCoordinate.getLength(field.getSourceCoordinate());
 
     symbols.recordDefinition(field.getName().getString(), new FieldId(field),
-        SymbolKind.Field, toRange(line, col, length));
+        SymbolKind.Field, toRange(source, field.getSourceCoordinate(), length));
     assert field.getName().getString().length() == length;
 
     addSemanticToken(line, col, length, SemanticTokenType.PROPERTY,
@@ -157,14 +156,14 @@ public class SomStructures
       if (c.getName() == name) {
         SourceSection ss = c.getSourceSection();
         if (ss != null) {
-          results.add(LanguageAdapter.getLocation(ss));
+          results.add(PositionConversion.getLocation(ss));
         }
       }
     }
 
     for (SInvokable m : methods.getValues()) {
       if (m.getSignature() == name) {
-        results.add(LanguageAdapter.getLocation(m.getSourceSection()));
+        results.add(PositionConversion.getLocation(m.getSourceSection()));
       }
     }
   }
