@@ -7,10 +7,10 @@ import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Hover;
-import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SignatureHelpContext;
+import org.eclipse.lsp4j.SymbolInformation;
 
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
@@ -20,7 +20,6 @@ import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Variable;
 import som.interpreter.nodes.ExpressionNode;
-import som.langserv.LanguageAdapter;
 import som.langserv.structure.DocumentData;
 import som.langserv.structure.DocumentSymbols;
 import som.langserv.structure.SemanticTokenType;
@@ -53,13 +52,14 @@ public class SimpleStructures
     }
   }
 
-  public SimpleStructures(final int length) {
+  public SimpleStructures(final int length, final String remoteUri,
+      final String normalizedUri) {
     this.source = null;
 
     this.map = new ExpressionNode[length];
     this.diagnostics = new ArrayList<>(0);
     this.semanticTokens = new ArrayList<>();
-    this.symbols = new DocumentSymbols();
+    this.symbols = new DocumentSymbols(remoteUri, normalizedUri);
 
     this.nodeFactory = new SimpleNodeFactory(this);
   }
@@ -67,6 +67,11 @@ public class SimpleStructures
   @Override
   public List<? extends DocumentSymbol> getRootSymbols() {
     return symbols.getRootSymbols();
+  }
+
+  @Override
+  public void symbols(final List<SymbolInformation> results, final String query) {
+    symbols.find(results, query);
   }
 
   public SimpleNodeFactory getFactory() {
@@ -84,33 +89,6 @@ public class SimpleStructures
   public synchronized ExpressionNode getElementAt(final int line, final int character) {
     int idx = source.getLineStartOffset(line) + character;
     return map[idx];
-  }
-
-  public synchronized void getDefinitionsFor(final SSymbol name,
-      final ArrayList<Location> results) {
-    for (MixinDefinition m : classes) {
-      if (m.getName() == name) {
-        results.add(LanguageAdapter.getLocation(m.getSourceSection()));
-      }
-    }
-
-    for (SInvokable m : methods.getValues()) {
-      if (m.getSignature() == name) {
-        results.add(LanguageAdapter.getLocation(m.getSourceSection()));
-      }
-    }
-
-    for (SlotDefinition s : slots) {
-      if (s.getName() == name) {
-        results.add(LanguageAdapter.getLocation(s.getSourceSection()));
-      }
-    }
-
-    for (Variable v : variables) {
-      if (v.name == name) {
-        results.add(LanguageAdapter.getLocation(v.source));
-      }
-    }
   }
 
   @Override

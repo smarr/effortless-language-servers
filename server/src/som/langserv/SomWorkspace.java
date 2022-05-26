@@ -29,9 +29,8 @@ public class SomWorkspace implements WorkspaceService {
     ArrayList<SymbolInformation> result = new ArrayList<>();
 
     for (LanguageAdapter<?> adapter : adapters) {
-      result.addAll(adapter.getAllSymbolInfo(params.getQuery()));
+      adapter.workspaceSymbol(result, params.getQuery());
     }
-
     return CompletableFuture.completedFuture(result);
   }
 

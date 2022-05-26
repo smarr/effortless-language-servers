@@ -3,6 +3,7 @@ package som.langserv;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static som.langserv.Helpers.assertRange;
 import static som.langserv.Helpers.assertToken;
 import static som.langserv.Helpers.printAllToken;
@@ -10,6 +11,7 @@ import static som.langserv.Helpers.printAllToken;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.lsp4j.DocumentSymbol;
@@ -17,6 +19,7 @@ import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SignatureHelp;
+import org.eclipse.lsp4j.SymbolInformation;
 import org.junit.Test;
 
 import simple.SimpleLanguageParser;
@@ -262,5 +265,44 @@ public class SimpleLanguageTests {
 
     var param = params.get(0);
     assertEquals("n", param.getLabel().getLeft());
+  }
+
+  @Test
+  public void testWorkspaceSymbols() throws URISyntaxException {
+    var adapter = new SimpleAdapter();
+    String path = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test.sl";
+    var diag = adapter.parse(
+        "function loop(  n  ) {\n"
+            + "  i = 0;\n"
+            + "  return i;\n"
+            + "}\n"
+            + "function main(  ) {\n"
+            + "  i = 0;\n"
+            + "  println(loop(1000));  \n"
+            + "}",
+        path);
+    assertTrue(diag.isEmpty());
+
+    path = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test2.sl";
+    diag = adapter.parse(
+        "function loop(n, b, c) {\n"
+            + "  i = 0;\n"
+            + "  return i;\n"
+            + "}\n"
+            + "function baz() {\n"
+            + "  println(loop(1000, 1, 2));  \n"
+            + "}",
+        path);
+    assertTrue(diag.isEmpty());
+
+    List<SymbolInformation> results = new ArrayList<>();
+    adapter.workspaceSymbol(results, "");
+
+    assertEquals(4, results.size());
+
+    results = new ArrayList<>();
+    adapter.workspaceSymbol(results, "l");
+
+    assertEquals(2, results.size());
   }
 }

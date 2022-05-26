@@ -49,7 +49,7 @@ public class SimpleAdapter extends LanguageAdapter<SimpleStructures> {
       throws URISyntaxException {
     String path = docUriToNormalizedPath(sourceUri);
 
-    SimpleStructures newProbe = new SimpleStructures(text.length());
+    SimpleStructures newProbe = new SimpleStructures(text.length(), sourceUri, "file:" + path);
     List<Diagnostic> diagnostics = newProbe.getDiagnostics();
     try {
       // clean out old structural data

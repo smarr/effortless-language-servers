@@ -1,7 +1,5 @@
 package som.langserv.som;
 
-import static som.langserv.Matcher.fuzzyMatch;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -109,7 +107,8 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
     Universe.setupClassPath(constructClassPath(CORE_LIB_PATH));
 
     SomStructures systemClassProbe = new SomStructures(
-        Source.newBuilder(SomLanguage.LANG_ID, "systemClasses", null).internal(true).build());
+        Source.newBuilder(SomLanguage.LANG_ID, "systemClasses", null).internal(true).build(),
+        null, null);
     Universe.setStructuralProbe(systemClassProbe);
     structuralProbes.put("systemClasses", systemClassProbe);
 
@@ -234,7 +233,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
               .mimeType(SomLanguage.MIME_TYPE)
               .uri(new URI(sourceUri).normalize()).build();
 
-    SomStructures newProbe = new SomStructures(source);
+    SomStructures newProbe = new SomStructures(source, sourceUri, "file:" + path);
     List<Diagnostic> diagnostics = newProbe.getDiagnostics();
     try {
       // clean out old structural data
@@ -327,22 +326,6 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
     } catch (URISyntaxException e) {
       return false;
     }
-  }
-
-  private static boolean matchQuery(final String query, final Field f) {
-    return fuzzyMatch(f.getName().getString(), query);
-  }
-
-  private static boolean matchQuery(final String query, final Variable v) {
-    return fuzzyMatch(v.name.getString(), query);
-  }
-
-  private static boolean matchQuery(final String query, final SInvokable m) {
-    return fuzzyMatch(m.getSignature().getString(), query);
-  }
-
-  private static boolean matchQuery(final String query, final SClass c) {
-    return fuzzyMatch(c.getName().getString(), query);
   }
 
   @Override
@@ -594,7 +577,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
       SomStructures p = (SomStructures) probe;
 
       if (!sourceIsForPath(source, p.getPath())) {
-        p = new SomStructures(source);
+        p = new SomStructures(source, null, "file:" + p.getPath());
       }
 
       return new SomParser(code, source, p);

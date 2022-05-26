@@ -32,4 +32,9 @@ public class FunctionId extends LanguageElementId {
     FunctionId other = (FunctionId) obj;
     return Objects.equals(name, other.name);
   }
+
+  @Override
+  protected String getName() {
+    return name;
+  }
 }

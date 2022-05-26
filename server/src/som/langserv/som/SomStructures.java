@@ -1,6 +1,5 @@
 package som.langserv.som;
 
-import static som.langserv.Matcher.fuzzyMatch;
 import static som.langserv.som.PositionConversion.toRange;
 
 import java.util.ArrayList;
@@ -14,6 +13,9 @@ import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.SignatureHelp;
+import org.eclipse.lsp4j.SignatureHelpContext;
+import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
 
 import com.oracle.truffle.api.source.Source;
@@ -62,13 +64,14 @@ public class SomStructures
     }
   }
 
-  public SomStructures(final Source source) {
+  public SomStructures(final Source source, final String remoteUri,
+      final String normalizedUri) {
     this.source = source;
     this.map = new ExpressionNode[source.getLength()];
     this.diagnostics = new ArrayList<>(0);
     this.calls = new ArrayList<>();
     this.semanticTokens = new ArrayList<>();
-    this.symbols = new DocumentSymbols();
+    this.symbols = new DocumentSymbols(remoteUri, normalizedUri);
   }
 
   public DocumentSymbols getSymbols() {
@@ -166,19 +169,6 @@ public class SomStructures
         results.add(PositionConversion.getLocation(m.getSourceSection()));
       }
     }
-  }
-
-  private static boolean fuzzyMatches(final SSymbol symbol, final SSymbol query) {
-    if (query == symbol) {
-      return true;
-    }
-
-    if (query.getNumberOfSignatureArguments() > 1
-        && query.getNumberOfSignatureArguments() == symbol.getNumberOfSignatureArguments()) {
-      return true;
-    }
-
-    return fuzzyMatch(symbol.getString().toLowerCase(), query.getString().toLowerCase());
   }
 
   public synchronized void getCompletions(final SSymbol name,

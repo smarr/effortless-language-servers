@@ -1,6 +1,5 @@
 package som.langserv.newspeak;
 
-import static som.langserv.Matcher.fuzzyMatch;
 import static som.langserv.som.PositionConversion.getLocation;
 import static som.langserv.som.PositionConversion.toRange;
 import static som.langserv.som.PositionConversion.toRangeMax;
@@ -260,18 +259,6 @@ public class NewspeakAdapter extends LanguageAdapter<NewspeakStructures> {
     } catch (URISyntaxException e) {
       return false;
     }
-  }
-
-  private static boolean matchQuery(final String query, final SInvokable m) {
-    return fuzzyMatch(m.getSignature().getString(), query);
-  }
-
-  private static boolean matchQuery(final String query, final MixinDefinition m) {
-    return fuzzyMatch(m.getName().getString(), query);
-  }
-
-  private static boolean matchQuery(final String query, final SlotDefinition s) {
-    return fuzzyMatch(s.getName().getString(), query);
   }
 
   private static DocumentSymbol getSymbolInfo(final SInvokable m) {

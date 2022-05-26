@@ -198,21 +198,19 @@ public class DocumentServiceImpl implements TextDocumentService {
   @Override
   public CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> documentSymbol(
       final DocumentSymbolParams params) {
-    String uri = params.getTextDocument().getUri();
-    for (LanguageAdapter<?> adapter : adapters) {
-      if (adapter.handlesUri(uri)) {
-        List<? extends DocumentSymbol> result =
-            adapter.documentSymbol(params.getTextDocument().getUri());
-        ArrayList<Either<SymbolInformation, DocumentSymbol>> eitherList =
-            new ArrayList<>(result.size());
-        for (DocumentSymbol s : result) {
-          eitherList.add(Either.forRight(s));
-        }
-        return CompletableFuture.completedFuture(eitherList);
+    var adapter = getResponsibleAdapter(params.getTextDocument());
+    if (adapter != null) {
+      var result = adapter.documentSymbol(params.getTextDocument().getUri());
+
+      ArrayList<Either<SymbolInformation, DocumentSymbol>> eitherList =
+          new ArrayList<>(result.size());
+      for (DocumentSymbol s : result) {
+        eitherList.add(Either.forRight(s));
       }
+      return CompletableFuture.completedFuture(eitherList);
     }
-    return CompletableFuture.completedFuture(
-        new ArrayList<Either<SymbolInformation, DocumentSymbol>>());
+
+    return CompletableFuture.completedFuture(null);
   }
 
   @Override

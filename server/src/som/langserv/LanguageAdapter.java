@@ -6,7 +6,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +25,7 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SignatureHelpContext;
+import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.services.LanguageClient;
 
 import som.langserv.structure.DocumentData;
@@ -162,26 +162,6 @@ public abstract class LanguageAdapter<Probe> {
 
   protected abstract Collection<Probe> getProbes();
 
-  public final List<? extends DocumentSymbol> documentSymbol(final String documentUri) {
-    Probe probe = getProbe(documentUri);
-    return ((DocumentData) probe).getRootSymbols();
-  }
-
-  protected abstract void addAllSymbols(
-      List<DocumentSymbol> results, String query, Probe probe);
-
-  public final List<? extends DocumentSymbol> getAllSymbolInfo(final String query) {
-    Collection<Probe> probes = getProbes();
-
-    ArrayList<DocumentSymbol> results = new ArrayList<>();
-
-    for (Probe probe : probes) {
-      addAllSymbols(results, query, probe);
-    }
-
-    return results;
-  }
-
   public abstract List<? extends Location> getDefinitions(final String docUri, final int line,
       final int character);
 
@@ -217,12 +197,25 @@ public abstract class LanguageAdapter<Probe> {
   public abstract void getCodeLenses(final List<CodeLens> codeLenses,
       final String documentUri);
 
+  public final void workspaceSymbol(final List<SymbolInformation> results,
+      final String query) {
+    var probes = getProbes();
+    for (var probe : probes) {
+      ((DocumentData) probe).symbols(results, query);
+    }
+  }
+
+  public final List<? extends DocumentSymbol> documentSymbol(final String documentUri) {
+    Probe probe = getProbe(documentUri);
+    return ((DocumentData) probe).getRootSymbols();
+  }
+
   public final Hover hover(final String uri, final Position position) {
     Probe probe = getProbe(uri);
     return ((DocumentData) probe).getHover(position);
   }
 
-  public SignatureHelp signatureHelp(final String uri, final Position position,
+  public final SignatureHelp signatureHelp(final String uri, final Position position,
       final SignatureHelpContext context) {
     Probe probe = getProbe(uri);
     return ((DocumentData) probe).getSignatureHelp(position, context);

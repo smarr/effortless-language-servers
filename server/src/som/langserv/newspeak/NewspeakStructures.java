@@ -1,7 +1,5 @@
 package som.langserv.newspeak;
 
-import static som.langserv.Matcher.fuzzyMatch;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -106,19 +104,6 @@ public class NewspeakStructures
         results.add(LanguageAdapter.getLocation(v.source));
       }
     }
-  }
-
-  private static boolean fuzzyMatches(final SSymbol symbol, final SSymbol query) {
-    if (query == symbol) {
-      return true;
-    }
-
-    if (query.getNumberOfSignatureArguments() > 1
-        && query.getNumberOfSignatureArguments() == symbol.getNumberOfSignatureArguments()) {
-      return true;
-    }
-
-    return fuzzyMatch(symbol.getString().toLowerCase(), query.getString().toLowerCase());
   }
 
   public synchronized void getCompletions(final SSymbol name,

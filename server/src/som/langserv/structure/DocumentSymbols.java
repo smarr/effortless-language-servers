@@ -15,6 +15,7 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SignatureHelpContext;
 import org.eclipse.lsp4j.SignatureInformation;
+import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
 
 
@@ -28,9 +29,15 @@ public class DocumentSymbols {
 
   private Map<LanguageElementId, Set<LanguageElement>> symbols;
 
-  public DocumentSymbols() {
+  private final String remoteUri;
+  private final String normalizedUri;
+
+  public DocumentSymbols(final String remoteUri, final String normalizedUri) {
     this.symbolsScope = new ArrayList<>();
     this.rootSymbols = new ArrayList<>();
+
+    this.remoteUri = remoteUri;
+    this.normalizedUri = normalizedUri;
   }
 
   /**
@@ -284,4 +291,14 @@ public class DocumentSymbols {
     return true;
   }
 
+  public void find(final List<SymbolInformation> results, final String query) {
+    for (var e : symbols.entrySet()) {
+      if (e.getKey().matches(query)) {
+        for (var s : e.getValue()) {
+          String uri = (remoteUri != null) ? remoteUri : normalizedUri;
+          results.add(s.createSymbolInfo(uri));
+        }
+      }
+    }
+  }
 }

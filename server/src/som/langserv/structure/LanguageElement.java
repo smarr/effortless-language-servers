@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.lsp4j.DocumentSymbol;
+import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SignatureInformation;
+import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
 
 
@@ -70,5 +72,18 @@ public class LanguageElement extends DocumentSymbol implements WithRange {
 
   public void setSignature(final SignatureInformation sig) {
     signature = sig;
+  }
+
+  public SymbolInformation createSymbolInfo(final String containerUri) {
+    SymbolInformation info = new SymbolInformation();
+    info.setKind(getKind());
+    info.setName(getName());
+
+    Location l = new Location();
+    l.setRange(getRange());
+    l.setUri(containerUri);
+    info.setLocation(l);
+
+    return info;
   }
 }
