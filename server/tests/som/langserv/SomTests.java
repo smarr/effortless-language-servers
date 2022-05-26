@@ -1,6 +1,8 @@
 package som.langserv;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static som.langserv.Helpers.assertRange;
 import static som.langserv.Helpers.assertToken;
 import static som.langserv.Helpers.printAllToken;
 
@@ -10,6 +12,9 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.concurrent.ForkJoinTask;
 
+import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.junit.Test;
 
 import som.langserv.som.SomAdapter;
@@ -121,5 +126,39 @@ public class SomTests {
 
     assertEquals("run:with:", children.get(3).getName());
     assertEquals("run: arg with: arg2", children.get(3).getDetail());
+  }
+
+  @Test
+  public void testSymbolLineAndPositionInfo() {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    var diagnostics = adapter.parse("Hello = (\n"
+        + "run = ()\n"
+        + "run:   arg = ()\n"
+        + "+   arg = ()\n"
+        + "run: arg   with:  arg2   = ()\n"
+        + ")\n", path);
+
+    assertEquals(0, diagnostics.size());
+
+    var symbols = adapter.documentSymbol(path);
+    assertEquals(1, symbols.size());
+    var classSymbol = symbols.get(0);
+    assertEquals("Hello", classSymbol.getName());
+    assertRange(1, 1, 1, 6, classSymbol.getSelectionRange());
+
+    var children = classSymbol.getChildren();
+    assertEquals(4, children.size());
+    assertEquals("run", children.get(0).getName());
+    assertRange(2, 1, 2, 4, children.get(0).getSelectionRange());
+
+    assertEquals("run:", children.get(1).getName());
+    assertRange(3, 1, 3, 5, children.get(1).getSelectionRange());
+
+    assertEquals("+", children.get(2).getName());
+    assertRange(4, 1, 4, 2, children.get(2).getSelectionRange());
+
+    assertEquals("run:with:", children.get(3).getName());
+    assertRange(5, 1, 5, 17, children.get(3).getSelectionRange());
   }
 }
