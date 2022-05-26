@@ -27,10 +27,10 @@ public class SomLexer extends Lexer {
           state.lastLineEnd = state.ptr;
           length = 0;
         }
-        state.incPtr();
+        state.ptr++;
       } while (currentChar() != '"');
       addCoordsToTokens(state.lineNumber, col, length + 1);
-      state.incPtr();
+      state.ptr++;
     }
   }
 
