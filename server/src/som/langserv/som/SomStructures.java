@@ -275,6 +275,6 @@ public class SomStructures
 
   @Override
   public Hover getHover(final Position position) {
-    throw new RuntimeException("Not yet implemented");
+    return symbols.getHover(position);
   }
 }

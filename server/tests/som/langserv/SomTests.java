@@ -161,4 +161,32 @@ public class SomTests {
     assertEquals("run:with:", children.get(3).getName());
     assertRange(5, 1, 5, 17, children.get(3).getSelectionRange());
   }
+
+  @Test
+  public void testHover() {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    var diagnostics = adapter.parse("Hello = (\n"
+        + "run = (\n"
+        + "  self run: 1234\n"
+        + ")\n"
+        + "run: arg = ()\n"
+        + ")\n", path);
+
+    assertEquals(0, diagnostics.size());
+
+    Hover hover = adapter.hover(path, new Position(3, 9));
+    assertNotNull(hover);
+
+    Range r = hover.getRange();
+
+    assertEquals(3, r.getStart().getLine());
+    assertEquals(8, r.getStart().getCharacter());
+
+    assertEquals(3, r.getEnd().getLine());
+    assertEquals(8 + "run:".length(), r.getEnd().getCharacter());
+
+    assertEquals("plaintext", hover.getContents().getRight().getKind());
+    assertEquals("run: arg\n", hover.getContents().getRight().getValue());
+  }
 }
