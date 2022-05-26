@@ -14,6 +14,11 @@ public class SymbolId extends LanguageElementId {
   }
 
   @Override
+  protected String getName() {
+    return sym.getString();
+  }
+
+  @Override
   public int hashCode() {
     return Objects.hash(sym);
   }

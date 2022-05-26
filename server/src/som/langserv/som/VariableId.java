@@ -15,6 +15,11 @@ public class VariableId extends LanguageElementId {
   }
 
   @Override
+  protected String getName() {
+    return var.getName().getString();
+  }
+
+  @Override
   public int hashCode() {
     return Objects.hash(var);
   }

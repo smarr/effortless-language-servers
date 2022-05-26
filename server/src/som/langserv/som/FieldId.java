@@ -22,6 +22,11 @@ public class FieldId extends LanguageElementId {
   }
 
   @Override
+  protected String getName() {
+    return field.getName().getString();
+  }
+
+  @Override
   public int hashCode() {
     return Objects.hash(field, fieldIndex);
   }

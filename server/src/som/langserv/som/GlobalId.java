@@ -14,6 +14,11 @@ public class GlobalId extends LanguageElementId {
   }
 
   @Override
+  protected String getName() {
+    return name.getString();
+  }
+
+  @Override
   public int hashCode() {
     return Objects.hash(name);
   }
