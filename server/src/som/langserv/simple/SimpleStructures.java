@@ -118,7 +118,10 @@ public class SimpleStructures
 
   public void addSemanticToken(final Token token, final SemanticTokenType type) {
     addSemanticToken(
-        token.getLine(), token.getCharPositionInLine(), token.getText().length(),
+        token.getLine(),
+        // char position is 0-based, so, +1 to make it 1-based
+        token.getCharPositionInLine() + 1,
+        token.getText().length(),
         type);
   }
 

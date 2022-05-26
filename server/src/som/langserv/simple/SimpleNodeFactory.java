@@ -1,10 +1,12 @@
 package som.langserv.simple;
 
+import static som.langserv.simple.PositionConversion.getEnd;
+import static som.langserv.simple.PositionConversion.getRange;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import org.antlr.v4.runtime.Token;
-import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 
@@ -38,13 +40,8 @@ public class SimpleNodeFactory extends SLNodeFactory {
   public void startFunction(final Token identifier, final Token s) {
     probe.addSemanticToken(identifier, SemanticTokenType.FUNCTION);
 
-    Range r = new Range();
-    r.setStart(new Position(s.getLine(), s.getCharPositionInLine()));
-    r.setEnd(
-        new Position(s.getLine(), s.getCharPositionInLine() + identifier.getText().length()));
-
     currentFunction = symbols.startSymbol(identifier.getText(), SymbolKind.Function,
-        new FunctionId(identifier.getText()), r);
+        new FunctionId(identifier.getText()), getRange(identifier));
 
     paramNames = new ArrayList<>(3);
   }
@@ -55,12 +52,11 @@ public class SimpleNodeFactory extends SLNodeFactory {
   public void finishFunction(final Token endBrace) {
     Range selectionRange = currentFunction.getSelectionRange();
 
-    Position end = new Position(endBrace.getLine(), endBrace.getCharPositionInLine() + 1);
-
     setFunctionSignature();
     paramNames = null;
 
-    symbols.completeSymbol(currentFunction, new Range(selectionRange.getStart(), end));
+    symbols.completeSymbol(currentFunction,
+        new Range(selectionRange.getStart(), getEnd(endBrace)));
   }
 
   private void setFunctionSignature() {
@@ -153,9 +149,6 @@ public class SimpleNodeFactory extends SLNodeFactory {
   }
 
   private void referenceSymbol(final LanguageElementId id, final Token token) {
-    symbols.referenceSymbol(id, new Range(
-        new Position(token.getLine(), token.getCharPositionInLine()),
-        new Position(token.getLine(),
-            token.getCharPositionInLine() + token.getText().length())));
+    symbols.referenceSymbol(id, getRange(token));
   }
 }

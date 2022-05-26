@@ -5,6 +5,8 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.lsp4j.Range;
+
 import som.langserv.structure.SemanticTokenType;
 
 
@@ -64,6 +66,47 @@ public class Helpers {
     }
 
     if (!error.equals("")) {
+      throw new AssertionError(error);
+    }
+  }
+
+  public static void assertRange(final int startLine, final int startCol, final int endLine,
+      final int endCol, final Range range) {
+    String error = "";
+    boolean failed = false;
+    if (startLine != range.getStart().getLine()) {
+      error += "expected start line: " + startLine + " but got: " + range.getStart().getLine();
+      failed = true;
+    }
+
+    if (startCol != range.getStart().getCharacter()) {
+      if (failed) {
+        error += "\n";
+      }
+      error +=
+          "expected start col: " + startCol + " but got: " + range.getStart().getCharacter();
+      failed = true;
+    }
+
+    if (endLine != range.getEnd().getLine()) {
+      if (failed) {
+        error += "\n";
+      }
+      error +=
+          "expected end line: " + endLine + " but got: " + range.getEnd().getLine();
+      failed = true;
+    }
+
+    if (endCol != range.getEnd().getCharacter()) {
+      if (failed) {
+        error += "\n";
+      }
+      error +=
+          "expected end col: " + endCol + " but got: " + range.getEnd().getCharacter();
+      failed = true;
+    }
+
+    if (failed) {
       throw new AssertionError(error);
     }
   }
