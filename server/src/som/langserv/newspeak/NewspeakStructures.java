@@ -23,7 +23,7 @@ import som.compiler.Variable;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.langserv.LanguageAdapter;
-import som.langserv.SemanticTokens;
+import som.langserv.structure.SemanticTokens;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 

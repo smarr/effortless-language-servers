@@ -1,6 +1,13 @@
 package som.langserv;
 
+import org.eclipse.lsp4j.DocumentSymbol;
+
+
 public class Matcher {
+  public static boolean fuzzyMatch(final DocumentSymbol symbol, final String query) {
+    return fuzzyMatch(symbol.getName(), query);
+  }
+
   public static boolean fuzzyMatch(final String string, final String query) {
     if (query == null) {
       return true;

@@ -1,5 +1,6 @@
 package som.langserv.som;
 
+import static som.langserv.LanguageAdapter.toRange;
 import static som.langserv.Matcher.fuzzyMatch;
 
 import java.util.ArrayList;
@@ -9,17 +10,28 @@ import java.util.Set;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionItemKind;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DocumentSymbol;
+import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.SymbolKind;
 
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bdt.source.SourceCoordinate;
 import bdt.tools.nodes.Invocation;
 import bdt.tools.structure.StructuralProbe;
 import som.langserv.LanguageAdapter;
-import som.langserv.SemanticTokens;
+import som.langserv.structure.DocumentData;
+import som.langserv.structure.DocumentSymbols;
+import som.langserv.structure.SemanticTokenModifier;
+import som.langserv.structure.SemanticTokenType;
+import som.langserv.structure.SemanticTokens;
 import trufflesom.compiler.Field;
 import trufflesom.compiler.Variable;
+import trufflesom.compiler.Variable.Argument;
+import trufflesom.compiler.Variable.Local;
 import trufflesom.interpreter.nodes.ExpressionNode;
 import trufflesom.vmobjects.SClass;
 import trufflesom.vmobjects.SInvokable;
@@ -28,7 +40,7 @@ import trufflesom.vmobjects.SSymbol;
 
 public class SomStructures
     extends StructuralProbe<SSymbol, SClass, SInvokable, Field, Variable>
-    implements SemanticTokens {
+    implements SemanticTokens, DocumentData {
 
   protected final Source         source;
   private final ExpressionNode[] map;
@@ -38,6 +50,8 @@ public class SomStructures
   private final List<Call> calls;
 
   private final List<int[]> semanticTokens;
+
+  private final DocumentSymbols symbols;
 
   public static class Call {
     final SSymbol         selector;
@@ -55,10 +69,72 @@ public class SomStructures
     this.diagnostics = new ArrayList<>(0);
     this.calls = new ArrayList<>();
     this.semanticTokens = new ArrayList<>();
+    this.symbols = new DocumentSymbols();
   }
 
-  public List<Call> getCalls() {
-    return calls;
+  public DocumentSymbols getSymbols() {
+    return symbols;
+  }
+
+  @Override
+  public List<? extends DocumentSymbol> getRootSymbols() {
+    return symbols.getRootSymbols();
+  }
+
+  /** Return the source path represented by the probe. */
+  public String getPath() {
+    String result = source.getPath();
+    if (result == null) {
+      result = source.getName();
+    }
+    return result;
+  }
+
+  @Override
+  public synchronized void recordNewSlot(final Field field) {
+    super.recordNewSlot(field);
+
+    int line = SourceCoordinate.getLine(source, field.getSourceCoordinate());
+    int col = SourceCoordinate.getColumn(source, field.getSourceCoordinate());
+    int length = SourceCoordinate.getLength(field.getSourceCoordinate());
+
+    symbols.recordDefinition(field.getName().getString(), new FieldId(field),
+        SymbolKind.Field, toRange(line, col, length));
+    assert field.getName().getString().length() == length;
+
+    addSemanticToken(line, col, length, SemanticTokenType.PROPERTY,
+        (SemanticTokenModifier[]) null);
+  }
+
+  @Override
+  public synchronized void recordNewVariable(final Variable var) {
+    super.recordNewVariable(var);
+
+    if (var instanceof Argument) {
+      if (((Argument) var).isSelf()) {
+        // we ignore self, since it's implicit
+        return;
+      }
+    }
+
+    int line = SourceCoordinate.getLine(source, var.coord);
+    int col = SourceCoordinate.getColumn(source, var.coord);
+    int length = SourceCoordinate.getLength(var.coord);
+
+    symbols.recordDefinition(var.getName().getString(), new VariableId(var),
+        SymbolKind.Variable, toRange(line, col, length));
+    assert var.getName().getString().length() == length;
+
+    SemanticTokenType tokenType;
+    if (var instanceof Local) {
+      tokenType = SemanticTokenType.VARIABLE;
+    } else {
+      assert var instanceof Argument;
+      tokenType = SemanticTokenType.PARAMETER;
+    }
+
+    addSemanticToken(line, col, length, tokenType,
+        (SemanticTokenModifier[]) null);
   }
 
   public String getDocumentUri() {
@@ -151,10 +227,7 @@ public class SomStructures
   @SuppressWarnings("unchecked")
   public void reportAssignment(final ExpressionNode result,
       final SourceSection removeLast) {
-    if (result instanceof Invocation<?>) {
-      calls.add(new Call(((Invocation<SSymbol>) result).getInvocationIdentifier(),
-          new SourceSection[] {removeLast}));
-    }
+
     putIntoMap(removeLast, result);
   }
 
@@ -194,5 +267,15 @@ public class SomStructures
   @Override
   public List<int[]> getSemanticTokens() {
     return semanticTokens;
+  }
+
+  @Override
+  public String toString() {
+    return source.getName();
+  }
+
+  @Override
+  public Hover getHover(final Position position) {
+    throw new RuntimeException("Not yet implemented");
   }
 }

@@ -26,8 +26,8 @@ import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Location;
-import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
 import org.graalvm.collections.EconomicSet;
 import org.graalvm.polyglot.Context;
@@ -41,9 +41,10 @@ import bdt.source.SourceCoordinate;
 import bdt.tools.nodes.Invocation;
 import bdt.tools.structure.StructuralProbe;
 import som.langserv.LanguageAdapter;
-import som.langserv.SemanticTokens;
 import som.langserv.ServerLauncher;
+import som.langserv.structure.SemanticTokens;
 import trufflesom.compiler.Field;
+import trufflesom.compiler.Parser;
 import trufflesom.compiler.Parser.ParseError;
 import trufflesom.compiler.SourcecodeCompiler;
 import trufflesom.compiler.Variable;
@@ -69,9 +70,13 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
 
   private final ForkJoinPool pool;
 
+  private final SomCompiler somCompiler;
+
   public SomAdapter() {
     this.structuralProbes = new HashMap<>();
     this.pool = new ForkJoinPool(1);
+    this.somCompiler = new SomCompiler();
+
     ForkJoinTask<?> task = this.pool.submit(() -> initializePolyglot());
     task.join();
   }
@@ -89,6 +94,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
     }
     String[] args = new String[] {"-cp", CORE_LIB_PATH + "/Smalltalk"};
 
+    Universe.setSourceCompiler(somCompiler);
     Builder builder = Universe.createContextBuilder();
     builder.arguments(SomLanguage.LANG_ID, args);
     context = builder.build();
@@ -237,7 +243,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
       }
 
       try {
-        SClass def = compileClass(text, source, newProbe);
+        SClass def = somCompiler.compileClass(text, source, newProbe);
         // SomLint.checkModuleName(path, def, diagnostics);
       } catch (ParseError e) {
         return toDiagnostics(e, diagnostics);
@@ -258,6 +264,12 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
     return diagnostics;
   }
 
+  void addNewProbe(final Source source, final SomStructures probe) {
+    synchronized (structuralProbes) {
+      structuralProbes.put(source.getPath(), probe);
+    }
+  }
+
   private String getStackTrace(final Throwable e) {
     StringWriter sw = new StringWriter();
     PrintWriter pw = new PrintWriter(sw);
@@ -266,7 +278,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
   }
 
   @Override
-  protected void addAllSymbols(final List<SymbolInformation> results, final String query,
+  protected void addAllSymbols(final List<DocumentSymbol> results, final String query,
       final SomStructures probe) {
     synchronized (probe) {
       EconomicSet<SClass> classes = probe.getClasses();
@@ -474,28 +486,28 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
   // return sym;
   // }
 
-  private static SymbolInformation getSymbolInfo(final Source source, final Field f) {
-    SymbolInformation sym = new SymbolInformation();
+  private static DocumentSymbol getSymbolInfo(final Source source, final Field f) {
+    DocumentSymbol sym = new DocumentSymbol();
     sym.setName(f.getName().getString());
     sym.setKind(SymbolKind.Field);
-    sym.setLocation(getLocation(source, f.getSourceCoordinate()));
+    sym.setRange(toRange(source, f.getSourceCoordinate()));
     return sym;
   }
 
-  private static SymbolInformation getSymbolInfo(final Source source, final Variable v) {
-    SymbolInformation sym = new SymbolInformation();
+  private static DocumentSymbol getSymbolInfo(final Source source, final Variable v) {
+    DocumentSymbol sym = new DocumentSymbol();
     sym.setName(v.name.getString());
     sym.setKind(SymbolKind.Variable);
-    sym.setLocation(getLocation(source, v.coord));
+    sym.setRange(toRange(source, v.coord));
     return sym;
   }
 
-  private static SymbolInformation getSymbolInfo(final SInvokable d) {
-    SymbolInformation sym = new SymbolInformation();
+  private static DocumentSymbol getSymbolInfo(final SInvokable d) {
+    DocumentSymbol sym = new DocumentSymbol();
     sym.setName(d.getSignature().toString());
     sym.setKind(SymbolKind.Method);
     if (null != d.getSourceSection()) {
-      sym.setLocation(getLocation(d.getSourceSection()));
+      sym.setRange(toRange(d.getSourceSection()));
     }
     if (null != d.getHolder()) {
       String holderName = d.getHolder().getName().getString();
@@ -507,12 +519,12 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
     return sym;
   }
 
-  private static SymbolInformation getSymbolInfo(final SClass c) {
-    SymbolInformation sym = new SymbolInformation();
+  private static DocumentSymbol getSymbolInfo(final SClass c) {
+    DocumentSymbol sym = new DocumentSymbol();
     sym.setName(c.getName().getString());
     sym.setKind(SymbolKind.Module);
     if (c.getSourceSection() != null) {
-      sym.setLocation(getLocation(c.getSourceSection()));
+      sym.setRange(toRange(c.getSourceSection()));
     }
     // MixinDefinition outer = c.getOuterMixinDefinition();
     // if (outer != null) {
@@ -522,7 +534,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
   }
 
   private static void addSymbolInfo(final SClass c, final String query,
-      final List<SymbolInformation> results) {
+      final List<DocumentSymbol> results) {
     if (matchQuery(query, c)) {
       results.add(getSymbolInfo(c));
     }
@@ -567,13 +579,31 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
     return SemanticTokens.makeRelativeTo11(tokens);
   }
 
-  public static SClass compileClass(final String text, final Source source,
-      final StructuralProbe<SSymbol, SClass, SInvokable, Field, Variable> structuralProbe)
-      throws ProgramDefinitionError {
-    SomParser parser =
-        new SomParser(text, source, (SomStructures) structuralProbe);
+  private static class SomCompiler extends SourcecodeCompiler {
 
-    SClass s = SourcecodeCompiler.compile(parser, null);
-    return s;
+    private boolean sourceIsForPath(final Source s, final String path) {
+      if (s.getPath() != null) {
+        return s.getPath().equals(path);
+      }
+      return s.getName().equals(path);
+    }
+
+    @Override
+    public Parser<?> createParser(final String code, final Source source,
+        final StructuralProbe<SSymbol, SClass, SInvokable, Field, Variable> probe) {
+      SomStructures p = (SomStructures) probe;
+
+      if (!sourceIsForPath(source, p.getPath())) {
+        p = new SomStructures(source);
+      }
+
+      return new SomParser(code, source, p);
+    }
+
+    public SClass compileClass(final String text, final Source source,
+        final SomStructures probe) throws ProgramDefinitionError {
+      Parser<?> parser = createParser(text, source, probe);
+      return SourcecodeCompiler.compile(parser, null);
+    }
   }
 }

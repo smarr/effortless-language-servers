@@ -17,8 +17,8 @@ import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Location;
-import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.EconomicSet;
@@ -48,8 +48,8 @@ import som.interpreter.nodes.NonLocalVariableNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.objectstorage.StorageAccessor;
 import som.langserv.LanguageAdapter;
-import som.langserv.SemanticTokens;
 import som.langserv.ServerLauncher;
+import som.langserv.structure.SemanticTokens;
 import som.vm.Primitives;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
@@ -223,7 +223,7 @@ public class NewspeakAdapter extends LanguageAdapter<NewspeakStructures> {
   }
 
   @Override
-  protected void addAllSymbols(final List<SymbolInformation> results, final String query,
+  protected void addAllSymbols(final List<DocumentSymbol> results, final String query,
       final NewspeakStructures probe) {
     synchronized (probe) {
       EconomicSet<MixinDefinition> classes = probe.getClasses();
@@ -271,12 +271,12 @@ public class NewspeakAdapter extends LanguageAdapter<NewspeakStructures> {
     return fuzzyMatch(s.getName().getString(), query);
   }
 
-  private static SymbolInformation getSymbolInfo(final SInvokable m) {
-    SymbolInformation sym = new SymbolInformation();
+  private static DocumentSymbol getSymbolInfo(final SInvokable m) {
+    DocumentSymbol sym = new DocumentSymbol();
     sym.setName(m.getSignature().toString());
     sym.setKind(SymbolKind.Method);
     if (null != m.getSourceSection()) {
-      sym.setLocation(getLocation(m.getSourceSection()));
+      sym.setRange(toRange(m.getSourceSection()));
     }
     if (m.getHolderUnsafe() != null) {
       sym.setContainerName(m.getHolder().getName().getString());
@@ -285,7 +285,7 @@ public class NewspeakAdapter extends LanguageAdapter<NewspeakStructures> {
   }
 
   private static void addSymbolInfo(final MixinDefinition m, final String query,
-      final List<SymbolInformation> results) {
+      final List<DocumentSymbol> results) {
     if (matchQuery(query, m)) {
       results.add(getSymbolInfo(m));
     }
@@ -301,25 +301,24 @@ public class NewspeakAdapter extends LanguageAdapter<NewspeakStructures> {
     }
   }
 
-  private static SymbolInformation getSymbolInfo(final SlotDefinition d,
+  private static DocumentSymbol getSymbolInfo(final SlotDefinition d,
       final MixinDefinition m) {
-    SymbolInformation sym = new SymbolInformation();
+    DocumentSymbol sym = new DocumentSymbol();
     sym.setName(d.getName().getString());
     SymbolKind kind = m.isModule() ? SymbolKind.Constant
         : SymbolKind.Property;
     sym.setKind(kind);
-    sym.setLocation(getLocation(d.getSourceSection()));
     sym.setContainerName(m.getName().getString());
     return sym;
   }
 
-  private static SymbolInformation getSymbolInfo(final MixinDefinition m) {
-    SymbolInformation sym = new SymbolInformation();
+  private static DocumentSymbol getSymbolInfo(final MixinDefinition m) {
+    DocumentSymbol sym = new DocumentSymbol();
     sym.setName(m.getName().getString());
     SymbolKind kind = m.isModule() ? SymbolKind.Module
         : SymbolKind.Class;
     sym.setKind(kind);
-    sym.setLocation(getLocation(m.getSourceSection()));
+    sym.setRange(toRange(m.getSourceSection()));
 
     MixinDefinition outer = m.getOuterMixinDefinition();
     if (outer != null) {

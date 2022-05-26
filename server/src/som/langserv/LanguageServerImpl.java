@@ -30,6 +30,8 @@ import som.langserv.newspeak.Minitest;
 import som.langserv.newspeak.NewspeakAdapter;
 import som.langserv.simple.SimpleAdapter;
 import som.langserv.som.SomAdapter;
+import som.langserv.structure.SemanticTokenModifier;
+import som.langserv.structure.SemanticTokenType;
 
 
 public class LanguageServerImpl implements LanguageServer, LanguageClientAware {

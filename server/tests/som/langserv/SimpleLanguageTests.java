@@ -1,6 +1,7 @@
 package som.langserv;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static som.langserv.Helpers.assertToken;
 import static som.langserv.Helpers.printAllToken;
 
@@ -9,10 +10,14 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
 
+import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.junit.Test;
 
 import simple.SimpleLanguageParser;
 import som.langserv.simple.SimpleAdapter;
+import som.langserv.structure.SemanticTokenType;
 
 
 public class SimpleLanguageTests {
@@ -102,5 +107,86 @@ public class SimpleLanguageTests {
     assertToken(6, 4, "else", SemanticTokenType.KEYWORD, tokens.get(24));
 
     assertEquals(25, tokens.size());
+  }
+
+  @Test
+  public void testSymbols() throws URISyntaxException {
+    var adapter = new SimpleAdapter();
+    String path = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test.sl";
+    adapter.parse(
+        "function add(a, b) {\n"
+            + "  return a + b;\n"
+            + "}\n"
+            + "function loop(n) {\n"
+            + "  i = 0;\n"
+            + "  return i;\n"
+            + "}\n"
+            + "function main() {\n"
+            + "  i = 0;\n"
+            + "  println(loop(1000));  \n"
+            + "}",
+        path);
+
+    var symbols = adapter.documentSymbol(path);
+
+    assertEquals(3, symbols.size());
+    assertEquals("add", symbols.get(0).getName());
+    assertEquals("loop", symbols.get(1).getName());
+    assertEquals("main", symbols.get(2).getName());
+  }
+
+  @Test
+  public void testSymbolDetails() throws URISyntaxException {
+    var adapter = new SimpleAdapter();
+    String path = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test.sl";
+    adapter.parse(
+        "function add( a , b   ) {\n"
+            + "  return a + b;\n"
+            + "}\n"
+            + "function loop(  n  ) {\n"
+            + "  i = 0;\n"
+            + "  return i;\n"
+            + "}\n"
+            + "function main(  ) {\n"
+            + "  i = 0;\n"
+            + "  println(loop(1000));  \n"
+            + "}",
+        path);
+
+    var symbols = adapter.documentSymbol(path);
+    assertEquals(3, symbols.size());
+    assertEquals("add(a, b)", symbols.get(0).getDetail());
+    assertEquals("loop(n)", symbols.get(1).getDetail());
+    assertEquals("main()", symbols.get(2).getDetail());
+  }
+
+  @Test
+  public void testHover() throws URISyntaxException {
+    var adapter = new SimpleAdapter();
+    String path = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test.sl";
+    adapter.parse(
+        "function loop(  n  ) {\n"
+            + "  i = 0;\n"
+            + "  return i;\n"
+            + "}\n"
+            + "function main(  ) {\n"
+            + "  i = 0;\n"
+            + "  println(loop(1000));  \n"
+            + "}",
+        path);
+
+    Hover hover = adapter.hover(path, new Position(7, 12));
+    assertNotNull(hover);
+
+    Range r = hover.getRange();
+
+    assertEquals(7, r.getStart().getLine());
+    assertEquals(10, r.getStart().getCharacter());
+
+    assertEquals(7, r.getEnd().getLine());
+    assertEquals(10 + "loop".length(), r.getEnd().getCharacter());
+
+    assertEquals("plaintext", hover.getContents().getRight().getKind());
+    assertEquals("loop(n)\n", hover.getContents().getRight().getValue());
   }
 }

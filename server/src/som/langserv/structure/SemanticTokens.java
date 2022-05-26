@@ -1,4 +1,4 @@
-package som.langserv;
+package som.langserv.structure;
 
 import java.util.ArrayList;
 import java.util.List;

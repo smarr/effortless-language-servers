@@ -5,6 +5,8 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.List;
 
+import som.langserv.structure.SemanticTokenType;
+
 
 public class Helpers {
   public static List<int[]> splitIntoTokenDetails(final List<Integer> tokenDetails) {

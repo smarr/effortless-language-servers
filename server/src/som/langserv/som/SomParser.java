@@ -1,23 +1,33 @@
 package som.langserv.som;
 
+import static som.langserv.LanguageAdapter.toRange;
 import static trufflesom.compiler.Symbol.Primitive;
+import static trufflesom.vm.SymbolTable.symbolFor;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
+import java.util.ArrayList;
+
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SymbolKind;
 
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bdt.basic.ProgramDefinitionError;
 import bdt.source.SourceCoordinate;
-import som.langserv.SemanticTokenModifier;
-import som.langserv.SemanticTokenType;
+import som.langserv.structure.DocumentSymbols;
+import som.langserv.structure.LanguageElement;
+import som.langserv.structure.LanguageElementId;
+import som.langserv.structure.SemanticTokenModifier;
+import som.langserv.structure.SemanticTokenType;
 import trufflesom.compiler.ClassGenerationContext;
 import trufflesom.compiler.Lexer;
 //import som.langserv.SemanticTokenType;
 import trufflesom.compiler.MethodGenerationContext;
 import trufflesom.compiler.ParserAst;
 import trufflesom.compiler.Symbol;
+import trufflesom.compiler.Variable.Argument;
+import trufflesom.compiler.Variable.Local;
 import trufflesom.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
 import trufflesom.interpreter.nodes.ArgumentReadNode.NonLocalArgumentReadNode;
 import trufflesom.interpreter.nodes.ExpressionNode;
@@ -35,17 +45,24 @@ import trufflesom.vmobjects.SSymbol;
  */
 public class SomParser extends ParserAst {
 
-  private SomStructures              structuralProbe;
-  private final Deque<SourceSection> sourceSections;
+  private final SomStructures   structuralProbe;
+  private final DocumentSymbols symbols;
 
-  private boolean parsingLiteralSymbol;
+  private LanguageElement currentClass;
+  private LanguageElement currentMethod;
+
+  private final ArrayList<Integer> keywordStart;
+  private final ArrayList<String>  keywordParts;
 
   public SomParser(final String content, final Source source,
       final SomStructures structuralProbe) {
     super(content, source, structuralProbe);
     assert structuralProbe != null : "Needed for this extended parser.";
+    assert structuralProbe.source == source;
     this.structuralProbe = structuralProbe;
-    sourceSections = new ArrayDeque<>();
+    this.keywordParts = new ArrayList<>();
+    this.keywordStart = new ArrayList<>();
+    this.symbols = structuralProbe.getSymbols();
   }
 
   @Override
@@ -57,7 +74,32 @@ public class SomParser extends ParserAst {
   protected void className(final ClassGenerationContext cgenc, final int coord)
       throws ParseError {
     super.className(cgenc, coord);
-    recordTokenSemantics(coord, cgenc.getName().getString(), SemanticTokenType.CLASS);
+    String name = cgenc.getName().getString();
+    recordTokenSemantics(coord, name, SemanticTokenType.CLASS);
+    currentClass = startSymbol(name, SymbolKind.Class, coord, new GlobalId(cgenc.getName()));
+  }
+
+  @Override
+  protected void classSide(final ClassGenerationContext cgenc)
+      throws ProgramDefinitionError, ParseError {
+    if (sym == Symbol.Separator) {
+      int coord = getStartIndex();
+
+      LanguageElement clazz = currentClass;
+      currentClass = startSymbol("class", SymbolKind.Class, coord,
+          new GlobalId(SymbolTable.symbolFor(cgenc.getName().getString() + " class")));
+
+      super.classSide(cgenc);
+
+      completeSymbol(currentClass, getCoordWithLength(coord));
+      currentClass = clazz;
+    }
+  }
+
+  @Override
+  public void classdef(final ClassGenerationContext cgenc) throws ProgramDefinitionError {
+    super.classdef(cgenc);
+    completeSymbol(currentClass, cgenc.getSourceCoord());
   }
 
   @Override
@@ -68,25 +110,10 @@ public class SomParser extends ParserAst {
   }
 
   @Override
-  protected SSymbol selector() throws ParseError {
-    var prevSym = sym;
-    SSymbol sel = super.selector();
-    if (prevSym != Symbol.Keyword && prevSym != Symbol.KeywordSequence) {
-      // we don't override the keywordSelector to capture the source section
-      // so, we only need to ignore the source section of unary and binary literal symbols
-      // which is what selector() parses.
-      sourceSections.removeLast();
-    }
-
-    return sel;
-  }
-
-  @Override
   protected ExpressionNode variableRead(final MethodGenerationContext mgenc,
       final SSymbol variableName, final long coord) {
     ExpressionNode result = super.variableRead(mgenc, variableName, coord);
     SourceSection sourceSection = SourceCoordinate.createSourceSection(source, coord);
-    structuralProbe.reportCall(result, sourceSection);
 
     if (result instanceof LocalArgumentReadNode
         || result instanceof NonLocalArgumentReadNode) {
@@ -95,70 +122,30 @@ public class SomParser extends ParserAst {
       } else {
         recordTokenSemantics(sourceSection, SemanticTokenType.PARAMETER);
       }
+      Argument arg;
+      if (result instanceof LocalArgumentReadNode) {
+        arg = ((LocalArgumentReadNode) result).arg;
+      } else {
+        arg = ((NonLocalArgumentReadNode) result).arg;
+      }
+      referenceSymbol(new VariableId(arg), sourceSection);
     } else if (result instanceof LocalVariableReadNode
         || result instanceof NonLocalVariableReadNode) {
       recordTokenSemantics(sourceSection, SemanticTokenType.VARIABLE);
+      Local l;
+      if (result instanceof LocalVariableReadNode) {
+        l = ((LocalVariableReadNode) result).getLocal();
+      } else {
+        l = ((NonLocalVariableReadNode) result).getLocal();
+      }
+      referenceSymbol(new VariableId(l), sourceSection);
     } else if (result instanceof FieldReadNode) {
       recordTokenSemantics(sourceSection, SemanticTokenType.PROPERTY);
+      referenceSymbol(new FieldId(((FieldReadNode) result).getFieldIndex()), sourceSection);
     } else if (result instanceof GlobalNode) {
       recordTokenSemantics(sourceSection, SemanticTokenType.CLASS);
+      referenceSymbol(new GlobalId(variableName), sourceSection);
     }
-    return result;
-  }
-
-  @Override
-  protected ExpressionNode unaryMessage(final MethodGenerationContext mgenc,
-      final ExpressionNode receiver) throws ParseError {
-    int stackHeight = sourceSections.size();
-    ExpressionNode result = super.unaryMessage(mgenc, receiver);
-    SourceSection selector = sourceSections.getLast();
-    // Can't access the ss from the result, because parent pointers are not set on nodes:
-    // assert result.getSourceSection().getCharIndex() == selector.getCharIndex();
-    structuralProbe.reportCall(result, sourceSections.removeLast());
-    assert stackHeight == sourceSections.size();
-    return result;
-  }
-
-  @Override
-  protected ExpressionNode binaryMessage(final MethodGenerationContext mgenc,
-      final ExpressionNode receiver) throws ProgramDefinitionError {
-    int stackHeight = sourceSections.size();
-    ExpressionNode result = super.binaryMessage(mgenc, receiver);
-    SourceSection selector = sourceSections.getLast();
-    // Can't access the ss from the result, because parent pointers are not set on nodes:
-    // assert result.getSourceSection().getCharIndex() == selector.getCharIndex();
-    structuralProbe.reportCall(result, sourceSections.removeLast());
-    assert stackHeight == sourceSections.size();
-    return result;
-  }
-
-  @Override
-  protected ExpressionNode keywordMessage(final MethodGenerationContext mgenc,
-      final ExpressionNode receiver) throws ProgramDefinitionError {
-    int stackHeight = sourceSections.size();
-    ExpressionNode result = super.keywordMessage(mgenc, receiver);
-    int numParts = sourceSections.size() - stackHeight;
-
-    assert numParts >= 1;
-    SourceSection[] sections = new SourceSection[numParts];
-    for (int i = numParts - 1; i >= 0; i--) {
-      sections[i] = sourceSections.removeLast();
-    }
-
-    structuralProbe.reportCall(result, sections);
-    assert stackHeight == sourceSections.size();
-    return result;
-  }
-
-  @Override
-  protected SSymbol literalSymbol() throws ParseError {
-    int coord = getStartIndex();
-    parsingLiteralSymbol = true;
-
-    SSymbol result = super.literalSymbol();
-    recordTokenSemantics(coord, result.getString() + 1, SemanticTokenType.STRING);
-
-    parsingLiteralSymbol = false;
     return result;
   }
 
@@ -166,10 +153,17 @@ public class SomParser extends ParserAst {
   protected SSymbol unarySelector() throws ParseError {
     int coord = getStartIndex();
     SSymbol result = super.unarySelector();
-    recordSourceSection(coord);
-    if (!parsingLiteralSymbol) {
-      recordTokenSemantics(coord, result.getString(), SemanticTokenType.METHOD);
-    }
+    recordTokenSemantics(coord, result.getString(), SemanticTokenType.METHOD);
+    return result;
+  }
+
+  @Override
+  protected SSymbol unarySendSelector() throws ParseError {
+    int coord = getStartIndex();
+    SSymbol result = super.unarySendSelector();
+
+    recordTokenSemantics(coord, result.getString(), SemanticTokenType.METHOD);
+    referenceSymbol(new SymbolId(result), coord, result.getString().length());
     return result;
   }
 
@@ -177,7 +171,42 @@ public class SomParser extends ParserAst {
   protected SSymbol binarySelector() throws ParseError {
     int coord = getStartIndex();
     SSymbol result = super.binarySelector();
-    recordSourceSection(coord);
+    recordTokenSemantics(coord, result.getString(), SemanticTokenType.METHOD);
+    return result;
+  }
+
+  @Override
+  protected SSymbol binarySendSelector() throws ParseError {
+    int coord = getStartIndex();
+    SSymbol result = super.binarySendSelector();
+    referenceSymbol(new SymbolId(result), coord, result.getString().length());
+    return result;
+  }
+
+  @Override
+  protected ExpressionNode keywordMessage(final MethodGenerationContext mgenc,
+      final ExpressionNode receiver) throws ProgramDefinitionError {
+    int stackHeight = keywordParts.size();
+    ExpressionNode result = super.keywordMessage(mgenc, receiver);
+    int numParts = keywordParts.size() - stackHeight;
+
+    assert numParts >= 1;
+    int[] starts = new int[numParts];
+
+    StringBuilder kw = new StringBuilder();
+
+    for (int i = numParts - 1; i >= 0; i--) {
+      kw.append(keywordParts.remove(keywordParts.size() - 1));
+      starts[i] = keywordStart.remove(keywordStart.size() - 1);
+    }
+
+    SSymbol msg = symbolFor(kw.toString());
+
+    SymbolId call = new SymbolId(msg);
+
+    for (int i = 0; i < numParts; i += 1) {
+      referenceSymbol(call, starts[i], msg.getString().length());
+    }
     return result;
   }
 
@@ -185,53 +214,28 @@ public class SomParser extends ParserAst {
   protected String keyword() throws ParseError {
     int coord = getStartIndex();
     String result = super.keyword();
-    recordSourceSection(coord);
     recordTokenSemantics(coord, result, SemanticTokenType.METHOD);
     return result;
   }
 
   @Override
-  protected SSymbol field() throws ParseError {
+  protected String keywordInSend() throws ParseError {
     int coord = getStartIndex();
-    SSymbol result = super.field();
-    recordTokenSemantics(coord, result.getString(), SemanticTokenType.PROPERTY);
+    String result = super.keywordInSend();
+    keywordParts.add(result);
+    keywordStart.add(coord);
     return result;
   }
 
   @Override
-  protected SSymbol argument() throws ProgramDefinitionError {
+  protected SSymbol literalSymbol() throws ParseError {
     int coord = getStartIndex();
-    SSymbol s = super.argument();
-    recordTokenSemantics(coord, s.getString(), SemanticTokenType.PARAMETER);
-    return s;
-  }
 
-  @Override
-  protected SSymbol local() throws ProgramDefinitionError {
-    int coord = getStartIndex();
-    SSymbol s = variable();
-    recordTokenSemantics(coord, s.getString(), SemanticTokenType.VARIABLE);
-    return s;
-  }
+    SSymbol result = super.literalSymbol();
+    recordTokenSemantics(coord, result.getString() + 1, SemanticTokenType.STRING);
+    recordSymbolDefinition(result.getString(), new SymbolId(result), SymbolKind.Constant,
+        coord);
 
-  protected void recordSourceSection(final int coord) {
-    sourceSections.addLast(
-        SourceCoordinate.createSourceSection(source, getCoordWithLength(coord)));
-  }
-
-  @Override
-  protected ExpressionNode assignation(final MethodGenerationContext mgenc)
-      throws ProgramDefinitionError {
-    ExpressionNode result = super.assignation(mgenc);
-    structuralProbe.reportAssignment(result, sourceSections.removeLast());
-    return result;
-  }
-
-  @Override
-  protected SSymbol assignment() throws ParseError {
-    int coord = getStartIndex();
-    SSymbol result = super.assignment();
-    recordSourceSection(coord);
     return result;
   }
 
@@ -244,43 +248,166 @@ public class SomParser extends ParserAst {
   }
 
   @Override
+  public ExpressionNode method(final MethodGenerationContext mgenc)
+      throws ProgramDefinitionError {
+    int coord = getStartIndex();
+    ExpressionNode result = super.method(mgenc);
+    completeSymbol(currentMethod, getCoordWithLength(coord));
+    return result;
+  }
+
+  @Override
   protected void unaryPattern(final MethodGenerationContext mgenc) throws ParseError {
+    int coord = getStartIndex();
+    currentMethod = startSymbol(SymbolKind.Method);
     super.unaryPattern(mgenc);
-    sourceSections.removeLast();
+
+    currentMethod.setName(mgenc.getSignature().getString());
+    currentMethod.setId(new SymbolId(mgenc.getSignature()));
+    currentMethod.setSelectionRange(getRange(coord, mgenc.getSignature().getString()));
   }
 
   @Override
   protected void binaryPattern(final MethodGenerationContext mgenc)
       throws ProgramDefinitionError {
+    int coord = getStartIndex();
+
+    currentMethod = startSymbol(SymbolKind.Method);
+
     super.binaryPattern(mgenc);
-    sourceSections.removeLast();
+
+    String name = mgenc.getSignature().getString();
+    currentMethod.setName(name);
+    currentMethod.setId(new SymbolId(mgenc.getSignature()));
+    currentMethod.setSelectionRange(getRange(coord, name));
+
+    currentMethod.setDetail(name + " " + mgenc.getArgument(1).getName().getString());
   }
 
   @Override
   protected void keywordPattern(final MethodGenerationContext mgenc)
       throws ProgramDefinitionError {
+    int coord = getStartIndex();
+    currentMethod = startSymbol(SymbolKind.Method);
+
     super.keywordPattern(mgenc);
 
-    // remove one less than number of arguments
-    for (int i = 1; i < mgenc.getSignature().getNumberOfSignatureArguments(); i += 1) {
-      sourceSections.removeLast();
+    String name = mgenc.getSignature().getString();
+    currentMethod.setName(name);
+    currentMethod.setId(new SymbolId(mgenc.getSignature()));
+    currentMethod.setSelectionRange(getRange(coord, name));
+
+    StringBuilder builder = new StringBuilder();
+
+    String[] keywords = name.split(":");
+
+    for (int i = 0; i < keywords.length; i += 1) {
+      builder.append(keywords[i]);
+      builder.append(": ");
+      builder.append(mgenc.getArgument(i + 1).getName().getString());
+      if (i < keywords.length - 1) {
+        builder.append(' ');
+      }
     }
+
+    currentMethod.setDetail(builder.toString());
   }
 
-  protected void recordTokenSemantics(final int startCoord, final String token,
+  private void recordTokenSemantics(final int startCoord, final String token,
       final SemanticTokenType type) {
     recordTokenSemantics(startCoord, token, type, (SemanticTokenModifier[]) null);
   }
 
-  protected void recordTokenSemantics(final int startCoord, final String token,
+  private void recordTokenSemantics(final int startCoord, final String token,
       final SemanticTokenType type, final SemanticTokenModifier... modifiers) {
     int line = SourceCoordinate.getLine(source, startCoord);
     int column = SourceCoordinate.getColumn(source, startCoord);
     structuralProbe.addSemanticToken(line, column, token.length(), type, modifiers);
   }
 
-  protected void recordTokenSemantics(final SourceSection section, final SemanticTokenType type) {
+  private void recordTokenSemantics(final long coord,
+      final SemanticTokenType type) {
+    int line = SourceCoordinate.getLine(source, coord);
+    int column = SourceCoordinate.getColumn(source, coord);
+    int length = SourceCoordinate.getLength(coord);
+
+    structuralProbe.addSemanticToken(line, column, length, type,
+        (SemanticTokenModifier[]) null);
+  }
+
+  private void recordTokenSemantics(final SourceSection section,
+      final SemanticTokenType type) {
     structuralProbe.addSemanticToken(section.getStartLine(), section.getStartColumn(),
         section.getCharLength(), type, (SemanticTokenModifier[]) null);
+  }
+
+  private LanguageElement startSymbol(final String name, final SymbolKind kind,
+      final int startCoord, final LanguageElementId id) {
+    int line = SourceCoordinate.getLine(source, startCoord);
+    int column = SourceCoordinate.getColumn(source, startCoord);
+
+    return symbols.startSymbol(name, kind, id, toRange(line, column, name.length()));
+  }
+
+  private Range getRange(final int startCoord, final String name) {
+    int line = SourceCoordinate.getLine(source, startCoord);
+    int column = SourceCoordinate.getColumn(source, startCoord);
+    return toRange(line, column, name.length());
+  }
+
+  private LanguageElement startSymbol(final SymbolKind kind) {
+    return symbols.startSymbol(kind);
+  }
+
+  private LanguageElement startSymbol(final String name, final SymbolKind kind,
+      final long coordWithLength, final LanguageElementId id) {
+    int line = SourceCoordinate.getLine(source, coordWithLength);
+    int column = SourceCoordinate.getColumn(source, coordWithLength);
+    int length = SourceCoordinate.getLength(coordWithLength);
+
+    return symbols.startSymbol(name, kind, id, toRange(line, column, length));
+  }
+
+  private void completeSymbol(final LanguageElement symbol, final Position start,
+      final int endCoord, final int endLength) {
+    int line = SourceCoordinate.getLine(source, endCoord);
+    int column = SourceCoordinate.getColumn(source, endCoord);
+
+    symbols.completeSymbol(symbol,
+        new Range(start, new Position(line, column + endLength)));
+  }
+
+  private void completeSymbol(final LanguageElement symbol, final long coord) {
+    SourceSection ss = SourceCoordinate.createSourceSection(source, coord);
+    symbols.completeSymbol(symbol, toRange(ss));
+  }
+
+  private void recordSymbolDefinition(final String string, final LanguageElementId id,
+      final SymbolKind kind, final int startCoord) {
+    int line = SourceCoordinate.getLine(source, startCoord);
+    int column = SourceCoordinate.getColumn(source, startCoord);
+    symbols.recordDefinition(string, id, kind,
+        toRange(line, column, string.length()));
+  }
+
+  private void recordSymbolDefinition(final String string, final LanguageElementId id,
+      final SymbolKind kind, final long coordWithLength) {
+    int line = SourceCoordinate.getLine(source, coordWithLength);
+    int column = SourceCoordinate.getColumn(source, coordWithLength);
+    int length = SourceCoordinate.getLength(coordWithLength);
+    assert length == string.length();
+    symbols.recordDefinition(string, id, kind,
+        toRange(line, column, string.length()));
+  }
+
+  private void referenceSymbol(final LanguageElementId id, final SourceSection sourceSection) {
+    symbols.referenceSymbol(id, toRange(sourceSection));
+  }
+
+  private void referenceSymbol(final LanguageElementId id, final int startCoord,
+      final int length) {
+    int line = SourceCoordinate.getLine(source, startCoord);
+    int column = SourceCoordinate.getColumn(source, startCoord);
+    symbols.referenceSymbol(id, toRange(line, column, length));
   }
 }

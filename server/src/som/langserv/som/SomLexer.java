@@ -2,7 +2,7 @@ package som.langserv.som;
 
 import java.util.List;
 
-import som.langserv.SemanticTokenType;
+import som.langserv.structure.SemanticTokenType;
 import trufflesom.compiler.Lexer;
 
 

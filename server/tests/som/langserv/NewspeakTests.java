@@ -15,6 +15,7 @@ import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.junit.Test;
 
 import som.langserv.newspeak.NewspeakAdapter;
+import som.langserv.structure.SemanticTokenType;
 
 
 public class NewspeakTests {

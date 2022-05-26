@@ -17,19 +17,21 @@ import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DocumentHighlight;
+import org.eclipse.lsp4j.DocumentSymbol;
+import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.Range;
-import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.services.LanguageClient;
 
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.source.SourceCoordinate;
+import som.langserv.structure.DocumentData;
 
 
 public abstract class LanguageAdapter<Probe> {
@@ -209,24 +211,18 @@ public abstract class LanguageAdapter<Probe> {
 
   protected abstract Collection<Probe> getProbes();
 
-  public final List<? extends SymbolInformation> getSymbolInfo(final String documentUri) {
+  public final List<? extends DocumentSymbol> documentSymbol(final String documentUri) {
     Probe probe = getProbe(documentUri);
-    ArrayList<SymbolInformation> results = new ArrayList<>();
-    if (probe == null) {
-      return results;
-    }
-
-    addAllSymbols(results, null, probe);
-    return results;
+    return ((DocumentData) probe).getRootSymbols();
   }
 
   protected abstract void addAllSymbols(
-      List<SymbolInformation> results, String query, Probe probe);
+      List<DocumentSymbol> results, String query, Probe probe);
 
-  public final List<? extends SymbolInformation> getAllSymbolInfo(final String query) {
+  public final List<? extends DocumentSymbol> getAllSymbolInfo(final String query) {
     Collection<Probe> probes = getProbes();
 
-    ArrayList<SymbolInformation> results = new ArrayList<>();
+    ArrayList<DocumentSymbol> results = new ArrayList<>();
 
     for (Probe probe : probes) {
       addAllSymbols(results, query, probe);
@@ -269,4 +265,9 @@ public abstract class LanguageAdapter<Probe> {
 
   public abstract void getCodeLenses(final List<CodeLens> codeLenses,
       final String documentUri);
+
+  public final Hover hover(final String uri, final Position position) {
+    Probe probe = getProbe(uri);
+    return ((DocumentData) probe).getHover(position);
+  }
 }

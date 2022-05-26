@@ -1,7 +1,7 @@
 package som.langserv;
 
-import static som.langserv.SemanticTokens.combineTokensRemovingErroneousLine;
-import static som.langserv.SemanticTokens.sort;
+import static som.langserv.structure.SemanticTokens.combineTokensRemovingErroneousLine;
+import static som.langserv.structure.SemanticTokens.sort;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -25,6 +25,8 @@ import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.DocumentSymbolParams;
+import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.Position;
@@ -196,12 +198,12 @@ public class DocumentServiceImpl implements TextDocumentService {
     String uri = params.getTextDocument().getUri();
     for (LanguageAdapter<?> adapter : adapters) {
       if (adapter.handlesUri(uri)) {
-        List<? extends SymbolInformation> result =
-            adapter.getSymbolInfo(params.getTextDocument().getUri());
+        List<? extends DocumentSymbol> result =
+            adapter.documentSymbol(params.getTextDocument().getUri());
         ArrayList<Either<SymbolInformation, DocumentSymbol>> eitherList =
             new ArrayList<>(result.size());
-        for (SymbolInformation s : result) {
-          eitherList.add(Either.forLeft(s));
+        for (DocumentSymbol s : result) {
+          eitherList.add(Either.forRight(s));
         }
         return CompletableFuture.completedFuture(eitherList);
       }
@@ -216,10 +218,23 @@ public class DocumentServiceImpl implements TextDocumentService {
     for (LanguageAdapter<?> adapter : adapters) {
       if (adapter.handlesUri(uri)) {
         List<CodeLens> result = new ArrayList<>();
-        adapter.getCodeLenses(result, params.getTextDocument().getUri());
+        adapter.getCodeLenses(result, uri);
         return CompletableFuture.completedFuture(result);
       }
     }
     return CompletableFuture.completedFuture(new ArrayList<CodeLens>());
+  }
+
+  @Override
+  public CompletableFuture<Hover> hover(final HoverParams params) {
+    String uri = params.getTextDocument().getUri();
+    for (LanguageAdapter<?> adapter : adapters) {
+      if (adapter.handlesUri(uri)) {
+        Hover result = adapter.hover(uri, params.getPosition());
+        return CompletableFuture.completedFuture(result);
+      }
+    }
+
+    return CompletableFuture.completedFuture(null);
   }
 }

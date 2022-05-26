@@ -1,4 +1,4 @@
-package som.langserv;
+package som.langserv.structure;
 
 public enum SemanticTokenType {
   TYPE("type"),

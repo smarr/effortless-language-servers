@@ -23,15 +23,17 @@ import simple.SimpleLanguageParser.SimplelanguageContext;
 import simple.SimpleLanguageParser.StatementContext;
 import simple.SimpleLanguageParser.TermContext;
 import simple.SimpleLanguageParser.While_statementContext;
-import som.langserv.SemanticTokenType;
+import som.langserv.structure.SemanticTokenType;
 
 
 public class SimpleTokenCollector implements SimpleLanguageListener {
 
-  private final SimpleStructures probe;
+  private final SimpleStructures  probe;
+  private final SimpleNodeFactory factory;
 
   public SimpleTokenCollector(final SimpleStructures probe) {
     this.probe = probe;
+    this.factory = probe.getFactory();
   }
 
   @Override
@@ -59,7 +61,9 @@ public class SimpleTokenCollector implements SimpleLanguageListener {
   }
 
   @Override
-  public void exitFunction(final FunctionContext ctx) {}
+  public void exitFunction(final FunctionContext ctx) {
+    factory.finishFunction(ctx.getStop());
+  }
 
   @Override
   public void enterBlock(final BlockContext ctx) {}

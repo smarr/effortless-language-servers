@@ -9,17 +9,19 @@ import java.util.Map;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.eclipse.lsp4j.CodeLens;
+import org.eclipse.lsp4j.CompletionItem;
+import org.eclipse.lsp4j.CompletionItemKind;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Location;
-import org.eclipse.lsp4j.SymbolInformation;
 
 import com.oracle.truffle.sl.parser.SLParseError;
 
 import simple.SimpleLanguageLexer;
 import som.langserv.LanguageAdapter;
-import som.langserv.SemanticTokens;
+import som.langserv.structure.SemanticTokens;
 
 
 public class SimpleAdapter extends LanguageAdapter<SimpleStructures> {
@@ -159,8 +161,17 @@ public class SimpleAdapter extends LanguageAdapter<SimpleStructures> {
   @Override
   public CompletionList getCompletions(final String docUri, final int line,
       final int character) {
-    // TODO Auto-generated method stub
-    return null;
+    List<CompletionItem> results = new ArrayList<>(0);
+    for (SimpleStructures s : structuralProbes.values()) {
+      for (DocumentSymbol m : s.getMethods()) {
+        CompletionItem c = new CompletionItem();
+        c.setDetail(m.getDetail());
+        c.setKind(CompletionItemKind.Function);
+        c.setLabel(m.getName());
+        results.add(c);
+      }
+    }
+    return new CompletionList(true, results);
   }
 
   @Override

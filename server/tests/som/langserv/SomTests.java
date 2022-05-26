@@ -13,6 +13,7 @@ import java.util.concurrent.ForkJoinTask;
 import org.junit.Test;
 
 import som.langserv.som.SomAdapter;
+import som.langserv.structure.SemanticTokenType;
 
 
 public class SomTests {
@@ -46,10 +47,12 @@ public class SomTests {
   public void testSemanticHighlightingInSmallExample() throws URISyntaxException {
     var adapter = new SomAdapter();
     String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
-    adapter.parse("Hello = (\n"
+    var diagnostics = adapter.parse("Hello = (\n"
         + "    \"The 'run' method is called when initializing the system\"\n"
         + "    run = ('Hello, World from SOM' println )\n"
         + ")\n", path);
+
+    assertEquals(0, diagnostics.size());
 
     List<int[]> tokens = adapter.getSemanticTokens(path);
     printAllToken(tokens);
@@ -64,5 +67,59 @@ public class SomTests {
     assertToken(3, 36, "println", SemanticTokenType.METHOD, tokens.get(4));
 
     assertEquals(5, tokens.size());
+  }
+
+  @Test
+  public void testSymbols() {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    var diagnostics = adapter.parse("Hello = (\n"
+        + "    \"The 'run' method is called when initializing the system\"\n"
+        + "    run = ('Hello, World from SOM' println )\n"
+        + ")\n", path);
+
+    assertEquals(0, diagnostics.size());
+
+    var symbols = adapter.documentSymbol(path);
+    assertEquals(1, symbols.size());
+    var classSymbol = symbols.get(0);
+    assertEquals("Hello", classSymbol.getName());
+
+    var children = classSymbol.getChildren();
+    assertEquals(1, children.size());
+    assertEquals("run", children.get(0).getName());
+  }
+
+  @Test
+  public void testSymbolDetails() {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    var diagnostics = adapter.parse("Hello = (\n"
+        + "run = ()\n"
+        + "run:   arg = ()\n"
+        + "+   arg = ()\n"
+        + "run: arg   with:  arg2   = ()\n"
+        + ")\n", path);
+
+    assertEquals(0, diagnostics.size());
+
+    var symbols = adapter.documentSymbol(path);
+    assertEquals(1, symbols.size());
+    var classSymbol = symbols.get(0);
+    assertEquals("Hello", classSymbol.getName());
+
+    var children = classSymbol.getChildren();
+    assertEquals(4, children.size());
+    assertEquals("run", children.get(0).getName());
+    assertEquals(null, children.get(0).getDetail());
+
+    assertEquals("run:", children.get(1).getName());
+    assertEquals("run: arg", children.get(1).getDetail());
+
+    assertEquals("+", children.get(2).getName());
+    assertEquals("+ arg", children.get(2).getDetail());
+
+    assertEquals("run:with:", children.get(3).getName());
+    assertEquals("run: arg with: arg2", children.get(3).getDetail());
   }
 }

@@ -5,7 +5,10 @@ import java.util.List;
 
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DocumentSymbol;
+import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.Position;
 
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
@@ -16,26 +19,27 @@ import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Variable;
 import som.interpreter.nodes.ExpressionNode;
 import som.langserv.LanguageAdapter;
-import som.langserv.SemanticTokenType;
-import som.langserv.SemanticTokens;
-import som.vmobjects.SInvokable;
+import som.langserv.structure.DocumentData;
+import som.langserv.structure.DocumentSymbols;
+import som.langserv.structure.SemanticTokenType;
+import som.langserv.structure.SemanticTokens;
 import som.vmobjects.SSymbol;
 
 
 public class SimpleStructures
-    extends StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable>
-    implements SemanticTokens {
+    extends StructuralProbe<String, MixinDefinition, DocumentSymbol, SlotDefinition, Variable>
+    implements SemanticTokens, DocumentData {
 
   private final Source           source;
   private final ExpressionNode[] map;
 
   private final List<Diagnostic> diagnostics;
 
-  private final List<Call> calls;
-
   private final List<int[]> semanticTokens;
 
   private final SimpleNodeFactory nodeFactory;
+
+  private final DocumentSymbols symbols;
 
   public static class Call {
     final SSymbol         selector;
@@ -52,17 +56,19 @@ public class SimpleStructures
 
     this.map = new ExpressionNode[length];
     this.diagnostics = new ArrayList<>(0);
-    this.calls = new ArrayList<>();
     this.semanticTokens = new ArrayList<>();
+    this.symbols = new DocumentSymbols();
+
     this.nodeFactory = new SimpleNodeFactory(this);
+  }
+
+  @Override
+  public List<? extends DocumentSymbol> getRootSymbols() {
+    return symbols.getRootSymbols();
   }
 
   public SimpleNodeFactory getFactory() {
     return nodeFactory;
-  }
-
-  public List<Call> getCalls() {
-    return calls;
   }
 
   public String getDocumentUri() {
@@ -114,5 +120,14 @@ public class SimpleStructures
     addSemanticToken(
         token.getLine(), token.getCharPositionInLine(), token.getText().length(),
         type);
+  }
+
+  public DocumentSymbols getSymbols() {
+    return symbols;
+  }
+
+  @Override
+  public Hover getHover(final Position position) {
+    return symbols.getHover(position);
   }
 }

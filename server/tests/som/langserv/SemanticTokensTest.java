@@ -9,6 +9,8 @@ import java.util.List;
 import org.eclipse.lsp4j.Position;
 import org.junit.Test;
 
+import som.langserv.structure.SemanticTokens;
+
 
 public class SemanticTokensTest {
 
