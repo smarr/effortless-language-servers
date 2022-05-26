@@ -216,13 +216,6 @@ public class SomParser extends ParserAst {
     int coord = getStartIndex();
     String result = super.keyword();
     recordTokenSemantics(coord, result, SemanticTokenType.METHOD);
-    return result;
-  }
-
-  @Override
-  protected String keywordInSend() throws ParseError {
-    int coord = getStartIndex();
-    String result = super.keywordInSend();
     keywordParts.add(result);
     keywordStart.add(coord);
     return result;
@@ -288,7 +281,10 @@ public class SomParser extends ParserAst {
   @Override
   protected void keywordPattern(final MethodGenerationContext mgenc)
       throws ProgramDefinitionError {
-    int coord = getStartIndex();
+    assert keywordParts.size() == 0 : "We are not in any method, so, this is expected to be zero";
+    assert keywordStart.size() == 0 : "We are not in any method, so, this is expected to be zero";
+    assert keywordStart.size() == keywordParts.size();
+
     currentMethod = startSymbol(SymbolKind.Method);
 
     super.keywordPattern(mgenc);
@@ -296,22 +292,27 @@ public class SomParser extends ParserAst {
     String name = mgenc.getSignature().getString();
     currentMethod.setName(name);
     currentMethod.setId(new SymbolId(mgenc.getSignature()));
-    currentMethod.setSelectionRange(getRange(coord, name));
+
+    Position start = getStart(source, keywordStart.get(0));
+    Position end = getEnd(source, keywordStart.get(keywordStart.size() - 1),
+        keywordParts.get(keywordParts.size() - 1).length());
+    currentMethod.setSelectionRange(new Range(start, end));
 
     StringBuilder builder = new StringBuilder();
 
-    String[] keywords = name.split(":");
-
-    for (int i = 0; i < keywords.length; i += 1) {
-      builder.append(keywords[i]);
-      builder.append(": ");
+    for (int i = 0; i < keywordParts.size(); i += 1) {
+      builder.append(keywordParts.get(i));
+      builder.append(' ');
       builder.append(mgenc.getArgument(i + 1).getName().getString());
-      if (i < keywords.length - 1) {
+      if (i < keywordParts.size() - 1) {
         builder.append(' ');
       }
     }
 
     currentMethod.setDetail(builder.toString());
+
+    keywordParts.clear();
+    keywordStart.clear();
   }
 
   private void recordTokenSemantics(final int startCoord, final String token,
