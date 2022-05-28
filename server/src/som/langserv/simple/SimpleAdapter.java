@@ -129,13 +129,6 @@ public class SimpleAdapter extends LanguageAdapter<SimpleStructures> {
   }
 
   @Override
-  protected void addAllSymbols(final List<SymbolInformation> results, final String query,
-      final SimpleStructures probe) {
-    // TODO Auto-generated method stub
-
-  }
-
-  @Override
   public List<? extends Location> getDefinitions(final String docUri, final int line,
       final int character) {
     // TODO Auto-generated method stub

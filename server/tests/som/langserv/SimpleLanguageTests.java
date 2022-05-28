@@ -305,4 +305,23 @@ public class SimpleLanguageTests {
 
     assertEquals(2, results.size());
   }
+
+  @Test
+  public void testSyntaxErrors() throws URISyntaxException {
+    var adapter = new SimpleAdapter();
+    String path = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test.sl";
+    var diag = adapter.parse(
+        "function main() {\n"
+            + "  i = 0;\n"
+            + "  println(loop 1000));  \n"
+            + "}",
+        path);
+
+    // since we don't bail on parsing errors, there will be multiple
+    assertEquals(3, diag.size());
+
+    assertEquals("missing ';' at '('", diag.get(0).getMessage());
+    assertEquals(3, diag.get(0).getRange().getStart().getLine());
+    assertEquals(10, diag.get(0).getRange().getStart().getCharacter());
+  }
 }

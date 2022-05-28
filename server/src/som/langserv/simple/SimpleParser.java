@@ -2,7 +2,13 @@ package som.langserv.simple;
 
 import java.lang.reflect.Field;
 
+import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.Recognizer;
+import org.antlr.v4.runtime.Token;
+import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DiagnosticSeverity;
 
 import simple.SLNodeFactory;
 import simple.SimpleLanguageLexer;
@@ -23,11 +29,9 @@ public class SimpleParser extends SimpleLanguageParser {
     lexer.removeErrorListeners();
     removeErrorListeners();
 
-    // TODO: add error listener to have specific error with the details we need for a
-    // diagnostic
-    // BailoutErrorListener listener = new BailoutErrorListener(source);
-    // lexer.addErrorListener(listener);
-    // parser.addErrorListener(listener)
+    var errorListener = new CapturingErrorListener();
+    lexer.addErrorListener(errorListener);
+    addErrorListener(errorListener);
   }
 
   private void setFactory(final SLNodeFactory factory) {
@@ -39,6 +43,21 @@ public class SimpleParser extends SimpleLanguageParser {
     } catch (NoSuchFieldException | SecurityException | IllegalArgumentException
         | IllegalAccessException e) {
       throw new RuntimeException(e);
+    }
+  }
+
+  private final class CapturingErrorListener extends BaseErrorListener {
+    @Override
+    public void syntaxError(final Recognizer<?, ?> recognizer, final Object offendingSymbol,
+        final int line, final int charPositionInLine, final String msg,
+        final RecognitionException e) {
+      Diagnostic diag = new Diagnostic();
+      diag.setRange(PositionConversion.getRange((Token) offendingSymbol));
+      diag.setMessage(msg);
+      diag.setSeverity(DiagnosticSeverity.Error);
+      diag.setSource("Simple Language Parser");
+
+      struturalProbe.getDiagnostics().add(diag);
     }
   }
 
