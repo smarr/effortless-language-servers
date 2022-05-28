@@ -7,7 +7,9 @@ import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SignatureHelpContext;
 import org.eclipse.lsp4j.SymbolInformation;
@@ -22,6 +24,8 @@ import som.compiler.Variable;
 import som.interpreter.nodes.ExpressionNode;
 import som.langserv.structure.DocumentData;
 import som.langserv.structure.DocumentSymbols;
+import som.langserv.structure.LanguageElementId;
+import som.langserv.structure.Pair;
 import som.langserv.structure.SemanticTokenType;
 import som.langserv.structure.SemanticTokens;
 import som.vmobjects.SSymbol;
@@ -118,5 +122,16 @@ public class SimpleStructures
   public SignatureHelp getSignatureHelp(final Position position,
       final SignatureHelpContext context) {
     return symbols.getSignatureHelp(position, context);
+  }
+
+  @Override
+  public Pair<LanguageElementId, Range> getElement(final Position pos) {
+    return symbols.getElement(pos);
+  }
+
+  @Override
+  public void lookupDefinitions(final Pair<LanguageElementId, Range> element,
+      final List<LocationLink> definitions) {
+    symbols.lookupDefinitions(element, definitions);
   }
 }

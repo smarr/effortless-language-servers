@@ -9,6 +9,7 @@ import java.util.Set;
 
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -295,10 +296,42 @@ public class DocumentSymbols {
     for (var e : symbols.entrySet()) {
       if (e.getKey().matches(query)) {
         for (var s : e.getValue()) {
-          String uri = (remoteUri != null) ? remoteUri : normalizedUri;
+          String uri = getUri();
           results.add(s.createSymbolInfo(uri));
         }
       }
+    }
+  }
+
+  private String getUri() {
+    return (remoteUri != null) ? remoteUri : normalizedUri;
+  }
+
+  public Pair<LanguageElementId, Range> getElement(final Position pos) {
+    WithRange symbol = getMostPrecise(pos, rootSymbols);
+    if (symbol == null) {
+      return null;
+    }
+
+    if (symbol instanceof LanguageElement e) {
+      return new Pair<>(e.getId(), e.getSelectionRange());
+    } else if (symbol instanceof Reference ref) {
+      return new Pair<>(ref.id, ref.getRange());
+    } else {
+      throw new RuntimeException("Not yet implemented for " + symbol.getClass());
+    }
+  }
+
+  public void lookupDefinitions(final Pair<LanguageElementId, Range> element,
+      final List<LocationLink> definitions) {
+    var defs = symbols.get(element.v1);
+
+    if (defs == null) {
+      return;
+    }
+
+    for (var d : defs) {
+      definitions.add(d.getLocationLink(getUri(), element.v2));
     }
   }
 }

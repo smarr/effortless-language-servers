@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SignatureInformation;
 import org.eclipse.lsp4j.SymbolInformation;
@@ -85,5 +86,16 @@ public class LanguageElement extends DocumentSymbol implements WithRange {
     info.setLocation(l);
 
     return info;
+  }
+
+  public LocationLink getLocationLink(final String containerUri, final Range origin) {
+    LocationLink link = new LocationLink();
+
+    link.setOriginSelectionRange(origin);
+    link.setTargetRange(getRange());
+    link.setTargetSelectionRange(getSelectionRange());
+    link.setTargetUri(containerUri);
+
+    return link;
   }
 }

@@ -157,24 +157,6 @@ public class DocumentServiceImpl implements TextDocumentService {
   }
 
   @Override
-  public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> definition(
-      final DefinitionParams params) {
-    String uri = params.getTextDocument().getUri();
-    List<? extends Location> result = new ArrayList<>();
-
-    for (LanguageAdapter<?> adapter : adapters) {
-      if (adapter.handlesUri(uri)) {
-        result = adapter.getDefinitions(
-            params.getTextDocument().getUri(), params.getPosition().getLine(),
-            params.getPosition().getCharacter());
-        break;
-      }
-    }
-
-    return CompletableFuture.completedFuture(Either.forLeft(result));
-  }
-
-  @Override
   public CompletableFuture<List<? extends DocumentHighlight>> documentHighlight(
       final DocumentHighlightParams params) {
     // TODO: this is wrong, it should be something entirely different.
@@ -248,6 +230,20 @@ public class DocumentServiceImpl implements TextDocumentService {
     }
 
     return CompletableFuture.completedFuture(null);
+  }
+
+  @Override
+  public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> definition(
+      final DefinitionParams params) {
+    var adapter = getResponsibleAdapter(params.getTextDocument());
+    if (adapter == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+
+    String uri = params.getTextDocument().getUri();
+    List<? extends LocationLink> result = adapter.getDefinitions(uri, params.getPosition());
+
+    return CompletableFuture.completedFuture(Either.forRight(result));
   }
 
   private LanguageAdapter<?> getResponsibleAdapter(final TextDocumentIdentifier docId) {

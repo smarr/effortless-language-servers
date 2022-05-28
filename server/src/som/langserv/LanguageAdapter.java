@@ -6,6 +6,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -18,7 +19,7 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Hover;
-import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.Position;
@@ -162,9 +163,6 @@ public abstract class LanguageAdapter<Probe> {
 
   protected abstract Collection<Probe> getProbes();
 
-  public abstract List<? extends Location> getDefinitions(final String docUri, final int line,
-      final int character);
-
   public void reportError(final String msgStr) {
     MessageParams msg = new MessageParams();
     msg.setType(MessageType.Log);
@@ -219,5 +217,25 @@ public abstract class LanguageAdapter<Probe> {
       final SignatureHelpContext context) {
     Probe probe = getProbe(uri);
     return ((DocumentData) probe).getSignatureHelp(position, context);
+  }
+
+  public final List<? extends LocationLink> getDefinitions(final String uri,
+      final Position pos) {
+    Probe probe = getProbe(uri);
+    var element = ((DocumentData) probe).getElement(pos);
+
+    List<LocationLink> definitions = new ArrayList<>();
+    ((DocumentData) probe).lookupDefinitions(element, definitions);
+
+    for (Probe p : getProbes()) {
+      // we already have those, so, skip this one
+      if (p == probe) {
+        continue;
+      }
+
+      ((DocumentData) p).lookupDefinitions(element, definitions);
+    }
+
+    return definitions;
   }
 }

@@ -307,6 +307,49 @@ public class SimpleLanguageTests {
   }
 
   @Test
+  public void testGotoDefinition() throws URISyntaxException {
+    var adapter = new SimpleAdapter();
+    String path1 = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test.sl";
+    var diag = adapter.parse(
+        "\n" +
+            "function loop(  n  ) {\n"
+            + "  i = 0;\n"
+            + "  return i;\n"
+            + "}\n"
+            + "function main(  ) {\n"
+            + "  i = 0;\n"
+            + "  println(loop(1000));  \n"
+            + "}",
+        path1);
+    assertTrue(diag.isEmpty());
+
+    String path2 = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test2.sl";
+    diag = adapter.parse(
+        "function loop(n, b, c) {\n"
+            + "  i = 0;\n"
+            + "  return i;\n"
+            + "}\n"
+            + "function baz() {\n"
+            + "  println(loop(1000, 1, 2));  \n"
+            + "}",
+        path2);
+    assertTrue(diag.isEmpty());
+
+    var locations = adapter.getDefinitions(path2, new Position(6, 12));
+    assertEquals(2, locations.size());
+
+    var loop1 = locations.get(0);
+    assertEquals(path2, loop1.getTargetUri());
+    assertEquals(1, loop1.getTargetSelectionRange().getStart().getLine());
+    assertEquals(6, loop1.getOriginSelectionRange().getStart().getLine());
+
+    var loop2 = locations.get(1);
+    assertEquals(path1, loop2.getTargetUri());
+    assertEquals(2, loop2.getTargetSelectionRange().getStart().getLine());
+    assertEquals(6, loop2.getOriginSelectionRange().getStart().getLine());
+  }
+
+  @Test
   public void testSyntaxErrors() throws URISyntaxException {
     var adapter = new SimpleAdapter();
     String path = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test.sl";
