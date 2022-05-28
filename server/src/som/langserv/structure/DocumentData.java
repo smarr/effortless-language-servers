@@ -2,6 +2,7 @@ package som.langserv.structure;
 
 import java.util.List;
 
+import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.LocationLink;
@@ -25,4 +26,6 @@ public interface DocumentData {
 
   void lookupDefinitions(Pair<LanguageElementId, Range> element,
       List<LocationLink> definitions);
+
+  List<DocumentHighlight> getHighlight(Position position);
 }

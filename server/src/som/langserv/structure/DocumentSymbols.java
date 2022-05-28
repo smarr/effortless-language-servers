@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.LocationLink;
@@ -27,6 +28,7 @@ public class DocumentSymbols {
   private final ArrayList<LanguageElement> rootSymbols;
 
   private ArrayList<Reference> rootReference;
+  private ArrayList<Reference> allReferences;
 
   private Map<LanguageElementId, Set<LanguageElement>> symbols;
 
@@ -122,9 +124,14 @@ public class DocumentSymbols {
     } else {
       if (rootReference == null) {
         rootReference = new ArrayList<>();
-        rootReference.add(ref);
       }
+      rootReference.add(ref);
     }
+
+    if (allReferences == null) {
+      allReferences = new ArrayList<>();
+    }
+    allReferences.add(ref);
   }
 
   /** Not sure this is really needed. */
@@ -220,6 +227,50 @@ public class DocumentSymbols {
 
       help.setSignatures(sigs);
       return help;
+    } else {
+      throw new RuntimeException("Not yet implemented for " + symbol.getClass());
+    }
+  }
+
+  public List<DocumentHighlight> getHighlight(final Position position) {
+    WithRange symbol = getMostPrecise(position, rootSymbols);
+    if (symbol == null) {
+      return null;
+    }
+
+    if (symbol instanceof LanguageElement e) {
+      if (e.getSignature() == null) {
+        return null;
+      }
+
+      List<DocumentHighlight> result = new ArrayList<>(1);
+      result.add(e.createHighlight());
+      return result;
+    } else if (symbol instanceof Reference ref) {
+      var similar = lookup(ref);
+      if (similar == null) {
+        return null;
+      }
+
+      var result = new ArrayList<DocumentHighlight>(similar.size());
+
+      for (LanguageElement e : similar) {
+        result.add(e.createHighlight());
+      }
+
+      if (allReferences != null) {
+        for (var r : allReferences) {
+          if (r.getId().equals(symbol.getId())) {
+            result.add(r.createHighlight());
+          }
+        }
+      }
+
+      if (result.isEmpty()) {
+        return null;
+      }
+
+      return result;
     } else {
       throw new RuntimeException("Not yet implemented for " + symbol.getClass());
     }
@@ -331,7 +382,7 @@ public class DocumentSymbols {
     }
 
     for (var d : defs) {
-      definitions.add(d.getLocationLink(getUri(), element.v2));
+      definitions.add(d.createLocationLink(getUri(), element.v2));
     }
   }
 }

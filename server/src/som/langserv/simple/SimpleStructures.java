@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.LocationLink;
@@ -133,5 +134,10 @@ public class SimpleStructures
   public void lookupDefinitions(final Pair<LanguageElementId, Range> element,
       final List<LocationLink> definitions) {
     symbols.lookupDefinitions(element, definitions);
+  }
+
+  @Override
+  public List<DocumentHighlight> getHighlight(final Position position) {
+    return symbols.getHighlight(position);
   }
 }

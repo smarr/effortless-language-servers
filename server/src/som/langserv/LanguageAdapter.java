@@ -238,4 +238,10 @@ public abstract class LanguageAdapter<Probe> {
 
     return definitions;
   }
+
+  public final List<DocumentHighlight> getHighlight(final String uri,
+      final Position position) {
+    Probe probe = getProbe(uri);
+    return ((DocumentData) probe).getHighlight(position);
+  }
 }

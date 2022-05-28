@@ -14,6 +14,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Position;
@@ -347,6 +348,41 @@ public class SimpleLanguageTests {
     assertEquals(path1, loop2.getTargetUri());
     assertEquals(2, loop2.getTargetSelectionRange().getStart().getLine());
     assertEquals(6, loop2.getOriginSelectionRange().getStart().getLine());
+  }
+
+  @Test
+  public void testHighlights() throws URISyntaxException {
+    var adapter = new SimpleAdapter();
+    String path = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test.sl";
+    adapter.parse(
+        "function loop(  n  ) {\n"
+            + "  i = 0;\n"
+            + "  return i;\n"
+            + "}\n"
+            + "function main(  ) {\n"
+            + "  i = 0;\n"
+            + "loop(1);\n"
+            + "loop(2);\n"
+            + "  println(loop(1000));  \n"
+            + "}",
+        path);
+
+    List<DocumentHighlight> hs = adapter.getHighlight(path, new Position(8, 2));
+    assertNotNull(hs);
+
+    assertEquals(4, hs.size());
+
+    assertEquals(1, hs.get(0).getRange().getStart().getLine());
+    assertEquals(10, hs.get(0).getRange().getStart().getCharacter());
+
+    assertEquals(7, hs.get(1).getRange().getStart().getLine());
+    assertEquals(1, hs.get(1).getRange().getStart().getCharacter());
+
+    assertEquals(8, hs.get(2).getRange().getStart().getLine());
+    assertEquals(1, hs.get(2).getRange().getStart().getCharacter());
+
+    assertEquals(9, hs.get(3).getRange().getStart().getLine());
+    assertEquals(11, hs.get(3).getRange().getStart().getCharacter());
   }
 
   @Test

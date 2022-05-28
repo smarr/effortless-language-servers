@@ -159,22 +159,15 @@ public class DocumentServiceImpl implements TextDocumentService {
   @Override
   public CompletableFuture<List<? extends DocumentHighlight>> documentHighlight(
       final DocumentHighlightParams params) {
-    // TODO: this is wrong, it should be something entirely different.
-    // this feature is about marking the occurrences of a selected element
-    // like a variable, where it is used.
-    // so, this should actually return multiple results.
-    // The spec is currently broken for that.
-    String uri = params.getTextDocument().getUri();
-    for (LanguageAdapter<?> adapter : adapters) {
-      if (adapter.handlesUri(uri)) {
-        DocumentHighlight result = adapter.getHighlight(params.getTextDocument().getUri(),
-            params.getPosition().getLine() + 1, params.getPosition().getCharacter() + 1);
-        ArrayList<DocumentHighlight> list = new ArrayList<>(1);
-        list.add(result);
-        return CompletableFuture.completedFuture(list);
-      }
+    var adapter = getResponsibleAdapter(params.getTextDocument());
+    if (adapter != null) {
+      String uri = params.getTextDocument().getUri();
+      List<DocumentHighlight> highlights =
+          adapter.getHighlight(uri, params.getPosition());
+      return CompletableFuture.completedFuture(highlights);
     }
-    return CompletableFuture.completedFuture(new ArrayList<DocumentHighlight>());
+
+    return CompletableFuture.completedFuture(null);
   }
 
   @Override

@@ -3,6 +3,8 @@ package som.langserv.structure;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.lsp4j.DocumentHighlight;
+import org.eclipse.lsp4j.DocumentHighlightKind;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
@@ -34,6 +36,11 @@ public class LanguageElement extends DocumentSymbol implements WithRange {
     setKind(kind);
   }
 
+  @Override
+  public LanguageElementId getId() {
+    return id;
+  }
+
   public void setId(final LanguageElementId id) {
     this.id = id;
   }
@@ -63,10 +70,6 @@ public class LanguageElement extends DocumentSymbol implements WithRange {
     return id != null;
   }
 
-  public LanguageElementId getId() {
-    return id;
-  }
-
   public SignatureInformation getSignature() {
     return signature;
   }
@@ -88,7 +91,7 @@ public class LanguageElement extends DocumentSymbol implements WithRange {
     return info;
   }
 
-  public LocationLink getLocationLink(final String containerUri, final Range origin) {
+  public LocationLink createLocationLink(final String containerUri, final Range origin) {
     LocationLink link = new LocationLink();
 
     link.setOriginSelectionRange(origin);
@@ -97,5 +100,17 @@ public class LanguageElement extends DocumentSymbol implements WithRange {
     link.setTargetUri(containerUri);
 
     return link;
+  }
+
+  public DocumentHighlight createHighlight() {
+    DocumentHighlight highlight = new DocumentHighlight();
+    highlight.setRange(getSelectionRange());
+    highlight.setKind(getHighlightkind());
+    return highlight;
+  }
+
+  public DocumentHighlightKind getHighlightkind() {
+    // This is a definition, so, always the Text type
+    return DocumentHighlightKind.Text;
   }
 }
