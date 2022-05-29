@@ -113,52 +113,6 @@ public abstract class LanguageAdapter<Probe> {
   public abstract List<Diagnostic> parse(final String text, final String sourceUri)
       throws URISyntaxException;
 
-  public DocumentHighlight getHighlight(final String documentUri,
-      final int line, final int character) {
-    // TODO: this is wrong, it should be something entierly different.
-    // this feature is about marking the occurrences of a selected element
-    // like a variable, where it is used.
-    // so, this should actually return multiple results.
-    // The spec is currently broken for that.
-
-    // XXX: the code here doesn't make any sense for what it is supposed to do
-
-    // Map<SourceSection, Set<Class<? extends Tags>>> sections = Highlight.
-    // getSourceSections();
-    // SourceSection[] all = sections.entrySet().stream().map(e -> e.getKey()).toArray(size ->
-    // new SourceSection[size]);
-    //
-    // Stream<Entry<SourceSection, Set<Class<? extends Tags>>>> filtered = sections.
-    // entrySet().stream().filter(
-    // (final Entry<SourceSection, Set<Class<? extends Tags>>> e) -> in(e.getKey(), line,
-    // character));
-    //
-    // @SuppressWarnings("rawtypes")
-    // Entry[] matching = filtered.toArray(size -> new Entry[size]);
-    //
-    // for (Entry<SourceSection, Set<Class<? extends Tags>>> e : matching) {
-    // int kind;
-    // if (e.getValue().contains(LiteralTag.class)) {
-    // kind = DocumentHighlight.KIND_READ;
-    // } else {
-    // kind = DocumentHighlight.KIND_TEXT;
-    // }
-    // DocumentHighlightImpl highlight = new DocumentHighlightImpl();
-    // highlight.setKind(kind);
-    // highlight.setRange(getRange(e.getKey()));
-    // return highlight;
-    // }
-    //
-    // DocumentHighlightImpl highlight = new DocumentHighlightImpl();
-    // highlight.setKind(DocumentHighlight.KIND_TEXT);
-    // RangeImpl range = new RangeImpl();
-    // range.setStart(pos(line, character));
-    // range.setEnd(pos(line, character + 1));
-    // highlight.setRange(range);
-    // return highlight;
-    return null;
-  }
-
   protected abstract Probe getProbe(String documentUri);
 
   protected abstract Collection<Probe> getProbes();
