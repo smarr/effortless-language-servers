@@ -3,7 +3,7 @@ package som.langserv.simple;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,7 +15,6 @@ import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.DocumentSymbol;
-import org.eclipse.lsp4j.Location;
 
 import com.oracle.truffle.sl.parser.SLParseError;
 
@@ -29,7 +28,7 @@ public class SimpleAdapter extends LanguageAdapter<SimpleStructures> {
   private final Map<String, SimpleStructures> structuralProbes;
 
   public SimpleAdapter() {
-    this.structuralProbes = new HashMap<>();
+    this.structuralProbes = new LinkedHashMap<>();
   }
 
   @Override

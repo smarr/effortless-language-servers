@@ -102,6 +102,13 @@ public class LanguageElement extends DocumentSymbol implements WithRange {
     return link;
   }
 
+  public Location createLocation(final String containerUri, final Range origin) {
+    Location loc = new Location();
+    loc.setRange(getSelectionRange());
+    loc.setUri(containerUri);
+    return loc;
+  }
+
   public DocumentHighlight createHighlight() {
     DocumentHighlight highlight = new DocumentHighlight();
     highlight.setRange(getSelectionRange());
@@ -109,8 +116,9 @@ public class LanguageElement extends DocumentSymbol implements WithRange {
     return highlight;
   }
 
+  /** This is a definition, so, always the Text type. */
   public DocumentHighlightKind getHighlightkind() {
-    // This is a definition, so, always the Text type
     return DocumentHighlightKind.Text;
   }
+
 }

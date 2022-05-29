@@ -5,6 +5,7 @@ import java.util.List;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -26,6 +27,12 @@ public interface DocumentData {
 
   void lookupDefinitions(Pair<LanguageElementId, Range> element,
       List<LocationLink> definitions);
+
+  void lookupDefinitionsLocation(Pair<LanguageElementId, Range> element,
+      List<Location> definitions);
+
+  void lookupReferences(Pair<LanguageElementId, Range> element,
+      List<Location> references);
 
   List<DocumentHighlight> getHighlight(Position position);
 }

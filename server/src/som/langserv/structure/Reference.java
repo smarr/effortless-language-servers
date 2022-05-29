@@ -2,6 +2,7 @@ package som.langserv.structure;
 
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightKind;
+import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Range;
 
 
@@ -54,5 +55,12 @@ public class Reference implements WithRange {
     }
 
     return DocumentHighlightKind.Text;
+  }
+
+  public Location createLocation(final String containerUri, final Range origin) {
+    Location loc = new Location();
+    loc.setRange(range);
+    loc.setUri(containerUri);
+    return loc;
   }
 }

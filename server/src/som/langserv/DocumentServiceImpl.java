@@ -30,6 +30,7 @@ import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensParams;
 import org.eclipse.lsp4j.SignatureHelp;
@@ -165,6 +166,19 @@ public class DocumentServiceImpl implements TextDocumentService {
       List<DocumentHighlight> highlights =
           adapter.getHighlight(uri, params.getPosition());
       return CompletableFuture.completedFuture(highlights);
+    }
+
+    return CompletableFuture.completedFuture(null);
+  }
+
+  @Override
+  public CompletableFuture<List<? extends Location>> references(
+      final ReferenceParams params) {
+    var adapter = getResponsibleAdapter(params.getTextDocument());
+    if (adapter != null) {
+      List<Location> result = adapter.getReferences(params.getTextDocument().getUri(),
+          params.getPosition(), params.getContext().isIncludeDeclaration());
+      return CompletableFuture.completedFuture(result);
     }
 
     return CompletableFuture.completedFuture(null);

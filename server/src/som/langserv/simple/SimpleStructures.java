@@ -8,6 +8,7 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -134,6 +135,18 @@ public class SimpleStructures
   public void lookupDefinitions(final Pair<LanguageElementId, Range> element,
       final List<LocationLink> definitions) {
     symbols.lookupDefinitions(element, definitions);
+  }
+
+  @Override
+  public void lookupDefinitionsLocation(final Pair<LanguageElementId, Range> element,
+      final List<Location> definitions) {
+    symbols.lookupDefinitionsLocation(element, definitions);
+  }
+
+  @Override
+  public void lookupReferences(final Pair<LanguageElementId, Range> element,
+      final List<Location> references) {
+    symbols.lookupReferences(element, references);
   }
 
   @Override

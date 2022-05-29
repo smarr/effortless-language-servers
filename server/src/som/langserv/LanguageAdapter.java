@@ -244,4 +244,22 @@ public abstract class LanguageAdapter<Probe> {
     Probe probe = getProbe(uri);
     return ((DocumentData) probe).getHighlight(position);
   }
+
+  public final List<Location> getReferences(final String uri, final Position position,
+      final boolean includeDeclaration) {
+    Probe probe = getProbe(uri);
+    var element = ((DocumentData) probe).getElement(position);
+
+    List<Location> result = new ArrayList<>();
+
+    for (Probe p : getProbes()) {
+      if (includeDeclaration) {
+        ((DocumentData) p).lookupDefinitionsLocation(element, result);
+      }
+
+      ((DocumentData) p).lookupReferences(element, result);
+    }
+
+    return result;
+  }
 }

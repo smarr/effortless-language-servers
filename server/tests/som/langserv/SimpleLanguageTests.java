@@ -17,6 +17,7 @@ import java.util.List;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SignatureHelp;
@@ -383,6 +384,90 @@ public class SimpleLanguageTests {
 
     assertEquals(9, hs.get(3).getRange().getStart().getLine());
     assertEquals(11, hs.get(3).getRange().getStart().getCharacter());
+  }
+
+  @Test
+  public void testReferencesIncludeDecls() throws URISyntaxException {
+    var adapter = new SimpleAdapter();
+    String path1 = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test.sl";
+    var diag = adapter.parse(
+        "function loop(  n  ) {\n"
+            + "  loop(1);\n"
+            + "}\n"
+            + "function main(  ) {\n"
+            + "  i = 0;\n"
+            + "  println(loop(1000));  \n"
+            + "}",
+        path1);
+    assertTrue(diag.isEmpty());
+
+    String path2 = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test2.sl";
+    diag = adapter.parse(
+        "function loop(n, b, c) {\n"
+            + "}\n"
+            + "function baz() {\n"
+            + "  println(loop(1000, 1, 2));  \n"
+            + "}",
+        path2);
+    assertTrue(diag.isEmpty());
+
+    List<Location> result = adapter.getReferences(path2, new Position(4, 12), true);
+
+    assertEquals(5, result.size());
+
+    assertEquals(path1, result.get(0).getUri());
+    assertEquals(1, result.get(0).getRange().getStart().getLine());
+
+    assertEquals(path1, result.get(1).getUri());
+    assertEquals(2, result.get(1).getRange().getStart().getLine());
+
+    assertEquals(path1, result.get(2).getUri());
+    assertEquals(6, result.get(2).getRange().getStart().getLine());
+
+    assertEquals(path2, result.get(3).getUri());
+    assertEquals(1, result.get(3).getRange().getStart().getLine());
+
+    assertEquals(path2, result.get(4).getUri());
+    assertEquals(4, result.get(4).getRange().getStart().getLine());
+  }
+
+  @Test
+  public void testReferencesExcludeDecls() throws URISyntaxException {
+    var adapter = new SimpleAdapter();
+    String path1 = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test.sl";
+    var diag = adapter.parse(
+        "function loop(  n  ) {\n"
+            + "  loop(1);\n"
+            + "}\n"
+            + "function main(  ) {\n"
+            + "  i = 0;\n"
+            + "  println(loop(1000));  \n"
+            + "}",
+        path1);
+    assertTrue(diag.isEmpty());
+
+    String path2 = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test2.sl";
+    diag = adapter.parse(
+        "function loop(n, b, c) {\n"
+            + "}\n"
+            + "function baz() {\n"
+            + "  println(loop(1000, 1, 2));  \n"
+            + "}",
+        path2);
+    assertTrue(diag.isEmpty());
+
+    List<Location> result = adapter.getReferences(path2, new Position(4, 12), false);
+
+    assertEquals(3, result.size());
+
+    assertEquals(path1, result.get(0).getUri());
+    assertEquals(2, result.get(0).getRange().getStart().getLine());
+
+    assertEquals(path1, result.get(1).getUri());
+    assertEquals(6, result.get(1).getRange().getStart().getLine());
+
+    assertEquals(path2, result.get(2).getUri());
+    assertEquals(4, result.get(2).getRange().getStart().getLine());
   }
 
   @Test

@@ -10,6 +10,7 @@ import java.util.Set;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.Position;
@@ -28,9 +29,9 @@ public class DocumentSymbols {
   private final ArrayList<LanguageElement> rootSymbols;
 
   private ArrayList<Reference> rootReference;
-  private ArrayList<Reference> allReferences;
 
   private Map<LanguageElementId, Set<LanguageElement>> symbols;
+  private Map<LanguageElementId, List<Reference>>      allReferences;
 
   private final String remoteUri;
   private final String normalizedUri;
@@ -129,9 +130,15 @@ public class DocumentSymbols {
     }
 
     if (allReferences == null) {
-      allReferences = new ArrayList<>();
+      allReferences = new HashMap<>();
     }
-    allReferences.add(ref);
+
+    List<Reference> list = allReferences.get(ref.id);
+    if (list == null) {
+      list = new ArrayList<>(3);
+      allReferences.put(ref.id, list);
+    }
+    list.add(ref);
   }
 
   /** Not sure this is really needed. */
@@ -259,8 +266,9 @@ public class DocumentSymbols {
       }
 
       if (allReferences != null) {
-        for (var r : allReferences) {
-          if (r.getId().equals(symbol.getId())) {
+        List<Reference> list = allReferences.get(symbol.getId());
+        if (list != null) {
+          for (var r : list) {
             result.add(r.createHighlight());
           }
         }
@@ -383,6 +391,31 @@ public class DocumentSymbols {
 
     for (var d : defs) {
       definitions.add(d.createLocationLink(getUri(), element.v2));
+    }
+  }
+
+  public void lookupDefinitionsLocation(final Pair<LanguageElementId, Range> element,
+      final List<Location> definitions) {
+    var defs = symbols.get(element.v1);
+
+    if (defs == null) {
+      return;
+    }
+
+    for (var d : defs) {
+      definitions.add(d.createLocation(getUri(), element.v2));
+    }
+  }
+
+  public void lookupReferences(final Pair<LanguageElementId, Range> element,
+      final List<Location> references) {
+    var refs = allReferences.get(element.v1);
+    if (refs == null) {
+      return;
+    }
+
+    for (var r : refs) {
+      references.add(r.createLocation(getUri(), element.v2));
     }
   }
 }
