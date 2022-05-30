@@ -33,6 +33,10 @@ public class LanguageElement extends DocumentSymbol implements WithRange {
     this.id = id;
   }
 
+  public boolean matches(final String query) {
+    return id.matches(query);
+  }
+
   public LanguageElement(final SymbolKind kind) {
     super();
     setKind(kind);

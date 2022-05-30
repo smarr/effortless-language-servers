@@ -546,4 +546,35 @@ public class SimpleLanguageTests {
     assertEquals("loop", i.getLabel());
     assertEquals("op", i.getInsertText());
   }
+
+  @Test
+  public void testCompletionLocals() throws URISyntaxException {
+    var adapter = new SimpleAdapter();
+    String path1 = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test.sl";
+    var diag = adapter.parse(
+        "function loop(ii) {\n"
+            + "  loop(1);\n"
+            + "}\n"
+            + "function main(  ) {\n"
+            + "  i = 0;\n"
+            + "  println(i);  \n"
+            + "}",
+        path1);
+    assertTrue(diag.isEmpty());
+
+    String path2 = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test2.sl";
+    diag = adapter.parse("function loop(iii) {}", path2);
+    assertTrue(diag.isEmpty());
+
+    CompletionList result = adapter.getCompletions(path1, new Position(6, 11));
+    assertFalse(result.isIncomplete());
+
+    var items = result.getItems();
+    assertEquals(1, items.size());
+
+    var i = items.get(0);
+    assertEquals(CompletionItemKind.Variable, i.getKind());
+    assertEquals("i", i.getLabel());
+    assertEquals("", i.getInsertText());
+  }
 }

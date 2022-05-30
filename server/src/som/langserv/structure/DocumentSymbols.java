@@ -302,8 +302,7 @@ public class DocumentSymbols {
       final List<? extends WithRange> es) {
     for (var e : es) {
       if (isIn(pos, e)) {
-        if (e instanceof LanguageElement) {
-          var le = (LanguageElement) e;
+        if (e instanceof LanguageElement le) {
           @SuppressWarnings("rawtypes")
           List children = le.getChildren();
           if (children != null) {
@@ -368,17 +367,27 @@ public class DocumentSymbols {
     }
   }
 
-  public void find(final String partialName, final Position position,
-      final List<CompletionItem> results) {
-    // TODO: use position to first consider scopes
+  @SuppressWarnings("unchecked")
+  private void findIn(final String partialName, final Position pos,
+      final List<LanguageElement> es, final List<CompletionItem> results) {
+    for (var e : es) {
+      if (e.matches(partialName)) {
+        results.add(e.createCompletionItem(partialName));
+      }
 
-    for (var e : symbols.entrySet()) {
-      if (e.getKey().matches(partialName)) {
-        for (var s : e.getValue()) {
-          results.add(s.createCompletionItem(partialName));
+      if (isIn(pos, e)) {
+        @SuppressWarnings("rawtypes")
+        List children = e.getChildren();
+        if (children != null) {
+          findIn(partialName, pos, children, results);
         }
       }
     }
+  }
+
+  public void find(final String partialName, final Position position,
+      final List<CompletionItem> results) {
+    findIn(partialName, position, rootSymbols, results);
   }
 
   private String getUri() {
