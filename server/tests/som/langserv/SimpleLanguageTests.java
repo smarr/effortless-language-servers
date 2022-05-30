@@ -1,6 +1,7 @@
 package som.langserv;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -11,9 +12,10 @@ import static som.langserv.Helpers.printAllToken;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.lsp4j.CompletionItemKind;
+import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Hover;
@@ -22,16 +24,18 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SymbolInformation;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import simple.SimpleLanguageParser;
 import som.langserv.simple.SimpleAdapter;
 import som.langserv.structure.SemanticTokenType;
+import util.ArrayListIgnoreIfLastIdentical;
 
 
 public class SimpleLanguageTests {
 
-  private static File getRootForSimpleLanguageExamples() throws URISyntaxException {
+  public static File getRootForSimpleLanguageExamples() throws URISyntaxException {
     File f = new File(
         SimpleLanguageParser.class.getProtectionDomain().getCodeSource()
                                   .getLocation().toURI().getPath());
@@ -297,12 +301,12 @@ public class SimpleLanguageTests {
         path);
     assertTrue(diag.isEmpty());
 
-    List<SymbolInformation> results = new ArrayList<>();
+    List<SymbolInformation> results = new ArrayListIgnoreIfLastIdentical<>();
     adapter.workspaceSymbol(results, "");
 
-    assertEquals(4, results.size());
+    assertEquals(11, results.size());
 
-    results = new ArrayList<>();
+    results = new ArrayListIgnoreIfLastIdentical<>();
     adapter.workspaceSymbol(results, "l");
 
     assertEquals(2, results.size());

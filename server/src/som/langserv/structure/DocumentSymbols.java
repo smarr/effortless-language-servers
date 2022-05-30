@@ -21,6 +21,8 @@ import org.eclipse.lsp4j.SignatureInformation;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
 
+import util.ArrayListIgnoreIfLastIdentical;
+
 
 public class DocumentSymbols {
 
@@ -103,7 +105,9 @@ public class DocumentSymbols {
 
   public void recordDefinition(final String name, final LanguageElementId id,
       final SymbolKind kind, final Range range) {
+    assert range != null;
     LanguageElement symbol = new LanguageElement(name, kind, id, range);
+    symbol.setRange(range);
     addToScopes(symbol);
 
     assert symbol.hasId();
@@ -117,7 +121,7 @@ public class DocumentSymbols {
    * @param id something that a {@code LanguageElementId} would match on
    * @param range the code range were the reference is in the file
    */
-  public void referenceSymbol(final LanguageElementId id, final Range range) {
+  public Reference referenceSymbol(final LanguageElementId id, final Range range) {
     Reference ref = new Reference(id, range);
     if (!symbolsScope.isEmpty()) {
       LanguageElement current = symbolsScope.get(symbolsScope.size() - 1);
@@ -139,6 +143,7 @@ public class DocumentSymbols {
       allReferences.put(ref.id, list);
     }
     list.add(ref);
+    return ref;
   }
 
   /** Not sure this is really needed. */
@@ -259,7 +264,7 @@ public class DocumentSymbols {
         return null;
       }
 
-      var result = new ArrayList<DocumentHighlight>(similar.size());
+      var result = new ArrayListIgnoreIfLastIdentical<DocumentHighlight>(similar.size());
 
       for (LanguageElement e : similar) {
         result.add(e.createHighlight());
@@ -409,6 +414,10 @@ public class DocumentSymbols {
 
   public void lookupReferences(final Pair<LanguageElementId, Range> element,
       final List<Location> references) {
+    if (allReferences == null) {
+      return;
+    }
+
     var refs = allReferences.get(element.v1);
     if (refs == null) {
       return;
@@ -417,5 +426,10 @@ public class DocumentSymbols {
     for (var r : refs) {
       references.add(r.createLocation(getUri(), element.v2));
     }
+  }
+
+  @Override
+  public String toString() {
+    return "DocumentSymbols(" + getUri() + ")";
   }
 }

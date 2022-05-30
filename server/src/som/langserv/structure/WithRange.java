@@ -7,4 +7,6 @@ public interface WithRange {
   LanguageElementId getId();
 
   Range getRange();
+
+  String getName();
 }

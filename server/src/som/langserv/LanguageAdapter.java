@@ -204,7 +204,11 @@ public abstract class LanguageAdapter<Probe> {
     Probe probe = getProbe(uri);
     var element = ((DocumentData) probe).getElement(position);
 
-    List<Location> result = new ArrayList<>();
+    if (element == null) {
+      return null;
+    }
+
+    List<Location> result = new ArrayListIgnoreIfLastIdentical<>();
 
     for (Probe p : getProbes()) {
       if (includeDeclaration) {

@@ -9,4 +9,9 @@ public class Pair<T1, T2> {
     this.v1 = v1;
     this.v2 = v2;
   }
+
+  @Override
+  public String toString() {
+    return "Pair(" + v1.toString() + ", " + v2.toString() + ")";
+  }
 }

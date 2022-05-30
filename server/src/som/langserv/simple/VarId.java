@@ -5,11 +5,11 @@ import java.util.Objects;
 import som.langserv.structure.LanguageElementId;
 
 
-public class FunctionId extends LanguageElementId {
+public class VarId extends LanguageElementId {
 
   private final String name;
 
-  public FunctionId(final String name) {
+  public VarId(final String name) {
     this.name = name;
   }
 
@@ -29,12 +29,17 @@ public class FunctionId extends LanguageElementId {
     if (getClass() != obj.getClass()) {
       return false;
     }
-    FunctionId other = (FunctionId) obj;
+    VarId other = (VarId) obj;
     return Objects.equals(name, other.name);
   }
 
   @Override
   protected String getName() {
     return name;
+  }
+
+  @Override
+  public String toString() {
+    return "VarId(" + name + ")";
   }
 }

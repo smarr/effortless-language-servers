@@ -9,6 +9,7 @@ import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.sl.SLLanguage;
 import com.oracle.truffle.sl.nodes.SLExpressionNode;
+import com.oracle.truffle.sl.nodes.SLRead;
 import com.oracle.truffle.sl.nodes.SLStatementNode;
 
 import simple.nodes.SimpleString;
@@ -29,7 +30,7 @@ public class SLNodeFactory {
   }
 
   public SLExpressionNode createRead(SLExpressionNode assignmentName) {
-    return assignmentName;
+    return new SLRead(assignmentName);
   }
 
   public SLExpressionNode createReadProperty(SLExpressionNode receiver,

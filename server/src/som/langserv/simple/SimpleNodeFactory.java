@@ -14,6 +14,7 @@ import org.eclipse.lsp4j.SymbolKind;
 
 import com.oracle.truffle.sl.nodes.SLBlock;
 import com.oracle.truffle.sl.nodes.SLExpressionNode;
+import com.oracle.truffle.sl.nodes.SLRead;
 import com.oracle.truffle.sl.nodes.SLStatementNode;
 
 import simple.SLNodeFactory;
@@ -21,6 +22,7 @@ import simple.nodes.SimpleString;
 import som.langserv.structure.DocumentSymbols;
 import som.langserv.structure.LanguageElement;
 import som.langserv.structure.LanguageElementId;
+import som.langserv.structure.Reference;
 import som.langserv.structure.SemanticTokenType;
 
 
@@ -43,7 +45,7 @@ public class SimpleNodeFactory extends SLNodeFactory {
     probe.addSemanticToken(identifier, SemanticTokenType.FUNCTION);
 
     currentFunction = symbols.startSymbol(identifier.getText(), SymbolKind.Function,
-        new FunctionId(identifier.getText()), getRange(identifier));
+        new VarId(identifier.getText()), getRange(identifier));
 
     paramNames = new ArrayList<>(3);
   }
@@ -95,6 +97,7 @@ public class SimpleNodeFactory extends SLNodeFactory {
   @Override
   public void addFormalParameter(final Token identifier) {
     probe.addSemanticToken(identifier, SemanticTokenType.PARAMETER);
+    recordDefinition(identifier, new VarId(identifier.getText()), SymbolKind.Variable);
     paramNames.add(identifier.getText());
   }
 
@@ -140,26 +143,84 @@ public class SimpleNodeFactory extends SLNodeFactory {
 
   @Override
   public SLExpressionNode createRead(final SLExpressionNode assignmentName) {
-    if (assignmentName instanceof SimpleString) {
+    if (assignmentName instanceof SimpleString t) {
       probe.addSemanticToken(
-          ((SimpleString) assignmentName).identifier,
+          t.identifier,
           SemanticTokenType.VARIABLE);
+      referenceSymbol(new VarId(t.identifier.getText()), t.identifier);
+    } else {
+      throw new RuntimeException("Not yet implemented " + assignmentName.getClass());
     }
     return super.createRead(assignmentName);
   }
 
   @Override
+  public SLExpressionNode createAssignment(final SLExpressionNode assignmentName,
+      final SLExpressionNode result) {
+    if (assignmentName instanceof SimpleString s) {
+      recordDefinition(s.identifier, new VarId(s.identifier.getText()), SymbolKind.Variable);
+    } else {
+      throw new RuntimeException("Not yet implemented " + assignmentName.getClass());
+    }
+    return super.createAssignment(assignmentName, result);
+  }
+
+  @Override
   public SLExpressionNode createCall(final SLExpressionNode receiver,
       final List<SLExpressionNode> parameters, final Token e) {
-    if (receiver instanceof SimpleString) {
-      SimpleString s = (SimpleString) receiver;
+    if (receiver instanceof SimpleString s) {
       probe.addSemanticToken(s.identifier, SemanticTokenType.FUNCTION);
-      referenceSymbol(new FunctionId(s.identifier.getText()), s.identifier);
+      referenceSymbol(new VarId(s.identifier.getText()), s.identifier);
+    } else if (receiver instanceof SLRead r) {
+      if (r.assignmentName instanceof SimpleString s) {
+        probe.addSemanticToken(s.identifier, SemanticTokenType.FUNCTION);
+        referenceSymbol(new VarId(s.identifier.getText()), s.identifier);
+      } else {
+        throw new RuntimeException("Not yet implemented " + r.assignmentName.getClass());
+      }
+    } else {
+      throw new RuntimeException("Not yet implemented " + receiver.getClass());
     }
     return super.createCall(receiver, parameters, e);
   }
 
-  private void referenceSymbol(final LanguageElementId id, final Token token) {
-    symbols.referenceSymbol(id, getRange(token));
+  @Override
+  public SLExpressionNode createReadProperty(final SLExpressionNode receiver,
+      final SLExpressionNode nestedAssignmentName) {
+    if (nestedAssignmentName instanceof SimpleString s) {
+      referenceSymbol(new PropertyId(s.identifier.getText()), s.identifier).markAsRead();
+    } else if (nestedAssignmentName instanceof SLRead r) {
+      SLExpressionNode name = r.assignmentName;
+      if (name instanceof SimpleString s) {
+        referenceSymbol(new VarId(s.identifier.getText()), s.identifier).markAsRead();
+      } else {
+        throw new RuntimeException("Not yet implemented for " + name.getClass());
+      }
+    } else {
+      throw new RuntimeException("Not yet implemented " + nestedAssignmentName.getClass());
+    }
+    return super.createReadProperty(receiver, nestedAssignmentName);
+  }
+
+  @Override
+  public SLExpressionNode createWriteProperty(
+      final SLExpressionNode assignmentReceiver, final SLExpressionNode assignmentName,
+      final SLExpressionNode result) {
+    if (assignmentName instanceof SimpleString s) {
+      recordDefinition(s.identifier, new PropertyId(s.identifier.getText()),
+          SymbolKind.Property);
+    } else {
+      throw new RuntimeException("Not yet implemented " + assignmentName.getClass());
+    }
+    return super.createWriteProperty(assignmentReceiver, assignmentName, result);
+  }
+
+  private void recordDefinition(final Token t, final LanguageElementId id,
+      final SymbolKind kind) {
+    symbols.recordDefinition(t.getText(), id, kind, getRange(t));
+  }
+
+  private Reference referenceSymbol(final LanguageElementId id, final Token token) {
+    return symbols.referenceSymbol(id, getRange(token));
   }
 }

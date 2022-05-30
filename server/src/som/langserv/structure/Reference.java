@@ -25,6 +25,11 @@ public class Reference implements WithRange {
     return id;
   }
 
+  @Override
+  public String getName() {
+    return id.getName();
+  }
+
   public void markAsRead() {
     isRead = true;
   }
@@ -62,5 +67,10 @@ public class Reference implements WithRange {
     loc.setRange(range);
     loc.setUri(containerUri);
     return loc;
+  }
+
+  @Override
+  public String toString() {
+    return "Ref(" + id.toString() + ")";
   }
 }

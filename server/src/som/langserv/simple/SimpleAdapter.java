@@ -128,13 +128,6 @@ public class SimpleAdapter extends LanguageAdapter<SimpleStructures> {
   }
 
   @Override
-  public List<? extends Location> getDefinitions(final String docUri, final int line,
-      final int character) {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  @Override
   public List<int[]> getSemanticTokens(final String documentUri) {
     String path;
     try {
