@@ -237,6 +237,36 @@ public class SimpleLanguageTests {
   }
 
   @Test
+  public void testHoverAfterSymbol() throws URISyntaxException {
+    var adapter = new SimpleAdapter();
+    String path = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test.sl";
+    adapter.parse(
+        "function loop(  n  ) {\n"
+            + "  i = 0;\n"
+            + "  return i;\n"
+            + "}\n"
+            + "function main(  ) {\n"
+            + "  i = 0;\n"
+            + "  println(loop(1000));  \n"
+            + "}",
+        path);
+
+    Hover hover = adapter.hover(path, new Position(7, 11 + "loop".length()));
+    assertNotNull(hover);
+
+    Range r = hover.getRange();
+
+    assertEquals(7, r.getStart().getLine());
+    assertEquals(11, r.getStart().getCharacter());
+
+    assertEquals(7, r.getEnd().getLine());
+    assertEquals(11 + "loop".length(), r.getEnd().getCharacter());
+
+    assertEquals("plaintext", hover.getContents().getRight().getKind());
+    assertEquals("loop(n)\n", hover.getContents().getRight().getValue());
+  }
+
+  @Test
   public void testSignatureHelp() throws URISyntaxException {
     var adapter = new SimpleAdapter();
     String path = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test.sl";
@@ -491,5 +521,29 @@ public class SimpleLanguageTests {
     assertEquals("missing ';' at '('", diag.get(0).getMessage());
     assertEquals(3, diag.get(0).getRange().getStart().getLine());
     assertEquals(10, diag.get(0).getRange().getStart().getCharacter());
+  }
+
+  @Test
+  public void testCompletionGlobals() throws URISyntaxException {
+    var adapter = new SimpleAdapter();
+    String path = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test.sl";
+    adapter.parse(
+        "function loop(n,   b,   c) {}\n"
+            + "function main() {\n"
+            + "  i = 0;\n"
+            + "  println(lo",
+        path);
+
+    CompletionList result = adapter.getCompletions(path, new Position(4, 13));
+    assertFalse(result.isIncomplete());
+
+    var items = result.getItems();
+    assertEquals(1, items.size());
+
+    var i = items.get(0);
+    assertEquals(CompletionItemKind.Function, i.getKind());
+    assertEquals("loop(n, b, c)", i.getDetail());
+    assertEquals("loop", i.getLabel());
+    assertEquals("op", i.getInsertText());
   }
 }

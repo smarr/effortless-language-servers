@@ -14,11 +14,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.eclipse.lsp4j.CodeLens;
+import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
@@ -30,6 +32,9 @@ import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.services.LanguageClient;
 
 import som.langserv.structure.DocumentData;
+import som.langserv.structure.Pair;
+import som.langserv.structure.ParseContextKind;
+import util.ArrayListIgnoreIfLastIdentical;
 
 
 public abstract class LanguageAdapter<Probe> {
@@ -143,9 +148,6 @@ public abstract class LanguageAdapter<Probe> {
 
   public abstract List<Integer> makeRelative(List<int[]> tokens);
 
-  public abstract CompletionList getCompletions(final String docUri, final int line,
-      final int character);
-
   public abstract void getCodeLenses(final List<CodeLens> codeLenses,
       final String documentUri);
 
@@ -220,4 +222,40 @@ public abstract class LanguageAdapter<Probe> {
 
     return result;
   }
+
+  public final CompletionList getCompletions(final String uri, final Position position) {
+    Probe probe = getProbe(uri);
+
+    // TODO things we want to consider
+    // - [ ] incompletely typed text
+    // - [ ] scope, so, we want to be able to propose local variables
+    // - [ ] navigation, that is '.' etc to consider the structure?? (I don't think we can do
+    // this
+    // easily...)
+
+    Pair<ParseContextKind, String> element =
+        ((DocumentData) probe).getPossiblyIncompleteElement(position);
+
+    if (element == null) {
+      return null;
+    }
+
+    CompletionList completion = new CompletionList();
+    completion.setIsIncomplete(false);
+
+    List<CompletionItem> items = new ArrayListIgnoreIfLastIdentical<>();
+    completion.setItems(items);
+
+    ((DocumentData) probe).find(element.v2, position, items);
+
+    for (Probe p : getProbes()) {
+      if (p == probe) {
+        continue;
+      }
+
+      ((DocumentData) p).find(element.v2, position, items);
+    }
+    return completion;
+  }
+
 }

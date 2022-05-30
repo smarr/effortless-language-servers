@@ -2,6 +2,7 @@ package som.langserv.structure;
 
 import java.util.List;
 
+import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Hover;
@@ -35,4 +36,8 @@ public interface DocumentData {
       List<Location> references);
 
   List<DocumentHighlight> getHighlight(Position position);
+
+  Pair<ParseContextKind, String> getPossiblyIncompleteElement(Position position);
+
+  void find(String partialName, Position position, List<CompletionItem> results);
 }

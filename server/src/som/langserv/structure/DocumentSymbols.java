@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Hover;
@@ -367,6 +368,19 @@ public class DocumentSymbols {
     }
   }
 
+  public void find(final String partialName, final Position position,
+      final List<CompletionItem> results) {
+    // TODO: use position to first consider scopes
+
+    for (var e : symbols.entrySet()) {
+      if (e.getKey().matches(partialName)) {
+        for (var s : e.getValue()) {
+          results.add(s.createCompletionItem(partialName));
+        }
+      }
+    }
+  }
+
   private String getUri() {
     return (remoteUri != null) ? remoteUri : normalizedUri;
   }
@@ -426,6 +440,11 @@ public class DocumentSymbols {
     for (var r : refs) {
       references.add(r.createLocation(getUri(), element.v2));
     }
+  }
+
+  public Pair<ParseContextKind, String> getPossiblyIncompleteElement(final Position position) {
+    var e = getMostPrecise(position, rootSymbols);
+    return new Pair<>(ParseContextKind.Any, e.getName());
   }
 
   @Override

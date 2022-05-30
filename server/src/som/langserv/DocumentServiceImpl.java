@@ -142,19 +142,15 @@ public class DocumentServiceImpl implements TextDocumentService {
 
   @Override
   public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(
-      final CompletionParams position) {
-    String uri = position.getTextDocument().getUri();
-
-    for (LanguageAdapter<?> adapter : adapters) {
-      if (adapter.handlesUri(uri)) {
-        CompletionList result = adapter.getCompletions(
-            position.getTextDocument().getUri(), position.getPosition().getLine(),
-            position.getPosition().getCharacter());
-        return CompletableFuture.completedFuture(Either.forRight(result));
-      }
+      final CompletionParams params) {
+    var adapter = getResponsibleAdapter(params.getTextDocument());
+    if (adapter != null) {
+      String uri = params.getTextDocument().getUri();
+      CompletionList result = adapter.getCompletions(uri, params.getPosition());
+      return CompletableFuture.completedFuture(Either.forRight(result));
     }
 
-    return CompletableFuture.completedFuture(Either.forRight(new CompletionList()));
+    return CompletableFuture.completedFuture(null);
   }
 
   @Override

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.antlr.v4.runtime.Token;
+import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentSymbol;
@@ -28,6 +29,7 @@ import som.langserv.structure.DocumentData;
 import som.langserv.structure.DocumentSymbols;
 import som.langserv.structure.LanguageElementId;
 import som.langserv.structure.Pair;
+import som.langserv.structure.ParseContextKind;
 import som.langserv.structure.SemanticTokenType;
 import som.langserv.structure.SemanticTokens;
 import som.vmobjects.SSymbol;
@@ -152,5 +154,16 @@ public class SimpleStructures
   @Override
   public List<DocumentHighlight> getHighlight(final Position position) {
     return symbols.getHighlight(position);
+  }
+
+  @Override
+  public Pair<ParseContextKind, String> getPossiblyIncompleteElement(final Position position) {
+    return symbols.getPossiblyIncompleteElement(position);
+  }
+
+  @Override
+  public void find(final String partialName, final Position position,
+      final List<CompletionItem> results) {
+    symbols.find(partialName, position, results);
   }
 }
