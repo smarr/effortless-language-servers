@@ -19,30 +19,40 @@ import com.oracle.truffle.sl.nodes.SLStatementNode;
 
 import simple.SLNodeFactory;
 import simple.nodes.SimpleString;
-import som.langserv.structure.DocumentSymbols;
+import som.langserv.structure.DocumentStructures;
 import som.langserv.structure.LanguageElement;
 import som.langserv.structure.LanguageElementId;
 import som.langserv.structure.Reference;
 import som.langserv.structure.SemanticTokenType;
+import som.langserv.structure.SemanticTokens;
 
 
 public class SimpleNodeFactory extends SLNodeFactory {
 
-  private final SimpleStructures probe;
-  private final DocumentSymbols  symbols;
+  private final DocumentStructures symbols;
+  private final SemanticTokens     semanticTokens;
 
   private List<String>    paramNames;
   private LanguageElement currentFunction;
 
   public SimpleNodeFactory(final SimpleStructures probe) {
     super(null, null);
-    this.probe = probe;
     this.symbols = probe.getSymbols();
+    this.semanticTokens = symbols.getSemanticTokens();
+  }
+
+  protected void addSemanticToken(final Token token, final SemanticTokenType type) {
+    semanticTokens.addSemanticToken(
+        token.getLine(),
+        // char position is 0-based, so, +1 to make it 1-based
+        token.getCharPositionInLine() + 1,
+        token.getText().length(),
+        type);
   }
 
   @Override
   public void startFunction(final Token identifier, final Token s) {
-    probe.addSemanticToken(identifier, SemanticTokenType.FUNCTION);
+    addSemanticToken(identifier, SemanticTokenType.FUNCTION);
 
     currentFunction = symbols.startSymbol(identifier.getText(), SymbolKind.Function,
         new VarId(identifier.getText()), getRange(identifier));
@@ -96,33 +106,33 @@ public class SimpleNodeFactory extends SLNodeFactory {
 
   @Override
   public void addFormalParameter(final Token identifier) {
-    probe.addSemanticToken(identifier, SemanticTokenType.PARAMETER);
+    addSemanticToken(identifier, SemanticTokenType.PARAMETER);
     recordDefinition(identifier, new VarId(identifier.getText()), SymbolKind.Variable);
     paramNames.add(identifier.getText());
   }
 
   @Override
   public SLStatementNode createBreak(final Token b) {
-    probe.addSemanticToken(b, SemanticTokenType.KEYWORD);
+    addSemanticToken(b, SemanticTokenType.KEYWORD);
     return super.createBreak(b);
   }
 
   @Override
   public SLStatementNode createContinue(final Token c) {
-    probe.addSemanticToken(c, SemanticTokenType.KEYWORD);
+    addSemanticToken(c, SemanticTokenType.KEYWORD);
     return super.createContinue(c);
   }
 
   @Override
   public SLStatementNode createDebugger(final Token d) {
-    probe.addSemanticToken(d, SemanticTokenType.KEYWORD);
+    addSemanticToken(d, SemanticTokenType.KEYWORD);
     return super.createDebugger(d);
   }
 
   @Override
   public SLExpressionNode createBinary(final Token op, final SLExpressionNode result,
       final SLExpressionNode result2) {
-    probe.addSemanticToken(op, SemanticTokenType.OPERATOR);
+    addSemanticToken(op, SemanticTokenType.OPERATOR);
     return super.createBinary(op, result, result2);
   }
 
@@ -130,21 +140,21 @@ public class SimpleNodeFactory extends SLNodeFactory {
   public SLExpressionNode createStringLiteral(final Token identifier,
       final boolean isLiteral) {
     if (isLiteral) {
-      probe.addSemanticToken(identifier, SemanticTokenType.STRING);
+      addSemanticToken(identifier, SemanticTokenType.STRING);
     }
     return super.createStringLiteral(identifier, isLiteral);
   }
 
   @Override
   public SLExpressionNode createNumericLiteral(final Token numeric_LITERAL) {
-    probe.addSemanticToken(numeric_LITERAL, SemanticTokenType.NUMBER);
+    addSemanticToken(numeric_LITERAL, SemanticTokenType.NUMBER);
     return super.createNumericLiteral(numeric_LITERAL);
   }
 
   @Override
   public SLExpressionNode createRead(final SLExpressionNode assignmentName) {
     if (assignmentName instanceof SimpleString t) {
-      probe.addSemanticToken(
+      addSemanticToken(
           t.identifier,
           SemanticTokenType.VARIABLE);
       referenceSymbol(new VarId(t.identifier.getText()), t.identifier);
@@ -169,11 +179,11 @@ public class SimpleNodeFactory extends SLNodeFactory {
   public SLExpressionNode createCall(final SLExpressionNode receiver,
       final List<SLExpressionNode> parameters, final Token e) {
     if (receiver instanceof SimpleString s) {
-      probe.addSemanticToken(s.identifier, SemanticTokenType.FUNCTION);
+      addSemanticToken(s.identifier, SemanticTokenType.FUNCTION);
       referenceSymbol(new VarId(s.identifier.getText()), s.identifier);
     } else if (receiver instanceof SLRead r) {
       if (r.assignmentName instanceof SimpleString s) {
-        probe.addSemanticToken(s.identifier, SemanticTokenType.FUNCTION);
+        addSemanticToken(s.identifier, SemanticTokenType.FUNCTION);
         referenceSymbol(new VarId(s.identifier.getText()), s.identifier);
       } else {
         throw new RuntimeException("Not yet implemented " + r.assignmentName.getClass());

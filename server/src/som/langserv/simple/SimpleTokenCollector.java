@@ -57,7 +57,7 @@ public class SimpleTokenCollector implements SimpleLanguageListener {
   @Override
   public void enterFunction(final FunctionContext ctx) {
     Token fn = ctx.getStart();
-    probe.addSemanticToken(fn, SemanticTokenType.KEYWORD);
+    factory.addSemanticToken(fn, SemanticTokenType.KEYWORD);
   }
 
   @Override
@@ -80,7 +80,7 @@ public class SimpleTokenCollector implements SimpleLanguageListener {
   @Override
   public void enterWhile_statement(final While_statementContext ctx) {
     Token whileT = ctx.getStart();
-    probe.addSemanticToken(whileT, SemanticTokenType.KEYWORD);
+    factory.addSemanticToken(whileT, SemanticTokenType.KEYWORD);
   }
 
   @Override
@@ -89,14 +89,14 @@ public class SimpleTokenCollector implements SimpleLanguageListener {
   @Override
   public void enterIf_statement(final If_statementContext ctx) {
     Token ifT = ctx.getStart();
-    probe.addSemanticToken(ifT, SemanticTokenType.KEYWORD);
+    factory.addSemanticToken(ifT, SemanticTokenType.KEYWORD);
   }
 
   @Override
   public void exitIf_statement(final If_statementContext ctx) {
     if (ctx.getChildCount() > 5) {
       Token elseT = (Token) ctx.getChild(5).getPayload();
-      probe.addSemanticToken(elseT, SemanticTokenType.KEYWORD);
+      factory.addSemanticToken(elseT, SemanticTokenType.KEYWORD);
     }
   }
 
@@ -106,7 +106,7 @@ public class SimpleTokenCollector implements SimpleLanguageListener {
   @Override
   public void exitReturn_statement(final Return_statementContext ctx) {
     Token returnT = ctx.getStart();
-    probe.addSemanticToken(returnT, SemanticTokenType.KEYWORD);
+    factory.addSemanticToken(returnT, SemanticTokenType.KEYWORD);
   }
 
   @Override

@@ -1,9 +1,7 @@
 package som.langserv.simple;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DocumentHighlight;
@@ -17,36 +15,27 @@ import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SignatureHelpContext;
 import org.eclipse.lsp4j.SymbolInformation;
 
-import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.tools.structure.StructuralProbe;
 import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Variable;
-import som.interpreter.nodes.ExpressionNode;
 import som.langserv.structure.DocumentData;
-import som.langserv.structure.DocumentSymbols;
+import som.langserv.structure.DocumentStructures;
 import som.langserv.structure.LanguageElementId;
 import som.langserv.structure.Pair;
 import som.langserv.structure.ParseContextKind;
-import som.langserv.structure.SemanticTokenType;
-import som.langserv.structure.SemanticTokens;
 import som.vmobjects.SSymbol;
 
 
 public class SimpleStructures
     extends StructuralProbe<String, MixinDefinition, DocumentSymbol, SlotDefinition, Variable>
-    implements SemanticTokens, DocumentData {
-
-  private final Source           source;
-  private final ExpressionNode[] map;
-
-  private final List<int[]> semanticTokens;
+    implements DocumentData {
 
   private final SimpleNodeFactory nodeFactory;
 
-  private final DocumentSymbols symbols;
+  private final DocumentStructures symbols;
 
   public static class Call {
     final SSymbol         selector;
@@ -60,11 +49,7 @@ public class SimpleStructures
 
   public SimpleStructures(final int length, final String remoteUri,
       final String normalizedUri) {
-    this.source = null;
-
-    this.map = new ExpressionNode[length];
-    this.semanticTokens = new ArrayList<>();
-    this.symbols = new DocumentSymbols(remoteUri, normalizedUri);
+    this.symbols = new DocumentStructures(remoteUri, normalizedUri);
 
     this.nodeFactory = new SimpleNodeFactory(this);
   }
@@ -83,34 +68,11 @@ public class SimpleStructures
     return nodeFactory;
   }
 
-  public String getDocumentUri() {
-    return source.getURI().toString();
-  }
-
   public List<Diagnostic> getDiagnostics() {
     return symbols.getDiagnostics();
   }
 
-  public synchronized ExpressionNode getElementAt(final int line, final int character) {
-    int idx = source.getLineStartOffset(line) + character;
-    return map[idx];
-  }
-
-  @Override
-  public List<int[]> getSemanticTokens() {
-    return semanticTokens;
-  }
-
-  public void addSemanticToken(final Token token, final SemanticTokenType type) {
-    addSemanticToken(
-        token.getLine(),
-        // char position is 0-based, so, +1 to make it 1-based
-        token.getCharPositionInLine() + 1,
-        token.getText().length(),
-        type);
-  }
-
-  public DocumentSymbols getSymbols() {
+  public DocumentStructures getSymbols() {
     return symbols;
   }
 

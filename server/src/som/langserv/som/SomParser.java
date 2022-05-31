@@ -17,7 +17,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import bdt.basic.ProgramDefinitionError;
 import bdt.source.SourceCoordinate;
-import som.langserv.structure.DocumentSymbols;
+import som.langserv.structure.DocumentStructures;
 import som.langserv.structure.LanguageElement;
 import som.langserv.structure.LanguageElementId;
 import som.langserv.structure.SemanticTokenModifier;
@@ -47,7 +47,7 @@ import trufflesom.vmobjects.SSymbol;
 public class SomParser extends ParserAst {
 
   private final SomStructures   structuralProbe;
-  private final DocumentSymbols symbols;
+  private final DocumentStructures symbols;
 
   private LanguageElement currentClass;
   private LanguageElement currentMethod;

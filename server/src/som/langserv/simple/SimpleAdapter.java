@@ -16,7 +16,7 @@ import com.oracle.truffle.sl.parser.SLParseError;
 
 import simple.SimpleLanguageLexer;
 import som.langserv.LanguageAdapter;
-import som.langserv.structure.DocumentSymbols;
+import som.langserv.structure.DocumentStructures;
 import som.langserv.structure.SemanticTokens;
 
 
@@ -68,7 +68,7 @@ public class SimpleAdapter extends LanguageAdapter<SimpleStructures> {
   }
 
   private List<Diagnostic> toDiagnostics(final SLParseError e,
-      final DocumentSymbols symbols) {
+      final DocumentStructures symbols) {
     String[] msgParts = e.format.split(":");
     String msg = msgParts[2].trim();
 
@@ -85,7 +85,7 @@ public class SimpleAdapter extends LanguageAdapter<SimpleStructures> {
   }
 
   private List<Diagnostic> toDiagnostics(final Throwable e,
-      final DocumentSymbols symbols) {
+      final DocumentStructures symbols) {
     Diagnostic d = new Diagnostic();
     d.setSeverity(DiagnosticSeverity.Error);
 
@@ -120,17 +120,6 @@ public class SimpleAdapter extends LanguageAdapter<SimpleStructures> {
   protected Collection<SimpleStructures> getProbes() {
     synchronized (structuralProbes) {
       return new ArrayList<>(structuralProbes.values());
-    }
-  }
-
-  @Override
-  public List<int[]> getSemanticTokens(final String documentUri) {
-    String path;
-    try {
-      path = docUriToNormalizedPath(documentUri);
-      return getProbe(path).getSemanticTokens();
-    } catch (URISyntaxException e) {
-      return null;
     }
   }
 

@@ -1,11 +1,7 @@
 package som.langserv;
 
-import static som.langserv.structure.SemanticTokens.combineTokensRemovingErroneousLine;
-import static som.langserv.structure.SemanticTokens.sort;
-
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -16,7 +12,6 @@ import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.DefinitionParams;
 import org.eclipse.lsp4j.Diagnostic;
-import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
@@ -29,7 +24,6 @@ import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
-import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensParams;
@@ -47,12 +41,10 @@ import org.eclipse.lsp4j.services.TextDocumentService;
  */
 public class DocumentServiceImpl implements TextDocumentService {
 
-  private final LanguageAdapter<?>[]         adapters;
-  private final HashMap<String, List<int[]>> tokenCache;
+  private final LanguageAdapter<?>[] adapters;
 
   public DocumentServiceImpl(final LanguageAdapter<?>[] adapters) {
     this.adapters = adapters;
-    this.tokenCache = new HashMap<>();
   }
 
   @Override
@@ -96,48 +88,19 @@ public class DocumentServiceImpl implements TextDocumentService {
     parseDocument(documentUri, e.getText());
   }
 
-  private static Diagnostic getErrorOrNull(final List<Diagnostic> diagnostics) {
-    for (Diagnostic d : diagnostics) {
-      if (d.getSeverity() == DiagnosticSeverity.Error) {
-        return d;
-      }
-    }
-    return null;
-  }
-
-  private static Position to1based(final Position p) {
-    return new Position(p.getLine() + 1, p.getCharacter() + 1);
-  }
-
   @Override
   public CompletableFuture<SemanticTokens> semanticTokensFull(
       final SemanticTokensParams params) {
-    String uri = params.getTextDocument().getUri();
-    for (LanguageAdapter<?> adapter : adapters) {
-      if (adapter.handlesUri(uri)) {
-        List<int[]> sortedTokenList = sort(adapter.getSemanticTokens(uri));
-
-        Diagnostic error = getErrorOrNull(adapter.getDiagnostics(uri));
-        if (error != null) {
-          List<int[]> prevTokens = tokenCache.get(uri);
-
-          if (prevTokens != null) {
-            List<int[]> withOldAndWithoutError =
-                combineTokensRemovingErroneousLine(
-                    to1based(error.getRange().getStart()), prevTokens, sortedTokenList);
-            List<Integer> tokens = adapter.makeRelative(withOldAndWithoutError);
-            return CompletableFuture.completedFuture(new SemanticTokens(tokens));
-          }
-        }
-
-        tokenCache.put(uri, sortedTokenList);
-
-        return CompletableFuture.completedFuture(
-            new SemanticTokens(adapter.makeRelative(sortedTokenList)));
-      }
+    var adapter = getResponsibleAdapter(params.getTextDocument());
+    if (adapter == null) {
+      return null;
     }
 
-    return null;
+    List<Integer> tokens = adapter.getSemanticTokensFull(params.getTextDocument().getUri());
+    if (tokens == null) {
+      return null;
+    }
+    return CompletableFuture.completedFuture(new SemanticTokens(tokens));
   }
 
   @Override

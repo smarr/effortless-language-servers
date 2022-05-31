@@ -25,7 +25,7 @@ import bdt.source.SourceCoordinate;
 import bdt.tools.nodes.Invocation;
 import bdt.tools.structure.StructuralProbe;
 import som.langserv.structure.DocumentData;
-import som.langserv.structure.DocumentSymbols;
+import som.langserv.structure.DocumentStructures;
 import som.langserv.structure.SemanticTokenModifier;
 import som.langserv.structure.SemanticTokenType;
 import som.langserv.structure.SemanticTokens;
@@ -52,7 +52,7 @@ public class SomStructures
 
   private final List<int[]> semanticTokens;
 
-  private final DocumentSymbols symbols;
+  private final DocumentStructures symbols;
 
   public static class Call {
     final SSymbol         selector;
@@ -71,10 +71,10 @@ public class SomStructures
     this.diagnostics = new ArrayList<>(0);
     this.calls = new ArrayList<>();
     this.semanticTokens = new ArrayList<>();
-    this.symbols = new DocumentSymbols(remoteUri, normalizedUri);
+    this.symbols = new DocumentStructures(remoteUri, normalizedUri);
   }
 
-  public DocumentSymbols getSymbols() {
+  public DocumentStructures getSymbols() {
     return symbols;
   }
 

@@ -9,6 +9,7 @@ import java.util.Set;
 
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Hover;
@@ -26,7 +27,7 @@ import org.eclipse.lsp4j.SymbolKind;
 import util.ArrayListIgnoreIfLastIdentical;
 
 
-public class DocumentSymbols {
+public class DocumentStructures {
 
   private List<Diagnostic> diagnostics;
 
@@ -44,16 +45,36 @@ public class DocumentSymbols {
 
   private ArrayList<LanguageElement> afterNavigationSymbols;
 
-  public DocumentSymbols(final String remoteUri, final String normalizedUri) {
+  private final SemanticTokens semanticTokens;
+
+  public DocumentStructures(final String remoteUri, final String normalizedUri) {
     this.symbolsScope = new ArrayList<>();
     this.rootSymbols = new ArrayList<>();
 
     this.remoteUri = remoteUri;
     this.normalizedUri = normalizedUri;
+    this.semanticTokens = new SemanticTokens();
+  }
+
+  public SemanticTokens getSemanticTokens() {
+    return semanticTokens;
   }
 
   public List<Diagnostic> getDiagnostics() {
     return diagnostics;
+  }
+
+  public Diagnostic getFirstErrorOrNull() {
+    if (diagnostics == null) {
+      return null;
+    }
+
+    for (Diagnostic d : diagnostics) {
+      if (d.getSeverity() == DiagnosticSeverity.Error) {
+        return d;
+      }
+    }
+    return null;
   }
 
   public void addDiagnostic(final Diagnostic diag) {

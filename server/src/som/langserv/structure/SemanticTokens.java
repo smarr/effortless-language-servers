@@ -6,15 +6,30 @@ import java.util.List;
 import org.eclipse.lsp4j.Position;
 
 
-public interface SemanticTokens {
+public class SemanticTokens {
 
-  public List<int[]> getSemanticTokens();
+  private boolean isSorted;
 
-  public default void addSemanticToken(final int lineNumber, final int startingChar,
+  public SemanticTokens() {
+    this.semanticTokens = new ArrayList<>();
+    this.isSorted = false;
+  }
+
+  private final List<int[]> semanticTokens;
+
+  public List<int[]> getSemanticTokens() {
+    if (!isSorted) {
+      sort(semanticTokens);
+      isSorted = true;
+    }
+    return semanticTokens;
+  }
+
+  public void addSemanticToken(final int lineNumber, final int startingChar,
       final int length, final SemanticTokenType tokenType,
       final SemanticTokenModifier... tokenModifiers) {
-    List<int[]> tokenList = getSemanticTokens();
-    assert tokenList != null;
+    isSorted = false;
+    assert semanticTokens != null;
 
     int[] tuple = new int[5];
 
@@ -31,7 +46,7 @@ public interface SemanticTokens {
       tuple[4] = 0;
     }
 
-    tokenList.add(tuple);
+    semanticTokens.add(tuple);
   }
 
   /**

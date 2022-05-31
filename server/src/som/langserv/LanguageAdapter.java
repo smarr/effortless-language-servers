@@ -1,5 +1,7 @@
 package som.langserv;
 
+import static som.langserv.structure.SemanticTokens.combineTokensRemovingErroneousLine;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -32,6 +34,7 @@ import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.services.LanguageClient;
 
 import som.langserv.structure.DocumentData;
+import som.langserv.structure.DocumentStructures;
 import som.langserv.structure.Pair;
 import som.langserv.structure.ParseContextKind;
 import util.ArrayListIgnoreIfLastIdentical;
@@ -39,6 +42,12 @@ import util.ArrayListIgnoreIfLastIdentical;
 
 public abstract class LanguageAdapter<Probe> {
   private LanguageClient client;
+
+  private final Map<String, List<int[]>> semanticTokenCache;
+
+  public LanguageAdapter() {
+    this.semanticTokenCache = new HashMap<>();
+  }
 
   public abstract String getFileEnding();
 
@@ -144,8 +153,6 @@ public abstract class LanguageAdapter<Probe> {
 
   public abstract List<Diagnostic> getDiagnostics(final String documentUri);
 
-  public abstract List<int[]> getSemanticTokens(final String documentUri);
-
   public abstract List<Integer> makeRelative(List<int[]> tokens);
 
   public abstract void getCodeLenses(final List<CodeLens> codeLenses,
@@ -225,14 +232,6 @@ public abstract class LanguageAdapter<Probe> {
 
   public final CompletionList getCompletions(final String uri, final Position position) {
     Probe probe = getProbe(uri);
-
-    // TODO things we want to consider
-    // - [ ] incompletely typed text
-    // - [ ] scope, so, we want to be able to propose local variables
-    // - [ ] navigation, that is '.' etc to consider the structure?? (I don't think we can do
-    // this
-    // easily...)
-
     Pair<ParseContextKind, String> element =
         ((DocumentData) probe).getPossiblyIncompleteElement(position);
 
@@ -258,4 +257,24 @@ public abstract class LanguageAdapter<Probe> {
     return completion;
   }
 
+  public final List<Integer> getSemanticTokensFull(final String uri) {
+    Probe probe = getProbe(uri);
+    List<int[]> tokens = ((DocumentStructures) probe).getSemanticTokens().getSemanticTokens();
+
+    Diagnostic error = ((DocumentStructures) probe).getFirstErrorOrNull();
+    if (error == null) {
+      semanticTokenCache.put(uri, tokens);
+      return makeRelative(tokens);
+    }
+
+    List<int[]> prevTokens = semanticTokenCache.get(uri);
+    if (prevTokens == null) {
+      return null;
+    }
+
+    List<int[]> withOldAndWithoutError =
+        combineTokensRemovingErroneousLine(
+            error.getRange().getStart(), prevTokens, tokens);
+    return makeRelative(withOldAndWithoutError);
+  }
 }
