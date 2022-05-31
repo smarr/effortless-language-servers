@@ -39,5 +39,6 @@ public interface DocumentData {
 
   Pair<ParseContextKind, String> getPossiblyIncompleteElement(Position position);
 
-  void find(String partialName, Position position, List<CompletionItem> results);
+  void find(String partialName, ParseContextKind context, Position position,
+      List<CompletionItem> results);
 }

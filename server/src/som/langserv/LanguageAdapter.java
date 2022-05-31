@@ -246,14 +246,14 @@ public abstract class LanguageAdapter<Probe> {
     List<CompletionItem> items = new ArrayListIgnoreIfLastIdentical<>();
     completion.setItems(items);
 
-    ((DocumentData) probe).find(element.v2, position, items);
+    ((DocumentData) probe).find(element.v2, element.v1, position, items);
 
     for (Probe p : getProbes()) {
       if (p == probe) {
         continue;
       }
 
-      ((DocumentData) p).find(element.v2, position, items);
+      ((DocumentData) p).find(element.v2, element.v1, position, items);
     }
     return completion;
   }

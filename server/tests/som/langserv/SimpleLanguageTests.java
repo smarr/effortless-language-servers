@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static som.langserv.Helpers.assertRange;
 import static som.langserv.Helpers.assertToken;
 import static som.langserv.Helpers.printAllToken;
@@ -24,7 +23,6 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SymbolInformation;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import simple.SimpleLanguageParser;
@@ -50,7 +48,7 @@ public class SimpleLanguageTests {
         adapter.loadFile(
             new File(getRootForSimpleLanguageExamples() + File.separator + "HelloWorld.sl"));
 
-    assertEquals(0, diagnostics.size());
+    assertNull(diagnostics);
   }
 
   @Test
@@ -317,7 +315,7 @@ public class SimpleLanguageTests {
             + "  println(loop(1000));  \n"
             + "}",
         path);
-    assertTrue(diag.isEmpty());
+    assertNull(diag);
 
     path = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test2.sl";
     diag = adapter.parse(
@@ -329,7 +327,7 @@ public class SimpleLanguageTests {
             + "  println(loop(1000, 1, 2));  \n"
             + "}",
         path);
-    assertTrue(diag.isEmpty());
+    assertNull(diag);
 
     List<SymbolInformation> results = new ArrayListIgnoreIfLastIdentical<>();
     adapter.workspaceSymbol(results, "");
@@ -357,7 +355,7 @@ public class SimpleLanguageTests {
             + "  println(loop(1000));  \n"
             + "}",
         path1);
-    assertTrue(diag.isEmpty());
+    assertNull(diag);
 
     String path2 = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test2.sl";
     diag = adapter.parse(
@@ -369,7 +367,7 @@ public class SimpleLanguageTests {
             + "  println(loop(1000, 1, 2));  \n"
             + "}",
         path2);
-    assertTrue(diag.isEmpty());
+    assertNull(diag);
 
     var locations = adapter.getDefinitions(path2, new Position(6, 12));
     assertEquals(2, locations.size());
@@ -433,7 +431,7 @@ public class SimpleLanguageTests {
             + "  println(loop(1000));  \n"
             + "}",
         path1);
-    assertTrue(diag.isEmpty());
+    assertNull(diag);
 
     String path2 = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test2.sl";
     diag = adapter.parse(
@@ -443,7 +441,7 @@ public class SimpleLanguageTests {
             + "  println(loop(1000, 1, 2));  \n"
             + "}",
         path2);
-    assertTrue(diag.isEmpty());
+    assertNull(diag);
 
     List<Location> result = adapter.getReferences(path2, new Position(4, 12), true);
 
@@ -478,7 +476,7 @@ public class SimpleLanguageTests {
             + "  println(loop(1000));  \n"
             + "}",
         path1);
-    assertTrue(diag.isEmpty());
+    assertNull(diag);
 
     String path2 = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test2.sl";
     diag = adapter.parse(
@@ -488,7 +486,7 @@ public class SimpleLanguageTests {
             + "  println(loop(1000, 1, 2));  \n"
             + "}",
         path2);
-    assertTrue(diag.isEmpty());
+    assertNull(diag);
 
     List<Location> result = adapter.getReferences(path2, new Position(4, 12), false);
 
@@ -560,11 +558,11 @@ public class SimpleLanguageTests {
             + "  println(i);  \n"
             + "}",
         path1);
-    assertTrue(diag.isEmpty());
+    assertNull(diag);
 
     String path2 = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test2.sl";
     diag = adapter.parse("function loop(iii) {}", path2);
-    assertTrue(diag.isEmpty());
+    assertNull(diag);
 
     CompletionList result = adapter.getCompletions(path1, new Position(6, 11));
     assertFalse(result.isIncomplete());
@@ -576,5 +574,54 @@ public class SimpleLanguageTests {
     assertEquals(CompletionItemKind.Variable, i.getKind());
     assertEquals("i", i.getLabel());
     assertEquals("", i.getInsertText());
+  }
+
+  @Test
+  public void testCompletionProperties() throws URISyntaxException {
+    var adapter = new SimpleAdapter();
+    String path1 = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test.sl";
+    var diag = adapter.parse(
+        "function loop() {\n"
+            + "  o = new(); \n"
+            + "  o.prop2 = 32;\n"
+            + "}\n"
+            + "function main() {\n"
+            + "  o = new();\n"
+            + "  o.prop3 = 434;  \n"
+            + "  o.  \n"
+            + "}",
+        path1);
+
+    String path2 = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test2.sl";
+    diag = adapter.parse("function baz() {\n"
+        + " o = new();\n"
+        + " o.prop1 = 3;\n"
+        + "}", path2);
+    assertNull(diag);
+
+    // TODO: figure out how to make getPossiblyIncompleteElement find that we actually just
+    // parsed a dot
+    // this might not be easily accessible, maybe I need to intercept the parser error
+
+    CompletionList result = adapter.getCompletions(path1, new Position(8, 5));
+    assertFalse(result.isIncomplete());
+
+    var items = result.getItems();
+    assertEquals(3, items.size());
+
+    var i = items.get(0);
+    assertEquals(CompletionItemKind.Property, i.getKind());
+    assertEquals("prop2", i.getLabel());
+    assertEquals("prop2", i.getInsertText());
+
+    i = items.get(1);
+    assertEquals(CompletionItemKind.Property, i.getKind());
+    assertEquals("prop3", i.getLabel());
+    assertEquals("prop3", i.getInsertText());
+
+    i = items.get(2);
+    assertEquals(CompletionItemKind.Property, i.getKind());
+    assertEquals("prop1", i.getLabel());
+    assertEquals("prop1", i.getInsertText());
   }
 }

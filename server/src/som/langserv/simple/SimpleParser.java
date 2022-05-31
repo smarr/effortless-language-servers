@@ -51,13 +51,16 @@ public class SimpleParser extends SimpleLanguageParser {
     public void syntaxError(final Recognizer<?, ?> recognizer, final Object offendingSymbol,
         final int line, final int charPositionInLine, final String msg,
         final RecognitionException e) {
+      Token token = (Token) offendingSymbol;
+
       Diagnostic diag = new Diagnostic();
-      diag.setRange(PositionConversion.getRange((Token) offendingSymbol));
+      diag.setRange(PositionConversion.getRange(token));
       diag.setMessage(msg);
       diag.setSeverity(DiagnosticSeverity.Error);
       diag.setSource("Simple Language Parser");
+      diag.setData(token.getText().equals("."));
 
-      struturalProbe.getDiagnostics().add(diag);
+      struturalProbe.getSymbols().addDiagnostic(diag);
     }
   }
 

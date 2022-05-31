@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.lsp4j.CompletionItem;
+import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Hover;
@@ -27,6 +28,8 @@ import util.ArrayListIgnoreIfLastIdentical;
 
 public class DocumentSymbols {
 
+  private List<Diagnostic> diagnostics;
+
   private final ArrayList<LanguageElement> symbolsScope;
 
   private final ArrayList<LanguageElement> rootSymbols;
@@ -39,12 +42,26 @@ public class DocumentSymbols {
   private final String remoteUri;
   private final String normalizedUri;
 
+  private ArrayList<LanguageElement> afterNavigationSymbols;
+
   public DocumentSymbols(final String remoteUri, final String normalizedUri) {
     this.symbolsScope = new ArrayList<>();
     this.rootSymbols = new ArrayList<>();
 
     this.remoteUri = remoteUri;
     this.normalizedUri = normalizedUri;
+  }
+
+  public List<Diagnostic> getDiagnostics() {
+    return diagnostics;
+  }
+
+  public void addDiagnostic(final Diagnostic diag) {
+    if (diagnostics == null) {
+      diagnostics = new ArrayList<>(1);
+    }
+
+    diagnostics.add(diag);
   }
 
   /**
@@ -104,8 +121,21 @@ public class DocumentSymbols {
     similar.add(symbol);
   }
 
+  private void recordForAfterNavigation(final LanguageElement symbol) {
+    if (afterNavigationSymbols == null) {
+      afterNavigationSymbols = new ArrayList<>();
+    }
+
+    afterNavigationSymbols.add(symbol);
+  }
+
   public void recordDefinition(final String name, final LanguageElementId id,
       final SymbolKind kind, final Range range) {
+    recordDefinition(name, id, kind, range, false);
+  }
+
+  public void recordDefinition(final String name, final LanguageElementId id,
+      final SymbolKind kind, final Range range, final boolean afterNavigation) {
     assert range != null;
     LanguageElement symbol = new LanguageElement(name, kind, id, range);
     symbol.setRange(range);
@@ -113,6 +143,10 @@ public class DocumentSymbols {
 
     assert symbol.hasId();
     recordForLookup(symbol);
+
+    if (afterNavigation) {
+      recordForAfterNavigation(symbol);
+    }
   }
 
   /**
@@ -331,24 +365,30 @@ public class DocumentSymbols {
   private boolean isIn(final Position pos, final WithRange e) {
     Range r = e.getRange();
 
-    if (r.getStart().getLine() < pos.getLine() && pos.getLine() < r.getEnd().getLine()) {
+    return isIn(pos, r);
+  }
+
+  private boolean isIn(final Position pos, final Range range) {
+    if (range.getStart().getLine() < pos.getLine()
+        && pos.getLine() < range.getEnd().getLine()) {
       // strictly within a multiline range
       return true;
     }
 
-    if (pos.getLine() < r.getStart().getLine() || r.getEnd().getLine() < pos.getLine()) {
+    if (pos.getLine() < range.getStart().getLine()
+        || range.getEnd().getLine() < pos.getLine()) {
       // strictly outside
       return false;
     }
 
     // now we know it's on the relevant lines, but not yet whether within the characters
-    if (pos.getLine() == r.getStart().getLine()
-        && pos.getCharacter() < r.getStart().getCharacter()) {
+    if (pos.getLine() == range.getStart().getLine()
+        && pos.getCharacter() < range.getStart().getCharacter()) {
       return false;
     }
 
-    if (pos.getLine() == r.getEnd().getLine()
-        && r.getEnd().getCharacter() < pos.getCharacter()) {
+    if (pos.getLine() == range.getEnd().getLine()
+        && range.getEnd().getCharacter() < pos.getCharacter()) {
       return false;
     }
 
@@ -371,10 +411,6 @@ public class DocumentSymbols {
   private void findIn(final String partialName, final Position pos,
       final List<LanguageElement> es, final List<CompletionItem> results) {
     for (var e : es) {
-      if (e.matches(partialName)) {
-        results.add(e.createCompletionItem(partialName));
-      }
-
       if (isIn(pos, e)) {
         @SuppressWarnings("rawtypes")
         List children = e.getChildren();
@@ -382,12 +418,24 @@ public class DocumentSymbols {
           findIn(partialName, pos, children, results);
         }
       }
+
+      if (e.matches(partialName)) {
+        results.add(e.createCompletionItem(partialName));
+      }
     }
   }
 
-  public void find(final String partialName, final Position position,
-      final List<CompletionItem> results) {
-    findIn(partialName, position, rootSymbols, results);
+  public void find(final String partialName, final ParseContextKind context,
+      final Position position, final List<CompletionItem> results) {
+    if (context == ParseContextKind.Primary) {
+      findIn(partialName, position, rootSymbols, results);
+    } else if (context == ParseContextKind.Navigation && afterNavigationSymbols != null) {
+      for (var e : afterNavigationSymbols) {
+        if (e.matches(partialName)) {
+          results.add(e.createCompletionItem(partialName));
+        }
+      }
+    }
   }
 
   private String getUri() {
@@ -453,7 +501,25 @@ public class DocumentSymbols {
 
   public Pair<ParseContextKind, String> getPossiblyIncompleteElement(final Position position) {
     var e = getMostPrecise(position, rootSymbols);
-    return new Pair<>(ParseContextKind.Any, e.getName());
+
+    if (e instanceof LanguageElement le && !isIn(position, le.getSelectionRange())) {
+      boolean isNavigation = false;
+      Range navRange = null;
+      if (diagnostics != null) {
+        for (Diagnostic d : diagnostics) {
+          if (d.getData() == Boolean.TRUE) {
+            isNavigation = true;
+            navRange = d.getRange();
+          }
+        }
+      }
+
+      if (isNavigation && isIn(position, navRange)) {
+        return new Pair<>(ParseContextKind.Navigation, "");
+      }
+    }
+
+    return new Pair<>(ParseContextKind.Primary, e.getName());
   }
 
   @Override

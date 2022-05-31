@@ -9,17 +9,14 @@ import java.util.Map;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.eclipse.lsp4j.CodeLens;
-import org.eclipse.lsp4j.CompletionItem;
-import org.eclipse.lsp4j.CompletionItemKind;
-import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
-import org.eclipse.lsp4j.DocumentSymbol;
 
 import com.oracle.truffle.sl.parser.SLParseError;
 
 import simple.SimpleLanguageLexer;
 import som.langserv.LanguageAdapter;
+import som.langserv.structure.DocumentSymbols;
 import som.langserv.structure.SemanticTokens;
 
 
@@ -49,7 +46,6 @@ public class SimpleAdapter extends LanguageAdapter<SimpleStructures> {
     String path = docUriToNormalizedPath(sourceUri);
 
     SimpleStructures newProbe = new SimpleStructures(text.length(), sourceUri, "file:" + path);
-    List<Diagnostic> diagnostics = newProbe.getDiagnostics();
     try {
       // clean out old structural data
       synchronized (structuralProbes) {
@@ -59,20 +55,20 @@ public class SimpleAdapter extends LanguageAdapter<SimpleStructures> {
         parse(text, newProbe);
       }
     } catch (SLParseError e) {
-      return toDiagnostics(e, diagnostics);
+      return toDiagnostics(e, newProbe.getSymbols());
     } catch (Throwable e) {
-      return toDiagnostics(e, diagnostics);
+      return toDiagnostics(e, newProbe.getSymbols());
     } finally {
       // set new probe once done with everything
       synchronized (structuralProbes) {
         structuralProbes.put(path, newProbe);
       }
     }
-    return diagnostics;
+    return newProbe.getDiagnostics();
   }
 
   private List<Diagnostic> toDiagnostics(final SLParseError e,
-      final List<Diagnostic> diagnostics) {
+      final DocumentSymbols symbols) {
     String[] msgParts = e.format.split(":");
     String msg = msgParts[2].trim();
 
@@ -84,12 +80,12 @@ public class SimpleAdapter extends LanguageAdapter<SimpleStructures> {
     d.setMessage(msg);
     d.setSource("Parser");
 
-    diagnostics.add(d);
-    return diagnostics;
+    symbols.addDiagnostic(d);
+    return symbols.getDiagnostics();
   }
 
   private List<Diagnostic> toDiagnostics(final Throwable e,
-      final List<Diagnostic> diagnostics) {
+      final DocumentSymbols symbols) {
     Diagnostic d = new Diagnostic();
     d.setSeverity(DiagnosticSeverity.Error);
 
@@ -97,8 +93,8 @@ public class SimpleAdapter extends LanguageAdapter<SimpleStructures> {
 
     d.setSource("Parser");
 
-    diagnostics.add(d);
-    return diagnostics;
+    symbols.addDiagnostic(d);
+    return symbols.getDiagnostics();
   }
 
   public void parse(final String source, final SimpleStructures probe) {
@@ -141,22 +137,6 @@ public class SimpleAdapter extends LanguageAdapter<SimpleStructures> {
   @Override
   public List<Integer> makeRelative(final List<int[]> tokens) {
     return SemanticTokens.makeRelative(tokens, 1, 0);
-  }
-
-  @Override
-  public CompletionList getCompletions(final String docUri, final int line,
-      final int character) {
-    List<CompletionItem> results = new ArrayList<>(0);
-    for (SimpleStructures s : structuralProbes.values()) {
-      for (DocumentSymbol m : s.getMethods()) {
-        CompletionItem c = new CompletionItem();
-        c.setDetail(m.getDetail());
-        c.setKind(CompletionItemKind.Function);
-        c.setLabel(m.getName());
-        results.add(c);
-      }
-    }
-    return new CompletionList(true, results);
   }
 
   @Override

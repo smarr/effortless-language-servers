@@ -42,8 +42,6 @@ public class SimpleStructures
   private final Source           source;
   private final ExpressionNode[] map;
 
-  private final List<Diagnostic> diagnostics;
-
   private final List<int[]> semanticTokens;
 
   private final SimpleNodeFactory nodeFactory;
@@ -65,7 +63,6 @@ public class SimpleStructures
     this.source = null;
 
     this.map = new ExpressionNode[length];
-    this.diagnostics = new ArrayList<>(0);
     this.semanticTokens = new ArrayList<>();
     this.symbols = new DocumentSymbols(remoteUri, normalizedUri);
 
@@ -91,7 +88,7 @@ public class SimpleStructures
   }
 
   public List<Diagnostic> getDiagnostics() {
-    return diagnostics;
+    return symbols.getDiagnostics();
   }
 
   public synchronized ExpressionNode getElementAt(final int line, final int character) {
@@ -162,8 +159,8 @@ public class SimpleStructures
   }
 
   @Override
-  public void find(final String partialName, final Position position,
-      final List<CompletionItem> results) {
-    symbols.find(partialName, position, results);
+  public void find(final String partialName, final ParseContextKind context,
+      final Position position, final List<CompletionItem> results) {
+    symbols.find(partialName, context, position, results);
   }
 }

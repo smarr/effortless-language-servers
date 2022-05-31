@@ -208,7 +208,7 @@ public class SimpleNodeFactory extends SLNodeFactory {
       final SLExpressionNode result) {
     if (assignmentName instanceof SimpleString s) {
       recordDefinition(s.identifier, new PropertyId(s.identifier.getText()),
-          SymbolKind.Property);
+          SymbolKind.Property, true);
     } else {
       throw new RuntimeException("Not yet implemented " + assignmentName.getClass());
     }
@@ -217,7 +217,12 @@ public class SimpleNodeFactory extends SLNodeFactory {
 
   private void recordDefinition(final Token t, final LanguageElementId id,
       final SymbolKind kind) {
-    symbols.recordDefinition(t.getText(), id, kind, getRange(t));
+    recordDefinition(t, id, kind, false);
+  }
+
+  private void recordDefinition(final Token t, final LanguageElementId id,
+      final SymbolKind kind, final boolean afterNavigation) {
+    symbols.recordDefinition(t.getText(), id, kind, getRange(t), afterNavigation);
   }
 
   private Reference referenceSymbol(final LanguageElementId id, final Token token) {
