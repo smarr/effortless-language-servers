@@ -44,11 +44,11 @@ public class SimpleLanguageTests {
   @Test
   public void testLoadFile() throws IOException, URISyntaxException {
     var adapter = new SimpleAdapter();
-    var diagnostics =
+    var structures =
         adapter.loadFile(
             new File(getRootForSimpleLanguageExamples() + File.separator + "HelloWorld.sl"));
 
-    assertNull(diagnostics);
+    assertNull(structures.getDiagnostics());
   }
 
   @Test
@@ -65,7 +65,7 @@ public class SimpleLanguageTests {
         + "}  \n", path);
 
     List<int[]> tokens =
-        adapter.getProbe(path).getSymbols().getSemanticTokens().getSemanticTokens();
+        adapter.getStructures(path).getSemanticTokens().getSemanticTokens();
     printAllToken(tokens);
 
     assertToken(6, 1, "function", SemanticTokenType.KEYWORD, tokens.get(0));
@@ -95,7 +95,7 @@ public class SimpleLanguageTests {
         + "}", path);
 
     List<int[]> tokens =
-        adapter.getProbe(path).getSymbols().getSemanticTokens().getSemanticTokens();
+        adapter.getStructures(path).getSemanticTokens().getSemanticTokens();
     printAllToken(tokens);
 
     assertToken(1, 1, "function", SemanticTokenType.KEYWORD, tokens.get(0));
@@ -307,7 +307,7 @@ public class SimpleLanguageTests {
   public void testWorkspaceSymbols() throws URISyntaxException {
     var adapter = new SimpleAdapter();
     String path = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test.sl";
-    var diag = adapter.parse(
+    var structures = adapter.parse(
         "function loop(  n  ) {\n"
             + "  i = 0;\n"
             + "  return i;\n"
@@ -317,10 +317,10 @@ public class SimpleLanguageTests {
             + "  println(loop(1000));  \n"
             + "}",
         path);
-    assertNull(diag);
+    assertNull(structures.getDiagnostics());
 
     path = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test2.sl";
-    diag = adapter.parse(
+    structures = adapter.parse(
         "function loop(n, b, c) {\n"
             + "  i = 0;\n"
             + "  return i;\n"
@@ -329,7 +329,7 @@ public class SimpleLanguageTests {
             + "  println(loop(1000, 1, 2));  \n"
             + "}",
         path);
-    assertNull(diag);
+    assertNull(structures.getDiagnostics());
 
     List<SymbolInformation> results = new ArrayListIgnoreIfLastIdentical<>();
     adapter.workspaceSymbol(results, "");
@@ -346,7 +346,7 @@ public class SimpleLanguageTests {
   public void testGotoDefinition() throws URISyntaxException {
     var adapter = new SimpleAdapter();
     String path1 = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test.sl";
-    var diag = adapter.parse(
+    var structures = adapter.parse(
         "\n" +
             "function loop(  n  ) {\n"
             + "  i = 0;\n"
@@ -357,10 +357,10 @@ public class SimpleLanguageTests {
             + "  println(loop(1000));  \n"
             + "}",
         path1);
-    assertNull(diag);
+    assertNull(structures.getDiagnostics());
 
     String path2 = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test2.sl";
-    diag = adapter.parse(
+    structures = adapter.parse(
         "function loop(n, b, c) {\n"
             + "  i = 0;\n"
             + "  return i;\n"
@@ -369,7 +369,7 @@ public class SimpleLanguageTests {
             + "  println(loop(1000, 1, 2));  \n"
             + "}",
         path2);
-    assertNull(diag);
+    assertNull(structures.getDiagnostics());
 
     var locations = adapter.getDefinitions(path2, new Position(6, 12));
     assertEquals(2, locations.size());
@@ -424,7 +424,7 @@ public class SimpleLanguageTests {
   public void testReferencesIncludeDecls() throws URISyntaxException {
     var adapter = new SimpleAdapter();
     String path1 = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test.sl";
-    var diag = adapter.parse(
+    var structures = adapter.parse(
         "function loop(  n  ) {\n"
             + "  loop(1);\n"
             + "}\n"
@@ -433,17 +433,17 @@ public class SimpleLanguageTests {
             + "  println(loop(1000));  \n"
             + "}",
         path1);
-    assertNull(diag);
+    assertNull(structures.getDiagnostics());
 
     String path2 = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test2.sl";
-    diag = adapter.parse(
+    structures = adapter.parse(
         "function loop(n, b, c) {\n"
             + "}\n"
             + "function baz() {\n"
             + "  println(loop(1000, 1, 2));  \n"
             + "}",
         path2);
-    assertNull(diag);
+    assertNull(structures.getDiagnostics());
 
     List<Location> result = adapter.getReferences(path2, new Position(4, 12), true);
 
@@ -469,7 +469,7 @@ public class SimpleLanguageTests {
   public void testReferencesExcludeDecls() throws URISyntaxException {
     var adapter = new SimpleAdapter();
     String path1 = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test.sl";
-    var diag = adapter.parse(
+    var structures = adapter.parse(
         "function loop(  n  ) {\n"
             + "  loop(1);\n"
             + "}\n"
@@ -478,17 +478,17 @@ public class SimpleLanguageTests {
             + "  println(loop(1000));  \n"
             + "}",
         path1);
-    assertNull(diag);
+    assertNull(structures.getDiagnostics());
 
     String path2 = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test2.sl";
-    diag = adapter.parse(
+    structures = adapter.parse(
         "function loop(n, b, c) {\n"
             + "}\n"
             + "function baz() {\n"
             + "  println(loop(1000, 1, 2));  \n"
             + "}",
         path2);
-    assertNull(diag);
+    assertNull(structures.getDiagnostics());
 
     List<Location> result = adapter.getReferences(path2, new Position(4, 12), false);
 
@@ -508,12 +508,13 @@ public class SimpleLanguageTests {
   public void testSyntaxErrors() throws URISyntaxException {
     var adapter = new SimpleAdapter();
     String path = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test.sl";
-    var diag = adapter.parse(
+    var doc = adapter.parse(
         "function main() {\n"
             + "  i = 0;\n"
             + "  println(loop 1000));  \n"
             + "}",
         path);
+    var diag = doc.getDiagnostics();
 
     // since we don't bail on parsing errors, there will be multiple
     assertEquals(3, diag.size());
@@ -551,7 +552,7 @@ public class SimpleLanguageTests {
   public void testCompletionLocals() throws URISyntaxException {
     var adapter = new SimpleAdapter();
     String path1 = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test.sl";
-    var diag = adapter.parse(
+    var structures = adapter.parse(
         "function loop(ii) {\n"
             + "  loop(1);\n"
             + "}\n"
@@ -560,11 +561,11 @@ public class SimpleLanguageTests {
             + "  println(i);  \n"
             + "}",
         path1);
-    assertNull(diag);
+    assertNull(structures.getDiagnostics());
 
     String path2 = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test2.sl";
-    diag = adapter.parse("function loop(iii) {}", path2);
-    assertNull(diag);
+    structures = adapter.parse("function loop(iii) {}", path2);
+    assertNull(structures.getDiagnostics());
 
     CompletionList result = adapter.getCompletions(path1, new Position(6, 11));
     assertFalse(result.isIncomplete());
@@ -582,7 +583,7 @@ public class SimpleLanguageTests {
   public void testCompletionProperties() throws URISyntaxException {
     var adapter = new SimpleAdapter();
     String path1 = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test.sl";
-    var diag = adapter.parse(
+    var structures = adapter.parse(
         "function loop() {\n"
             + "  o = new(); \n"
             + "  o.prop2 = 32;\n"
@@ -595,11 +596,11 @@ public class SimpleLanguageTests {
         path1);
 
     String path2 = "file:" + getRootForSimpleLanguageExamples() + File.separator + "Test2.sl";
-    diag = adapter.parse("function baz() {\n"
+    structures = adapter.parse("function baz() {\n"
         + " o = new();\n"
         + " o.prop1 = 3;\n"
         + "}", path2);
-    assertNull(diag);
+    assertNull(structures.getDiagnostics());
 
     // TODO: figure out how to make getPossiblyIncompleteElement find that we actually just
     // parsed a dot

@@ -13,18 +13,21 @@ import org.eclipse.lsp4j.DiagnosticSeverity;
 import simple.SLNodeFactory;
 import simple.SimpleLanguageLexer;
 import simple.SimpleLanguageParser;
+import som.langserv.structure.DocumentStructures;
 
 
 public class SimpleParser extends SimpleLanguageParser {
 
-  private final SimpleStructures struturalProbe;
+  private final DocumentStructures structures;
 
   public SimpleParser(final SimpleLanguageLexer lexer,
-      final SimpleStructures structuralProbe) {
+      final DocumentStructures structures) {
     super(new CommonTokenStream(lexer));
-    this.struturalProbe = structuralProbe;
-    addParseListener(new SimpleTokenCollector(structuralProbe));
-    setFactory(structuralProbe.getFactory());
+    this.structures = structures;
+    SimpleNodeFactory factory = new SimpleNodeFactory(structures);
+
+    addParseListener(new SimpleTokenCollector(factory));
+    setFactory(factory);
 
     lexer.removeErrorListeners();
     removeErrorListeners();
@@ -60,7 +63,7 @@ public class SimpleParser extends SimpleLanguageParser {
       diag.setSource("Simple Language Parser");
       diag.setData(token.getText().equals("."));
 
-      struturalProbe.getSymbols().addDiagnostic(diag);
+      structures.addDiagnostic(diag);
     }
   }
 

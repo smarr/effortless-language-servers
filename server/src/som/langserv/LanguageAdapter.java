@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -33,20 +34,30 @@ import org.eclipse.lsp4j.SignatureHelpContext;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.services.LanguageClient;
 
-import som.langserv.structure.DocumentData;
 import som.langserv.structure.DocumentStructures;
 import som.langserv.structure.Pair;
 import som.langserv.structure.ParseContextKind;
+import som.langserv.structure.SemanticTokens;
 import util.ArrayListIgnoreIfLastIdentical;
 
 
-public abstract class LanguageAdapter<Probe> {
+public abstract class LanguageAdapter {
   private LanguageClient client;
+
+  private final Map<String, DocumentStructures> structures;
 
   private final Map<String, List<int[]>> semanticTokenCache;
 
   public LanguageAdapter() {
+    this.structures = new LinkedHashMap<>();
     this.semanticTokenCache = new HashMap<>();
+  }
+
+  protected void putStructures(final String normalizedPath,
+      final DocumentStructures docStructures) {
+    synchronized (structures) {
+      structures.put(normalizedPath, docStructures);
+    }
   }
 
   public abstract String getFileEnding();
@@ -98,9 +109,11 @@ public abstract class LanguageAdapter<Probe> {
         loadFolder(f, allDiagnostics);
       } else if (f.getName().endsWith(getFileEnding())) {
         try {
-          List<Diagnostic> diagnostics = loadFile(f);
+          DocumentStructures structures = loadFile(f);
           String uri = f.toURI().toString();
-          allDiagnostics.put(uri, diagnostics);
+          if (structures.getDiagnostics() != null) {
+            allDiagnostics.put(uri, structures.getDiagnostics());
+          }
         } catch (IOException | URISyntaxException e) {
           // if loading fails, we don't do anything, just move on to the next file
         }
@@ -108,7 +121,7 @@ public abstract class LanguageAdapter<Probe> {
     }
   }
 
-  public List<Diagnostic> loadFile(final File f) throws IOException, URISyntaxException {
+  public DocumentStructures loadFile(final File f) throws IOException, URISyntaxException {
     byte[] content = Files.readAllBytes(f.toPath());
     String str = new String(content, StandardCharsets.UTF_8);
     String uri = f.toURI().toString();
@@ -124,12 +137,24 @@ public abstract class LanguageAdapter<Probe> {
     return uri.getPath();
   }
 
-  public abstract List<Diagnostic> parse(final String text, final String sourceUri)
+  public abstract DocumentStructures parse(final String text, final String sourceUri)
       throws URISyntaxException;
 
-  protected abstract Probe getProbe(String documentUri);
+  public final DocumentStructures getStructures(final String documentUri) {
+    synchronized (structures) {
+      try {
+        return structures.get(docUriToNormalizedPath(documentUri));
+      } catch (URISyntaxException e) {
+        return null;
+      }
+    }
+  }
 
-  protected abstract Collection<Probe> getProbes();
+  protected final Collection<DocumentStructures> getDocuments() {
+    synchronized (structures) {
+      return new ArrayList<>(structures.values());
+    }
+  }
 
   public void reportError(final String msgStr) {
     MessageParams msg = new MessageParams();
@@ -151,50 +176,48 @@ public abstract class LanguageAdapter<Probe> {
     }
   }
 
-  public abstract List<Diagnostic> getDiagnostics(final String documentUri);
-
   public abstract void getCodeLenses(final List<CodeLens> codeLenses,
       final String documentUri);
 
   public final void workspaceSymbol(final List<SymbolInformation> results,
       final String query) {
-    var probes = getProbes();
-    for (var probe : probes) {
-      ((DocumentData) probe).symbols(results, query);
+    var docs = getDocuments();
+    for (var doc : docs) {
+      doc.find(results, query);
     }
   }
 
   public final List<? extends DocumentSymbol> documentSymbol(final String documentUri) {
-    Probe probe = getProbe(documentUri);
-    return ((DocumentData) probe).getRootSymbols();
+    DocumentStructures doc = getStructures(documentUri);
+    return doc.getRootSymbols();
   }
 
   public final Hover hover(final String uri, final Position position) {
-    Probe probe = getProbe(uri);
-    return ((DocumentData) probe).getHover(position);
+    DocumentStructures doc = getStructures(uri);
+    return doc.getHover(position);
   }
 
   public final SignatureHelp signatureHelp(final String uri, final Position position,
       final SignatureHelpContext context) {
-    Probe probe = getProbe(uri);
-    return ((DocumentData) probe).getSignatureHelp(position, context);
+    DocumentStructures doc = getStructures(uri);
+    return doc.getSignatureHelp(position, context);
   }
 
   public final List<? extends LocationLink> getDefinitions(final String uri,
       final Position pos) {
-    Probe probe = getProbe(uri);
-    var element = ((DocumentData) probe).getElement(pos);
+    DocumentStructures doc = getStructures(uri);
+    var element = doc.getElement(pos);
 
     List<LocationLink> definitions = new ArrayList<>();
-    ((DocumentData) probe).lookupDefinitions(element, definitions);
+    doc.lookupDefinitions(element, definitions);
 
-    for (Probe p : getProbes()) {
+    for (DocumentStructures d : getDocuments()) {
       // we already have those, so, skip this one
-      if (p == probe) {
+      if (doc == d) {
         continue;
       }
 
-      ((DocumentData) p).lookupDefinitions(element, definitions);
+      d.lookupDefinitions(element, definitions);
     }
 
     return definitions;
@@ -202,14 +225,14 @@ public abstract class LanguageAdapter<Probe> {
 
   public final List<DocumentHighlight> getHighlight(final String uri,
       final Position position) {
-    Probe probe = getProbe(uri);
-    return ((DocumentData) probe).getHighlight(position);
+    DocumentStructures doc = getStructures(uri);
+    return doc.getHighlight(position);
   }
 
   public final List<Location> getReferences(final String uri, final Position position,
       final boolean includeDeclaration) {
-    Probe probe = getProbe(uri);
-    var element = ((DocumentData) probe).getElement(position);
+    DocumentStructures doc = getStructures(uri);
+    var element = doc.getElement(position);
 
     if (element == null) {
       return null;
@@ -217,21 +240,20 @@ public abstract class LanguageAdapter<Probe> {
 
     List<Location> result = new ArrayListIgnoreIfLastIdentical<>();
 
-    for (Probe p : getProbes()) {
+    for (DocumentStructures d : getDocuments()) {
       if (includeDeclaration) {
-        ((DocumentData) p).lookupDefinitionsLocation(element, result);
+        d.lookupDefinitionsLocation(element, result);
       }
 
-      ((DocumentData) p).lookupReferences(element, result);
+      d.lookupReferences(element, result);
     }
 
     return result;
   }
 
   public final CompletionList getCompletions(final String uri, final Position position) {
-    Probe probe = getProbe(uri);
-    Pair<ParseContextKind, String> element =
-        ((DocumentData) probe).getPossiblyIncompleteElement(position);
+    DocumentStructures doc = getStructures(uri);
+    Pair<ParseContextKind, String> element = doc.getPossiblyIncompleteElement(position);
 
     if (element == null) {
       return null;
@@ -243,23 +265,23 @@ public abstract class LanguageAdapter<Probe> {
     List<CompletionItem> items = new ArrayListIgnoreIfLastIdentical<>();
     completion.setItems(items);
 
-    ((DocumentData) probe).find(element.v2, element.v1, position, items);
+    doc.find(element.v2, element.v1, position, items);
 
-    for (Probe p : getProbes()) {
-      if (p == probe) {
+    for (DocumentStructures d : getDocuments()) {
+      if (d == doc) {
         continue;
       }
 
-      ((DocumentData) p).find(element.v2, element.v1, position, items);
+      d.find(element.v2, element.v1, position, items);
     }
     return completion;
   }
 
   public final List<Integer> getSemanticTokensFull(final String uri) {
-    Probe probe = getProbe(uri);
-    List<int[]> tokens = ((DocumentStructures) probe).getSemanticTokens().getSemanticTokens();
+    DocumentStructures doc = getStructures(uri);
+    List<int[]> tokens = doc.getSemanticTokens().getSemanticTokens();
 
-    Diagnostic error = ((DocumentStructures) probe).getFirstErrorOrNull();
+    Diagnostic error = doc.getFirstErrorOrNull();
     if (error == null) {
       semanticTokenCache.put(uri, tokens);
       return SemanticTokens.makeRelativeTo11(tokens);

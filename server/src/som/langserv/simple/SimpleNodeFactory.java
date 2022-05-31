@@ -29,16 +29,16 @@ import som.langserv.structure.SemanticTokens;
 
 public class SimpleNodeFactory extends SLNodeFactory {
 
-  private final DocumentStructures symbols;
+  private final DocumentStructures structures;
   private final SemanticTokens     semanticTokens;
 
   private List<String>    paramNames;
   private LanguageElement currentFunction;
 
-  public SimpleNodeFactory(final SimpleStructures probe) {
+  public SimpleNodeFactory(final DocumentStructures structures) {
     super(null, null);
-    this.symbols = probe.getSymbols();
-    this.semanticTokens = symbols.getSemanticTokens();
+    this.structures = structures;
+    this.semanticTokens = structures.getSemanticTokens();
   }
 
   protected void addSemanticToken(final Token token, final SemanticTokenType type) {
@@ -54,7 +54,7 @@ public class SimpleNodeFactory extends SLNodeFactory {
   public void startFunction(final Token identifier, final Token s) {
     addSemanticToken(identifier, SemanticTokenType.FUNCTION);
 
-    currentFunction = symbols.startSymbol(identifier.getText(), SymbolKind.Function,
+    currentFunction = structures.startSymbol(identifier.getText(), SymbolKind.Function,
         new VarId(identifier.getText()), getRange(identifier));
 
     paramNames = new ArrayList<>(3);
@@ -69,7 +69,7 @@ public class SimpleNodeFactory extends SLNodeFactory {
     setFunctionSignature();
     paramNames = null;
 
-    symbols.completeSymbol(currentFunction,
+    structures.completeSymbol(currentFunction,
         new Range(selectionRange.getStart(), getEnd(endBrace)));
   }
 
@@ -232,10 +232,10 @@ public class SimpleNodeFactory extends SLNodeFactory {
 
   private void recordDefinition(final Token t, final LanguageElementId id,
       final SymbolKind kind, final boolean afterNavigation) {
-    symbols.recordDefinition(t.getText(), id, kind, getRange(t), afterNavigation);
+    structures.recordDefinition(t.getText(), id, kind, getRange(t), afterNavigation);
   }
 
   private Reference referenceSymbol(final LanguageElementId id, final Token token) {
-    return symbols.referenceSymbol(id, getRange(token));
+    return structures.referenceSymbol(id, getRange(token));
   }
 }

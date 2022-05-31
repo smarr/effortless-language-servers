@@ -40,7 +40,7 @@ import bdt.tools.nodes.Invocation;
 import bdt.tools.structure.StructuralProbe;
 import som.langserv.LanguageAdapter;
 import som.langserv.ServerLauncher;
-import som.langserv.structure.SemanticTokens;
+import som.langserv.structure.DocumentStructures;
 import trufflesom.compiler.Field;
 import trufflesom.compiler.Parser;
 import trufflesom.compiler.Parser.ParseError;
@@ -199,7 +199,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
   }
 
   @Override
-  public List<Diagnostic> loadFile(final File f) throws IOException, URISyntaxException {
+  public DocumentStructures loadFile(final File f) throws IOException, URISyntaxException {
     byte[] content = Files.readAllBytes(f.toPath());
     String str = new String(content, StandardCharsets.UTF_8);
     String uri = f.toURI().toString();
@@ -207,7 +207,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
   }
 
   @Override
-  public List<Diagnostic> parse(final String text, final String sourceUri) {
+  public DocumentStructures parse(final String text, final String sourceUri) {
     try {
       return pool.submit(() -> parseEnterLeave(text, sourceUri)).get();
     } catch (InterruptedException | ExecutionException e) {
@@ -215,7 +215,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
     }
   }
 
-  public List<Diagnostic> parseEnterLeave(final String text, final String sourceUri)
+  public DocumentStructures parseEnterLeave(final String text, final String sourceUri)
       throws URISyntaxException {
     try {
       context.enter();
@@ -225,7 +225,7 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
     }
   }
 
-  public List<Diagnostic> parseSync(final String text, final String sourceUri)
+  public DocumentStructures parseSync(final String text, final String sourceUri)
       throws URISyntaxException {
     String path = docUriToNormalizedPath(sourceUri);
     Source source =

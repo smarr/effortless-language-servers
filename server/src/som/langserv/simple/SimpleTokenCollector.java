@@ -28,12 +28,10 @@ import som.langserv.structure.SemanticTokenType;
 
 public class SimpleTokenCollector implements SimpleLanguageListener {
 
-  private final SimpleStructures  probe;
   private final SimpleNodeFactory factory;
 
-  public SimpleTokenCollector(final SimpleStructures probe) {
-    this.probe = probe;
-    this.factory = probe.getFactory();
+  public SimpleTokenCollector(final SimpleNodeFactory factory) {
+    this.factory = factory;
   }
 
   @Override

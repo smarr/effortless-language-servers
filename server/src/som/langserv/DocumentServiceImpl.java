@@ -11,7 +11,6 @@ import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.DefinitionParams;
-import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
@@ -35,15 +34,17 @@ import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.TextDocumentService;
 
+import som.langserv.structure.DocumentStructures;
+
 
 /**
  * Implements things like completion, hover, signature help, etc.
  */
 public class DocumentServiceImpl implements TextDocumentService {
 
-  private final LanguageAdapter<?>[] adapters;
+  private final LanguageAdapter[] adapters;
 
-  public DocumentServiceImpl(final LanguageAdapter<?>[] adapters) {
+  public DocumentServiceImpl(final LanguageAdapter[] adapters) {
     this.adapters = adapters;
   }
 
@@ -67,11 +68,11 @@ public class DocumentServiceImpl implements TextDocumentService {
 
   private void parseDocument(final String documentUri, final String text) {
     try {
-      for (LanguageAdapter<?> adapter : adapters) {
+      for (LanguageAdapter adapter : adapters) {
         if (adapter.handlesUri(documentUri)) {
-          List<Diagnostic> diagnostics = adapter.parse(text, documentUri);
-          adapter.lintSends(documentUri, diagnostics);
-          adapter.reportDiagnostics(diagnostics, documentUri);
+          DocumentStructures structures = adapter.parse(text, documentUri);
+          adapter.lintSends(documentUri, structures.getDiagnostics());
+          adapter.reportDiagnostics(structures.getDiagnostics(), documentUri);
           return;
         }
       }
@@ -212,9 +213,9 @@ public class DocumentServiceImpl implements TextDocumentService {
     return CompletableFuture.completedFuture(Either.forRight(result));
   }
 
-  private LanguageAdapter<?> getResponsibleAdapter(final TextDocumentIdentifier docId) {
+  private LanguageAdapter getResponsibleAdapter(final TextDocumentIdentifier docId) {
     String uri = docId.getUri();
-    for (LanguageAdapter<?> adapter : adapters) {
+    for (LanguageAdapter adapter : adapters) {
       if (adapter.handlesUri(uri)) {
         return adapter;
       }
