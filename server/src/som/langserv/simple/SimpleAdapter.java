@@ -17,7 +17,6 @@ import com.oracle.truffle.sl.parser.SLParseError;
 import simple.SimpleLanguageLexer;
 import som.langserv.LanguageAdapter;
 import som.langserv.structure.DocumentStructures;
-import som.langserv.structure.SemanticTokens;
 
 
 public class SimpleAdapter extends LanguageAdapter<SimpleStructures> {
@@ -121,11 +120,6 @@ public class SimpleAdapter extends LanguageAdapter<SimpleStructures> {
     synchronized (structuralProbes) {
       return new ArrayList<>(structuralProbes.values());
     }
-  }
-
-  @Override
-  public List<Integer> makeRelative(final List<int[]> tokens) {
-    return SemanticTokens.makeRelative(tokens, 1, 0);
   }
 
   @Override

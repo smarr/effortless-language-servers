@@ -51,7 +51,6 @@ import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.objectstorage.StorageAccessor;
 import som.langserv.LanguageAdapter;
 import som.langserv.ServerLauncher;
-import som.langserv.structure.SemanticTokens;
 import som.vm.Primitives;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
@@ -426,18 +425,6 @@ public class NewspeakAdapter extends LanguageAdapter<NewspeakStructures> {
   }
 
   @Override
-  public List<int[]> getSemanticTokens(final String documentUri) {
-    String path;
-    try {
-      path = docUriToNormalizedPath(documentUri);
-      return getProbe(path).getSemanticTokens();
-    } catch (URISyntaxException e) {
-      return null;
-    }
-
-  }
-
-  @Override
   public void getCodeLenses(final List<CodeLens> codeLenses, final String documentUri) {
     NewspeakStructures probe = getProbe(documentUri);
     if (probe == null) {
@@ -460,10 +447,5 @@ public class NewspeakAdapter extends LanguageAdapter<NewspeakStructures> {
       e.printStackTrace();
       return null;
     }
-  }
-
-  @Override
-  public List<Integer> makeRelative(final List<int[]> tokens) {
-    return SemanticTokens.makeRelativeTo11(tokens);
   }
 }

@@ -153,8 +153,6 @@ public abstract class LanguageAdapter<Probe> {
 
   public abstract List<Diagnostic> getDiagnostics(final String documentUri);
 
-  public abstract List<Integer> makeRelative(List<int[]> tokens);
-
   public abstract void getCodeLenses(final List<CodeLens> codeLenses,
       final String documentUri);
 
@@ -264,7 +262,7 @@ public abstract class LanguageAdapter<Probe> {
     Diagnostic error = ((DocumentStructures) probe).getFirstErrorOrNull();
     if (error == null) {
       semanticTokenCache.put(uri, tokens);
-      return makeRelative(tokens);
+      return SemanticTokens.makeRelativeTo11(tokens);
     }
 
     List<int[]> prevTokens = semanticTokenCache.get(uri);
@@ -275,6 +273,6 @@ public abstract class LanguageAdapter<Probe> {
     List<int[]> withOldAndWithoutError =
         combineTokensRemovingErroneousLine(
             error.getRange().getStart(), prevTokens, tokens);
-    return makeRelative(withOldAndWithoutError);
+    return SemanticTokens.makeRelativeTo11(withOldAndWithoutError);
   }
 }

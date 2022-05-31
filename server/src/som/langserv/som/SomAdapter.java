@@ -546,22 +546,6 @@ public class SomAdapter extends LanguageAdapter<SomStructures> {
     }
   }
 
-  @Override
-  public List<int[]> getSemanticTokens(final String documentUri) {
-    String path;
-    try {
-      path = docUriToNormalizedPath(documentUri);
-      return getProbe(path).getSemanticTokens();
-    } catch (URISyntaxException e) {
-      return null;
-    }
-  }
-
-  @Override
-  public List<Integer> makeRelative(final List<int[]> tokens) {
-    return SemanticTokens.makeRelativeTo11(tokens);
-  }
-
   private static class SomCompiler extends SourcecodeCompiler {
 
     private boolean sourceIsForPath(final Source s, final String path) {
