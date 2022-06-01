@@ -13,13 +13,14 @@ import org.eclipse.lsp4j.Range;
 import som.compiler.MixinDefinition;
 import som.langserv.newspeak.NewspeakStructures.Call;
 import som.langserv.som.PositionConversion;
+import som.langserv.structure.DocumentStructures;
 
 
 public class Lint {
   private static final String LINT_NAME = "SOMns Lint";
 
   public static void checkModuleName(final String filepath, final MixinDefinition def,
-      final List<Diagnostic> diagnostics) {
+      final DocumentStructures structures) {
     File f = new File(filepath);
     String name = f.getName();
     checkFileEnding(name, diagnostics);
@@ -54,7 +55,7 @@ public class Lint {
     }
   }
 
-  public static void checkLastChar(final String text, final List<Diagnostic> diagnostics) {
+  public static void checkLastChar(final String text, final DocumentStructures structures) {
     int finalCharPos = text.length() - 1;
     if (text.charAt(finalCharPos) != '\n') {
 
