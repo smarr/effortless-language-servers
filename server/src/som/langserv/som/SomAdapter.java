@@ -58,7 +58,7 @@ import trufflesom.vmobjects.SInvokable;
 import trufflesom.vmobjects.SSymbol;
 
 
-public class SomAdapter extends LanguageAdapter<SomStructures> {
+public class SomAdapter extends LanguageAdapter {
   private final static String CORE_LIB_PROP = "som.langserv.som-core-lib";
   public final static String  CORE_LIB_PATH = System.getProperty(CORE_LIB_PROP);
 

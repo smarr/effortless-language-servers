@@ -36,8 +36,8 @@ import som.langserv.structure.SemanticTokenType;
 
 public class LanguageServerImpl implements LanguageServer, LanguageClientAware {
 
-  private final SomWorkspace       workspace;
-  private final LanguageAdapter<?> adapters[];
+  private final WorkspaceImpl   workspace;
+  private final LanguageAdapter adapters[];
 
   private LanguageClient client;
 
@@ -47,7 +47,7 @@ public class LanguageServerImpl implements LanguageServer, LanguageClientAware {
     adapters = new LanguageAdapter[] {
         new NewspeakAdapter(), new SomAdapter(), new SimpleAdapter()};
 
-    workspace = new SomWorkspace(adapters);
+    workspace = new WorkspaceImpl(adapters);
     this.documentService = new DocumentServiceImpl(adapters);
   }
 
@@ -119,7 +119,7 @@ public class LanguageServerImpl implements LanguageServer, LanguageClientAware {
       return;
     }
 
-    for (LanguageAdapter<?> adapter : adapters) {
+    for (LanguageAdapter adapter : adapters) {
       for (WorkspaceFolder f : folders) {
         try {
           adapter.loadWorkspace(f.getUri());
@@ -159,7 +159,7 @@ public class LanguageServerImpl implements LanguageServer, LanguageClientAware {
 
   @Override
   public void connect(final LanguageClient client) {
-    for (LanguageAdapter<?> adapter : adapters) {
+    for (LanguageAdapter adapter : adapters) {
       adapter.connect(client);
     }
     this.client = client;

@@ -59,7 +59,7 @@ import som.vmobjects.SSymbol;
 /**
  * Provides Newspeak/SOMns specific functionality.
  */
-public class NewspeakAdapter extends LanguageAdapter<NewspeakStructures> {
+public class NewspeakAdapter extends LanguageAdapter {
 
   private final static String CORE_LIB_PROP = "som.langserv.somns-core-lib";
   public final static String  CORE_LIB_PATH = System.getProperty(CORE_LIB_PROP);

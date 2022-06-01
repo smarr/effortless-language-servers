@@ -2,6 +2,7 @@ package som.langserv;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static som.langserv.Helpers.assertRange;
 import static som.langserv.Helpers.assertToken;
 import static som.langserv.Helpers.printAllToken;
@@ -26,10 +27,10 @@ public class SomTests {
   @Test
   public void testLoadFile() throws IOException, URISyntaxException {
     var adapter = new SomAdapter();
-    var diagnostics =
+    var structures =
         adapter.loadFile(new File(SomAdapter.CORE_LIB_PATH + "/Examples/Hello.som"));
 
-    assertEquals(0, diagnostics.size());
+    assertNull(structures.getDiagnostics());
   }
 
   @Test
@@ -52,12 +53,12 @@ public class SomTests {
   public void testSemanticHighlightingInSmallExample() throws URISyntaxException {
     var adapter = new SomAdapter();
     String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
-    var diagnostics = adapter.parse("Hello = (\n"
+    var structures = adapter.parse("Hello = (\n"
         + "    \"The 'run' method is called when initializing the system\"\n"
         + "    run = ('Hello, World from SOM' println )\n"
         + ")\n", path);
 
-    assertEquals(0, diagnostics.size());
+    assertNull(structures.getDiagnostics());
 
     List<int[]> tokens = adapter.getSemanticTokens(path);
     printAllToken(tokens);
@@ -78,12 +79,12 @@ public class SomTests {
   public void testSymbols() {
     var adapter = new SomAdapter();
     String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
-    var diagnostics = adapter.parse("Hello = (\n"
+    var structures = adapter.parse("Hello = (\n"
         + "    \"The 'run' method is called when initializing the system\"\n"
         + "    run = ('Hello, World from SOM' println )\n"
         + ")\n", path);
 
-    assertEquals(0, diagnostics.size());
+    assertNull(structures.getDiagnostics());
 
     var symbols = adapter.documentSymbol(path);
     assertEquals(1, symbols.size());
@@ -99,14 +100,14 @@ public class SomTests {
   public void testSymbolDetails() {
     var adapter = new SomAdapter();
     String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
-    var diagnostics = adapter.parse("Hello = (\n"
+    var structures = adapter.parse("Hello = (\n"
         + "run = ()\n"
         + "run:   arg = ()\n"
         + "+   arg = ()\n"
         + "run: arg   with:  arg2   = ()\n"
         + ")\n", path);
 
-    assertEquals(0, diagnostics.size());
+    assertNull(structures.getDiagnostics());
 
     var symbols = adapter.documentSymbol(path);
     assertEquals(1, symbols.size());
@@ -132,14 +133,14 @@ public class SomTests {
   public void testSymbolLineAndPositionInfo() {
     var adapter = new SomAdapter();
     String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
-    var diagnostics = adapter.parse("Hello = (\n"
+    var structures = adapter.parse("Hello = (\n"
         + "run = ()\n"
         + "run:   arg = ()\n"
         + "+   arg = ()\n"
         + "run: arg   with:  arg2   = ()\n"
         + ")\n", path);
 
-    assertEquals(0, diagnostics.size());
+    assertNull(structures.getDiagnostics());
 
     var symbols = adapter.documentSymbol(path);
     assertEquals(1, symbols.size());
@@ -166,14 +167,14 @@ public class SomTests {
   public void testHover() {
     var adapter = new SomAdapter();
     String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
-    var diagnostics = adapter.parse("Hello = (\n"
+    var structures = adapter.parse("Hello = (\n"
         + "run = (\n"
         + "  self run: 1234\n"
         + ")\n"
         + "run: arg = ()\n"
         + ")\n", path);
 
-    assertEquals(0, diagnostics.size());
+    assertNull(structures.getDiagnostics());
 
     Hover hover = adapter.hover(path, new Position(3, 9));
     assertNotNull(hover);

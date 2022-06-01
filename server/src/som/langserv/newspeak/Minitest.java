@@ -20,6 +20,7 @@ import com.google.common.collect.Lists;
 import som.compiler.MixinDefinition;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.langserv.LanguageAdapter;
+import som.langserv.som.PositionConversion;
 import som.vm.Symbols;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
@@ -61,7 +62,7 @@ public class Minitest {
     Command cmd = new Command();
     cmd.setCommand(COMMAND);
     cmd.setTitle("Run tests");
-    Range r = LanguageAdapter.toRange(def.getNameSourceSection());
+    Range r = PositionConversion.toRange(def.getNameSourceSection());
     cmd.setArguments(Lists.newArrayList(documentUri, def.getName().getString(),
         r.getStart().getLine(), r.getStart().getCharacter(), r.getEnd().getLine(),
         r.getEnd().getCharacter()));
@@ -90,7 +91,7 @@ public class Minitest {
     Command cmd = new Command();
     cmd.setCommand(COMMAND);
     cmd.setTitle("Run test");
-    Range r = LanguageAdapter.toRange(i.getSourceSection());
+    Range r = PositionConversion.toRange(i.getSourceSection());
     cmd.setArguments(Lists.newArrayList(documentUri,
         def.getName().getString() + "." + i.getSignature().getString(),
         r.getStart().getLine(), r.getStart().getCharacter(), r.getEnd().getLine(),
