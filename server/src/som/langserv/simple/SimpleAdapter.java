@@ -12,10 +12,16 @@ import com.oracle.truffle.sl.parser.SLParseError;
 
 import simple.SimpleLanguageLexer;
 import som.langserv.LanguageAdapter;
+import som.langserv.lint.LintEndsWithNewline;
+import som.langserv.lint.Linter;
 import som.langserv.structure.DocumentStructures;
 
 
 public class SimpleAdapter extends LanguageAdapter {
+
+  public SimpleAdapter(final Linter[] linters) {
+    super(new Linter[] {new LintEndsWithNewline()});
+  }
 
   @Override
   public String getFileEnding() {

@@ -30,6 +30,8 @@ import som.compiler.Variable;
 import som.interpreter.SomLanguage;
 import som.interpreter.objectstorage.StorageAccessor;
 import som.langserv.LanguageAdapter;
+import som.langserv.lint.LintEndsWithNewline;
+import som.langserv.lint.Linter;
 import som.langserv.structure.DocumentStructures;
 import som.vm.Primitives;
 import som.vmobjects.SInvokable;
@@ -47,6 +49,7 @@ public class NewspeakAdapter extends LanguageAdapter {
   private final SomCompiler compiler;
 
   public NewspeakAdapter() {
+    super(new Linter[] {new LintEndsWithNewline(), new LintFileHasNSEnding()});
     VM vm = initializePolyglot();
     this.compiler = new SomCompiler(vm.getLanguage());
     registerVmMirrorPrimitives(vm);

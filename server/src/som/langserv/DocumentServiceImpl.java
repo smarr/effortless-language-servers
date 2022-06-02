@@ -1,5 +1,6 @@
 package som.langserv;
 
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +35,7 @@ import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.TextDocumentService;
 
+import som.langserv.lint.Linter;
 import som.langserv.structure.DocumentStructures;
 
 
@@ -71,6 +73,14 @@ public class DocumentServiceImpl implements TextDocumentService {
       for (LanguageAdapter adapter : adapters) {
         if (adapter.handlesUri(documentUri)) {
           DocumentStructures structures = adapter.parse(text, documentUri);
+
+          URI uri = new URI(documentUri).normalize();
+          String filePath = uri.getPath();
+
+          for (Linter lint : adapter.getLinters()) {
+            lint.lint(filePath, text, structures);
+          }
+
           adapter.lintSends(documentUri, structures.getDiagnostics());
           adapter.reportDiagnostics(structures.getDiagnostics(), documentUri);
           return;

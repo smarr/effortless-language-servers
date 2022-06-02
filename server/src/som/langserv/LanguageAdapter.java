@@ -34,6 +34,7 @@ import org.eclipse.lsp4j.SignatureHelpContext;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.services.LanguageClient;
 
+import som.langserv.lint.Linter;
 import som.langserv.structure.DocumentStructures;
 import som.langserv.structure.Pair;
 import som.langserv.structure.ParseContextKind;
@@ -48,9 +49,12 @@ public abstract class LanguageAdapter {
 
   private final Map<String, List<int[]>> semanticTokenCache;
 
-  public LanguageAdapter() {
+  private final Linter[] linters;
+
+  public LanguageAdapter(final Linter[] linters) {
     this.structures = new LinkedHashMap<>();
     this.semanticTokenCache = new HashMap<>();
+    this.linters = linters;
   }
 
   protected void putStructures(final String normalizedPath,
@@ -296,5 +300,9 @@ public abstract class LanguageAdapter {
         combineTokensRemovingErroneousLine(
             error.getRange().getStart(), prevTokens, tokens);
     return SemanticTokens.makeRelativeTo11(withOldAndWithoutError);
+  }
+
+  protected Linter[] getLinters() {
+    return linters;
   }
 }
