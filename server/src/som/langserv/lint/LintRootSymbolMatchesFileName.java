@@ -9,7 +9,7 @@ import org.eclipse.lsp4j.DocumentSymbol;
 import som.langserv.structure.DocumentStructures;
 
 
-public class LintRootSymbolMatchesFileName implements Linter {
+public class LintRootSymbolMatchesFileName implements FileLinter {
 
   @Override
   public void lint(final String filePath, final String text,

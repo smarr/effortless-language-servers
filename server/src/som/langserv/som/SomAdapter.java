@@ -28,6 +28,11 @@ import bdt.basic.ProgramDefinitionError;
 import bdt.source.SourceCoordinate;
 import bdt.tools.structure.StructuralProbe;
 import som.langserv.LanguageAdapter;
+import som.langserv.lint.FileLinter;
+import som.langserv.lint.LintEndsWithNewline;
+import som.langserv.lint.LintUseNeedsDefine;
+import som.langserv.lint.WorkspaceLinter;
+import som.langserv.newspeak.LintFileHasNSEnding;
 import som.langserv.structure.DocumentStructures;
 import trufflesom.compiler.Field;
 import trufflesom.compiler.Parser;
@@ -54,6 +59,9 @@ public class SomAdapter extends LanguageAdapter {
   private final SomCompiler somCompiler;
 
   public SomAdapter() {
+    super(
+        new FileLinter[] {new LintEndsWithNewline(), new LintFileHasNSEnding()},
+        new WorkspaceLinter[] {new LintUseNeedsDefine()});
     this.structuralProbes = new LinkedHashMap<>();
     this.pool = new ForkJoinPool(1);
     this.somCompiler = new SomCompiler();
@@ -129,17 +137,6 @@ public class SomAdapter extends LanguageAdapter {
   }
 
   @Override
-  public void lintSends(final String docUri, final List<Diagnostic> diagnostics)
-      throws URISyntaxException {
-    // TODO: implement linting
-    SomStructures probe;
-    synchronized (structuralProbes) {
-      probe = structuralProbes.get(docUriToNormalizedPath(docUri));
-    }
-    // SomLint.checkSends(structuralProbes, probe, diagnostics);
-  }
-
-  @Override
   public ForkJoinTask<?> loadWorkspace(final String uri) throws URISyntaxException {
     if (uri == null) {
       return null;
@@ -197,8 +194,8 @@ public class SomAdapter extends LanguageAdapter {
               .mimeType(SomLanguage.MIME_TYPE)
               .uri(new URI(sourceUri).normalize()).build();
 
-    DocumentStructures structures = new DocumentStructures(sourceUri, "file:" + path);
     SomStructures newProbe = new SomStructures(source, sourceUri, "file:" + path);
+    DocumentStructures structures = newProbe.getDocumentStructures();
 
     try {
       try {

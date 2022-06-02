@@ -31,6 +31,7 @@ import som.interpreter.SomLanguage;
 import som.interpreter.objectstorage.StorageAccessor;
 import som.langserv.LanguageAdapter;
 import som.langserv.lint.LintEndsWithNewline;
+import som.langserv.lint.LintUseNeedsDefine;
 import som.langserv.lint.Linter;
 import som.langserv.structure.DocumentStructures;
 import som.vm.Primitives;
@@ -49,7 +50,9 @@ public class NewspeakAdapter extends LanguageAdapter {
   private final SomCompiler compiler;
 
   public NewspeakAdapter() {
-    super(new Linter[] {new LintEndsWithNewline(), new LintFileHasNSEnding()});
+    super(
+        new Linter[] {new LintEndsWithNewline(), new LintFileHasNSEnding()},
+        new Linter[] {new LintUseNeedsDefine()});
     VM vm = initializePolyglot();
     this.compiler = new SomCompiler(vm.getLanguage());
     registerVmMirrorPrimitives(vm);
@@ -99,16 +102,6 @@ public class NewspeakAdapter extends LanguageAdapter {
         Boolean.class) : "INIT is exected to return true after initializing the Context";
 
     return SomLanguage.getCurrent().getVM();
-  }
-
-  @Override
-  public void lintSends(final String docUri, final List<Diagnostic> diagnostics)
-      throws URISyntaxException {
-    NewspeakStructures probe;
-    synchronized (structuralProbes) {
-      probe = structuralProbes.get(docUriToNormalizedPath(docUri));
-    }
-    Lint.checkSends(structuralProbes, probe, diagnostics);
   }
 
   @Override

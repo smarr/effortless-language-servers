@@ -4,12 +4,12 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Range;
 
-import som.langserv.lint.Linter;
+import som.langserv.lint.FileLinter;
 import som.langserv.som.PositionConversion;
 import som.langserv.structure.DocumentStructures;
 
 
-public class LintFileHasNSEnding implements Linter {
+public class LintFileHasNSEnding implements FileLinter {
 
   @Override
   public void lint(final String filePath, final String text,

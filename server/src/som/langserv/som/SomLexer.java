@@ -1,15 +1,14 @@
 package som.langserv.som;
 
-import java.util.List;
-
 import som.langserv.structure.SemanticTokenType;
+import som.langserv.structure.SemanticTokens;
 import trufflesom.compiler.Lexer;
 
 
 public class SomLexer extends Lexer {
-  private final List<int[]> semanticTokens;
+  private final SemanticTokens semanticTokens;
 
-  protected SomLexer(final String content, final List<int[]> semanticTokens) {
+  protected SomLexer(final String content, final SemanticTokens semanticTokens) {
     super(content);
     this.semanticTokens = semanticTokens;
   }
@@ -35,9 +34,7 @@ public class SomLexer extends Lexer {
   }
 
   private void addCoordsToTokens(final int line, final int col, final int length) {
-    int[] tuple = {line, col, length, // ~
-        SemanticTokenType.COMMENT.ordinal(), // ~
-        0 /* token modifier */};
-    semanticTokens.add(tuple);
+    semanticTokens.addSemanticToken(
+        line, col, length, SemanticTokenType.COMMENT);
   }
 }

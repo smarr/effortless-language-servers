@@ -46,7 +46,7 @@ import trufflesom.vmobjects.SSymbol;
  */
 public class SomParser extends ParserAst {
 
-  private final SomStructures   structuralProbe;
+  private final SomStructures      structuralProbe;
   private final DocumentStructures symbols;
 
   private LanguageElement currentClass;
@@ -68,7 +68,8 @@ public class SomParser extends ParserAst {
 
   @Override
   protected Lexer createLexer(final String content) {
-    return new SomLexer(content, ((SomStructures) super.structuralProbe).getSemanticTokens());
+    return new SomLexer(content,
+        ((SomStructures) super.structuralProbe).getSymbols().getSemanticTokens());
   }
 
   @Override
@@ -324,7 +325,8 @@ public class SomParser extends ParserAst {
       final SemanticTokenType type, final SemanticTokenModifier... modifiers) {
     int line = SourceCoordinate.getLine(source, startCoord);
     int column = SourceCoordinate.getColumn(source, startCoord);
-    structuralProbe.addSemanticToken(line, column, token.length(), type, modifiers);
+    symbols.getSemanticTokens().addSemanticToken(line, column, token.length(), type,
+        modifiers);
   }
 
   private void recordTokenSemantics(final long coord,
@@ -333,13 +335,14 @@ public class SomParser extends ParserAst {
     int column = SourceCoordinate.getColumn(source, coord);
     int length = SourceCoordinate.getLength(coord);
 
-    structuralProbe.addSemanticToken(line, column, length, type,
+    symbols.getSemanticTokens().addSemanticToken(line, column, length, type,
         (SemanticTokenModifier[]) null);
   }
 
   private void recordTokenSemantics(final SourceSection section,
       final SemanticTokenType type) {
-    structuralProbe.addSemanticToken(section.getStartLine(), section.getStartColumn(),
+    symbols.getSemanticTokens().addSemanticToken(section.getStartLine(),
+        section.getStartColumn(),
         section.getCharLength(), type, (SemanticTokenModifier[]) null);
   }
 

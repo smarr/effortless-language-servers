@@ -12,27 +12,24 @@ import com.oracle.truffle.sl.parser.SLParseError;
 
 import simple.SimpleLanguageLexer;
 import som.langserv.LanguageAdapter;
+import som.langserv.lint.FileLinter;
 import som.langserv.lint.LintEndsWithNewline;
-import som.langserv.lint.Linter;
+import som.langserv.lint.LintUseNeedsDefine;
+import som.langserv.lint.WorkspaceLinter;
 import som.langserv.structure.DocumentStructures;
 
 
 public class SimpleAdapter extends LanguageAdapter {
 
-  public SimpleAdapter(final Linter[] linters) {
-    super(new Linter[] {new LintEndsWithNewline()});
+  public SimpleAdapter() {
+    super(
+        new FileLinter[] {new LintEndsWithNewline()},
+        new WorkspaceLinter[] {new LintUseNeedsDefine()});
   }
 
   @Override
   public String getFileEnding() {
     return ".sl";
-  }
-
-  @Override
-  public void lintSends(final String docUri, final List<Diagnostic> diagnostics)
-      throws URISyntaxException {
-    // TODO Auto-generated method stub
-
   }
 
   @Override
@@ -49,9 +46,8 @@ public class SimpleAdapter extends LanguageAdapter {
     } catch (Throwable e) {
       return toDiagnostics(e, structures);
     } finally {
-      if (structures != null) {
-        putStructures(path, structures);
-      }
+      assert structures != null;
+      putStructures(path, structures);
     }
     return structures;
   }

@@ -14,7 +14,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CompletionItem;
@@ -34,7 +33,8 @@ import org.eclipse.lsp4j.SignatureHelpContext;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.services.LanguageClient;
 
-import som.langserv.lint.Linter;
+import som.langserv.lint.FileLinter;
+import som.langserv.lint.WorkspaceLinter;
 import som.langserv.structure.DocumentStructures;
 import som.langserv.structure.Pair;
 import som.langserv.structure.ParseContextKind;
@@ -49,12 +49,23 @@ public abstract class LanguageAdapter {
 
   private final Map<String, List<int[]>> semanticTokenCache;
 
-  private final Linter[] linters;
+  private final FileLinter[]      fileLinters;
+  private final WorkspaceLinter[] workspaceLinters;
 
-  public LanguageAdapter(final Linter[] linters) {
+  public LanguageAdapter(final FileLinter[] fileLinters,
+      final WorkspaceLinter[] workspaceLinters) {
     this.structures = new LinkedHashMap<>();
     this.semanticTokenCache = new HashMap<>();
-    this.linters = linters;
+    this.fileLinters = fileLinters;
+    this.workspaceLinters = workspaceLinters;
+  }
+
+  protected FileLinter[] getFileLinters() {
+    return fileLinters;
+  }
+
+  protected WorkspaceLinter[] getWorkspaceLinters() {
+    return workspaceLinters;
   }
 
   protected void putStructures(final String normalizedPath,
@@ -89,35 +100,24 @@ public abstract class LanguageAdapter {
   }
 
   protected void loadWorkspaceAndLint(final File workspace) {
-    Map<String, List<Diagnostic>> allDiagnostics = new HashMap<>();
-    loadFolder(workspace, allDiagnostics);
+    loadFolder(workspace);
 
-    for (Entry<String, List<Diagnostic>> e : allDiagnostics.entrySet()) {
-      try {
-        lintSends(e.getKey(), e.getValue());
-      } catch (URISyntaxException ex) {
-        /*
-         * at this point, there is nothing to be done anymore,
-         * would have been problematic earlier
-         */
-      }
+    for (WorkspaceLinter l : workspaceLinters) {
+      l.lint(structures);
+    }
 
-      reportDiagnostics(e.getValue(), e.getKey());
+    for (var s : structures.entrySet()) {
+      reportDiagnostics(s.getValue().getDiagnostics(), s.getKey());
     }
   }
 
-  public void loadFolder(final File folder,
-      final Map<String, List<Diagnostic>> allDiagnostics) {
+  public void loadFolder(final File folder) {
     for (File f : folder.listFiles()) {
       if (f.isDirectory()) {
-        loadFolder(f, allDiagnostics);
+        loadFolder(f);
       } else if (f.getName().endsWith(getFileEnding())) {
         try {
-          DocumentStructures structures = loadFile(f);
-          String uri = f.toURI().toString();
-          if (structures.getDiagnostics() != null) {
-            allDiagnostics.put(uri, structures.getDiagnostics());
-          }
+          loadFile(f);
         } catch (IOException | URISyntaxException e) {
           // if loading fails, we don't do anything, just move on to the next file
         }
@@ -131,9 +131,6 @@ public abstract class LanguageAdapter {
     String uri = f.toURI().toString();
     return parse(str, uri);
   }
-
-  public abstract void lintSends(final String docUri, final List<Diagnostic> diagnostics)
-      throws URISyntaxException;
 
   public static String docUriToNormalizedPath(final String documentUri)
       throws URISyntaxException {
@@ -300,9 +297,5 @@ public abstract class LanguageAdapter {
         combineTokensRemovingErroneousLine(
             error.getRange().getStart(), prevTokens, tokens);
     return SemanticTokens.makeRelativeTo11(withOldAndWithoutError);
-  }
-
-  protected Linter[] getLinters() {
-    return linters;
   }
 }

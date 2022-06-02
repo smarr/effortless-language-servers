@@ -8,7 +8,7 @@ import som.langserv.som.PositionConversion;
 import som.langserv.structure.DocumentStructures;
 
 
-public class LintEndsWithNewline implements Linter {
+public class LintEndsWithNewline implements FileLinter {
 
   @Override
   public void lint(final String filePath, final String text,

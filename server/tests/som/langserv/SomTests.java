@@ -60,7 +60,8 @@ public class SomTests {
 
     assertNull(structures.getDiagnostics());
 
-    List<int[]> tokens = adapter.getSemanticTokens(path);
+    List<int[]> tokens =
+        adapter.getStructures(path).getSemanticTokens().getSemanticTokens();
     printAllToken(tokens);
 
     assertToken(1, 1, "Hello", SemanticTokenType.CLASS, tokens.get(0));

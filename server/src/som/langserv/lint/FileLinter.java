@@ -3,6 +3,6 @@ package som.langserv.lint;
 import som.langserv.structure.DocumentStructures;
 
 
-public interface Linter {
+public interface FileLinter {
   void lint(String filePath, String text, DocumentStructures structures);
 }
