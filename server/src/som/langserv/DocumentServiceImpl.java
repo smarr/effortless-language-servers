@@ -35,7 +35,8 @@ import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.TextDocumentService;
 
-import som.langserv.lint.Linter;
+import som.langserv.lint.FileLinter;
+import som.langserv.lint.WorkspaceLinter;
 import som.langserv.structure.DocumentStructures;
 
 
@@ -77,11 +78,14 @@ public class DocumentServiceImpl implements TextDocumentService {
           URI uri = new URI(documentUri).normalize();
           String filePath = uri.getPath();
 
-          for (Linter lint : adapter.getLinters()) {
+          for (FileLinter lint : adapter.getFileLinters()) {
             lint.lint(filePath, text, structures);
           }
 
-          adapter.lintSends(documentUri, structures.getDiagnostics());
+          for (WorkspaceLinter lint : adapter.getWorkspaceLinters()) {
+            lint.lint(adapter.getDocuments());
+          }
+
           adapter.reportDiagnostics(structures.getDiagnostics(), documentUri);
           return;
         }

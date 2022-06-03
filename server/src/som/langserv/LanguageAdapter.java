@@ -33,6 +33,7 @@ import org.eclipse.lsp4j.SignatureHelpContext;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.services.LanguageClient;
 
+import som.langserv.lense.FileLens;
 import som.langserv.lint.FileLinter;
 import som.langserv.lint.WorkspaceLinter;
 import som.langserv.structure.DocumentStructures;
@@ -52,12 +53,20 @@ public abstract class LanguageAdapter {
   private final FileLinter[]      fileLinters;
   private final WorkspaceLinter[] workspaceLinters;
 
+  private final FileLens[] fileLenses;
+
   public LanguageAdapter(final FileLinter[] fileLinters,
       final WorkspaceLinter[] workspaceLinters) {
+    this(fileLinters, workspaceLinters, null);
+  }
+
+  public LanguageAdapter(final FileLinter[] fileLinters,
+      final WorkspaceLinter[] workspaceLinters, final FileLens[] fileLenses) {
     this.structures = new LinkedHashMap<>();
     this.semanticTokenCache = new HashMap<>();
     this.fileLinters = fileLinters;
     this.workspaceLinters = workspaceLinters;
+    this.fileLenses = fileLenses;
   }
 
   protected FileLinter[] getFileLinters() {
@@ -103,7 +112,7 @@ public abstract class LanguageAdapter {
     loadFolder(workspace);
 
     for (WorkspaceLinter l : workspaceLinters) {
-      l.lint(structures);
+      l.lint(structures.values());
     }
 
     for (var s : structures.entrySet()) {
@@ -177,8 +186,18 @@ public abstract class LanguageAdapter {
     }
   }
 
-  public abstract void getCodeLenses(final List<CodeLens> codeLenses,
-      final String documentUri);
+  public final void getCodeLenses(final List<CodeLens> codeLenses,
+      final String documentUri) {
+    DocumentStructures doc = getStructures(documentUri);
+    if (doc == null) {
+      return;
+    }
+
+    for (var lens : fileLenses) {
+      var results = lens.getCodeLenses(doc);
+      codeLenses.addAll(results);
+    }
+  }
 
   public final void workspaceSymbol(final List<SymbolInformation> results,
       final String query) {

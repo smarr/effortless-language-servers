@@ -5,9 +5,7 @@ import static som.langserv.som.PositionConversion.toRangeMax;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.List;
 
-import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.graalvm.collections.EconomicMap;
@@ -30,9 +28,10 @@ import som.compiler.Variable;
 import som.interpreter.SomLanguage;
 import som.interpreter.objectstorage.StorageAccessor;
 import som.langserv.LanguageAdapter;
+import som.langserv.lint.FileLinter;
 import som.langserv.lint.LintEndsWithNewline;
 import som.langserv.lint.LintUseNeedsDefine;
-import som.langserv.lint.Linter;
+import som.langserv.lint.WorkspaceLinter;
 import som.langserv.structure.DocumentStructures;
 import som.vm.Primitives;
 import som.vmobjects.SInvokable;
@@ -51,8 +50,8 @@ public class NewspeakAdapter extends LanguageAdapter {
 
   public NewspeakAdapter() {
     super(
-        new Linter[] {new LintEndsWithNewline(), new LintFileHasNSEnding()},
-        new Linter[] {new LintUseNeedsDefine()});
+        new FileLinter[] {new LintEndsWithNewline(), new LintFileHasNSEnding()},
+        new WorkspaceLinter[] {new LintUseNeedsDefine()});
     VM vm = initializePolyglot();
     this.compiler = new SomCompiler(vm.getLanguage());
     registerVmMirrorPrimitives(vm);
@@ -113,13 +112,10 @@ public class NewspeakAdapter extends LanguageAdapter {
                           .uri(new URI(sourceUri).normalize()).build();
 
     DocumentStructures structures = new DocumentStructures(sourceUri, "file:" + path);
-    NewspeakStructures newProbe = new NewspeakStructures(source);
+    NewspeakStructures newProbe = new NewspeakStructures(source, structures);
 
     try {
-      MixinDefinition def = compiler.compileModule(source, newProbe);
-      Lint.checkModuleName(path, def, structures);
-      Lint.checkLastChar(text, structures);
-
+      compiler.compileModule(source, newProbe);
     } catch (ParseError e) {
       return toDiagnostics(e, structures);
     } catch (SemanticDefinitionError e) {
@@ -187,18 +183,6 @@ public class NewspeakAdapter extends LanguageAdapter {
           new NewspeakParser(source.getCharacters().toString(), source,
               (NewspeakStructures) structuralProbe, language);
       return compile(parser, source);
-    }
-  }
-
-  @Override
-  public void getCodeLenses(final List<CodeLens> codeLenses, final String documentUri) {
-    NewspeakStructures probe = getProbe(documentUri);
-    if (probe == null) {
-      return;
-    }
-
-    for (MixinDefinition c : probe.getClasses()) {
-      Minitest.checkForTests(c, codeLenses, documentUri);
     }
   }
 }
