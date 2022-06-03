@@ -9,6 +9,7 @@ import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.sl.SLLanguage;
 import com.oracle.truffle.sl.nodes.SLExpressionNode;
+import com.oracle.truffle.sl.nodes.SLPropertyRead;
 import com.oracle.truffle.sl.nodes.SLRead;
 import com.oracle.truffle.sl.nodes.SLStatementNode;
 
@@ -24,9 +25,9 @@ public class SLNodeFactory {
 
   public void addFormalParameter(Token identifier) {}
 
-  public SLExpressionNode createBinary(Token op, SLExpressionNode result,
-      SLExpressionNode result2) {
-    return null;
+  public SLExpressionNode createBinary(Token op, SLExpressionNode left,
+      SLExpressionNode right) {
+    return new SLExpressionNode(left, right);
   }
 
   public SLExpressionNode createRead(SLExpressionNode assignmentName) {
@@ -35,12 +36,12 @@ public class SLNodeFactory {
 
   public SLExpressionNode createReadProperty(SLExpressionNode receiver,
       SLExpressionNode nestedAssignmentName) {
-    return null;
+    return new SLPropertyRead(receiver, nestedAssignmentName);
   }
 
   public SLExpressionNode createAssignment(SLExpressionNode assignmentName,
       SLExpressionNode result) {
-    return null;
+    return new SLExpressionNode(assignmentName, result);
   }
 
   public SLStatementNode createBreak(Token b) {
@@ -53,13 +54,13 @@ public class SLNodeFactory {
 
   public SLExpressionNode createCall(SLExpressionNode receiver,
       List<SLExpressionNode> parameters, Token e) {
-    return null;
+    return new SLExpressionNode(receiver);
   }
 
   public SLExpressionNode createWriteProperty(
       SLExpressionNode assignmentReceiver, SLExpressionNode assignmentName,
       SLExpressionNode result) {
-    return null;
+    return new SLExpressionNode(assignmentReceiver, assignmentName, result);
   }
 
   public SLStatementNode createDebugger(Token d) {
@@ -70,9 +71,9 @@ public class SLNodeFactory {
     return new SimpleString(identifier, isLiteral);
   }
 
-  public SLStatementNode createIf(Token i, SLExpressionNode result,
-      SLStatementNode result2, SLStatementNode elsePart) {
-    return null;
+  public SLStatementNode createIf(Token i, SLExpressionNode condition,
+      SLStatementNode thenPart, SLStatementNode elsePart) {
+    return new SLExpressionNode(condition, thenPart, elsePart);
   }
 
   public SLExpressionNode createNumericLiteral(Token numeric_LITERAL) {
@@ -81,11 +82,11 @@ public class SLNodeFactory {
 
   public SLExpressionNode createParenExpression(SLExpressionNode result,
       int startIndex, int i) {
-    return null;
+    return new SLExpressionNode(result);
   }
 
   public SLStatementNode createReturn(Token r, SLExpressionNode value) {
-    return null;
+    return new SLExpressionNode(value);
   }
 
   public SLStatementNode createWhile(Token w, SLExpressionNode result,

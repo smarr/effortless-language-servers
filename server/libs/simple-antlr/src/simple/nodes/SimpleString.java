@@ -13,4 +13,14 @@ public class SimpleString extends SLExpressionNode {
     this.identifier = identifier;
     this.isLiteral = isLiteral;
   }
+
+  @Override
+  public Token getLastName() {
+    return identifier;
+  }
+
+  @Override
+  public String toString() {
+    return "SimpleString(" + identifier.getText() + ", " + isLiteral + ")";
+  }
 }
