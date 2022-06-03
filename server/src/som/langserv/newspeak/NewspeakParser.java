@@ -13,6 +13,7 @@ import som.compiler.Parser;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.literals.LiteralNode;
+import som.langserv.structure.DocumentStructures;
 import som.langserv.structure.SemanticTokenModifier;
 import som.langserv.structure.SemanticTokenType;
 import som.vmobjects.SSymbol;
@@ -29,14 +30,16 @@ import tools.debugger.Tags.LocalVariableTag;
  */
 public class NewspeakParser extends Parser {
 
-  private NewspeakStructures         struturalProbe;
+  private final NewspeakStructures   struturalProbe;
   private final Deque<SourceSection> sourceSections;
+  private final DocumentStructures   symbols;
 
   public NewspeakParser(final String content, final Source source,
       final NewspeakStructures structuralProbe, final SomLanguage lang) throws ParseError {
     super(content, source, structuralProbe, lang);
     // assert structuralProbe != null : "Needed for this extended parser.";
     this.struturalProbe = structuralProbe;
+    this.symbols = structuralProbe.getSymbols();
     sourceSections = new ArrayDeque<>();
   }
 
@@ -155,13 +158,13 @@ public class NewspeakParser extends Parser {
 
   protected void recordTokenSemantics(final int coords, final String length,
       final SemanticTokenType tokenType, final SemanticTokenModifier... modifiers) {
-    struturalProbe.addSemanticToken(source.getLineNumber(coords),
+    symbols.getSemanticTokens().addSemanticToken(source.getLineNumber(coords),
         source.getColumnNumber(coords), length.length(), tokenType, modifiers);
   }
 
   protected void recordTokenSemantics(final SourceSection source,
       final SemanticTokenType tokenType) {
-    struturalProbe.addSemanticToken(source.getStartLine(),
+    symbols.getSemanticTokens().addSemanticToken(source.getStartLine(),
         source.getStartColumn(), source.getCharLength(), tokenType);
   }
 

@@ -1,6 +1,7 @@
 package som.langserv;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static som.langserv.Helpers.assertToken;
 import static som.langserv.Helpers.printAllToken;
 
@@ -22,10 +23,10 @@ public class NewspeakTests {
   @Test
   public void testLoadFile() throws IOException, URISyntaxException {
     var adapter = new NewspeakAdapter();
-    var diagnostics =
+    var symbols =
         adapter.loadFile(new File(NewspeakAdapter.CORE_LIB_PATH + "/Hello.ns"));
 
-    assertEquals(0, diagnostics.size());
+    assertNull(symbols.getDiagnostics());
   }
 
   @Test
@@ -69,7 +70,8 @@ public class NewspeakTests {
         + "  public main: args = ()\n"
         + ") )\n", path);
 
-    List<int[]> tokenTuples = adapter.getSemanticTokens(path);
+    List<int[]> tokenTuples =
+        adapter.getStructures(path).getSemanticTokens().getSemanticTokens();
     printAllToken(tokenTuples);
 
     assertToken(1, 1, "class", SemanticTokenType.KEYWORD, tokenTuples.get(0));
