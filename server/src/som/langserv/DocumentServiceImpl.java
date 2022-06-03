@@ -12,6 +12,7 @@ import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.DefinitionParams;
+import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
@@ -24,6 +25,7 @@ import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
+import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensParams;
@@ -33,6 +35,7 @@ import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.TextDocumentService;
 
 import som.langserv.lint.FileLinter;
@@ -47,8 +50,14 @@ public class DocumentServiceImpl implements TextDocumentService {
 
   private final LanguageAdapter[] adapters;
 
+  private LanguageClient client;
+
   public DocumentServiceImpl(final LanguageAdapter[] adapters) {
     this.adapters = adapters;
+  }
+
+  public void connect(final LanguageClient client) {
+    this.client = client;
   }
 
   @Override
@@ -86,13 +95,23 @@ public class DocumentServiceImpl implements TextDocumentService {
             lint.lint(adapter.getDocuments());
           }
 
-          adapter.reportDiagnostics(structures.getDiagnostics(), documentUri);
+          reportDiagnostics(structures.getDiagnostics(), documentUri, client);
           return;
         }
       }
       assert false : "LanguageServer does not support file type: " + documentUri;
     } catch (URISyntaxException ex) {
       ex.printStackTrace(ServerLauncher.errWriter());
+    }
+  }
+
+  protected static void reportDiagnostics(final List<Diagnostic> diagnostics,
+      final String documentUri, final LanguageClient client) {
+    if (diagnostics != null) {
+      PublishDiagnosticsParams result = new PublishDiagnosticsParams();
+      result.setDiagnostics(diagnostics);
+      result.setUri(documentUri);
+      client.publishDiagnostics(result);
     }
   }
 

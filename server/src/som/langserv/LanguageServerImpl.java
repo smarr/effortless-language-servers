@@ -162,6 +162,7 @@ public class LanguageServerImpl implements LanguageServer, LanguageClientAware {
     for (LanguageAdapter adapter : adapters) {
       adapter.connect(client);
     }
+    this.documentService.connect(client);
     this.client = client;
   }
 }

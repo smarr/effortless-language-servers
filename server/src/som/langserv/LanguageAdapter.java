@@ -27,7 +27,6 @@ import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SignatureHelpContext;
 import org.eclipse.lsp4j.SymbolInformation;
@@ -116,7 +115,7 @@ public abstract class LanguageAdapter {
     }
 
     for (var s : structures.entrySet()) {
-      reportDiagnostics(s.getValue().getDiagnostics(), s.getKey());
+      DocumentServiceImpl.reportDiagnostics(s.getValue().getDiagnostics(), s.getKey(), client);
     }
   }
 
@@ -176,19 +175,9 @@ public abstract class LanguageAdapter {
     ServerLauncher.logErr(msgStr);
   }
 
-  public void reportDiagnostics(final List<Diagnostic> diagnostics,
-      final String documentUri) {
-    if (diagnostics != null) {
-      PublishDiagnosticsParams result = new PublishDiagnosticsParams();
-      result.setDiagnostics(diagnostics);
-      result.setUri(documentUri);
-      client.publishDiagnostics(result);
-    }
-  }
-
   public final List<CodeLens> getCodeLenses(final String documentUri) {
     DocumentStructures doc = getStructures(documentUri);
-    if (doc == null) {
+    if (doc == null || fileLenses == null) {
       return null;
     }
 
