@@ -180,9 +180,8 @@ public class DocumentServiceImpl implements TextDocumentService {
   public CompletableFuture<List<? extends CodeLens>> codeLens(final CodeLensParams params) {
     var adapter = getResponsibleAdapter(params.getTextDocument());
     if (adapter != null) {
-      List<CodeLens> result = new ArrayList<>();
       String uri = params.getTextDocument().getUri();
-      adapter.getCodeLenses(result, uri);
+      List<CodeLens> result = adapter.getCodeLenses(uri);
       return CompletableFuture.completedFuture(result);
     }
     return CompletableFuture.completedFuture(null);

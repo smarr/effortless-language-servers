@@ -186,17 +186,19 @@ public abstract class LanguageAdapter {
     }
   }
 
-  public final void getCodeLenses(final List<CodeLens> codeLenses,
-      final String documentUri) {
+  public final List<CodeLens> getCodeLenses(final String documentUri) {
     DocumentStructures doc = getStructures(documentUri);
     if (doc == null) {
-      return;
+      return null;
     }
 
+    List<CodeLens> codeLenses = new ArrayList<>();
     for (var lens : fileLenses) {
       var results = lens.getCodeLenses(doc);
       codeLenses.addAll(results);
     }
+
+    return codeLenses;
   }
 
   public final void workspaceSymbol(final List<SymbolInformation> results,
