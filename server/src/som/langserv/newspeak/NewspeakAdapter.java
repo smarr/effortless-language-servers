@@ -68,14 +68,17 @@ public class NewspeakAdapter extends LanguageAdapter {
     @SuppressWarnings({"rawtypes", "unchecked"})
     EconomicMap<SSymbol, SInvokable> ps = (EconomicMap) prims.takeVmMirrorPrimitives();
 
+    DocumentStructures vmStructures =
+        new DocumentStructures("internal:vmMirror.ns", "internal:vmMirror.ns");
     NewspeakStructures primProbe =
         new NewspeakStructures(Source.newBuilder(SomLanguage.LANG_ID, "vmMirror", "vmMirror")
-                                     .mimeType(SomLanguage.MIME_TYPE).build());
+                                     .mimeType(SomLanguage.MIME_TYPE).build(),
+            vmStructures);
     for (SInvokable i : ps.getValues()) {
       primProbe.recordNewMethod(i.getIdentifier(), i);
     }
 
-    structuralProbes.put("vmMirror", primProbe);
+    putStructures("internal:vmMirror.ns", vmStructures);
   }
 
   private VM initializePolyglot() {
