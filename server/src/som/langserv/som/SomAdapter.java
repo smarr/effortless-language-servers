@@ -16,7 +16,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 
-import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.graalvm.polyglot.Context;
@@ -230,11 +229,6 @@ public class SomAdapter extends LanguageAdapter {
     return sw.toString();
   }
 
-
-  @Override
-  public void getCodeLenses(final List<CodeLens> codeLenses, final String documentUri) {
-    // TODO Auto-generated method stub
-  }
 
   private DocumentStructures toDiagnostics(final ParseError e,
       final DocumentStructures structures) {

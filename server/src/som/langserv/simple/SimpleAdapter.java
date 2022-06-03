@@ -1,10 +1,8 @@
 package som.langserv.simple;
 
 import java.net.URISyntaxException;
-import java.util.List;
 
 import org.antlr.v4.runtime.CharStreams;
-import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 
@@ -89,11 +87,4 @@ public class SimpleAdapter extends LanguageAdapter {
 
     parser.parse();
   }
-
-  @Override
-  public void getCodeLenses(final List<CodeLens> codeLenses, final String documentUri) {
-    // TODO Auto-generated method stub
-
-  }
-
 }

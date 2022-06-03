@@ -20,13 +20,15 @@ import com.google.common.collect.Lists;
 import som.compiler.MixinDefinition;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.langserv.LanguageAdapter;
+import som.langserv.lense.FileLens;
 import som.langserv.som.PositionConversion;
+import som.langserv.structure.DocumentStructures;
 import som.vm.Symbols;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
 
-public class Minitest {
+public class Minitest implements FileLens {
   private static final SSymbol TEST_CONTEXT = Symbols.symbolFor("TEST_CONTEXT");
   private static final String  TEST_PREFIX  = "test";
 
@@ -42,8 +44,8 @@ public class Minitest {
       "--kernel", NewspeakAdapter.CORE_LIB_PATH + "/Kernel.ns",
       NewspeakAdapter.CORE_LIB_PATH + "/TestSuite/TestRunner.ns"};
 
-  public static void checkForTests(final MixinDefinition def,
-      final List<CodeLens> codeLenses, final String documentUri) {
+  @Override
+  public List<CodeLens> getCodeLenses(final DocumentStructures symbols) {
     for (SSymbol s : def.getFactoryMethods().getKeys()) {
       if (s == TEST_CONTEXT) {
         CodeLens lens = createTestLense(def, documentUri);

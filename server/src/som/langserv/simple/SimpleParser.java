@@ -57,11 +57,13 @@ public class SimpleParser extends SimpleLanguageParser {
       Token token = (Token) offendingSymbol;
 
       Diagnostic diag = new Diagnostic();
-      diag.setRange(PositionConversion.getRange(token));
+      if (token != null) {
+        diag.setRange(PositionConversion.getRange(token));
+        diag.setData(token.getText().equals("."));
+      }
       diag.setMessage(msg);
       diag.setSeverity(DiagnosticSeverity.Error);
       diag.setSource("Simple Language Parser");
-      diag.setData(token.getText().equals("."));
 
       structures.addDiagnostic(diag);
     }
