@@ -64,6 +64,10 @@ public class SimpleNodeFactory extends SLNodeFactory {
   public void finishFunction(final SLStatementNode result) {}
 
   public void finishFunction(final Token endBrace) {
+    if (currentFunction == null) {
+      return;
+    }
+
     Range selectionRange = currentFunction.getSelectionRange();
 
     setFunctionSignature();

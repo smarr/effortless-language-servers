@@ -218,6 +218,9 @@ public abstract class LanguageAdapter {
       final Position pos) {
     DocumentStructures doc = getStructures(uri);
     var element = doc.getElement(pos);
+    if (element == null) {
+      return null;
+    }
 
     List<LocationLink> definitions = new ArrayList<>();
     doc.lookupDefinitions(element, definitions);

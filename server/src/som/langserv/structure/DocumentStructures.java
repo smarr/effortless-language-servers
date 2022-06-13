@@ -521,6 +521,9 @@ public class DocumentStructures {
 
   public Pair<ParseContextKind, String> getPossiblyIncompleteElement(final Position position) {
     var e = getMostPrecise(position, rootSymbols);
+    if (e == null) {
+      return null;
+    }
 
     if (e instanceof LanguageElement le && !isIn(position, le.getSelectionRange())) {
       boolean isNavigation = false;
