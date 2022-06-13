@@ -16,6 +16,7 @@ import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensServerFull;
 import org.eclipse.lsp4j.SemanticTokensWithRegistrationOptions;
 import org.eclipse.lsp4j.ServerCapabilities;
+import org.eclipse.lsp4j.SignatureHelpOptions;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.services.LanguageClient;
@@ -55,32 +56,60 @@ public class LanguageServerImpl implements LanguageServer, LanguageClientAware {
   public CompletableFuture<InitializeResult> initialize(final InitializeParams params) {
     InitializeResult result = new InitializeResult();
     ServerCapabilities cap = new ServerCapabilities();
-    cap.setDocumentHighlightProvider(true);
-    cap.setTextDocumentSync(TextDocumentSyncKind.Full);
-    cap.setDocumentSymbolProvider(true);
-    cap.setWorkspaceSymbolProvider(true);
-    cap.setDefinitionProvider(true);
+
     cap.setCodeLensProvider(new CodeLensOptions(true));
+    cap.setCompletionProvider(createCompletionOptions());
+    cap.setSemanticTokensProvider(createSemanticTokenProviderConfig());
+    cap.setWorkspaceSymbolProvider(true);
+    cap.setSignatureHelpProvider(createSignatureHelpOptions());
+
+    cap.setDocumentSymbolProvider(true);
+    cap.setDefinitionProvider(true);
+    cap.setDocumentHighlightProvider(true);
+    cap.setReferencesProvider(true);
+
+    cap.setTextDocumentSync(TextDocumentSyncKind.Full);
+
     cap.setExecuteCommandProvider(
         new ExecuteCommandOptions(Lists.newArrayList(Minitest.COMMAND)));
-
-    CompletionOptions completion = new CompletionOptions();
-    List<String> autoComplTrigger = new ArrayList<>();
-    autoComplTrigger.add("#"); // Smalltalk symbols
-    autoComplTrigger.add(":"); // end of keywords, to complete arguments
-    autoComplTrigger.add("="); // right-hand side of assignments
-    completion.setTriggerCharacters(autoComplTrigger);
-    completion.setResolveProvider(false); // TODO: look into that
-
-    cap.setCompletionProvider(completion);
-
-    cap.setSemanticTokensProvider(createSemanticTokenProviderConfig());
 
     result.setCapabilities(cap);
 
     loadWorkspace(params);
 
     return CompletableFuture.completedFuture(result);
+  }
+
+  private SignatureHelpOptions createSignatureHelpOptions() {
+    SignatureHelpOptions options = new SignatureHelpOptions();
+
+    List<String> triggerChars = new ArrayList<>();
+    triggerChars.add("#"); // Smalltalk symbols
+    triggerChars.add(":"); // end of keywords, to complete arguments
+    triggerChars.add("="); // right-hand side of assignments
+    triggerChars.add("."); // . for simple language
+
+    options.setTriggerCharacters(triggerChars);
+
+    List<String> retrigger = new ArrayList<>();
+    retrigger.add(",");
+
+    options.setRetriggerCharacters(retrigger);
+    return options;
+  }
+
+  private CompletionOptions createCompletionOptions() {
+    CompletionOptions completion = new CompletionOptions();
+
+    List<String> autoComplTrigger = new ArrayList<>();
+    autoComplTrigger.add("#"); // Smalltalk symbols
+    autoComplTrigger.add(":"); // end of keywords, to complete arguments
+    autoComplTrigger.add("="); // right-hand side of assignments
+    autoComplTrigger.add("."); // . for simple language
+    completion.setTriggerCharacters(autoComplTrigger);
+    completion.setResolveProvider(false); // TODO: look into that
+
+    return completion;
   }
 
   private SemanticTokensWithRegistrationOptions createSemanticTokenProviderConfig() {
