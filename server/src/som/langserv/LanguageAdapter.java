@@ -298,7 +298,7 @@ public abstract class LanguageAdapter {
     Diagnostic error = doc.getFirstErrorOrNull();
     if (error == null) {
       semanticTokenCache.put(uri, tokens);
-      return SemanticTokens.makeRelativeTo11(tokens);
+      return SemanticTokens.makeRelativeTo00(tokens);
     }
 
     List<int[]> prevTokens = semanticTokenCache.get(uri);
@@ -309,6 +309,6 @@ public abstract class LanguageAdapter {
     List<int[]> withOldAndWithoutError =
         combineTokensRemovingErroneousLine(
             error.getRange().getStart(), prevTokens, tokens);
-    return SemanticTokens.makeRelativeTo11(withOldAndWithoutError);
+    return SemanticTokens.makeRelativeTo00(withOldAndWithoutError);
   }
 }

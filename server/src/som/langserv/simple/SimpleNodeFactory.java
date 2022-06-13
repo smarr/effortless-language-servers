@@ -43,9 +43,10 @@ public class SimpleNodeFactory extends SLNodeFactory {
 
   protected void addSemanticToken(final Token token, final SemanticTokenType type) {
     semanticTokens.addSemanticToken(
-        token.getLine(),
-        // char position is 0-based, so, +1 to make it 1-based
-        token.getCharPositionInLine() + 1,
+        // line is 1-based, but needs to be 0-based
+        token.getLine() - 1,
+        // char position is already 0-based
+        token.getCharPositionInLine(),
         token.getText().length(),
         type);
   }

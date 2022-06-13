@@ -68,13 +68,13 @@ public class SimpleLanguageTests {
         adapter.getStructures(path).getSemanticTokens().getSemanticTokens();
     printAllToken(tokens);
 
-    assertToken(6, 1, "function", SemanticTokenType.KEYWORD, tokens.get(0));
-    assertToken(6, 10, "main", SemanticTokenType.FUNCTION, tokens.get(1));
+    assertToken(5, 0, "function", SemanticTokenType.KEYWORD, tokens.get(0));
+    assertToken(5, 9, "main", SemanticTokenType.FUNCTION, tokens.get(1));
 
-    assertToken(7, 3, "println", SemanticTokenType.VARIABLE, tokens.get(2));
-    assertToken(7, 3, "println", SemanticTokenType.FUNCTION, tokens.get(3));
+    assertToken(6, 2, "println", SemanticTokenType.VARIABLE, tokens.get(2));
+    assertToken(6, 2, "println", SemanticTokenType.FUNCTION, tokens.get(3));
 
-    assertToken(7, 11, "\"Hello World!\"", SemanticTokenType.STRING,
+    assertToken(6, 10, "\"Hello World!\"", SemanticTokenType.STRING,
         tokens.get(4));
 
     assertEquals(5, tokens.size());
@@ -98,26 +98,26 @@ public class SimpleLanguageTests {
         adapter.getStructures(path).getSemanticTokens().getSemanticTokens();
     printAllToken(tokens);
 
-    assertToken(1, 1, "function", SemanticTokenType.KEYWORD, tokens.get(0));
-    assertToken(1, 10, "recursion", SemanticTokenType.FUNCTION, tokens.get(1));
-    assertToken(1, 20, "n", SemanticTokenType.PARAMETER, tokens.get(2));
+    assertToken(0, 0, "function", SemanticTokenType.KEYWORD, tokens.get(0));
+    assertToken(0, 9, "recursion", SemanticTokenType.FUNCTION, tokens.get(1));
+    assertToken(0, 19, "n", SemanticTokenType.PARAMETER, tokens.get(2));
 
-    assertToken(2, 3, "if", SemanticTokenType.KEYWORD, tokens.get(3));
-    assertToken(2, 7, "n", SemanticTokenType.VARIABLE, tokens.get(4));
-    assertToken(2, 9, ">", SemanticTokenType.OPERATOR, tokens.get(5));
-    assertToken(2, 11, "0", SemanticTokenType.NUMBER, tokens.get(6));
+    assertToken(1, 2, "if", SemanticTokenType.KEYWORD, tokens.get(3));
+    assertToken(1, 6, "n", SemanticTokenType.VARIABLE, tokens.get(4));
+    assertToken(1, 8, ">", SemanticTokenType.OPERATOR, tokens.get(5));
+    assertToken(1, 10, "0", SemanticTokenType.NUMBER, tokens.get(6));
 
     for (int i = 0; i < 3; i += 1) {
-      assertToken(3 + i, 5, "recursion", SemanticTokenType.VARIABLE, tokens.get(7 + (i * 5)));
-      assertToken(3 + i, 5, "recursion", SemanticTokenType.FUNCTION, tokens.get(8 + (i * 5)));
-      assertToken(3 + i, 15, "n", SemanticTokenType.VARIABLE, tokens.get(9 + (i * 5)));
-      assertToken(3 + i, 17, "-", SemanticTokenType.OPERATOR, tokens.get(10 + (i * 5)));
-      assertToken(3 + i, 19, "1", SemanticTokenType.NUMBER, tokens.get(11 + (i * 5)));
+      assertToken(2 + i, 4, "recursion", SemanticTokenType.VARIABLE, tokens.get(7 + (i * 5)));
+      assertToken(2 + i, 4, "recursion", SemanticTokenType.FUNCTION, tokens.get(8 + (i * 5)));
+      assertToken(2 + i, 14, "n", SemanticTokenType.VARIABLE, tokens.get(9 + (i * 5)));
+      assertToken(2 + i, 16, "-", SemanticTokenType.OPERATOR, tokens.get(10 + (i * 5)));
+      assertToken(2 + i, 18, "1", SemanticTokenType.NUMBER, tokens.get(11 + (i * 5)));
     }
 
-    assertToken(6, 5, "else", SemanticTokenType.KEYWORD, tokens.get(22));
-    assertToken(7, 5, "return", SemanticTokenType.KEYWORD, tokens.get(23));
-    assertToken(7, 12, "n", SemanticTokenType.VARIABLE, tokens.get(24));
+    assertToken(5, 4, "else", SemanticTokenType.KEYWORD, tokens.get(22));
+    assertToken(6, 4, "return", SemanticTokenType.KEYWORD, tokens.get(23));
+    assertToken(6, 11, "n", SemanticTokenType.VARIABLE, tokens.get(24));
 
     assertEquals(25, tokens.size());
   }
