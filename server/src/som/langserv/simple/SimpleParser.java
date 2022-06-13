@@ -60,6 +60,8 @@ public class SimpleParser extends SimpleLanguageParser {
       if (token != null) {
         diag.setRange(PositionConversion.getRange(token));
         diag.setData(token.getText().equals("."));
+      } else {
+        diag.setRange(PositionConversion.getRange(line, charPositionInLine));
       }
       diag.setMessage(msg);
       diag.setSeverity(DiagnosticSeverity.Error);
