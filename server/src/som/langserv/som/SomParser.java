@@ -348,7 +348,8 @@ public class SomParser extends ParserAst {
 
   private LanguageElement startSymbol(final String name, final SymbolKind kind,
       final int startCoord, final LanguageElementId id) {
-    return symbols.startSymbol(name, kind, id, toRange(source, startCoord, name.length()));
+    return symbols.startSymbol(
+        name, kind, id, toRange(source, startCoord, name.length()), true);
   }
 
   private Range getRange(final int startCoord, final String name) {
@@ -356,12 +357,12 @@ public class SomParser extends ParserAst {
   }
 
   private LanguageElement startSymbol(final SymbolKind kind) {
-    return symbols.startSymbol(kind);
+    return symbols.startSymbol(kind, true);
   }
 
   private LanguageElement startSymbol(final String name, final SymbolKind kind,
-      final long coordWithLength, final LanguageElementId id) {
-    return symbols.startSymbol(name, kind, id, toRange(source, coordWithLength));
+      final long coordWithLength, final LanguageElementId id, final boolean listAsSymbol) {
+    return symbols.startSymbol(name, kind, id, toRange(source, coordWithLength), listAsSymbol);
   }
 
   private void completeSymbol(final LanguageElement symbol, final Position start,

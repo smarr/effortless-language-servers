@@ -55,7 +55,7 @@ public class SimpleNodeFactory extends SLNodeFactory {
     addSemanticToken(identifier, SemanticTokenType.FUNCTION);
 
     currentFunction = structures.startSymbol(identifier.getText(), SymbolKind.Function,
-        new VarId(identifier.getText()), getRange(identifier));
+        new VarId(identifier.getText()), getRange(identifier), true);
 
     paramNames = new ArrayList<>(3);
   }
@@ -209,19 +209,20 @@ public class SimpleNodeFactory extends SLNodeFactory {
       final SLExpressionNode result) {
     if (!assignmentName.isRead()) {
       Token name = assignmentName.getLastName();
-      recordDefinition(name, new PropertyId(name.getText()), SymbolKind.Property, true);
+      recordDefinition(name, new PropertyId(name.getText()), SymbolKind.Property, true, false);
     }
     return super.createWriteProperty(assignmentReceiver, assignmentName, result);
   }
 
   private void recordDefinition(final Token t, final LanguageElementId id,
       final SymbolKind kind) {
-    recordDefinition(t, id, kind, false);
+    recordDefinition(t, id, kind, false, false);
   }
 
   private void recordDefinition(final Token t, final LanguageElementId id,
-      final SymbolKind kind, final boolean afterNavigation) {
-    structures.recordDefinition(t.getText(), id, kind, getRange(t), afterNavigation);
+      final SymbolKind kind, final boolean afterNavigation, final boolean listAsSymbol) {
+    structures.recordDefinition(t.getText(), id, kind, getRange(t), afterNavigation,
+        listAsSymbol);
   }
 
   private Reference referenceSymbol(final LanguageElementId id, final Token token) {

@@ -20,7 +20,6 @@ import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DocumentHighlight;
-import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
@@ -36,6 +35,7 @@ import som.langserv.lense.FileLens;
 import som.langserv.lint.FileLinter;
 import som.langserv.lint.WorkspaceLinter;
 import som.langserv.structure.DocumentStructures;
+import som.langserv.structure.LanguageElement;
 import som.langserv.structure.Pair;
 import som.langserv.structure.ParseContextKind;
 import som.langserv.structure.SemanticTokens;
@@ -198,7 +198,7 @@ public abstract class LanguageAdapter {
     }
   }
 
-  public final List<? extends DocumentSymbol> documentSymbol(final String documentUri) {
+  public final List<LanguageElement> documentSymbol(final String documentUri) {
     DocumentStructures doc = getStructures(documentUri);
     return doc.getRootSymbols();
   }

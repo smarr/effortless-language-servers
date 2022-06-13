@@ -92,7 +92,7 @@ public class SomTests {
     var classSymbol = symbols.get(0);
     assertEquals("Hello", classSymbol.getName());
 
-    var children = classSymbol.getChildren();
+    var children = classSymbol.getAllChildren();
     assertEquals(1, children.size());
     assertEquals("run", children.get(0).getName());
   }
@@ -115,7 +115,7 @@ public class SomTests {
     var classSymbol = symbols.get(0);
     assertEquals("Hello", classSymbol.getName());
 
-    var children = classSymbol.getChildren();
+    var children = classSymbol.getAllChildren();
     assertEquals(4, children.size());
     assertEquals("run", children.get(0).getName());
     assertEquals(null, children.get(0).getDetail());
@@ -149,7 +149,7 @@ public class SomTests {
     assertEquals("Hello", classSymbol.getName());
     assertRange(1, 1, 1, 6, classSymbol.getSelectionRange());
 
-    var children = classSymbol.getChildren();
+    var children = classSymbol.getAllChildren();
     assertEquals(4, children.size());
     assertEquals("run", children.get(0).getName());
     assertRange(2, 1, 2, 4, children.get(0).getSelectionRange());

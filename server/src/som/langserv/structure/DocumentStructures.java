@@ -11,7 +11,6 @@ import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.DocumentHighlight;
-import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
@@ -90,8 +89,9 @@ public class DocumentStructures {
    * started.
    */
   public LanguageElement startSymbol(final String name, final SymbolKind kind,
-      final LanguageElementId id, final Range identifierRange) {
-    LanguageElement symbol = new LanguageElement(name, kind, id, identifierRange);
+      final LanguageElementId id, final Range identifierRange, final boolean listAsSymbol) {
+    LanguageElement symbol =
+        new LanguageElement(name, kind, id, identifierRange, listAsSymbol);
     addToScopes(symbol);
 
     symbolsScope.add(symbol);
@@ -99,8 +99,8 @@ public class DocumentStructures {
     return symbol;
   }
 
-  public LanguageElement startSymbol(final SymbolKind kind) {
-    LanguageElement symbol = new LanguageElement(kind);
+  public LanguageElement startSymbol(final SymbolKind kind, final boolean listAsSymbol) {
+    LanguageElement symbol = new LanguageElement(kind, listAsSymbol);
     addToScopes(symbol);
 
     symbolsScope.add(symbol);
@@ -152,13 +152,14 @@ public class DocumentStructures {
 
   public void recordDefinition(final String name, final LanguageElementId id,
       final SymbolKind kind, final Range range) {
-    recordDefinition(name, id, kind, range, false);
+    recordDefinition(name, id, kind, range, false, false);
   }
 
   public void recordDefinition(final String name, final LanguageElementId id,
-      final SymbolKind kind, final Range range, final boolean afterNavigation) {
+      final SymbolKind kind, final Range range, final boolean afterNavigation,
+      final boolean listAsSymbol) {
     assert range != null;
-    LanguageElement symbol = new LanguageElement(name, kind, id, range);
+    LanguageElement symbol = new LanguageElement(name, kind, id, range, listAsSymbol);
     symbol.setRange(range);
     addToScopes(symbol);
 
@@ -207,7 +208,7 @@ public class DocumentStructures {
     throw new RuntimeException("Not yet implemented");
   }
 
-  public List<? extends DocumentSymbol> getRootSymbols() {
+  public List<LanguageElement> getRootSymbols() {
     return rootSymbols;
   }
 
@@ -358,8 +359,7 @@ public class DocumentStructures {
     for (var e : es) {
       if (isIn(pos, e)) {
         if (e instanceof LanguageElement le) {
-          @SuppressWarnings("rawtypes")
-          List children = le.getChildren();
+          List<LanguageElement> children = le.getAllChildren();
           if (children != null) {
             var child = getMostPrecise(pos, children);
             if (child != null) {
@@ -433,8 +433,7 @@ public class DocumentStructures {
       final List<LanguageElement> es, final List<CompletionItem> results) {
     for (var e : es) {
       if (isIn(pos, e)) {
-        @SuppressWarnings("rawtypes")
-        List children = e.getChildren();
+        List<LanguageElement> children = e.getAllChildren();
         if (children != null) {
           findIn(partialName, pos, children, results);
         }

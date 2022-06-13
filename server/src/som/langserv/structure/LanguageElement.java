@@ -16,30 +16,40 @@ import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
 
 
-public class LanguageElement extends DocumentSymbol implements WithRange {
+public final class LanguageElement extends DocumentSymbol implements WithRange {
 
   private LanguageElementId id;
 
   private List<Reference> containedReferences;
 
+  protected List<LanguageElement> allChildren;
+
   private SignatureInformation signature;
 
+  /**
+   * If true, this element will be listed as a symbol on document and workspace symbol
+   * requests.
+   */
+  private final boolean listAsSymbol;
+
   public LanguageElement(final String name, final SymbolKind kind,
-      final LanguageElementId id, final Range identifierRange) {
+      final LanguageElementId id, final Range identifierRange, final boolean listAsSymbol) {
     super();
     setName(name);
     setKind(kind);
     setSelectionRange(identifierRange);
     this.id = id;
+    this.listAsSymbol = listAsSymbol;
   }
 
   public boolean matches(final String query) {
     return id.matches(query);
   }
 
-  public LanguageElement(final SymbolKind kind) {
+  public LanguageElement(final SymbolKind kind, final boolean listAsSymbol) {
     super();
     setKind(kind);
+    this.listAsSymbol = listAsSymbol;
   }
 
   @Override
@@ -63,13 +73,24 @@ public class LanguageElement extends DocumentSymbol implements WithRange {
   }
 
   public void addChild(final LanguageElement symbol) {
-    var children = getChildren();
+    if (symbol.listAsSymbol) {
+      var children = getChildren();
 
-    if (children == null) {
-      children = new ArrayList<>();
-      setChildren(children);
+      if (children == null) {
+        children = new ArrayList<>();
+        setChildren(children);
+      }
+      children.add(symbol);
     }
-    children.add(symbol);
+
+    if (allChildren == null) {
+      allChildren = new ArrayList<>();
+    }
+    allChildren.add(symbol);
+  }
+
+  public List<LanguageElement> getAllChildren() {
+    return allChildren;
   }
 
   public boolean hasId() {
