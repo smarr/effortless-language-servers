@@ -197,13 +197,13 @@ public class SimpleLanguageTests {
     DocumentSymbol add = symbols.get(0);
     assertEquals("add(a, b)", add.getDetail());
 
-    assertRange(1, 10, 1, 13, add.getSelectionRange());
-    assertRange(1, 10, 3, 2, add.getRange());
+    assertRange(0, 9, 0, 12, add.getSelectionRange());
+    assertRange(0, 9, 2, 1, add.getRange());
 
     DocumentSymbol loop = symbols.get(1);
     assertEquals("loop(n)", loop.getDetail());
-    assertRange(4, 10, 4, 14, loop.getSelectionRange());
-    assertRange(4, 10, 7, 2, loop.getRange());
+    assertRange(3, 9, 3, 13, loop.getSelectionRange());
+    assertRange(3, 9, 6, 1, loop.getRange());
   }
 
   @Test
@@ -221,16 +221,16 @@ public class SimpleLanguageTests {
             + "}",
         path);
 
-    Hover hover = adapter.hover(path, new Position(7, 12));
+    Hover hover = adapter.hover(path, new Position(6, 11));
     assertNotNull(hover);
 
     Range r = hover.getRange();
 
-    assertEquals(7, r.getStart().getLine());
-    assertEquals(11, r.getStart().getCharacter());
+    assertEquals(6, r.getStart().getLine());
+    assertEquals(10, r.getStart().getCharacter());
 
-    assertEquals(7, r.getEnd().getLine());
-    assertEquals(11 + "loop".length(), r.getEnd().getCharacter());
+    assertEquals(6, r.getEnd().getLine());
+    assertEquals(10 + "loop".length(), r.getEnd().getCharacter());
 
     assertEquals("plaintext", hover.getContents().getRight().getKind());
     assertEquals("loop(n)\n", hover.getContents().getRight().getValue());
@@ -251,16 +251,16 @@ public class SimpleLanguageTests {
             + "}",
         path);
 
-    Hover hover = adapter.hover(path, new Position(7, 11 + "loop".length()));
+    Hover hover = adapter.hover(path, new Position(6, 10 + "loop".length()));
     assertNotNull(hover);
 
     Range r = hover.getRange();
 
-    assertEquals(7, r.getStart().getLine());
-    assertEquals(11, r.getStart().getCharacter());
+    assertEquals(6, r.getStart().getLine());
+    assertEquals(10, r.getStart().getCharacter());
 
-    assertEquals(7, r.getEnd().getLine());
-    assertEquals(11 + "loop".length(), r.getEnd().getCharacter());
+    assertEquals(6, r.getEnd().getLine());
+    assertEquals(10 + "loop".length(), r.getEnd().getCharacter());
 
     assertEquals("plaintext", hover.getContents().getRight().getKind());
     assertEquals("loop(n)\n", hover.getContents().getRight().getValue());
@@ -281,7 +281,7 @@ public class SimpleLanguageTests {
             + "}",
         path);
 
-    SignatureHelp help = adapter.signatureHelp(path, new Position(7, 12), null);
+    SignatureHelp help = adapter.signatureHelp(path, new Position(6, 11), null);
     assertNotNull(help);
 
     assertNull(help.getActiveSignature());
@@ -371,18 +371,18 @@ public class SimpleLanguageTests {
         path2);
     assertNull(structures.getDiagnostics());
 
-    var locations = adapter.getDefinitions(path2, new Position(6, 12));
+    var locations = adapter.getDefinitions(path2, new Position(5, 11));
     assertEquals(2, locations.size());
 
     var loop1 = locations.get(0);
     assertEquals(path2, loop1.getTargetUri());
-    assertEquals(1, loop1.getTargetSelectionRange().getStart().getLine());
-    assertEquals(6, loop1.getOriginSelectionRange().getStart().getLine());
+    assertEquals(0, loop1.getTargetSelectionRange().getStart().getLine());
+    assertEquals(5, loop1.getOriginSelectionRange().getStart().getLine());
 
     var loop2 = locations.get(1);
     assertEquals(path1, loop2.getTargetUri());
-    assertEquals(2, loop2.getTargetSelectionRange().getStart().getLine());
-    assertEquals(6, loop2.getOriginSelectionRange().getStart().getLine());
+    assertEquals(1, loop2.getTargetSelectionRange().getStart().getLine());
+    assertEquals(5, loop2.getOriginSelectionRange().getStart().getLine());
   }
 
   @Test
@@ -402,22 +402,22 @@ public class SimpleLanguageTests {
             + "}",
         path);
 
-    List<DocumentHighlight> hs = adapter.getHighlight(path, new Position(8, 2));
+    List<DocumentHighlight> hs = adapter.getHighlight(path, new Position(7, 1));
     assertNotNull(hs);
 
     assertEquals(4, hs.size());
 
-    assertEquals(1, hs.get(0).getRange().getStart().getLine());
-    assertEquals(10, hs.get(0).getRange().getStart().getCharacter());
+    assertEquals(0, hs.get(0).getRange().getStart().getLine());
+    assertEquals(9, hs.get(0).getRange().getStart().getCharacter());
 
-    assertEquals(7, hs.get(1).getRange().getStart().getLine());
-    assertEquals(1, hs.get(1).getRange().getStart().getCharacter());
+    assertEquals(6, hs.get(1).getRange().getStart().getLine());
+    assertEquals(0, hs.get(1).getRange().getStart().getCharacter());
 
-    assertEquals(8, hs.get(2).getRange().getStart().getLine());
-    assertEquals(1, hs.get(2).getRange().getStart().getCharacter());
+    assertEquals(7, hs.get(2).getRange().getStart().getLine());
+    assertEquals(0, hs.get(2).getRange().getStart().getCharacter());
 
-    assertEquals(9, hs.get(3).getRange().getStart().getLine());
-    assertEquals(11, hs.get(3).getRange().getStart().getCharacter());
+    assertEquals(8, hs.get(3).getRange().getStart().getLine());
+    assertEquals(10, hs.get(3).getRange().getStart().getCharacter());
   }
 
   @Test
@@ -445,24 +445,24 @@ public class SimpleLanguageTests {
         path2);
     assertNull(structures.getDiagnostics());
 
-    List<Location> result = adapter.getReferences(path2, new Position(4, 12), true);
+    List<Location> result = adapter.getReferences(path2, new Position(3, 11), true);
 
     assertEquals(5, result.size());
 
     assertEquals(path1, result.get(0).getUri());
-    assertEquals(1, result.get(0).getRange().getStart().getLine());
+    assertEquals(0, result.get(0).getRange().getStart().getLine());
 
     assertEquals(path1, result.get(1).getUri());
-    assertEquals(2, result.get(1).getRange().getStart().getLine());
+    assertEquals(1, result.get(1).getRange().getStart().getLine());
 
     assertEquals(path1, result.get(2).getUri());
-    assertEquals(6, result.get(2).getRange().getStart().getLine());
+    assertEquals(5, result.get(2).getRange().getStart().getLine());
 
     assertEquals(path2, result.get(3).getUri());
-    assertEquals(1, result.get(3).getRange().getStart().getLine());
+    assertEquals(0, result.get(3).getRange().getStart().getLine());
 
     assertEquals(path2, result.get(4).getUri());
-    assertEquals(4, result.get(4).getRange().getStart().getLine());
+    assertEquals(3, result.get(4).getRange().getStart().getLine());
   }
 
   @Test
@@ -490,18 +490,18 @@ public class SimpleLanguageTests {
         path2);
     assertNull(structures.getDiagnostics());
 
-    List<Location> result = adapter.getReferences(path2, new Position(4, 12), false);
+    List<Location> result = adapter.getReferences(path2, new Position(3, 11), false);
 
     assertEquals(3, result.size());
 
     assertEquals(path1, result.get(0).getUri());
-    assertEquals(2, result.get(0).getRange().getStart().getLine());
+    assertEquals(1, result.get(0).getRange().getStart().getLine());
 
     assertEquals(path1, result.get(1).getUri());
-    assertEquals(6, result.get(1).getRange().getStart().getLine());
+    assertEquals(5, result.get(1).getRange().getStart().getLine());
 
     assertEquals(path2, result.get(2).getUri());
-    assertEquals(4, result.get(2).getRange().getStart().getLine());
+    assertEquals(3, result.get(2).getRange().getStart().getLine());
   }
 
   @Test
@@ -520,8 +520,8 @@ public class SimpleLanguageTests {
     assertEquals(3, diag.size());
 
     assertEquals("missing ';' at '('", diag.get(0).getMessage());
-    assertEquals(3, diag.get(0).getRange().getStart().getLine());
-    assertEquals(10, diag.get(0).getRange().getStart().getCharacter());
+    assertEquals(2, diag.get(0).getRange().getStart().getLine());
+    assertEquals(9, diag.get(0).getRange().getStart().getCharacter());
   }
 
   @Test
@@ -535,7 +535,7 @@ public class SimpleLanguageTests {
             + "  println(lo",
         path);
 
-    CompletionList result = adapter.getCompletions(path, new Position(4, 13));
+    CompletionList result = adapter.getCompletions(path, new Position(3, 12));
     assertFalse(result.isIncomplete());
 
     var items = result.getItems();
@@ -567,7 +567,7 @@ public class SimpleLanguageTests {
     structures = adapter.parse("function loop(iii) {}", path2);
     assertNull(structures.getDiagnostics());
 
-    CompletionList result = adapter.getCompletions(path1, new Position(6, 11));
+    CompletionList result = adapter.getCompletions(path1, new Position(5, 10));
     assertFalse(result.isIncomplete());
 
     var items = result.getItems();
@@ -606,7 +606,7 @@ public class SimpleLanguageTests {
     // parsed a dot
     // this might not be easily accessible, maybe I need to intercept the parser error
 
-    CompletionList result = adapter.getCompletions(path1, new Position(8, 5));
+    CompletionList result = adapter.getCompletions(path1, new Position(7, 4));
     assertFalse(result.isIncomplete());
 
     var items = result.getItems();

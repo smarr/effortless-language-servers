@@ -29,11 +29,11 @@ public class SimpleCompletenessTests {
             + "}",
         path);
 
-    List<Location> refs = adapter.getReferences(path, new Position(3, 12), true);
+    List<Location> refs = adapter.getReferences(path, new Position(2, 11), true);
 
     assertEquals(2, refs.size());
-    assertEquals(2, refs.get(0).getRange().getStart().getLine());
-    assertEquals(3, refs.get(1).getRange().getStart().getLine());
+    assertEquals(1, refs.get(0).getRange().getStart().getLine());
+    assertEquals(2, refs.get(1).getRange().getStart().getLine());
   }
 
   @Test
@@ -53,11 +53,11 @@ public class SimpleCompletenessTests {
             + "",
         path);
 
-    List<Location> refs = adapter.getReferences(path, new Position(8, 8), true);
+    List<Location> refs = adapter.getReferences(path, new Position(7, 7), true);
 
     assertEquals(2, refs.size());
-    assertEquals(1, refs.get(0).getRange().getStart().getLine());
-    assertEquals(8, refs.get(1).getRange().getStart().getLine());
+    assertEquals(0, refs.get(0).getRange().getStart().getLine());
+    assertEquals(7, refs.get(1).getRange().getStart().getLine());
   }
 
   @Test
@@ -75,11 +75,11 @@ public class SimpleCompletenessTests {
             + "function x() {}",
         path);
 
-    List<Location> refs = adapter.getReferences(path, new Position(6, 16), true);
+    List<Location> refs = adapter.getReferences(path, new Position(5, 15), true);
 
     assertEquals(2, refs.size());
-    assertEquals(3, refs.get(0).getRange().getStart().getLine());
-    assertEquals(6, refs.get(1).getRange().getStart().getLine());
+    assertEquals(2, refs.get(0).getRange().getStart().getLine());
+    assertEquals(5, refs.get(1).getRange().getStart().getLine());
   }
 
   @Test
@@ -92,10 +92,10 @@ public class SimpleCompletenessTests {
             + "}",
         path);
 
-    List<? extends LocationLink> refs = adapter.getDefinitions(path, new Position(2, 8));
+    List<? extends LocationLink> refs = adapter.getDefinitions(path, new Position(1, 7));
 
     assertEquals(1, refs.size());
-    assertEquals(1, refs.get(0).getTargetSelectionRange().getStart().getLine());
-    assertEquals(2, refs.get(0).getOriginSelectionRange().getStart().getLine());
+    assertEquals(0, refs.get(0).getTargetSelectionRange().getStart().getLine());
+    assertEquals(1, refs.get(0).getOriginSelectionRange().getStart().getLine());
   }
 }
