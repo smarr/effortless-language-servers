@@ -107,12 +107,20 @@ public class DocumentServiceImpl implements TextDocumentService {
 
   protected static void reportDiagnostics(final List<Diagnostic> diagnostics,
       final String documentUri, final LanguageClient client) {
+    PublishDiagnosticsParams result = new PublishDiagnosticsParams();
+    result.setUri(documentUri);
+
     if (diagnostics != null) {
-      PublishDiagnosticsParams result = new PublishDiagnosticsParams();
+      for (var d : diagnostics) {
+        assert d.getRange() != null;
+      }
+
       result.setDiagnostics(diagnostics);
-      result.setUri(documentUri);
-      client.publishDiagnostics(result);
+    } else {
+      result.setDiagnostics(new ArrayList<>());
     }
+
+    client.publishDiagnostics(result);
   }
 
   private void validateTextDocument(final String documentUri,
