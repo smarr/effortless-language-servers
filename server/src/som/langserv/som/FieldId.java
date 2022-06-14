@@ -8,8 +8,9 @@ import trufflesom.compiler.Field;
 
 public class FieldId extends LanguageElementId {
 
-  private final Field field;
-  private final int   fieldIndex;
+  private transient final Field field;
+
+  private final int fieldIndex;
 
   public FieldId(final Field field) {
     this.field = field;

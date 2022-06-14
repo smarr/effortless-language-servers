@@ -18,19 +18,19 @@ import org.eclipse.lsp4j.SymbolKind;
 
 public final class LanguageElement extends DocumentSymbol implements WithRange {
 
-  private LanguageElementId id;
+  private transient LanguageElementId id;
 
-  private List<Reference> containedReferences;
+  private transient List<Reference> containedReferences;
 
-  protected List<LanguageElement> allChildren;
+  protected transient List<LanguageElement> allChildren;
 
-  private SignatureInformation signature;
+  private transient SignatureInformation signature;
 
   /**
    * If true, this element will be listed as a symbol on document and workspace symbol
    * requests.
    */
-  private final boolean listAsSymbol;
+  private transient final boolean listAsSymbol;
 
   public LanguageElement(final String name, final SymbolKind kind,
       final LanguageElementId id, final Range identifierRange, final boolean listAsSymbol) {

@@ -8,7 +8,7 @@ import trufflesom.compiler.Variable;
 
 public class VariableId extends LanguageElementId {
 
-  private final Variable var;
+  private transient final Variable var;
 
   public VariableId(final Variable var) {
     this.var = var;
