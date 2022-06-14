@@ -321,16 +321,16 @@ public class SomTests {
 
     assertNull(structures.getDiagnostics());
 
-    Hover hover = adapter.hover(path, new Position(3, 9));
+    Hover hover = adapter.hover(path, new Position(2, 8));
     assertNotNull(hover);
 
     Range r = hover.getRange();
 
-    assertEquals(3, r.getStart().getLine());
-    assertEquals(8, r.getStart().getCharacter());
+    assertEquals(2, r.getStart().getLine());
+    assertEquals(7, r.getStart().getCharacter());
 
-    assertEquals(3, r.getEnd().getLine());
-    assertEquals(8 + "run:".length(), r.getEnd().getCharacter());
+    assertEquals(2, r.getEnd().getLine());
+    assertEquals(7 + "run:".length(), r.getEnd().getCharacter());
 
     assertEquals("plaintext", hover.getContents().getRight().getKind());
     assertEquals("run: arg\n", hover.getContents().getRight().getValue());
