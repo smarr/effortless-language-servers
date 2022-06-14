@@ -35,14 +35,14 @@ public class PositionConversion {
   }
 
   public static Position pos(final int startLine, final int startChar) {
-    return new Position(startLine, startChar);
+    return new Position(startLine - 1, startChar - 1);
   }
 
   public static Range toRange(final SourceSection ss) {
     Range range = new Range();
     range.setStart(pos(ss.getStartLine(), ss.getStartColumn()));
 
-    range.setEnd(pos(ss.getEndLine(), ss.getEndColumn() + 1));
+    range.setEnd(pos(ss.getEndLine(), ss.getEndColumn()));
     return range;
   }
 
@@ -78,13 +78,13 @@ public class PositionConversion {
     int line = SourceCoordinate.getLine(source, coord);
     int column = SourceCoordinate.getColumn(source, coord);
 
-    return new Position(line, column);
+    return new Position(line - 1, column - 1);
   }
 
   public static Position getEnd(final Source source, final int coord, final int length) {
     int line = SourceCoordinate.getLine(source, coord);
     int column = SourceCoordinate.getColumn(source, coord);
 
-    return new Position(line, column + length);
+    return new Position(line - 1, column + length - 1);
   }
 }

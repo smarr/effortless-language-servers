@@ -35,6 +35,6 @@ public class SomLexer extends Lexer {
 
   private void addCoordsToTokens(final int line, final int col, final int length) {
     semanticTokens.addSemanticToken(
-        line, col, length, SemanticTokenType.COMMENT);
+        line - 1, col - 1, length, SemanticTokenType.COMMENT);
   }
 }

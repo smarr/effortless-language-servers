@@ -65,14 +65,14 @@ public class SomTests {
         adapter.getStructures(path).getSemanticTokens().getSemanticTokens();
     printAllToken(tokens);
 
-    assertToken(1, 1, "Hello", SemanticTokenType.CLASS, tokens.get(0));
-    assertToken(2, 5, "\"The 'run' method is called when initializing the system\"",
+    assertToken(0, 0, "Hello", SemanticTokenType.CLASS, tokens.get(0));
+    assertToken(1, 4, "\"The 'run' method is called when initializing the system\"",
         SemanticTokenType.COMMENT, tokens.get(1));
 
-    assertToken(3, 5, "run", SemanticTokenType.METHOD, tokens.get(2));
-    assertToken(3, 12, "'Hello, World from SOM'", SemanticTokenType.STRING,
+    assertToken(2, 4, "run", SemanticTokenType.METHOD, tokens.get(2));
+    assertToken(2, 11, "'Hello, World from SOM'", SemanticTokenType.STRING,
         tokens.get(3));
-    assertToken(3, 36, "println", SemanticTokenType.METHOD, tokens.get(4));
+    assertToken(2, 35, "println", SemanticTokenType.METHOD, tokens.get(4));
 
     assertEquals(5, tokens.size());
   }
@@ -214,21 +214,21 @@ public class SomTests {
     assertEquals(1, symbols.size());
     var classSymbol = symbols.get(0);
     assertEquals("Hello", classSymbol.getName());
-    assertRange(1, 1, 1, 6, classSymbol.getSelectionRange());
+    assertRange(0, 0, 0, 5, classSymbol.getSelectionRange());
 
     var children = classSymbol.getAllChildren();
     assertEquals(4, children.size());
     assertEquals("run", children.get(0).getName());
-    assertRange(2, 1, 2, 4, children.get(0).getSelectionRange());
+    assertRange(1, 0, 1, 3, children.get(0).getSelectionRange());
 
     assertEquals("run:", children.get(1).getName());
-    assertRange(3, 1, 3, 5, children.get(1).getSelectionRange());
+    assertRange(2, 0, 2, 4, children.get(1).getSelectionRange());
 
     assertEquals("+", children.get(2).getName());
-    assertRange(4, 1, 4, 2, children.get(2).getSelectionRange());
+    assertRange(3, 0, 3, 1, children.get(2).getSelectionRange());
 
     assertEquals("run:with:", children.get(3).getName());
-    assertRange(5, 1, 5, 17, children.get(3).getSelectionRange());
+    assertRange(4, 0, 4, 16, children.get(3).getSelectionRange());
   }
 
   @Test

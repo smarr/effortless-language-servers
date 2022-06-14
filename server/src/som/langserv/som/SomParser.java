@@ -380,7 +380,7 @@ public class SomParser extends ParserAst {
       final SemanticTokenType type, final SemanticTokenModifier... modifiers) {
     int line = SourceCoordinate.getLine(source, startCoord);
     int column = SourceCoordinate.getColumn(source, startCoord);
-    symbols.getSemanticTokens().addSemanticToken(line, column, token.length(), type,
+    symbols.getSemanticTokens().addSemanticToken(line - 1, column - 1, token.length(), type,
         modifiers);
   }
 
@@ -390,7 +390,7 @@ public class SomParser extends ParserAst {
     int column = SourceCoordinate.getColumn(source, coord);
     int length = SourceCoordinate.getLength(coord);
 
-    symbols.getSemanticTokens().addSemanticToken(line, column, length, type,
+    symbols.getSemanticTokens().addSemanticToken(line - 1, column - 1, length, type,
         (SemanticTokenModifier[]) null);
   }
 

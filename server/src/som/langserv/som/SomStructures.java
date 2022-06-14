@@ -60,12 +60,10 @@ public class SomStructures
       }
     }
 
-    int line = SourceCoordinate.getLine(source, var.coord);
-    int col = SourceCoordinate.getColumn(source, var.coord);
     int length = SourceCoordinate.getLength(var.coord);
 
     symbols.recordDefinition(var.getName().getString(), new VariableId(var),
-        SymbolKind.Variable, toRange(line, col, length));
+        SymbolKind.Variable, toRange(source, var.coord));
     assert var.getName().getString().length() == length;
 
     SemanticTokenType tokenType;
@@ -75,6 +73,9 @@ public class SomStructures
       assert var instanceof Argument;
       tokenType = SemanticTokenType.PARAMETER;
     }
+
+    int line = SourceCoordinate.getLine(source, var.coord);
+    int col = SourceCoordinate.getColumn(source, var.coord);
 
     symbols.getSemanticTokens().addSemanticToken(line, col, length, tokenType,
         (SemanticTokenModifier[]) null);
