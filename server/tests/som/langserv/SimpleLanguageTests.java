@@ -545,7 +545,6 @@ public class SimpleLanguageTests {
     assertEquals(CompletionItemKind.Function, i.getKind());
     assertEquals("loop(n, b, c)", i.getDetail());
     assertEquals("loop", i.getLabel());
-    assertEquals("op", i.getInsertText());
   }
 
   @Test
@@ -576,7 +575,6 @@ public class SimpleLanguageTests {
     var i = items.get(0);
     assertEquals(CompletionItemKind.Variable, i.getKind());
     assertEquals("i", i.getLabel());
-    assertEquals("", i.getInsertText());
   }
 
   @Test
@@ -615,16 +613,13 @@ public class SimpleLanguageTests {
     var i = items.get(0);
     assertEquals(CompletionItemKind.Property, i.getKind());
     assertEquals("prop2", i.getLabel());
-    assertEquals("prop2", i.getInsertText());
 
     i = items.get(1);
     assertEquals(CompletionItemKind.Property, i.getKind());
     assertEquals("prop3", i.getLabel());
-    assertEquals("prop3", i.getInsertText());
 
     i = items.get(2);
     assertEquals(CompletionItemKind.Property, i.getKind());
     assertEquals("prop1", i.getLabel());
-    assertEquals("prop1", i.getInsertText());
   }
 }

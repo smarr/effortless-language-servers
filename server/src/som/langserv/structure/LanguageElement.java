@@ -152,12 +152,6 @@ public final class LanguageElement extends DocumentSymbol implements WithRange {
     CompletionItem item = new CompletionItem();
     item.setLabel(getName());
     item.setKind(getCompletionKind(getKind()));
-
-    if (getName().startsWith(partialName)) {
-      item.setInsertText(getName().substring(partialName.length()));
-    } else {
-      item.setInsertText(getName());
-    }
     item.setDetail(getDetail());
     return item;
   }
