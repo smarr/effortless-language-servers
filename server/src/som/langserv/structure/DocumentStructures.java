@@ -155,7 +155,7 @@ public class DocumentStructures {
     recordDefinition(name, id, kind, range, false, false);
   }
 
-  public void recordDefinition(final String name, final LanguageElementId id,
+  public LanguageElement recordDefinition(final String name, final LanguageElementId id,
       final SymbolKind kind, final Range range, final boolean afterNavigation,
       final boolean listAsSymbol) {
     assert range != null;
@@ -169,6 +169,8 @@ public class DocumentStructures {
     if (afterNavigation) {
       recordForAfterNavigation(symbol);
     }
+
+    return symbol;
   }
 
   /**
@@ -232,6 +234,7 @@ public class DocumentStructures {
   }
 
   private Hover createHover(final LanguageElement e) {
+    assert e.getDetail() != null;
     Hover hover = new Hover();
     hover.setRange(e.getSelectionRange());
     MarkupContent content = new MarkupContent("plaintext", e.getDetail());
