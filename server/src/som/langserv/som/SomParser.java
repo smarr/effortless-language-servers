@@ -3,7 +3,7 @@ package som.langserv.som;
 import static som.langserv.som.PositionConversion.getEnd;
 import static som.langserv.som.PositionConversion.getStart;
 import static som.langserv.som.PositionConversion.toRange;
-import static trufflesom.compiler.Symbol.Primitive;
+import static trufflesom.compiler.Symbol.Identifier;
 import static trufflesom.vm.SymbolTable.symbolFor;
 
 import java.util.ArrayList;
@@ -84,6 +84,16 @@ public class SomParser extends ParserAst {
   }
 
   @Override
+  protected void superclass(final ClassGenerationContext cgenc) throws ParseError {
+    if (sym == Identifier) {
+      int coord = getStartIndex();
+      recordTokenSemantics(coord, text, SemanticTokenType.CLASS);
+    }
+
+    super.superclass(cgenc);
+  }
+
+  @Override
   protected void classSide(final ClassGenerationContext cgenc)
       throws ProgramDefinitionError, ParseError {
     if (sym == Symbol.Separator) {
@@ -109,7 +119,7 @@ public class SomParser extends ParserAst {
   @Override
   protected void primitiveBlock() throws ParseError {
     int coord = getStartIndex();
-    recordTokenSemantics(coord, Primitive.toString(), SemanticTokenType.KEYWORD);
+    recordTokenSemantics(coord, "primitive", SemanticTokenType.KEYWORD);
     super.primitiveBlock();
   }
 
@@ -256,6 +266,38 @@ public class SomParser extends ParserAst {
   }
 
   @Override
+  protected Object literalInteger(final boolean isNegative) throws ParseError {
+    int coord = getStartIndex();
+    String t = text;
+    if (isNegative) {
+      t = "-" + t;
+      coord -= 1; // TODO: this is kind a unsafe, but probably good enough
+    }
+
+    Object result = super.literalInteger(isNegative);
+
+    recordTokenSemantics(coord, t, SemanticTokenType.NUMBER);
+
+    return result;
+  }
+
+  @Override
+  protected double literalDouble(final boolean isNegative) throws ParseError {
+    int coord = getStartIndex();
+    String t = text;
+    if (isNegative) {
+      t = "-" + t;
+      coord -= 1; // TODO: this is kind a unsafe, but probably good enough
+    }
+
+    double result = super.literalDouble(isNegative);
+
+    recordTokenSemantics(coord, t, SemanticTokenType.NUMBER);
+
+    return result;
+  }
+
+  @Override
   protected SSymbol literalSymbol() throws ParseError {
     int coord = getStartIndex();
 
@@ -396,8 +438,8 @@ public class SomParser extends ParserAst {
 
   private void recordTokenSemantics(final SourceSection section,
       final SemanticTokenType type) {
-    symbols.getSemanticTokens().addSemanticToken(section.getStartLine(),
-        section.getStartColumn(),
+    symbols.getSemanticTokens().addSemanticToken(section.getStartLine() - 1,
+        section.getStartColumn() - 1,
         section.getCharLength(), type, (SemanticTokenModifier[]) null);
   }
 

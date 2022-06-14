@@ -77,7 +77,7 @@ public class SomStructures
     int line = SourceCoordinate.getLine(source, var.coord);
     int col = SourceCoordinate.getColumn(source, var.coord);
 
-    symbols.getSemanticTokens().addSemanticToken(line, col, length, tokenType,
+    symbols.getSemanticTokens().addSemanticToken(line - 1, col - 1, length, tokenType,
         (SemanticTokenModifier[]) null);
   }
 

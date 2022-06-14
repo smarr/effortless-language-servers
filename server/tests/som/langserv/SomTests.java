@@ -78,6 +78,82 @@ public class SomTests {
   }
 
   @Test
+  public void testSemanticHighlightingFields() throws URISyntaxException {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    adapter.parse("Hello = (\n"
+        + "| f1 field2\n"
+        + "  anotherField |\n"
+        + "----\n"
+        + "| abcd \n"
+        + ")\n", path);
+
+    List<int[]> tokens =
+        adapter.getStructures(path).getSemanticTokens().getSemanticTokens();
+    printAllToken(tokens);
+
+    assertToken(0, 0, "Hello", SemanticTokenType.CLASS, tokens.get(0));
+    assertToken(1, 2, "f1", SemanticTokenType.PROPERTY, tokens.get(1));
+    assertToken(1, 5, "field2", SemanticTokenType.PROPERTY, tokens.get(2));
+    assertToken(2, 2, "anotherField", SemanticTokenType.PROPERTY, tokens.get(3));
+
+    assertToken(4, 2, "abcd", SemanticTokenType.PROPERTY, tokens.get(4));
+
+    assertEquals(5, tokens.size());
+  }
+
+  @Test
+  public void testSemanticHighlightingArgAndLocal() throws URISyntaxException {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    adapter.parse("Hello = (\n"
+        + "run: arg = (\n"
+        + "  | myLocal |\n"
+        + ") )\n", path);
+
+    List<int[]> tokens =
+        adapter.getStructures(path).getSemanticTokens().getSemanticTokens();
+    printAllToken(tokens);
+
+    assertToken(0, 0, "Hello", SemanticTokenType.CLASS, tokens.get(0));
+    assertToken(1, 0, "run:", SemanticTokenType.METHOD, tokens.get(1));
+    assertToken(1, 5, "arg", SemanticTokenType.PARAMETER, tokens.get(2));
+    assertToken(2, 4, "myLocal", SemanticTokenType.VARIABLE, tokens.get(3));
+
+    assertEquals(4, tokens.size());
+  }
+
+  @Test
+  public void testSemanticHighlightingTwoMethods() throws URISyntaxException {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    adapter.parse("Hello = (\n"
+        + "first = ( ^ self at: 1 )\n"
+        + "last  = ( ^ self at: self length )\n"
+        + ") )\n", path);
+
+    List<int[]> tokens =
+        adapter.getStructures(path).getSemanticTokens().getSemanticTokens();
+    printAllToken(tokens);
+
+    assertToken(0, 0, "Hello", SemanticTokenType.CLASS, tokens.get(0));
+    assertToken(1, 0, "first", SemanticTokenType.METHOD, tokens.get(1));
+
+    assertToken(1, 12, "self", SemanticTokenType.PARAMETER, tokens.get(2));
+    assertToken(1, 17, "at:", SemanticTokenType.METHOD, tokens.get(3));
+    assertToken(1, 21, "1", SemanticTokenType.NUMBER, tokens.get(4));
+
+    assertToken(2, 0, "last", SemanticTokenType.METHOD, tokens.get(5));
+
+    assertToken(2, 12, "self", SemanticTokenType.PARAMETER, tokens.get(6));
+    assertToken(2, 17, "at:", SemanticTokenType.METHOD, tokens.get(7));
+    assertToken(2, 21, "self", SemanticTokenType.PARAMETER, tokens.get(8));
+    assertToken(2, 26, "length", SemanticTokenType.METHOD, tokens.get(9));
+
+    assertEquals(10, tokens.size());
+  }
+
+  @Test
   public void testSymbols() {
     var adapter = new SomAdapter();
     String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
