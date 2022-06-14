@@ -3,6 +3,7 @@ package som.langserv;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static som.langserv.Helpers.assertRange;
 import static som.langserv.Helpers.assertToken;
 import static som.langserv.Helpers.printAllToken;
@@ -95,6 +96,72 @@ public class SomTests {
     var children = classSymbol.getAllChildren();
     assertEquals(1, children.size());
     assertEquals("run", children.get(0).getName());
+  }
+
+  @Test
+  public void testSymbolsInClasses() {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    var structures = adapter.parse("Hello = (\n"
+        + "  | aField field2 |\n"
+        + "  run = ('Hello, World from SOM' println )\n"
+        + "  ----\n"
+        + "  | classField1 field2 |\n"
+        + ")\n", path);
+
+    assertNull(structures.getDiagnostics());
+
+    var symbols = adapter.documentSymbol(path);
+    assertEquals(1, symbols.size());
+    var classSymbol = symbols.get(0);
+    assertEquals("Hello", classSymbol.getName());
+
+    var children = classSymbol.getAllChildren();
+    assertEquals(4, children.size());
+    assertEquals(4, classSymbol.getChildren().size());
+
+    assertEquals("aField", children.get(0).getName());
+    assertEquals("field2", children.get(1).getName());
+    assertEquals("run", children.get(2).getName());
+    assertEquals("class", children.get(3).getName());
+
+    var classChildren = children.get(3).getChildren();
+    assertEquals(2, classChildren.size());
+    assertEquals(2, children.get(3).getAllChildren().size());
+
+    assertEquals("classField1", classChildren.get(0).getName());
+    assertEquals("field2", classChildren.get(1).getName());
+  }
+
+  @Test
+  public void testSymbolsInMethods() {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    var structures = adapter.parse("Hello = (\n"
+        + "    run: arg = ( | local | self block: [:a | arg] )\n"
+        + ")\n", path);
+
+    assertNull(structures.getDiagnostics());
+
+    var symbols = adapter.documentSymbol(path);
+    assertEquals(1, symbols.size());
+    var classSymbol = symbols.get(0);
+    assertEquals("Hello", classSymbol.getName());
+
+    var children = classSymbol.getAllChildren();
+    assertEquals(1, children.size());
+    assertEquals("run:", children.get(0).getName());
+
+    var mChildren = children.get(0).getAllChildren();
+    assertEquals(3, mChildren.size());
+    assertEquals("arg", mChildren.get(0).getName());
+    assertEquals("local", mChildren.get(1).getName());
+    assertTrue(mChildren.get(2).getName().startsWith("λrun"));
+    assertEquals("[:a]", mChildren.get(2).getDetail());
+
+    var bChildren = mChildren.get(2).getAllChildren();
+    assertEquals(1, bChildren.size());
+    assertEquals("a", bChildren.get(0).getName());
   }
 
   @Test
