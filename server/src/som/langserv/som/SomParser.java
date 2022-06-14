@@ -243,6 +243,28 @@ public class SomParser extends ParserAst {
   }
 
   @Override
+  protected Field instanceField(final ClassGenerationContext cgenc) throws ParseError {
+    Field f = super.instanceField(cgenc);
+
+    recordSymbolDefinition(f.getName().getString(), new FieldId(f),
+        SymbolKind.Field, f.getSourceCoordinate(), true);
+    recordTokenSemantics(f.getSourceCoordinate(), SemanticTokenType.PROPERTY);
+
+    return f;
+  }
+
+  @Override
+  protected Field classField(final ClassGenerationContext cgenc) throws ParseError {
+    Field f = super.classField(cgenc);
+
+    recordSymbolDefinition(f.getName().getString(), new FieldId(f),
+        SymbolKind.Field, f.getSourceCoordinate(), true);
+    recordTokenSemantics(f.getSourceCoordinate(), SemanticTokenType.PROPERTY);
+
+    return f;
+  }
+
+  @Override
   public ExpressionNode method(final MethodGenerationContext mgenc)
       throws ProgramDefinitionError {
     int coord = getStartIndex();
@@ -382,8 +404,9 @@ public class SomParser extends ParserAst {
   }
 
   private void recordSymbolDefinition(final String string, final LanguageElementId id,
-      final SymbolKind kind, final long coordWithLength) {
-    symbols.recordDefinition(string, id, kind, toRange(source, coordWithLength));
+      final SymbolKind kind, final long coordWithLength, final boolean listAsSymbol) {
+    symbols.recordDefinition(string, id, kind, toRange(source, coordWithLength), false,
+        listAsSymbol);
   }
 
   private void referenceSymbol(final LanguageElementId id, final SourceSection sourceSection) {

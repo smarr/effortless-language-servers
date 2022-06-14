@@ -50,22 +50,6 @@ public class SomStructures
   }
 
   @Override
-  public synchronized void recordNewSlot(final Field field) {
-    super.recordNewSlot(field);
-
-    int line = SourceCoordinate.getLine(source, field.getSourceCoordinate());
-    int col = SourceCoordinate.getColumn(source, field.getSourceCoordinate());
-    int length = SourceCoordinate.getLength(field.getSourceCoordinate());
-
-    symbols.recordDefinition(field.getName().getString(), new FieldId(field),
-        SymbolKind.Field, toRange(source, field.getSourceCoordinate(), length));
-    assert field.getName().getString().length() == length;
-
-    symbols.getSemanticTokens().addSemanticToken(line, col, length, SemanticTokenType.PROPERTY,
-        (SemanticTokenModifier[]) null);
-  }
-
-  @Override
   public synchronized void recordNewVariable(final Variable var) {
     super.recordNewVariable(var);
 
