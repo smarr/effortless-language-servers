@@ -23,6 +23,7 @@ import som.langserv.structure.LanguageElementId;
 import som.langserv.structure.SemanticTokenModifier;
 import som.langserv.structure.SemanticTokenType;
 import trufflesom.compiler.ClassGenerationContext;
+import trufflesom.compiler.Field;
 import trufflesom.compiler.Lexer;
 import trufflesom.compiler.MethodGenerationContext;
 import trufflesom.compiler.ParserAst;
@@ -110,6 +111,37 @@ public class SomParser extends ParserAst {
     int coord = getStartIndex();
     recordTokenSemantics(coord, Primitive.toString(), SemanticTokenType.KEYWORD);
     super.primitiveBlock();
+  }
+
+  @Override
+  public ExpressionNode nestedBlock(final MethodGenerationContext mgenc)
+      throws ProgramDefinitionError {
+    int coord = getStartIndex();
+    LanguageElement block = startSymbol(SymbolKind.Function);
+    ExpressionNode result = super.nestedBlock(mgenc);
+
+    block.setName(mgenc.getSignature().getString());
+
+    StringBuilder sb = new StringBuilder();
+    sb.append('[');
+
+    for (int i = 1; i < mgenc.getNumberOfArguments(); i += 1) {
+      if (i > 1) {
+        sb.append(' ');
+      }
+
+      var a = mgenc.getArgument(i);
+      sb.append(':');
+      sb.append(a.getName().getString());
+    }
+
+    sb.append(']');
+
+    block.setDetail(sb.toString());
+    block.setId(new BlockId(block.getName()));
+    completeSymbol(block, coord);
+
+    return result;
   }
 
   @Override
