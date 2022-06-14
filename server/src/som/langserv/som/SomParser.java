@@ -79,6 +79,7 @@ public class SomParser extends ParserAst {
     String name = cgenc.getName().getString();
     recordTokenSemantics(coord, name, SemanticTokenType.CLASS);
     currentClass = startSymbol(name, SymbolKind.Class, coord, new GlobalId(cgenc.getName()));
+    currentClass.setDetail(name);
   }
 
   @Override
