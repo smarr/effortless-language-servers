@@ -5,6 +5,8 @@ import java.net.URISyntaxException;
 import org.antlr.v4.runtime.CharStreams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 
 import com.oracle.truffle.sl.parser.SLParseError;
 
@@ -70,6 +72,7 @@ public class SimpleAdapter extends LanguageAdapter {
   private DocumentStructures toDiagnostics(final Throwable e,
       final DocumentStructures structures) {
     Diagnostic d = new Diagnostic();
+    d.setRange(new Range(new Position(0, 0), new Position(0, Short.MAX_VALUE)));
     d.setSeverity(DiagnosticSeverity.Error);
 
     d.setMessage(e.getMessage());
