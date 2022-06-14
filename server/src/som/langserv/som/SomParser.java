@@ -149,7 +149,8 @@ public class SomParser extends ParserAst {
 
     block.setDetail(sb.toString());
     block.setId(new BlockId(block.getName()));
-    completeSymbol(block, coord);
+    completeSymbol(block, getCoordWithLength(coord));
+    block.setSelectionRange(block.getRange());
 
     return result;
   }
