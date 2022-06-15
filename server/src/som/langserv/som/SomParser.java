@@ -275,6 +275,26 @@ public class SomParser extends ParserAst {
   }
 
   @Override
+  protected Argument argument(final MethodGenerationContext mgenc)
+      throws ProgramDefinitionError {
+    Argument arg = super.argument(mgenc);
+    recordTokenSemantics(arg.coord, SemanticTokenType.PARAMETER);
+    recordSymbolDefinition(
+        arg.getName().getString(), new VariableId(arg), SymbolKind.Variable, arg.coord, false);
+    return arg;
+  }
+
+  @Override
+  protected Local local(final MethodGenerationContext mgenc) throws ProgramDefinitionError {
+    Local l = super.local(mgenc);
+
+    recordTokenSemantics(l.coord, SemanticTokenType.VARIABLE);
+    recordSymbolDefinition(
+        l.getName().getString(), new VariableId(l), SymbolKind.Variable, l.coord, false);
+    return l;
+  }
+
+  @Override
   protected Object literalInteger(final boolean isNegative) throws ParseError {
     int coord = getStartIndex();
     String t = text;

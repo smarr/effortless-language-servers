@@ -1,20 +1,11 @@
 package som.langserv.som;
 
-import static som.langserv.som.PositionConversion.toRange;
-
-import org.eclipse.lsp4j.SymbolKind;
-
 import com.oracle.truffle.api.source.Source;
 
-import bdt.source.SourceCoordinate;
 import bdt.tools.structure.StructuralProbe;
 import som.langserv.structure.DocumentStructures;
-import som.langserv.structure.SemanticTokenModifier;
-import som.langserv.structure.SemanticTokenType;
 import trufflesom.compiler.Field;
 import trufflesom.compiler.Variable;
-import trufflesom.compiler.Variable.Argument;
-import trufflesom.compiler.Variable.Local;
 import trufflesom.vmobjects.SClass;
 import trufflesom.vmobjects.SInvokable;
 import trufflesom.vmobjects.SSymbol;
@@ -47,38 +38,6 @@ public class SomStructures
       result = source.getName();
     }
     return result;
-  }
-
-  @Override
-  public synchronized void recordNewVariable(final Variable var) {
-    super.recordNewVariable(var);
-
-    if (var instanceof Argument) {
-      if (((Argument) var).isSelf()) {
-        // we ignore self, since it's implicit
-        return;
-      }
-    }
-
-    int length = SourceCoordinate.getLength(var.coord);
-
-    symbols.recordDefinition(var.getName().getString(), new VariableId(var),
-        SymbolKind.Variable, toRange(source, var.coord));
-    assert var.getName().getString().length() == length;
-
-    SemanticTokenType tokenType;
-    if (var instanceof Local) {
-      tokenType = SemanticTokenType.VARIABLE;
-    } else {
-      assert var instanceof Argument;
-      tokenType = SemanticTokenType.PARAMETER;
-    }
-
-    int line = SourceCoordinate.getLine(source, var.coord);
-    int col = SourceCoordinate.getColumn(source, var.coord);
-
-    symbols.getSemanticTokens().addSemanticToken(line - 1, col - 1, length, tokenType,
-        (SemanticTokenModifier[]) null);
   }
 
   public String getDocumentUri() {
