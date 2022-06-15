@@ -402,4 +402,21 @@ public class SomTests {
 
     assertEquals(2, results.size());
   }
+
+  @Test
+  public void testSyntaxErrors() {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    var structures = adapter.parse("Hello = (\n"
+        + "run = (\n"
+        + "  self run:  \n"
+        + ")\n", path);
+
+    var diag = structures.getDiagnostics();
+    assertEquals(1, diag.size());
+
+    assertTrue(diag.get(0).getMessage().contains("Unexpected symbol."));
+    assertEquals(3, diag.get(0).getRange().getStart().getLine());
+    assertEquals(0, diag.get(0).getRange().getStart().getCharacter());
+  }
 }
