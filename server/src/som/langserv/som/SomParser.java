@@ -50,7 +50,6 @@ import trufflesom.vmobjects.SSymbol;
  */
 public class SomParser extends ParserAst {
 
-  private final SomStructures      structuralProbe;
   private final DocumentStructures symbols;
 
   private LanguageElement currentClass;
@@ -64,7 +63,6 @@ public class SomParser extends ParserAst {
     super(content, source, structuralProbe);
     assert structuralProbe != null : "Needed for this extended parser.";
     assert structuralProbe.source == source;
-    this.structuralProbe = structuralProbe;
     this.keywordParts = new ArrayList<>();
     this.keywordStart = new ArrayList<>();
     this.symbols = structuralProbe.getSymbols();
@@ -506,17 +504,6 @@ public class SomParser extends ParserAst {
 
   private LanguageElement startSymbol(final SymbolKind kind) {
     return symbols.startSymbol(kind, true);
-  }
-
-  private LanguageElement startSymbol(final String name, final SymbolKind kind,
-      final long coordWithLength, final LanguageElementId id, final boolean listAsSymbol) {
-    return symbols.startSymbol(name, kind, id, toRange(source, coordWithLength), listAsSymbol);
-  }
-
-  private void completeSymbol(final LanguageElement symbol, final Position start,
-      final int endCoord, final int endLength) {
-    symbols.completeSymbol(symbol,
-        new Range(start, getEnd(source, endCoord, endLength)));
   }
 
   private void completeSymbol(final LanguageElement symbol, final long coord) {
