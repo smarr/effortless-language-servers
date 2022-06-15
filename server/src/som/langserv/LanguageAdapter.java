@@ -246,6 +246,10 @@ public abstract class LanguageAdapter {
   public final List<Location> getReferences(final String uri, final Position position,
       final boolean includeDeclaration) {
     DocumentStructures doc = getStructures(uri);
+    if (doc == null) {
+      return null;
+    }
+
     var element = doc.getElement(position);
 
     if (element == null) {
