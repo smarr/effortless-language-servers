@@ -24,12 +24,15 @@ public class FieldId extends LanguageElementId {
 
   @Override
   protected String getName() {
+    if (field == null) {
+      return "" + fieldIndex;
+    }
     return field.getName().getString();
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(field, fieldIndex);
+    return Objects.hash(fieldIndex);
   }
 
   @Override
@@ -44,6 +47,10 @@ public class FieldId extends LanguageElementId {
       return false;
     }
     FieldId other = (FieldId) obj;
-    return field == other.field && fieldIndex == other.fieldIndex;
+
+    if (field == null || other.field == null) {
+      return fieldIndex == other.fieldIndex;
+    }
+    return field == other.field;
   }
 }
