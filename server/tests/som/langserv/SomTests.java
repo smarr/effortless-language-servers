@@ -18,10 +18,12 @@ import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SignatureHelp;
+import org.eclipse.lsp4j.SymbolInformation;
 import org.junit.Test;
 
 import som.langserv.som.SomAdapter;
 import som.langserv.structure.SemanticTokenType;
+import util.ArrayListIgnoreIfLastIdentical;
 
 
 public class SomTests {
@@ -369,5 +371,35 @@ public class SomTests {
 
     var param = params.get(0);
     assertEquals("arg", param.getLabel().getLeft());
+  }
+
+  @Test
+  public void testWorkspaceSymbols() throws URISyntaxException {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello1.som";
+    var structures = adapter.parse(
+        "Hello1 = (\n"
+            + "m1 = ()\n"
+            + ")",
+        path);
+    assertNull(structures.getDiagnostics());
+
+    path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello2.som";
+    structures = adapter.parse(
+        "Hello2 = (\n"
+            + "m2: arg = ()\n"
+            + ")",
+        path);
+    assertNull(structures.getDiagnostics());
+
+    List<SymbolInformation> results = new ArrayListIgnoreIfLastIdentical<>();
+    adapter.workspaceSymbol(results, "");
+
+    assertEquals(5, results.size());
+
+    results = new ArrayListIgnoreIfLastIdentical<>();
+    adapter.workspaceSymbol(results, "m");
+
+    assertEquals(2, results.size());
   }
 }
