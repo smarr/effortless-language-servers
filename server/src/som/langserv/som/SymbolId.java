@@ -1,7 +1,5 @@
 package som.langserv.som;
 
-import java.util.Objects;
-
 import som.langserv.structure.LanguageElementId;
 import trufflesom.vmobjects.SSymbol;
 
@@ -20,7 +18,7 @@ public class SymbolId extends LanguageElementId {
 
   @Override
   public int hashCode() {
-    return Objects.hash(sym);
+    return sym.hashCode();
   }
 
   @Override

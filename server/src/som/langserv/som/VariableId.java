@@ -1,7 +1,5 @@
 package som.langserv.som;
 
-import java.util.Objects;
-
 import som.langserv.structure.LanguageElementId;
 import trufflesom.compiler.Variable;
 
@@ -21,7 +19,7 @@ public class VariableId extends LanguageElementId {
 
   @Override
   public int hashCode() {
-    return Objects.hash(var);
+    return var.hashCode();
   }
 
   @Override
@@ -36,6 +34,6 @@ public class VariableId extends LanguageElementId {
       return false;
     }
     VariableId other = (VariableId) obj;
-    return Objects.equals(var, other.var);
+    return var.equals(other.var);
   }
 }
