@@ -39,6 +39,8 @@ import trufflesom.compiler.Parser.ParseError;
 import trufflesom.compiler.SourcecodeCompiler;
 import trufflesom.compiler.Variable;
 import trufflesom.interpreter.SomLanguage;
+import trufflesom.vm.Classes;
+import trufflesom.vm.Globals;
 import trufflesom.vm.Universe;
 import trufflesom.vmobjects.SClass;
 import trufflesom.vmobjects.SInvokable;
@@ -56,6 +58,8 @@ public class SomAdapter extends LanguageAdapter {
   private final ForkJoinPool pool;
 
   private final SomCompiler somCompiler;
+
+  private final SSymbol[] systemClassNames = new SSymbol[16];
 
   public SomAdapter() {
     super(
@@ -103,6 +107,23 @@ public class SomAdapter extends LanguageAdapter {
     structuralProbes.put("systemClasses", systemClassProbe);
 
     Universe.initializeObjectSystem();
+    systemClassNames[0] = Classes.objectClass.getName();
+    systemClassNames[1] = Classes.classClass.getName();
+    systemClassNames[2] = Classes.classClass.getName();
+    systemClassNames[3] = Classes.metaclassClass.getName();
+    systemClassNames[4] = Classes.nilClass.getName();
+    systemClassNames[5] = Classes.integerClass.getName();
+    systemClassNames[6] = Classes.arrayClass.getName();
+    systemClassNames[7] = Classes.methodClass.getName();
+    systemClassNames[8] = Classes.symbolClass.getName();
+    systemClassNames[9] = Classes.primitiveClass.getName();
+    systemClassNames[10] = Classes.stringClass.getName();
+    systemClassNames[11] = Classes.doubleClass.getName();
+    systemClassNames[12] = Classes.booleanClass.getName();
+    systemClassNames[13] = Classes.trueClass.getName();
+    systemClassNames[14] = Classes.falseClass.getName();
+    systemClassNames[15] = Classes.blockClasses[0].getName();
+
     context.leave();
   }
 
@@ -185,6 +206,16 @@ public class SomAdapter extends LanguageAdapter {
     }
   }
 
+  private boolean isSystemClass(final SSymbol name) {
+    for (var n : systemClassNames) {
+      if (n == name) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   public DocumentStructures parseSync(final String text, final String sourceUri)
       throws URISyntaxException {
     String path = docUriToNormalizedPath(sourceUri);
@@ -199,6 +230,9 @@ public class SomAdapter extends LanguageAdapter {
     try {
       try {
         SClass def = somCompiler.compileClass(text, source, newProbe);
+        if (!isSystemClass(def.getName())) {
+          Globals.setGlobal(def.getName(), def);
+        }
         // SomLint.checkModuleName(path, def, diagnostics);
       } catch (ParseError e) {
         return toDiagnostics(e, structures);

@@ -404,6 +404,82 @@ public class SomTests {
   }
 
   @Test
+  public void testGotoDefinition() throws URISyntaxException {
+    var adapter = new SomAdapter();
+    String path1 = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello1.som";
+    var structures = adapter.parse(
+        "Hello1 = (\n"
+            + "method1 = (\n"
+            + " self method1.\n"
+            + " self method2.\n"
+            + ")\n"
+            + "method2 = ()\n"
+            + ")",
+        path1);
+    assertNull(structures.getDiagnostics());
+
+    String path2 = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello2.som";
+    structures = adapter.parse(
+        "Hello2 = Hello1 (\n"
+            + "method2 = (\n"
+            + " self method1\n"
+            + ")\n"
+            + ")",
+        path2);
+    assertNull(structures.getDiagnostics());
+
+    var locations = adapter.getDefinitions(path2, new Position(2, 8));
+    assertEquals(1, locations.size());
+
+    var m1 = locations.get(0);
+    assertEquals(path1, m1.getTargetUri());
+    assertEquals(1, m1.getTargetSelectionRange().getStart().getLine());
+    assertEquals(2, m1.getOriginSelectionRange().getStart().getLine());
+  }
+
+  @Test
+  public void testGotoDefinitionInBlockNested() throws URISyntaxException {
+    var adapter = new SomAdapter();
+    String path1 = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello1.som";
+    var structures = adapter.parse(
+        "Hello1 = (\n"
+            + "method1: arg = (\n"
+            + " [:arg |\n"
+            + "    arg ]\n"
+            + ")\n"
+            + "method2: arg = (\n"
+            + " arg )\n"
+            + ")",
+        path1);
+    assertNull(structures.getDiagnostics());
+
+    String path2 = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello2.som";
+    structures = adapter.parse(
+        "Hello2 = (\n"
+            + "method1: arg = (\n"
+            + " arg\n"
+            + ")\n"
+            + ")",
+        path2);
+    assertNull(structures.getDiagnostics());
+
+    var locations = adapter.getDefinitions(path1, new Position(3, 5));
+    assertEquals(1, locations.size());
+
+    var blockArg = locations.get(0);
+    assertEquals(path1, blockArg.getTargetUri());
+    assertEquals(2, blockArg.getTargetSelectionRange().getStart().getLine());
+    assertEquals(3, blockArg.getOriginSelectionRange().getStart().getLine());
+
+    locations = adapter.getDefinitions(path1, new Position(6, 2));
+    assertEquals(1, locations.size());
+
+    var m2Arg = locations.get(0);
+    assertEquals(path1, blockArg.getTargetUri());
+    assertEquals(5, m2Arg.getTargetSelectionRange().getStart().getLine());
+    assertEquals(6, m2Arg.getOriginSelectionRange().getStart().getLine());
+  }
+  @Test
   public void testSyntaxErrors() {
     var adapter = new SomAdapter();
     String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
