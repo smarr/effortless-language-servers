@@ -628,6 +628,50 @@ public class SomTests {
     assertEquals(path2, result.get(3).getUri());
     assertStart(2, 4, result.get(3).getRange());
   }
+
+  @Test
+  public void testReferencesToMethodsAcrossFiles() throws URISyntaxException {
+    var adapter = new SomAdapter();
+    String path1 = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello1.som";
+    var structures = adapter.parse(
+        "Hello1 = (\n"
+            + "method1: arg = (\n"
+            + " arg method1: arg )\n"
+            + "method1 = (\n"
+            + " self method1: 2 )\n"
+            + ")",
+        path1);
+    assertNull(structures.getDiagnostics());
+
+    String path2 = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello2.som";
+    structures = adapter.parse(
+        "Hello2 = (\n"
+            + "method1: arg = ()\n"
+            + "method = (\n"
+            + "  ^ self method1: self )\n"
+            + ")",
+        path2);
+    assertNull(structures.getDiagnostics());
+
+    List<Location> result = adapter.getReferences(path2, new Position(3, 12), true);
+
+    assertEquals(5, result.size());
+    assertEquals(path1, result.get(0).getUri());
+    assertStart(1, 0, result.get(0).getRange());
+
+    assertEquals(path1, result.get(1).getUri());
+    assertStart(2, 5, result.get(1).getRange());
+
+    assertEquals(path1, result.get(2).getUri());
+    assertStart(4, 6, result.get(2).getRange());
+
+    assertEquals(path2, result.get(3).getUri());
+    assertStart(1, 0, result.get(3).getRange());
+
+    assertEquals(path2, result.get(4).getUri());
+    assertStart(3, 9, result.get(4).getRange());
+  }
+
   @Test
   public void testSyntaxErrors() {
     var adapter = new SomAdapter();
