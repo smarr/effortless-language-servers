@@ -8,6 +8,8 @@ import java.net.URISyntaxException;
 
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Context.Builder;
@@ -166,6 +168,7 @@ public class NewspeakAdapter extends LanguageAdapter {
 
     d.setMessage(msg);
     d.setSource("Parser");
+    d.setRange(new Range(new Position(0, 0), new Position(1, Short.MAX_VALUE)));
 
     structures.addDiagnostic(d);
     return structures;
