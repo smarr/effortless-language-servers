@@ -115,8 +115,13 @@ public class SomParser extends ParserAst {
 
   @Override
   public void classdef(final ClassGenerationContext cgenc) throws ProgramDefinitionError {
-    super.classdef(cgenc);
-    completeSymbol(currentClass, cgenc.getSourceCoord());
+    try {
+      super.classdef(cgenc);
+    } finally {
+      if (currentClass != null) {
+        completeSymbol(currentClass, cgenc.getSourceCoord());
+      }
+    }
   }
 
   @Override

@@ -119,10 +119,20 @@ public class DocumentStructures {
 
   public void completeSymbol(final LanguageElement symbol, final Range fullRange) {
     symbol.setRange(fullRange);
-    int lastSymbolIdx = symbolsScope.size() - 1;
 
-    assert symbolsScope.get(lastSymbolIdx) == symbol;
-    symbolsScope.remove(lastSymbolIdx);
+    // we may complete a symbol, as part of a finally handler,
+    // i.e., when unwinding the stack with an error
+    // in this case, we remove everything up to the closed element
+    // TODO: do we need to try to complete the other bits? we probably need a range on them...
+    boolean removed = false;
+    while (!removed) {
+      int lastSymbolIdx = symbolsScope.size() - 1;
+      var last = symbolsScope.get(lastSymbolIdx);
+      symbolsScope.remove(lastSymbolIdx);
+      if (last == symbol) {
+        removed = true;
+      }
+    }
 
     assert symbol.hasId();
     recordForLookup(symbol);
