@@ -42,7 +42,7 @@ public class PositionConversion {
     Range range = new Range();
     range.setStart(pos(ss.getStartLine(), ss.getStartColumn()));
 
-    range.setEnd(pos(ss.getEndLine(), ss.getEndColumn()));
+    range.setEnd(pos(ss.getEndLine(), ss.getEndColumn() + 1));
     return range;
   }
 

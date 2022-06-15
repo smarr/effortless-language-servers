@@ -237,7 +237,7 @@ public class SomTests {
     assertEquals("local", mChildren.get(1).getName());
     assertTrue(mChildren.get(2).getName().startsWith("λrun"));
     assertEquals("[:a]", mChildren.get(2).getDetail());
-    assertRange(1, 35, 1, 44, mChildren.get(2).getRange());
+    assertRange(1, 35, 1, 45, mChildren.get(2).getRange());
 
     var bChildren = mChildren.get(2).getAllChildren();
     assertEquals(1, bChildren.size());
