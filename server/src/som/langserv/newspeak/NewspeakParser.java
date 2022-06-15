@@ -1,19 +1,36 @@
 package som.langserv.newspeak;
 
+import static som.langserv.som.PositionConversion.getEnd;
+import static som.langserv.som.PositionConversion.getStart;
+import static som.langserv.som.PositionConversion.toRange;
+import static som.vm.Symbols.symbolFor;
+
 import java.util.ArrayDeque;
-import java.util.Deque;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.eclipse.lsp4j.ParameterInformation;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SignatureInformation;
+import org.eclipse.lsp4j.SymbolKind;
 
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.basic.ProgramDefinitionError;
+import som.compiler.AccessModifier;
 import som.compiler.MethodBuilder;
+import som.compiler.MixinBuilder;
 import som.compiler.Parser;
+import som.compiler.Variable.Argument;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.literals.LiteralNode;
 import som.langserv.structure.DocumentStructures;
+import som.langserv.structure.LanguageElement;
+import som.langserv.structure.LanguageElementId;
 import som.langserv.structure.SemanticTokenModifier;
 import som.langserv.structure.SemanticTokenType;
 import som.vmobjects.SSymbol;
@@ -30,17 +47,24 @@ import tools.debugger.Tags.LocalVariableTag;
  */
 public class NewspeakParser extends Parser {
 
-  private final NewspeakStructures   struturalProbe;
-  private final Deque<SourceSection> sourceSections;
-  private final DocumentStructures   symbols;
+  private final DocumentStructures symbols;
+
+  private final ArrayDeque<LanguageElement> currentClass;
+
+  private LanguageElement currentMethod;
+
+  private final ArrayList<Integer> keywordStart;
+  private final ArrayList<String>  keywordParts;
 
   public NewspeakParser(final String content, final Source source,
       final NewspeakStructures structuralProbe, final SomLanguage lang) throws ParseError {
     super(content, source, structuralProbe, lang);
-    // assert structuralProbe != null : "Needed for this extended parser.";
-    this.struturalProbe = structuralProbe;
     this.symbols = structuralProbe.getSymbols();
-    sourceSections = new ArrayDeque<>();
+
+    currentClass = new ArrayDeque<>();
+
+    keywordStart = new ArrayList<>();
+    keywordParts = new ArrayList<>();
   }
 
   @Override
@@ -48,7 +72,81 @@ public class NewspeakParser extends Parser {
     int coord = getStartIndex();
     var name = super.className();
     recordTokenSemantics(coord, name, SemanticTokenType.CLASS);
+
+    LanguageElement clazz = startSymbol(name, SymbolKind.Class, coord, new SlotId(name));
+    currentClass.push(clazz);
+    clazz.setDetail(name);
+
     return name;
+  }
+
+  @Override
+  protected void mixinApplication(final MixinBuilder mxnBuilder, final int mixinId)
+      throws ProgramDefinitionError {
+    // in this case, classBody() isn't called,
+    // so, we need to complete the possible primary factory method
+    completePrimaryFactoryMethod(mxnBuilder);
+
+    super.mixinApplication(mxnBuilder, mixinId);
+  }
+
+  @Override
+  protected void classBody(final MixinBuilder mxnBuilder) throws ProgramDefinitionError {
+    int coord = getStartIndex();
+    try {
+      super.classBody(mxnBuilder);
+    } finally {
+      LanguageElement clazz = currentClass.pop();
+
+      Range range = toRange(getSource(coord));
+
+      symbols.completeSymbol(clazz,
+          new Range(clazz.getSelectionRange().getStart(), range.getEnd()));
+    }
+  }
+
+  @Override
+  protected void classHeader(final MixinBuilder mxnBuilder) throws ProgramDefinitionError {
+    try {
+      super.classHeader(mxnBuilder);
+    } finally {
+      completePrimaryFactoryMethod(mxnBuilder);
+    }
+  }
+
+  private void completePrimaryFactoryMethod(final MixinBuilder mxnBuilder) {
+    if (currentMethod != null) {
+      SourceSection ss = mxnBuilder.getInitializerSource();
+      if (ss == null) {
+        ss = getSource(getStartIndex());
+      }
+      Range selection = currentMethod.getSelectionRange();
+      Range init = toRange(ss);
+
+      symbols.completeSymbol(currentMethod, new Range(selection.getStart(), init.getEnd()));
+      currentMethod = null;
+    }
+  }
+
+  @Override
+  protected void classSideDecl(final MixinBuilder mxnBuilder)
+      throws ProgramDefinitionError {
+    int coord = getStartIndex();
+
+    LanguageElement clazz = symbols.startSymbol(SymbolKind.Class, true);
+    clazz.setName("class");
+    currentClass.push(clazz);
+
+    try {
+      super.classSideDecl(mxnBuilder);
+    } finally {
+      currentClass.pop();
+
+      clazz.setId(new SymbolId(symbolFor("class")));
+      clazz.setDetail(mxnBuilder.getName() + " class");
+
+      symbols.completeSymbol(clazz, toRange(getSource(coord)));
+    }
   }
 
   @Override
@@ -81,99 +179,49 @@ public class NewspeakParser extends Parser {
   }
 
   @Override
-  protected ExpressionNode implicitUnaryMessage(final MethodBuilder meth,
-      final SSymbol selector, final SourceSection section) {
-    ExpressionNode result = super.implicitUnaryMessage(meth, selector, section);
-
-    SourceSection s = sourceSections.getLast();
-    assert result.getSourceSection().getCharIndex() == s.getCharIndex();
-    struturalProbe.reportCall(result, sourceSections.removeLast());
-    return result;
-  }
-
-  @Override
-  protected SSymbol selector() throws ParseError {
-    SSymbol sel = super.selector();
-    if (sel.getNumberOfSignatureArguments() <= 2) {
-      // in this case, we called binarySelector() or unarySelector() and put a
-      // source section on the stack that we need to remove
-      sourceSections.removeLast();
-    }
-    return sel;
-  }
-
-  @Override
-  protected ExpressionNode unaryMessage(final ExpressionNode receiver,
-      final boolean eventualSend, final SourceSection sendOperator) throws ParseError {
-    @SuppressWarnings("unused")
-    int stackHeight = sourceSections.size();
-    ExpressionNode result = super.unaryMessage(receiver, eventualSend, sendOperator);
-    SourceSection selector = sourceSections.getLast();
-    assert result.getSourceSection().getCharIndex() == selector.getCharIndex();
-    struturalProbe.reportCall(result, sourceSections.removeLast());
-    // assert stackHeight == sourceSections.size();
-    return result;
-  }
-
-  @Override
-  protected ExpressionNode binaryMessage(final MethodBuilder builder,
-      final ExpressionNode receiver, final boolean eventualSend,
-      final SourceSection sendOperator) throws ProgramDefinitionError {
-    @SuppressWarnings("unused")
-    int stackHeight = sourceSections.size();
-    ExpressionNode result = super.binaryMessage(
-        builder, receiver, eventualSend, sendOperator);
-    SourceSection selector = sourceSections.getLast();
-    assert result.getSourceSection().getCharIndex() == selector.getCharIndex();
-    struturalProbe.reportCall(result, sourceSections.removeLast());
-    // assert stackHeight == sourceSections.size();
-    return result;
-  }
-
-  @Override
   protected ExpressionNode keywordMessage(final MethodBuilder builder,
       final ExpressionNode receiver, final boolean explicitRcvr,
       final boolean eventualSend, final SourceSection sendOperator)
       throws ProgramDefinitionError {
-    int stackHeight = sourceSections.size();
+    int stackHeight = keywordParts.size();
     ExpressionNode result = super.keywordMessage(
         builder, receiver, explicitRcvr, eventualSend, sendOperator);
-    int numParts = sourceSections.size() - stackHeight;
+    int numParts = keywordParts.size() - stackHeight;
 
     assert numParts >= 1;
-    SourceSection[] sections = new SourceSection[numParts];
+    int[] starts = new int[numParts];
+
+    StringBuilder kw = new StringBuilder();
+
     for (int i = numParts - 1; i >= 0; i--) {
-      sections[i] = sourceSections.removeLast();
+      kw.append(keywordParts.remove(keywordParts.size() - 1));
+      starts[i] = keywordStart.remove(keywordStart.size() - 1);
     }
 
-    struturalProbe.reportCall(result, sections);
-    // assert stackHeight == sourceSections.size();
+    SSymbol msg = symbolFor(kw.toString());
+
+    SymbolId call = new SymbolId(msg);
+
+    for (int i = 0; i < numParts; i += 1) {
+      referenceSymbol(call, starts[i], msg.getString().length());
+    }
     return result;
-  }
-
-  protected void recordTokenSemantics(final int coords, final String length,
-      final SemanticTokenType tokenType) {
-    recordTokenSemantics(coords, length, tokenType, (SemanticTokenModifier[]) null);
-  }
-
-  protected void recordTokenSemantics(final int coords, final String length,
-      final SemanticTokenType tokenType, final SemanticTokenModifier... modifiers) {
-    symbols.getSemanticTokens().addSemanticToken(source.getLineNumber(coords),
-        source.getColumnNumber(coords), length.length(), tokenType, modifiers);
-  }
-
-  protected void recordTokenSemantics(final SourceSection source,
-      final SemanticTokenType tokenType) {
-    symbols.getSemanticTokens().addSemanticToken(source.getStartLine(),
-        source.getStartColumn(), source.getCharLength(), tokenType);
   }
 
   @Override
   protected SSymbol unarySelector() throws ParseError {
     int coord = getStartIndex();
     SSymbol result = super.unarySelector();
-    sourceSections.addLast(getSource(coord));
     recordTokenSemantics(coord, result.getString(), SemanticTokenType.METHOD);
+    return result;
+  }
+
+  @Override
+  protected SSymbol unarySendSelector() throws ParseError {
+    int coord = getStartIndex();
+    SSymbol result = super.unarySendSelector();
+    recordTokenSemantics(coord, result.getString(), SemanticTokenType.METHOD);
+    referenceSymbol(new SymbolId(result), coord, result.getString().length());
     return result;
   }
 
@@ -182,7 +230,16 @@ public class NewspeakParser extends Parser {
     int coord = getStartIndex();
     SSymbol result = super.binarySelector();
     recordTokenSemantics(coord, result.getString(), SemanticTokenType.METHOD);
-    sourceSections.addLast(getSource(coord));
+    return result;
+  }
+
+  @Override
+  protected SSymbol binarySendSelector() throws ParseError {
+    int coord = getStartIndex();
+    SSymbol result = super.binarySendSelector();
+
+    recordTokenSemantics(coord, result.getString(), SemanticTokenType.METHOD);
+    referenceSymbol(new SymbolId(result), coord, result.getString().length());
     return result;
   }
 
@@ -191,46 +248,119 @@ public class NewspeakParser extends Parser {
     int coord = getStartIndex();
     String result = super.keyword();
     recordTokenSemantics(coord, result, SemanticTokenType.METHOD);
-    sourceSections.addLast(getSource(coord));
+    keywordParts.add(result);
+    keywordStart.add(coord);
     return result;
   }
 
   @Override
-  protected ExpressionNode setterSends(final MethodBuilder builder)
-      throws ProgramDefinitionError {
-    ExpressionNode result = super.setterSends(builder);
-    struturalProbe.reportAssignment(result, sourceSections.removeLast());
-    return result;
-  }
-
-  @Override
-  protected String setterKeyword() throws ParseError {
-    int coord = getStartIndex();
-    String result = super.setterKeyword();
-    sourceSections.addLast(getSource(coord));
-    return result;
+  protected Argument argument(final MethodBuilder builder) throws ParseError {
+    Argument arg = super.argument(builder);
+    recordTokenSemantics(arg.source, SemanticTokenType.PARAMETER);
+    recordSymbolDefinition(
+        arg.name.getString(), new VariableId(arg), SymbolKind.Variable, arg.source, false);
+    return arg;
   }
 
   @Override
   protected void unaryPattern(final MethodBuilder builder) throws ParseError {
+    assert currentMethod == null;
+
+    int coord = getStartIndex();
+    currentMethod = symbols.startSymbol(SymbolKind.Method, true);
+
     super.unaryPattern(builder);
-    sourceSections.removeLast();
+
+    currentMethod.setName(builder.getSignature().getString());
+    currentMethod.setId(new SymbolId(builder.getSignature()));
+    currentMethod.setSelectionRange(getRange(coord, builder.getSignature().getString()));
+
+    currentMethod.setDetail(builder.getSignature().getString());
   }
 
   @Override
   protected void binaryPattern(final MethodBuilder builder) throws ParseError {
+    assert currentMethod == null;
+
+    int coord = getStartIndex();
+    currentMethod = symbols.startSymbol(SymbolKind.Method, true);
+
     super.binaryPattern(builder);
-    sourceSections.removeLast();
+
+    String name = builder.getSignature().getString();
+    currentMethod.setName(name);
+    currentMethod.setId(new SymbolId(builder.getSignature()));
+    currentMethod.setSelectionRange(getRange(coord, name));
+
+    currentMethod.setDetail(name + " " + builder.getArgument(1).name.getString());
   }
 
   @Override
   protected void keywordPattern(final MethodBuilder builder) throws ParseError {
+    assert currentMethod == null;
+    assert keywordParts.size() == 0 : "We are not in any method, so, this is expected to be zero";
+    assert keywordStart.size() == 0 : "We are not in any method, so, this is expected to be zero";
+    assert keywordStart.size() == keywordParts.size();
+
+    currentMethod = symbols.startSymbol(SymbolKind.Method, true);
+
     super.keywordPattern(builder);
 
-    // remove one less than number of arguments
-    for (int i = 1; i < builder.getSignature().getNumberOfSignatureArguments(); i += 1) {
-      sourceSections.removeLast();
+    String name = builder.getSignature().getString();
+    currentMethod.setName(name);
+    currentMethod.setId(new SymbolId(builder.getSignature()));
+
+    Position start = getStart(source, keywordStart.get(0));
+    Position end = getEnd(source, keywordStart.get(keywordStart.size() - 1),
+        keywordParts.get(keywordParts.size() - 1).length());
+    currentMethod.setSelectionRange(new Range(start, end));
+
+    StringBuilder sb = new StringBuilder();
+
+    for (int i = 0; i < keywordParts.size(); i += 1) {
+      sb.append(keywordParts.get(i));
+      sb.append(' ');
+      sb.append(builder.getArgument(i + 1).name.getString());
+      if (i < keywordParts.size() - 1) {
+        sb.append(' ');
+      }
     }
+
+    currentMethod.setDetail(builder.getFullName());
+
+    keywordParts.clear();
+    keywordStart.clear();
+  }
+
+  @Override
+  protected MethodBuilder methodDeclaration(final AccessModifier accessModifier,
+      final int coord, final MixinBuilder mxnBuilder)
+      throws ProgramDefinitionError {
+
+    MethodBuilder builder = super.methodDeclaration(accessModifier, coord, mxnBuilder);
+
+    symbols.completeSymbol(currentMethod, toRange(getSource(coord)));
+    currentMethod.setSignature(createSignature(builder));
+    currentMethod = null;
+
+    return builder;
+  }
+
+  private SignatureInformation createSignature(final MethodBuilder mbuilder) {
+    SignatureInformation info = new SignatureInformation();
+    info.setLabel(mbuilder.getName());
+
+    List<ParameterInformation> params = new ArrayList<>(mbuilder.getNumberOfArguments() - 1);
+
+    for (int i = 1; i < mbuilder.getNumberOfArguments(); i += 1) {
+      ParameterInformation p = new ParameterInformation();
+      p.setLabel(mbuilder.getArgument(i).name.getString());
+      params.add(p);
+    }
+
+    info.setParameters(params);
+
+    return info;
   }
 
   @Override
@@ -290,6 +420,25 @@ public class NewspeakParser extends Parser {
   }
 
   @Override
+  protected ExpressionNode literalObject(final MethodBuilder builder)
+      throws ProgramDefinitionError {
+    LanguageElement currentM = currentMethod;
+    currentMethod = null;
+
+    int coord = getStartIndex();
+    LanguageElement clazz =
+        startSymbol("objL", SymbolKind.Class, coord, new LiteralId("objL"));
+    currentClass.push(clazz);
+    clazz.setDetail("objL");
+
+    ExpressionNode node = super.literalObject(builder);
+
+    currentMethod = currentM;
+
+    return node;
+  }
+
+  @Override
   protected void reportSyntaxElement(final Class<? extends Tag> type,
       final SourceSection source) {
     if (type == CommentTag.class) {
@@ -299,5 +448,43 @@ public class NewspeakParser extends Parser {
     } else if (type == ArgumentTag.class) {
       recordTokenSemantics(source, SemanticTokenType.PARAMETER);
     }
+  }
+
+  protected void recordTokenSemantics(final int coords, final String length,
+      final SemanticTokenType tokenType) {
+    recordTokenSemantics(coords, length, tokenType, (SemanticTokenModifier[]) null);
+  }
+
+  protected void recordTokenSemantics(final int coords, final String length,
+      final SemanticTokenType tokenType, final SemanticTokenModifier... modifiers) {
+    symbols.getSemanticTokens().addSemanticToken(source.getLineNumber(coords),
+        source.getColumnNumber(coords), length.length(), tokenType, modifiers);
+  }
+
+  protected void recordTokenSemantics(final SourceSection source,
+      final SemanticTokenType tokenType) {
+    symbols.getSemanticTokens().addSemanticToken(source.getStartLine(),
+        source.getStartColumn(), source.getCharLength(), tokenType);
+  }
+
+  private LanguageElement startSymbol(final String name, final SymbolKind kind,
+      final int startCoord, final LanguageElementId id) {
+    return symbols.startSymbol(
+        name, kind, id, toRange(source, startCoord, name.length()), true);
+  }
+
+  private void referenceSymbol(final LanguageElementId id, final int startCoord,
+      final int length) {
+    symbols.referenceSymbol(id, toRange(source, startCoord, length));
+  }
+
+  private Range getRange(final int startCoord, final String name) {
+    return toRange(source, startCoord, name.length());
+  }
+
+  private void recordSymbolDefinition(final String string, final LanguageElementId id,
+      final SymbolKind kind, final SourceSection ss, final boolean listAsSymbol) {
+    symbols.recordDefinition(string, id, kind, toRange(ss), false,
+        listAsSymbol);
   }
 }

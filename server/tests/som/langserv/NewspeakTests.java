@@ -86,4 +86,42 @@ public class NewspeakTests {
 
     assertEquals(8, tokenTuples.size());
   }
+
+  @Test
+  public void testSymbols() throws URISyntaxException {
+    var adapter = new NewspeakAdapter();
+    String path = "file:" + NewspeakAdapter.CORE_LIB_PATH + "/Hello.ns";
+    var structures = adapter.parse("class Hello usingPlatform: platform = Value ()(\n"
+        + "  public main: args = (\n"
+        + "    ^ 0\n"
+        + "  )\n"
+        + ") : (\n"
+        + "  public factoryMethod = ()\n"
+        + ")\n", path);
+
+    assertNull(structures.getDiagnostics());
+
+    var symbols = adapter.documentSymbol(path);
+    assertEquals(1, symbols.size());
+    var classSymbol = symbols.get(0);
+    assertEquals("Hello", classSymbol.getName());
+
+    var children = classSymbol.getAllChildren();
+    assertEquals(3, children.size());
+    assertEquals("usingPlatform:", children.get(0).getName());
+    assertEquals("main:", children.get(1).getName());
+    assertEquals("class", children.get(2).getName());
+
+    var usingPlatform = children.get(0).getAllChildren();
+    assertEquals(1, usingPlatform.size());
+    assertEquals("platform", usingPlatform.get(0).getName());
+
+    var main = children.get(1).getAllChildren();
+    assertEquals(1, main.size());
+    assertEquals("args", main.get(0).getName());
+
+    var clazz = children.get(2).getAllChildren();
+    assertEquals(1, clazz.size());
+    assertEquals("factoryMethod", clazz.get(0).getName());
+  }
 }
