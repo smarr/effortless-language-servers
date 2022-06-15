@@ -17,6 +17,7 @@ import java.util.concurrent.ForkJoinTask;
 
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SignatureHelp;
@@ -522,6 +523,110 @@ public class SomTests {
     assertEquals(2, hs.size());
     assertStart(7, 3, hs.get(0).getRange());
     assertStart(7, 9, hs.get(1).getRange());
+  }
+
+  @Test
+  public void testFieldReferencesIncludeDecls() throws URISyntaxException {
+    var adapter = new SomAdapter();
+    String path1 = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello1.som";
+    var structures = adapter.parse(
+        "Hello1 = (\n"
+            + "| var |\n"
+            + "method1: arg = (\n"
+            + " [:arg |\n"
+            + "    var ].\n"
+            + "  ^ var )\n"
+            + "method2: arg = (\n"
+            + " | var | var )\n"
+            + ")",
+        path1);
+
+    assertNull(structures.getDiagnostics());
+
+    List<Location> result = adapter.getReferences(path1, new Position(4, 5), true);
+
+    assertEquals(3, result.size());
+    assertEquals(path1, result.get(0).getUri());
+    assertStart(1, 2, result.get(0).getRange());
+
+    assertEquals(path1, result.get(1).getUri());
+    assertStart(4, 4, result.get(1).getRange());
+
+    assertEquals(path1, result.get(2).getUri());
+    assertStart(5, 4, result.get(2).getRange());
+  }
+
+  @Test
+  public void testFieldReferencesExcludeDecls() throws URISyntaxException {
+    var adapter = new SomAdapter();
+    String path1 = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello1.som";
+    var structures = adapter.parse(
+        "Hello1 = (\n"
+            + "| var |\n"
+            + "method1: arg = (\n"
+            + " [:arg |\n"
+            + "    var ].\n"
+            + "  ^ var )\n"
+            + "method2: arg = (\n"
+            + " | var | var )\n"
+            + ")",
+        path1);
+
+    assertNull(structures.getDiagnostics());
+
+    List<Location> result = adapter.getReferences(path1, new Position(4, 5), false);
+
+    assertEquals(2, result.size());
+    assertEquals(path1, result.get(0).getUri());
+    assertStart(4, 4, result.get(0).getRange());
+
+    assertEquals(path1, result.get(1).getUri());
+    assertStart(5, 4, result.get(1).getRange());
+  }
+
+  @Test
+  public void testReferencesToFieldsAcrossFiles() throws URISyntaxException {
+    var adapter = new SomAdapter();
+    String path1 = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello1.som";
+    var structures = adapter.parse(
+        "Hello1 = (\n"
+            + "| var |\n"
+            + "method1: arg = (\n"
+            + " [:arg |\n"
+            + "    var ].\n"
+            + "  ^ var )\n"
+            + "method2: arg = (\n"
+            + " | var | var )\n"
+            + ")",
+        path1);
+    assertNull(structures.getDiagnostics());
+
+    String path2 = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello2.som";
+    structures = adapter.parse(
+        "Hello2 = Hello1 (\n"
+            + "method = (\n"
+            + "  ^ var )\n"
+            + "method2: arg = (\n"
+            + " | var | var )\n"
+            + ")",
+        path2);
+
+    assertNull(structures.getDiagnostics());
+
+    List<Location> result = adapter.getReferences(path2, new Position(2, 5), true);
+
+    assertEquals(4, result.size());
+    assertEquals(path1, result.get(0).getUri());
+    assertStart(1, 2, result.get(0).getRange());
+
+    assertEquals(path1, result.get(1).getUri());
+    assertStart(4, 4, result.get(1).getRange());
+
+    assertEquals(path1, result.get(2).getUri());
+    assertStart(5, 4, result.get(2).getRange());
+
+    assertEquals(path2, result.get(3).getUri());
+    assertStart(2, 4, result.get(3).getRange());
   }
   @Test
   public void testSyntaxErrors() {
