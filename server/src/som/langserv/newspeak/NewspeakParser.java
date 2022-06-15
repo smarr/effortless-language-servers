@@ -26,7 +26,11 @@ import som.compiler.MixinBuilder;
 import som.compiler.Parser;
 import som.compiler.Variable.Argument;
 import som.interpreter.SomLanguage;
+import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
+import som.interpreter.nodes.ArgumentReadNode.NonLocalArgumentReadNode;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.LocalVariableNode.LocalVariableReadNode;
+import som.interpreter.nodes.NonLocalVariableNode.NonLocalVariableReadNode;
 import som.interpreter.nodes.literals.LiteralNode;
 import som.langserv.structure.DocumentStructures;
 import som.langserv.structure.LanguageElement;
@@ -226,6 +230,23 @@ public class NewspeakParser extends Parser {
   }
 
   @Override
+  protected ExpressionNode implicitUnaryMessage(final MethodBuilder meth,
+      final SSymbol selector, final SourceSection section) {
+    ExpressionNode result = super.implicitUnaryMessage(meth, selector, section);
+
+    if (result instanceof LocalArgumentReadNode
+        || result instanceof NonLocalArgumentReadNode) {
+      recordTokenSemantics(section, SemanticTokenType.PARAMETER);
+    } else if (result instanceof LocalVariableReadNode
+        || result instanceof NonLocalVariableReadNode) {
+      recordTokenSemantics(section, SemanticTokenType.VARIABLE);
+    } else {
+      recordTokenSemantics(section, SemanticTokenType.METHOD);
+    }
+    return result;
+  }
+
+  @Override
   protected SSymbol binarySelector() throws ParseError {
     int coord = getStartIndex();
     SSymbol result = super.binarySelector();
@@ -256,7 +277,6 @@ public class NewspeakParser extends Parser {
   @Override
   protected Argument argument(final MethodBuilder builder) throws ParseError {
     Argument arg = super.argument(builder);
-    recordTokenSemantics(arg.source, SemanticTokenType.PARAMETER);
     recordSymbolDefinition(
         arg.name.getString(), new VariableId(arg), SymbolKind.Variable, arg.source, false);
     return arg;

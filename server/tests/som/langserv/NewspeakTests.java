@@ -63,7 +63,7 @@ public class NewspeakTests {
   }
 
   @Test
-  public void testSmallHelloFile() throws URISyntaxException {
+  public void testSemanticHighlightingInSmallExample() throws URISyntaxException {
     var adapter = new NewspeakAdapter();
     String path = "file:" + NewspeakAdapter.CORE_LIB_PATH + "/Hello.ns";
     adapter.parse("class Debug usingPlatform: platform = Value ()(\n"
@@ -74,19 +74,70 @@ public class NewspeakTests {
         adapter.getStructures(path).getSemanticTokens().getSemanticTokens();
     printAllToken(tokenTuples);
 
-    assertToken(1, 1, "class", SemanticTokenType.KEYWORD, tokenTuples.get(0));
-    assertToken(1, 7, "Debug", SemanticTokenType.CLASS, tokenTuples.get(1));
-    assertToken(1, 13, "usingPlatform:", SemanticTokenType.METHOD, tokenTuples.get(2));
-    assertToken(1, 28, "platform", SemanticTokenType.PARAMETER, tokenTuples.get(3));
-    assertToken(1, 39, "Value", SemanticTokenType.METHOD, tokenTuples.get(4));
+    assertToken(0, 0, "class", SemanticTokenType.KEYWORD, tokenTuples.get(0));
+    assertToken(0, 6, "Debug", SemanticTokenType.CLASS, tokenTuples.get(1));
+    assertToken(0, 12, "usingPlatform:", SemanticTokenType.METHOD, tokenTuples.get(2));
+    assertToken(0, 27, "platform", SemanticTokenType.PARAMETER, tokenTuples.get(3));
+    assertToken(0, 38, "Value", SemanticTokenType.METHOD, tokenTuples.get(4));
 
-    assertToken(2, 3, "public", SemanticTokenType.MODIFIER, tokenTuples.get(5));
-    assertToken(2, 10, "main:", SemanticTokenType.METHOD, tokenTuples.get(6));
-    assertToken(2, 16, "args", SemanticTokenType.PARAMETER, tokenTuples.get(7));
+    assertToken(1, 2, "public", SemanticTokenType.MODIFIER, tokenTuples.get(5));
+    assertToken(1, 9, "main:", SemanticTokenType.METHOD, tokenTuples.get(6));
+    assertToken(1, 15, "args", SemanticTokenType.PARAMETER, tokenTuples.get(7));
 
     assertEquals(8, tokenTuples.size());
   }
 
+  @Test
+  public void testSemanticHighlightingHelloWorld() throws URISyntaxException {
+    var adapter = new NewspeakAdapter();
+    String path = "file:" + NewspeakAdapter.CORE_LIB_PATH + "/Hello.ns";
+    adapter.parse("class Hello usingPlatform: platform = Value ()(\n"
+        + "  public main: args = (\n"
+        + "    'Hello World!' println.\n"
+        + "    args from: 2 to: args size do: [ :arg | arg print. ' ' print ].\n"
+        + "    '' println.\n"
+        + "    ^ 0\n"
+        + "  )\n"
+        + ")\n"
+        + "\n", path);
+
+    List<int[]> tokenTuples =
+        adapter.getStructures(path).getSemanticTokens().getSemanticTokens();
+    printAllToken(tokenTuples);
+
+    assertToken(0, 0, "class", SemanticTokenType.KEYWORD, tokenTuples.get(0));
+    assertToken(0, 6, "Hello", SemanticTokenType.CLASS, tokenTuples.get(1));
+    assertToken(0, 12, "usingPlatform:", SemanticTokenType.METHOD, tokenTuples.get(2));
+    assertToken(0, 27, "platform", SemanticTokenType.PARAMETER, tokenTuples.get(3));
+    assertToken(0, 38, "Value", SemanticTokenType.METHOD, tokenTuples.get(4));
+
+    assertToken(1, 2, "public", SemanticTokenType.MODIFIER, tokenTuples.get(5));
+    assertToken(1, 9, "main:", SemanticTokenType.METHOD, tokenTuples.get(6));
+    assertToken(1, 15, "args", SemanticTokenType.PARAMETER, tokenTuples.get(7));
+
+    assertToken(2, 4, "'Hello World!'", SemanticTokenType.STRING, tokenTuples.get(8));
+    assertToken(2, 19, "println", SemanticTokenType.METHOD, tokenTuples.get(9));
+
+    assertToken(3, 4, "args", SemanticTokenType.PARAMETER, tokenTuples.get(10));
+    assertToken(3, 9, "from:", SemanticTokenType.METHOD, tokenTuples.get(11));
+    assertToken(3, 15, "2", SemanticTokenType.NUMBER, tokenTuples.get(12));
+    assertToken(3, 17, "to:", SemanticTokenType.METHOD, tokenTuples.get(13));
+    assertToken(3, 21, "args", SemanticTokenType.PARAMETER, tokenTuples.get(14));
+    assertToken(3, 26, "size", SemanticTokenType.METHOD, tokenTuples.get(15));
+    assertToken(3, 31, "do:", SemanticTokenType.METHOD, tokenTuples.get(16));
+    assertToken(3, 38, "arg", SemanticTokenType.PARAMETER, tokenTuples.get(17));
+    assertToken(3, 44, "arg", SemanticTokenType.PARAMETER, tokenTuples.get(18));
+    assertToken(3, 48, "print", SemanticTokenType.METHOD, tokenTuples.get(19));
+    assertToken(3, 55, "' '", SemanticTokenType.STRING, tokenTuples.get(20));
+    assertToken(3, 59, "print", SemanticTokenType.METHOD, tokenTuples.get(21));
+
+    assertToken(4, 4, "''", SemanticTokenType.STRING, tokenTuples.get(22));
+    assertToken(4, 7, "println", SemanticTokenType.METHOD, tokenTuples.get(23));
+
+    assertToken(5, 6, "0", SemanticTokenType.NUMBER, tokenTuples.get(24));
+
+    assertEquals(25, tokenTuples.size());
+  }
   @Test
   public void testSymbols() throws URISyntaxException {
     var adapter = new NewspeakAdapter();
