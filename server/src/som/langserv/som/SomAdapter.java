@@ -9,9 +9,7 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
@@ -51,8 +49,6 @@ public class SomAdapter extends LanguageAdapter {
   private final static String CORE_LIB_PROP = "som.langserv.som-core-lib";
   public final static String  CORE_LIB_PATH = System.getProperty(CORE_LIB_PROP);
 
-  private final Map<String, SomStructures> structuralProbes;
-
   private Context context;
 
   private final ForkJoinPool pool;
@@ -65,7 +61,6 @@ public class SomAdapter extends LanguageAdapter {
     super(
         new FileLinter[] {new LintEndsWithNewline(), new LintFileHasNSEnding()},
         new WorkspaceLinter[] {new LintUseNeedsDefine()});
-    this.structuralProbes = new LinkedHashMap<>();
     this.pool = new ForkJoinPool(1);
     this.somCompiler = new SomCompiler();
 
@@ -104,8 +99,6 @@ public class SomAdapter extends LanguageAdapter {
         Source.newBuilder(SomLanguage.LANG_ID, "systemClasses", null).internal(true).build(),
         null, null);
     Universe.setStructuralProbe(systemClassProbe);
-    structuralProbes.put("systemClasses", systemClassProbe);
-
     Universe.initializeObjectSystem();
     systemClassNames[0] = Classes.objectClass.getName();
     systemClassNames[1] = Classes.classClass.getName();
@@ -250,19 +243,12 @@ public class SomAdapter extends LanguageAdapter {
     return structures;
   }
 
-  void addNewProbe(final Source source, final SomStructures probe) {
-    synchronized (structuralProbes) {
-      structuralProbes.put(source.getPath(), probe);
-    }
-  }
-
   private String getStackTrace(final Throwable e) {
     StringWriter sw = new StringWriter();
     PrintWriter pw = new PrintWriter(sw);
     e.printStackTrace(pw);
     return sw.toString();
   }
-
 
   private DocumentStructures toDiagnostics(final ParseError e,
       final DocumentStructures structures) {

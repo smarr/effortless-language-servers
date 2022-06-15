@@ -442,7 +442,6 @@ public class DocumentStructures {
     }
   }
 
-  @SuppressWarnings("unchecked")
   private void findIn(final String partialName, final Position pos,
       final List<LanguageElement> es, final List<CompletionItem> results) {
     for (var e : es) {
