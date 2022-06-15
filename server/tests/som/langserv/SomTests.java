@@ -1,6 +1,7 @@
 package som.langserv;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -15,6 +16,8 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.concurrent.ForkJoinTask;
 
+import org.eclipse.lsp4j.CompletionItemKind;
+import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Location;
@@ -22,6 +25,7 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SymbolInformation;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import som.langserv.som.SomAdapter;
@@ -687,5 +691,124 @@ public class SomTests {
     assertTrue(diag.get(0).getMessage().contains("Unexpected symbol."));
     assertEquals(3, diag.get(0).getRange().getStart().getLine());
     assertEquals(0, diag.get(0).getRange().getStart().getCharacter());
+  }
+
+  @Ignore("This is difficulat to support."
+      + " We don't get the proper source location inside the class,"
+      + " and parsing aborts because He can't be loaded")
+  @Test
+  public void testCompletionGlobalsAsSuperclass() {
+    var adapter = new SomAdapter();
+    String path1 = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello1.som";
+    var structures = adapter.parse("Hello1 = ()", path1);
+    assertNull(structures.getDiagnostics());
+
+    String path2 = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello2.som";
+    structures = adapter.parse("Hello2 = He", path2);
+    assertNotNull(structures.getDiagnostics());
+
+    CompletionList result = adapter.getCompletions(path2, new Position(0, 11));
+    assertFalse(result.isIncomplete());
+
+    var items = result.getItems();
+    assertEquals(1, items.size());
+
+    var i = items.get(0);
+    assertEquals(CompletionItemKind.Class, i.getKind());
+    assertEquals("Hello1", i.getDetail());
+    assertEquals("Hello1", i.getLabel());
+  }
+
+  @Test
+  public void testCompletionGlobalsInMethod() {
+    var adapter = new SomAdapter();
+    String path1 = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello1.som";
+    var structures = adapter.parse("Hello1 = (\n"
+        + "method = ()\n"
+        + "run = (\n"
+        + " self me\n"
+        + ")\n"
+        + ")", path1);
+    assertNull(structures.getDiagnostics());
+
+    CompletionList result = adapter.getCompletions(path1, new Position(3, 8));
+    assertFalse(result.isIncomplete());
+
+    var items = result.getItems();
+    assertEquals(1, items.size());
+
+    var i = items.get(0);
+    assertEquals(CompletionItemKind.Method, i.getKind());
+    assertEquals("method", i.getDetail());
+    assertEquals("method", i.getLabel());
+  }
+
+  @Test
+  public void testCompletionLocals() {
+    var adapter = new SomAdapter();
+    String path1 = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello1.som";
+    var structures = adapter.parse("Hello1 = (\n"
+        + "run = (\n"
+        + "| local |\n"
+        + " lo\n"
+        + ")\n"
+        + ")", path1);
+    assertNull(structures.getDiagnostics());
+
+    CompletionList result = adapter.getCompletions(path1, new Position(3, 3));
+    assertFalse(result.isIncomplete());
+
+    var items = result.getItems();
+    assertEquals(1, items.size());
+
+    var i = items.get(0);
+    assertEquals(CompletionItemKind.Variable, i.getKind());
+    assertEquals("local", i.getLabel());
+  }
+
+  @Test
+  public void testCompletionProperties() {
+    var adapter = new SomAdapter();
+    String path1 = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello1.som";
+    var structures = adapter.parse("Hello1 = (\n"
+        + "  | field |\n"
+        + "run = (\n"
+        + " fi\n"
+        + ")\n"
+        + ")", path1);
+    assertNull(structures.getDiagnostics());
+
+    CompletionList result = adapter.getCompletions(path1, new Position(3, 3));
+    assertFalse(result.isIncomplete());
+
+    var items = result.getItems();
+    assertEquals(1, items.size());
+
+    var i = items.get(0);
+    assertEquals(CompletionItemKind.Field, i.getKind());
+    assertEquals("field", i.getLabel());
+  }
+
+  @Test
+  public void testCompletionMethods() {
+    var adapter = new SomAdapter();
+    String path1 = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello1.som";
+    var structures = adapter.parse("Hello1 = (\n"
+        + "method = (\n"
+        + " self me\n"
+        + ")\n"
+        + ")", path1);
+    assertNull(structures.getDiagnostics());
+
+    CompletionList result = adapter.getCompletions(path1, new Position(2, 8));
+    assertFalse(result.isIncomplete());
+
+    var items = result.getItems();
+    assertEquals(1, items.size());
+
+    var i = items.get(0);
+    assertEquals(CompletionItemKind.Method, i.getKind());
+    assertEquals("method", i.getDetail());
+    assertEquals("method", i.getLabel());
   }
 }
