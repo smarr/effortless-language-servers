@@ -311,12 +311,9 @@ public class DocumentStructures {
     }
 
     if (symbol instanceof LanguageElement e) {
-      if (e.getSignature() == null) {
-        return null;
-      }
-
-      List<DocumentHighlight> result = new ArrayList<>(1);
+      List<DocumentHighlight> result = new ArrayListIgnoreIfLastIdentical<>();
       result.add(e.createHighlight());
+      addAllReferences(e.getId(), result);
       return result;
     } else if (symbol instanceof Reference ref) {
       var similar = lookup(ref);
@@ -330,14 +327,7 @@ public class DocumentStructures {
         result.add(e.createHighlight());
       }
 
-      if (allReferences != null) {
-        List<Reference> list = allReferences.get(symbol.getId());
-        if (list != null) {
-          for (var r : list) {
-            result.add(r.createHighlight());
-          }
-        }
-      }
+      addAllReferences(symbol.getId(), result);
 
       if (result.isEmpty()) {
         return null;
@@ -349,6 +339,18 @@ public class DocumentStructures {
     }
   }
 
+  private void addAllReferences(final LanguageElementId id,
+      final List<DocumentHighlight> result) {
+    if (allReferences != null) {
+      List<Reference> list = allReferences.get(id);
+      if (list != null) {
+        for (var r : list) {
+          result.add(r.createHighlight());
+        }
+      }
+    }
+  }
+
   private Set<LanguageElement> lookup(final Reference ref) {
     if (symbols == null) {
       return null;
@@ -356,7 +358,6 @@ public class DocumentStructures {
     return symbols.get(ref.id);
   }
 
-  @SuppressWarnings("unchecked")
   private WithRange getMostPrecise(final Position pos,
       final List<? extends WithRange> es) {
     for (var e : es) {
@@ -482,6 +483,10 @@ public class DocumentStructures {
 
   public void lookupDefinitions(final Pair<LanguageElementId, Range> element,
       final List<LocationLink> definitions) {
+    if (symbols == null) {
+      return;
+    }
+
     var defs = symbols.get(element.v1);
 
     if (defs == null) {

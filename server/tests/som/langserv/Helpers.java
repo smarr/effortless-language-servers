@@ -70,6 +70,28 @@ public class Helpers {
     }
   }
 
+  public static void assertStart(final int startLine, final int startCol, final Range range) {
+    String error = "";
+    boolean failed = false;
+    if (startLine != range.getStart().getLine()) {
+      error += "expected start line: " + startLine + " but got: " + range.getStart().getLine();
+      failed = true;
+    }
+
+    if (startCol != range.getStart().getCharacter()) {
+      if (failed) {
+        error += "\n";
+      }
+      error +=
+          "expected start col: " + startCol + " but got: " + range.getStart().getCharacter();
+      failed = true;
+    }
+
+    if (failed) {
+      throw new AssertionError(error);
+    }
+  }
+
   public static void assertRange(final int startLine, final int startCol, final int endLine,
       final int endCol, final Range range) {
     String error = "";

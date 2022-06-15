@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static som.langserv.Helpers.assertRange;
+import static som.langserv.Helpers.assertStart;
 import static som.langserv.Helpers.assertToken;
 import static som.langserv.Helpers.printAllToken;
 
@@ -14,6 +15,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.concurrent.ForkJoinTask;
 
+import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -478,6 +480,48 @@ public class SomTests {
     assertEquals(path1, blockArg.getTargetUri());
     assertEquals(5, m2Arg.getTargetSelectionRange().getStart().getLine());
     assertEquals(6, m2Arg.getOriginSelectionRange().getStart().getLine());
+  }
+
+  @Test
+  public void testHighlightsFieldVsVariable() throws URISyntaxException {
+    var adapter = new SomAdapter();
+    String path1 = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello1.som";
+    var structures = adapter.parse(
+        "Hello1 = (\n"
+            + "| var |\n"
+            + "method1: arg = (\n"
+            + " [:arg |\n"
+            + "    var ]\n"
+            + ")\n"
+            + "method2: arg = (\n"
+            + " | var | var )\n"
+            + ")",
+        path1);
+    assertNull(structures.getDiagnostics());
+
+    // test from declaration
+    List<DocumentHighlight> hs = adapter.getHighlight(path1, new Position(1, 3));
+    assertNotNull(hs);
+
+    assertEquals(2, hs.size());
+    assertRange(1, 2, 1, 5, hs.get(0).getRange());
+    assertRange(4, 4, 4, 7, hs.get(1).getRange());
+
+    // test from use
+    hs = adapter.getHighlight(path1, new Position(4, 5));
+    assertNotNull(hs);
+
+    assertEquals(2, hs.size());
+    assertStart(1, 2, hs.get(0).getRange());
+    assertStart(4, 4, hs.get(1).getRange());
+
+    // test variable use
+    hs = adapter.getHighlight(path1, new Position(7, 10));
+    assertNotNull(hs);
+
+    assertEquals(2, hs.size());
+    assertStart(7, 3, hs.get(0).getRange());
+    assertStart(7, 9, hs.get(1).getRange());
   }
   @Test
   public void testSyntaxErrors() {
