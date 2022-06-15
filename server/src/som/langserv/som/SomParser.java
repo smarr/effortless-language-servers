@@ -7,9 +7,12 @@ import static trufflesom.compiler.Symbol.Identifier;
 import static trufflesom.vm.SymbolTable.symbolFor;
 
 import java.util.ArrayList;
+import java.util.List;
 
+import org.eclipse.lsp4j.ParameterInformation;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SignatureInformation;
 import org.eclipse.lsp4j.SymbolKind;
 
 import com.oracle.truffle.api.source.Source;
@@ -346,7 +349,27 @@ public class SomParser extends ParserAst {
     int coord = getStartIndex();
     ExpressionNode result = super.method(mgenc);
     completeSymbol(currentMethod, getCoordWithLength(coord));
+
+    currentMethod.setSignature(createSignature(mgenc));
+
     return result;
+  }
+
+  private SignatureInformation createSignature(final MethodGenerationContext mgenc) {
+    SignatureInformation info = new SignatureInformation();
+    info.setLabel(mgenc.getName());
+
+    List<ParameterInformation> params = new ArrayList<>(mgenc.getNumberOfArguments() - 1);
+
+    for (int i = 1; i < mgenc.getNumberOfArguments(); i += 1) {
+      ParameterInformation p = new ParameterInformation();
+      p.setLabel(mgenc.getArgument(i).getName().getString());
+      params.add(p);
+    }
+
+    info.setParameters(params);
+
+    return info;
   }
 
   @Override

@@ -17,6 +17,7 @@ import java.util.concurrent.ForkJoinTask;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SignatureHelp;
 import org.junit.Test;
 
 import som.langserv.som.SomAdapter;
@@ -334,5 +335,39 @@ public class SomTests {
 
     assertEquals("plaintext", hover.getContents().getRight().getKind());
     assertEquals("run: arg\n", hover.getContents().getRight().getValue());
+  }
+
+  @Test
+  public void testSignatureHelp() throws URISyntaxException {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    var structures = adapter.parse("Hello = (\n"
+        + "run: arg with: arg2 = ()\n"
+        + "run: arg = (\n"
+        + "  self run: 123 )\n"
+        + ")\n", path);
+
+    assertNull(structures.getDiagnostics());
+
+    SignatureHelp help = adapter.signatureHelp(path, new Position(3, 9), null);
+    assertNotNull(help);
+
+    assertNull(help.getActiveSignature());
+
+    var signatures = help.getSignatures();
+    assertNotNull(signatures);
+    assertEquals(1, signatures.size());
+
+    var sig = signatures.get(0);
+    assertNotNull(sig);
+
+    assertEquals("Hello>>#run:", sig.getLabel());
+
+    var params = sig.getParameters();
+    assertNotNull(params);
+    assertEquals(1, params.size());
+
+    var param = params.get(0);
+    assertEquals("arg", param.getLabel().getLeft());
   }
 }
