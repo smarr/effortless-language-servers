@@ -457,14 +457,14 @@ public class NewspeakParser extends Parser {
 
   protected void recordTokenSemantics(final int coords, final String length,
       final SemanticTokenType tokenType, final SemanticTokenModifier... modifiers) {
-    symbols.getSemanticTokens().addSemanticToken(source.getLineNumber(coords),
-        source.getColumnNumber(coords), length.length(), tokenType, modifiers);
+    symbols.getSemanticTokens().addSemanticToken(source.getLineNumber(coords) - 1,
+        source.getColumnNumber(coords) - 1, length.length(), tokenType, modifiers);
   }
 
   protected void recordTokenSemantics(final SourceSection source,
       final SemanticTokenType tokenType) {
-    symbols.getSemanticTokens().addSemanticToken(source.getStartLine(),
-        source.getStartColumn(), source.getCharLength(), tokenType);
+    symbols.getSemanticTokens().addSemanticToken(source.getStartLine() - 1,
+        source.getStartColumn() - 1, source.getCharLength(), tokenType);
   }
 
   private LanguageElement startSymbol(final String name, final SymbolKind kind,
