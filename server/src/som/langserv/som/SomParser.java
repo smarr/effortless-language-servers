@@ -231,6 +231,8 @@ public class SomParser extends ParserAst {
   protected SSymbol binarySendSelector() throws ParseError {
     int coord = getStartIndex();
     SSymbol result = super.binarySendSelector();
+
+    recordTokenSemantics(coord, result.getString(), SemanticTokenType.METHOD);
     referenceSymbol(new SymbolId(result), coord, result.getString().length());
     return result;
   }
@@ -412,7 +414,6 @@ public class SomParser extends ParserAst {
   protected void binaryPattern(final MethodGenerationContext mgenc)
       throws ProgramDefinitionError {
     int coord = getStartIndex();
-
     currentMethod = startSymbol(SymbolKind.Method);
 
     super.binaryPattern(mgenc);
