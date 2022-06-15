@@ -386,6 +386,8 @@ public class SomParser extends ParserAst {
     currentMethod.setName(mgenc.getSignature().getString());
     currentMethod.setId(new SymbolId(mgenc.getSignature()));
     currentMethod.setSelectionRange(getRange(coord, mgenc.getSignature().getString()));
+
+    currentMethod.setDetail(mgenc.getSignature().getString());
   }
 
   @Override

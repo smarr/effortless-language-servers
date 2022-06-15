@@ -268,7 +268,7 @@ public class SomTests {
     var children = classSymbol.getAllChildren();
     assertEquals(4, children.size());
     assertEquals("run", children.get(0).getName());
-    assertEquals(null, children.get(0).getDetail());
+    assertEquals("run", children.get(0).getDetail());
 
     assertEquals("run:", children.get(1).getName());
     assertEquals("run: arg", children.get(1).getDetail());
