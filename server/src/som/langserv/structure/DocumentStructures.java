@@ -92,7 +92,7 @@ public class DocumentStructures {
       final LanguageElementId id, final Range identifierRange, final boolean listAsSymbol) {
     LanguageElement symbol =
         new LanguageElement(name, kind, id, identifierRange, listAsSymbol);
-    addToScopes(symbol);
+    addToScopes(symbol, 0);
 
     symbolsScope.add(symbol);
 
@@ -101,18 +101,19 @@ public class DocumentStructures {
 
   public LanguageElement startSymbol(final SymbolKind kind, final boolean listAsSymbol) {
     LanguageElement symbol = new LanguageElement(kind, listAsSymbol);
-    addToScopes(symbol);
+    addToScopes(symbol, 0);
 
     symbolsScope.add(symbol);
 
     return symbol;
   }
 
-  private void addToScopes(final LanguageElement symbol) {
+  private void addToScopes(final LanguageElement symbol, final int inOuterScope) {
     if (symbolsScope.isEmpty()) {
+      assert inOuterScope == 0;
       rootSymbols.add(symbol);
     } else {
-      LanguageElement current = symbolsScope.get(symbolsScope.size() - 1);
+      LanguageElement current = symbolsScope.get(symbolsScope.size() - 1 - inOuterScope);
       current.addChild(symbol);
     }
   }
@@ -168,10 +169,16 @@ public class DocumentStructures {
   public LanguageElement recordDefinition(final String name, final LanguageElementId id,
       final SymbolKind kind, final Range range, final boolean afterNavigation,
       final boolean listAsSymbol) {
+    return recordDefinition(name, id, kind, range, afterNavigation, listAsSymbol, 0);
+  }
+
+  public LanguageElement recordDefinition(final String name, final LanguageElementId id,
+      final SymbolKind kind, final Range range, final boolean afterNavigation,
+      final boolean listAsSymbol, final int inOuterScope) {
     assert range != null;
     LanguageElement symbol = new LanguageElement(name, kind, id, range, listAsSymbol);
     symbol.setRange(range);
-    addToScopes(symbol);
+    addToScopes(symbol, inOuterScope);
 
     assert symbol.hasId();
     recordForLookup(symbol);
