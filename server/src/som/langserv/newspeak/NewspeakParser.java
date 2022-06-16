@@ -395,17 +395,6 @@ public class NewspeakParser extends Parser {
   }
 
   @Override
-  protected String localDecl() throws ParseError {
-    int coord = getStartIndex();
-
-    var localName = super.localDecl();
-
-    recordTokenSemantics(coord, localName, SemanticTokenType.VARIABLE);
-
-    return localName;
-  }
-
-  @Override
   protected LiteralNode literalNumber() throws ParseError {
     int coord = getStartIndex();
     var result = super.literalNumber();
