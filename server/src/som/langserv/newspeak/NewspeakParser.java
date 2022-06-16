@@ -253,7 +253,10 @@ public class NewspeakParser extends Parser {
       } else {
         arg = ((NonLocalArgumentReadNode) result).getArg();
       }
-      referenceSymbol(new VariableId(arg), section);
+      // let's ignore self, like in Eclipse, where this is also ignored
+      if (!arg.isSelf()) {
+        referenceSymbol(new VariableId(arg), section);
+      }
     } else if (result instanceof LocalVariableReadNode
         || result instanceof NonLocalVariableReadNode) {
       recordTokenSemantics(section, SemanticTokenType.VARIABLE);
