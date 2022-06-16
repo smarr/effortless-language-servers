@@ -346,7 +346,7 @@ public class NewspeakParser extends Parser {
       }
     }
 
-    currentMethod.setDetail(builder.getFullName());
+    currentMethod.setDetail(sb.toString());
 
     keywordParts.clear();
     keywordStart.clear();

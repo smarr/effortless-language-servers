@@ -175,4 +175,25 @@ public class NewspeakTests {
     assertEquals(1, clazz.size());
     assertEquals("factoryMethod", clazz.get(0).getName());
   }
+
+  @Test
+  public void testHover() throws URISyntaxException {
+    var adapter = new NewspeakAdapter();
+    String path = "file:" + NewspeakAdapter.CORE_LIB_PATH + "/Hello.ns";
+    var structures = adapter.parse("class Hello usingPlatform: platform = Value ()(\n"
+        + "run = (\n"
+        + "  self run: 1234\n"
+        + ")\n"
+        + "run: arg = ()\n"
+        + ")\n", path);
+    assertNull(structures.getDiagnostics());
+
+    Hover hover = adapter.hover(path, new Position(2, 8));
+    assertNotNull(hover);
+
+    assertRange(2, 7, 2, 7 + "run:".length(), hover.getRange());
+
+    assertEquals("plaintext", hover.getContents().getRight().getKind());
+    assertEquals("run: arg\n", hover.getContents().getRight().getValue());
+  }
 }
