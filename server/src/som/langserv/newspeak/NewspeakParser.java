@@ -153,6 +153,7 @@ public class NewspeakParser extends Parser {
       clazz.setDetail(mxnBuilder.getName() + " class");
 
       symbols.completeSymbol(clazz, toRange(getSource(coord)));
+      clazz.setSelectionRange(clazz.getRange());
     }
   }
 
