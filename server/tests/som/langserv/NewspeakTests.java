@@ -145,6 +145,67 @@ public class NewspeakTests {
 
     assertEquals(25, tokenTuples.size());
   }
+
+  @Test
+  public void testSemanticHighlightingFields() throws URISyntaxException {
+    var adapter = new NewspeakAdapter();
+    String path = "file:" + NewspeakAdapter.CORE_LIB_PATH + "/Hello.ns";
+    adapter.parse("class Hello usingPlatform: platform = Value (\n"
+        + "| public mySlot = 1. |\n"
+        + ")(\n"
+        + "  public main = (\n"
+        + "    ^ mySlot\n"
+        + "  )\n"
+        + ")\n"
+        + "\n", path);
+
+    List<int[]> tokenTuples =
+        adapter.getStructures(path).getSemanticTokens().getSemanticTokens();
+    printAllToken(tokenTuples);
+
+    assertToken(1, 2, "public", SemanticTokenType.MODIFIER, tokenTuples.get(5));
+    assertToken(1, 9, "mySlot", SemanticTokenType.PROPERTY, tokenTuples.get(6));
+    assertToken(1, 18, "1", SemanticTokenType.NUMBER, tokenTuples.get(7));
+
+    // yeah, that's newspeak semantics,
+    // we can't really know better at this point without doing the lookup
+    assertToken(4, 6, "mySlot", SemanticTokenType.METHOD, tokenTuples.get(10));
+
+    assertEquals(11, tokenTuples.size());
+  }
+
+  @Test
+  public void testSemanticHighlightingArgAndLocal() throws URISyntaxException {
+    var adapter = new NewspeakAdapter();
+    String path = "file:" + NewspeakAdapter.CORE_LIB_PATH + "/Hello.ns";
+    adapter.parse("class Hello usingPlatform: platform = Value ()(\n"
+        + "  public main: args = (\n"
+        + "    | local |\n"
+        + "    ^ local\n"
+        + "  )\n"
+        + ")\n"
+        + "\n", path);
+
+    List<int[]> tokenTuples =
+        adapter.getStructures(path).getSemanticTokens().getSemanticTokens();
+    printAllToken(tokenTuples);
+
+    assertToken(0, 0, "class", SemanticTokenType.KEYWORD, tokenTuples.get(0));
+    assertToken(0, 6, "Hello", SemanticTokenType.CLASS, tokenTuples.get(1));
+    assertToken(0, 12, "usingPlatform:", SemanticTokenType.METHOD, tokenTuples.get(2));
+    assertToken(0, 27, "platform", SemanticTokenType.PARAMETER, tokenTuples.get(3));
+    assertToken(0, 38, "Value", SemanticTokenType.METHOD, tokenTuples.get(4));
+
+    assertToken(1, 2, "public", SemanticTokenType.MODIFIER, tokenTuples.get(5));
+    assertToken(1, 9, "main:", SemanticTokenType.METHOD, tokenTuples.get(6));
+    assertToken(1, 15, "args", SemanticTokenType.PARAMETER, tokenTuples.get(7));
+
+    assertToken(2, 6, "local", SemanticTokenType.VARIABLE, tokenTuples.get(8));
+
+    assertToken(3, 6, "local", SemanticTokenType.VARIABLE, tokenTuples.get(9));
+
+    assertEquals(10, tokenTuples.size());
+  }
   @Test
   public void testSymbols() throws URISyntaxException {
     var adapter = new NewspeakAdapter();
