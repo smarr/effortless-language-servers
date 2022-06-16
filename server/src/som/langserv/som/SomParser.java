@@ -175,8 +175,8 @@ public class SomParser extends ParserAst {
         recordTokenSemantics(sourceSection, SemanticTokenType.PARAMETER);
       }
       Argument arg;
-      if (result instanceof LocalArgumentReadNode) {
-        arg = ((LocalArgumentReadNode) result).arg;
+      if (result instanceof LocalArgumentReadNode l) {
+        arg = l.arg;
       } else {
         arg = ((NonLocalArgumentReadNode) result).arg;
       }

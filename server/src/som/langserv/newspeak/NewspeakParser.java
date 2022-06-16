@@ -25,6 +25,7 @@ import som.compiler.MethodBuilder;
 import som.compiler.MixinBuilder;
 import som.compiler.Parser;
 import som.compiler.Variable.Argument;
+import som.compiler.Variable.Local;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
 import som.interpreter.nodes.ArgumentReadNode.NonLocalArgumentReadNode;
@@ -32,6 +33,7 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableReadNode;
 import som.interpreter.nodes.NonLocalVariableNode.NonLocalVariableReadNode;
 import som.interpreter.nodes.literals.LiteralNode;
+import som.langserv.som.BlockId;
 import som.langserv.structure.DocumentStructures;
 import som.langserv.structure.LanguageElement;
 import som.langserv.structure.LanguageElementId;
@@ -238,11 +240,27 @@ public class NewspeakParser extends Parser {
     if (result instanceof LocalArgumentReadNode
         || result instanceof NonLocalArgumentReadNode) {
       recordTokenSemantics(section, SemanticTokenType.PARAMETER);
+
+      Argument arg;
+      if (result instanceof LocalArgumentReadNode l) {
+        arg = l.getArg();
+      } else {
+        arg = ((NonLocalArgumentReadNode) result).getArg();
+      }
+      referenceSymbol(new VariableId(arg), section);
     } else if (result instanceof LocalVariableReadNode
         || result instanceof NonLocalVariableReadNode) {
       recordTokenSemantics(section, SemanticTokenType.VARIABLE);
+      Local local;
+      if (result instanceof LocalVariableReadNode l) {
+        local = l.getLocal();
+      } else {
+        local = ((NonLocalVariableReadNode) result).getLocal();
+      }
+      referenceSymbol(new VariableId(local), section);
     } else {
       recordTokenSemantics(section, SemanticTokenType.METHOD);
+      referenceSymbol(new SymbolId(selector), section);
     }
     return result;
   }
@@ -486,6 +504,10 @@ public class NewspeakParser extends Parser {
   private void referenceSymbol(final LanguageElementId id, final int startCoord,
       final int length) {
     symbols.referenceSymbol(id, toRange(source, startCoord, length));
+  }
+
+  private void referenceSymbol(final LanguageElementId id, final SourceSection ss) {
+    symbols.referenceSymbol(id, toRange(ss));
   }
 
   private Range getRange(final int startCoord, final String name) {
