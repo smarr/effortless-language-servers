@@ -419,9 +419,10 @@ public class NewspeakParser extends Parser {
 
     recordTokenSemantics(coord, slotName, SemanticTokenType.PROPERTY);
     int inOuterScope = currentMethod == null ? 0 : 1;
-    recordSymbolDefinition(slotName,
+    LanguageElement elem = recordSymbolDefinition(slotName,
         new SymbolId(symbolFor(slotName)), SymbolKind.Property, getSource(coord), true,
         inOuterScope);
+    elem.setDetail(slotName);
 
     return slotName;
   }
@@ -431,8 +432,10 @@ public class NewspeakParser extends Parser {
       final List<ExpressionNode> expressions) throws ProgramDefinitionError {
     Local local = super.localDefinition(builder, expressions);
     if (local != null) {
-      recordSymbolDefinition(local.name.getString(), new VariableId(local),
+      LanguageElement elem = recordSymbolDefinition(
+          local.name.getString(), new VariableId(local),
           SymbolKind.Variable, local.source, false, 0);
+      elem.setDetail(local.name.getString());
     }
     return local;
   }
