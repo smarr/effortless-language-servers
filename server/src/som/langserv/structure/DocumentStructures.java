@@ -55,6 +55,14 @@ public class DocumentStructures {
     this.semanticTokens = new SemanticTokens();
   }
 
+  public Map<LanguageElementId, Set<LanguageElement>> getAllDefinitions() {
+    return symbols;
+  }
+
+  public Map<LanguageElementId, List<Reference>> getAllReferences() {
+    return allReferences;
+  }
+
   public SemanticTokens getSemanticTokens() {
     return semanticTokens;
   }
