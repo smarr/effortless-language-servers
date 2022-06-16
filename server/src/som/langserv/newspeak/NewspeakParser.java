@@ -368,7 +368,7 @@ public class NewspeakParser extends Parser {
 
   private SignatureInformation createSignature(final MethodBuilder mbuilder) {
     SignatureInformation info = new SignatureInformation();
-    info.setLabel(mbuilder.getName());
+    info.setLabel(mbuilder.getFullName());
 
     List<ParameterInformation> params = new ArrayList<>(mbuilder.getNumberOfArguments() - 1);
 

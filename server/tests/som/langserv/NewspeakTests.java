@@ -1,7 +1,9 @@
 package som.langserv;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static som.langserv.Helpers.assertRange;
 import static som.langserv.Helpers.assertToken;
 import static som.langserv.Helpers.printAllToken;
 
@@ -12,7 +14,10 @@ import java.util.List;
 
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
+import org.eclipse.lsp4j.SignatureHelp;
 import org.junit.Test;
 
 import som.langserv.newspeak.NewspeakAdapter;
@@ -195,5 +200,38 @@ public class NewspeakTests {
 
     assertEquals("plaintext", hover.getContents().getRight().getKind());
     assertEquals("run: arg\n", hover.getContents().getRight().getValue());
+  }
+
+  @Test
+  public void testSignatureHelp() throws URISyntaxException {
+    var adapter = new NewspeakAdapter();
+    String path = "file:" + NewspeakAdapter.CORE_LIB_PATH + "/Hello.ns";
+    var structures = adapter.parse("class Hello usingPlatform: platform = Value ()(\n"
+        + "run: arg with: arg2 = ()\n"
+        + "run: arg = (\n"
+        + "  self run: 123 )\n"
+        + ")\n", path);
+    assertNull(structures.getDiagnostics());
+
+    SignatureHelp help = adapter.signatureHelp(path, new Position(3, 9), null);
+    assertNotNull(help);
+
+    assertNull(help.getActiveSignature());
+
+    var signatures = help.getSignatures();
+    assertNotNull(signatures);
+    assertEquals(1, signatures.size());
+
+    var sig = signatures.get(0);
+    assertNotNull(sig);
+
+    assertEquals("Hello>>#run:", sig.getLabel());
+
+    var params = sig.getParameters();
+    assertNotNull(params);
+    assertEquals(1, params.size());
+
+    var param = params.get(0);
+    assertEquals("arg", param.getLabel().getLeft());
   }
 }
