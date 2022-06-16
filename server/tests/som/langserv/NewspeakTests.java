@@ -266,4 +266,34 @@ public class NewspeakTests {
 
     assertEquals(4, results.size());
   }
+
+  @Test
+  public void testGotoDefinition() throws URISyntaxException {
+    var adapter = new NewspeakAdapter();
+    String path1 = "file:" + NewspeakAdapter.CORE_LIB_PATH + "/Hello1.ns";
+    var structures = adapter.parse("class Hello1 usingPlatform: platform = Value ()(\n"
+        + "method1 = (\n"
+        + " self method1.\n"
+        + " self method2.\n"
+        + ")\n"
+        + "method2 = ()\n"
+        + ")\n", path1);
+    assertNull(structures.getDiagnostics());
+
+    String path2 = "file:" + NewspeakAdapter.CORE_LIB_PATH + "/Hello2.ns";
+    structures = adapter.parse("class Hello2 usingPlatform: platform = Value ()(\n"
+        + "method2 = (\n"
+        + " self method1\n"
+        + ")\n"
+        + ")\n", path2);
+    assertNull(structures.getDiagnostics());
+
+    var locations = adapter.getDefinitions(path2, new Position(2, 8));
+    assertEquals(1, locations.size());
+
+    var m1 = locations.get(0);
+    assertEquals(path1, m1.getTargetUri());
+    assertEquals(1, m1.getTargetSelectionRange().getStart().getLine());
+    assertEquals(2, m1.getOriginSelectionRange().getStart().getLine());
+  }
 }
