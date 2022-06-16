@@ -1,9 +1,12 @@
 package som.langserv;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static som.langserv.Helpers.assertRange;
+import static som.langserv.Helpers.assertStart;
 import static som.langserv.Helpers.assertToken;
 import static som.langserv.Helpers.printAllToken;
 
@@ -12,9 +15,12 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
 
+import org.eclipse.lsp4j.CompletionItemKind;
+import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.SignatureHelp;
@@ -64,8 +70,8 @@ public class NewspeakTests {
     // There are currently various known warnings, errors, and other things
     // Some of the errors are old SOM files not adapted to Newspeak
     // Carefully fix these numbers when needed, they may be brittle
-    assertEquals(48, warnings);
     assertEquals(11, errors);
+    assertEquals(48, warnings);
     assertEquals(4, others);
   }
 
@@ -206,6 +212,7 @@ public class NewspeakTests {
 
     assertEquals(10, tokenTuples.size());
   }
+
   @Test
   public void testSymbols() throws URISyntaxException {
     var adapter = new NewspeakAdapter();
@@ -217,7 +224,6 @@ public class NewspeakTests {
         + ") : (\n"
         + "  public factoryMethod = ()\n"
         + ")\n", path);
-
     assertNull(structures.getDiagnostics());
 
     var symbols = adapter.documentSymbol(path);
@@ -230,6 +236,9 @@ public class NewspeakTests {
     assertEquals("usingPlatform:", children.get(0).getName());
     assertEquals("main:", children.get(1).getName());
     assertEquals("class", children.get(2).getName());
+
+    assertNotNull(children.get(2).getRange());
+    assertNotNull(children.get(2).getSelectionRange());
 
     var usingPlatform = children.get(0).getAllChildren();
     assertEquals(1, usingPlatform.size());
@@ -466,5 +475,196 @@ public class NewspeakTests {
     assertEquals(path1, blockArg.getTargetUri());
     assertEquals(5, m2Arg.getTargetSelectionRange().getStart().getLine());
     assertEquals(6, m2Arg.getOriginSelectionRange().getStart().getLine());
+  }
+
+  @Test
+  public void testReferencesToFieldsAcrossFiles() throws URISyntaxException {
+    var adapter = new NewspeakAdapter();
+    String path1 = "file:" + NewspeakAdapter.CORE_LIB_PATH + "/Hello1.ns";
+    var structures = adapter.parse("class Hello1 usingPlatform: platform = Value (\n"
+        + "| var |)(\n"
+        + "method1: arg = (\n"
+        + " [:arg |\n"
+        + "    var ].\n"
+        + "  ^ var )\n"
+        + "method2: arg = (\n"
+        + " | var | var )\n"
+        + ")\n", path1);
+    assertNull(structures.getDiagnostics());
+
+    String path2 = "file:" + NewspeakAdapter.CORE_LIB_PATH + "/Hello2.ns";
+    structures = adapter.parse("class Hello2 usingPlatform: platform = Value ()(\n"
+        + "method = (\n"
+        + "  ^ var )\n"
+        + "method2: arg = (\n"
+        + " | var | var )\n"
+        + ")\n", path2);
+    assertNull(structures.getDiagnostics());
+
+    List<Location> result = adapter.getReferences(path2, new Position(2, 5), true);
+
+    assertEquals(path1, result.get(0).getUri());
+    assertStart(1, 2, result.get(0).getRange());
+
+    assertEquals(path1, result.get(1).getUri());
+    assertStart(4, 4, result.get(1).getRange());
+
+    assertEquals(path1, result.get(2).getUri());
+    assertStart(5, 4, result.get(2).getRange());
+
+    assertEquals(path2, result.get(3).getUri());
+    assertStart(2, 4, result.get(3).getRange());
+
+    assertEquals(4, result.size());
+
+  }
+
+  @Test
+  public void testReferencesToMethodsAcrossFiles() throws URISyntaxException {
+    var adapter = new NewspeakAdapter();
+    String path1 = "file:" + NewspeakAdapter.CORE_LIB_PATH + "/Hello1.ns";
+    var structures = adapter.parse("class Hello1 usingPlatform: platform = Value ()(\n"
+        + "method1: arg = (\n"
+        + " arg method1: arg )\n"
+        + "method1 = (\n"
+        + " self method1: 2 )\n"
+        + ")\n", path1);
+    assertNull(structures.getDiagnostics());
+
+    String path2 = "file:" + NewspeakAdapter.CORE_LIB_PATH + "/Hello2.ns";
+    structures = adapter.parse("class Hello2 usingPlatform: platform = Value ()(\n"
+        + "method1: arg = ()\n"
+        + "method = (\n"
+        + "  ^ self method1: self )\n"
+        + ")\n", path2);
+    assertNull(structures.getDiagnostics());
+
+    List<Location> result = adapter.getReferences(path2, new Position(3, 12), true);
+
+    assertEquals(5, result.size());
+    assertEquals(path1, result.get(0).getUri());
+    assertStart(1, 0, result.get(0).getRange());
+
+    assertEquals(path1, result.get(1).getUri());
+    assertStart(2, 5, result.get(1).getRange());
+
+    assertEquals(path1, result.get(2).getUri());
+    assertStart(4, 6, result.get(2).getRange());
+
+    assertEquals(path2, result.get(3).getUri());
+    assertStart(1, 0, result.get(3).getRange());
+
+    assertEquals(path2, result.get(4).getUri());
+    assertStart(3, 9, result.get(4).getRange());
+  }
+
+  @Test
+  public void testSyntaxErrors() throws URISyntaxException {
+    var adapter = new NewspeakAdapter();
+    String path1 = "file:" + NewspeakAdapter.CORE_LIB_PATH + "/Hello1.ns";
+    var structures = adapter.parse("class Hello1 usingPlatform: platform = Value ()(\n"
+        + "method1: arg = (\n"
+        + " [:arg |\n"
+        + ")\n", path1);
+
+    var diag = structures.getDiagnostics();
+    assertEquals(1, diag.size());
+
+    assertTrue(diag.get(0).getMessage().contains("Unexpected symbol."));
+    assertEquals(3, diag.get(0).getRange().getStart().getLine());
+    assertEquals(0, diag.get(0).getRange().getStart().getCharacter());
+  }
+
+  @Test
+  public void testCompletionGlobalsInMethod() throws URISyntaxException {
+    var adapter = new NewspeakAdapter();
+    String path1 = "file:" + NewspeakAdapter.CORE_LIB_PATH + "/Hello1.ns";
+    var structures = adapter.parse("class Hello1 usingPlatform: platform = Value ()(\n"
+        + "method = ()\n"
+        + "run = (\n"
+        + " self me\n"
+        + ")\n"
+        + ")\n", path1);
+    assertNull(structures.getDiagnostics());
+
+    CompletionList result = adapter.getCompletions(path1, new Position(3, 8));
+    assertFalse(result.isIncomplete());
+
+    var items = result.getItems();
+    assertEquals(1, items.size());
+
+    var i = items.get(0);
+    assertEquals(CompletionItemKind.Method, i.getKind());
+    assertEquals("method", i.getDetail());
+    assertEquals("method", i.getLabel());
+  }
+
+  @Test
+  public void testCompletionLocals() throws URISyntaxException {
+    var adapter = new NewspeakAdapter();
+    String path1 = "file:" + NewspeakAdapter.CORE_LIB_PATH + "/Hello1.ns";
+    var structures = adapter.parse("class Hello1 usingPlatform: platform = Value ()(\n"
+        + "run = (\n"
+        + "| local |\n"
+        + " lo\n"
+        + ")\n"
+        + ")\n", path1);
+    assertNull(structures.getDiagnostics());
+
+    CompletionList result = adapter.getCompletions(path1, new Position(3, 3));
+    assertFalse(result.isIncomplete());
+
+    var items = result.getItems();
+    assertEquals(1, items.size());
+
+    var i = items.get(0);
+    assertEquals(CompletionItemKind.Variable, i.getKind());
+    assertEquals("local", i.getLabel());
+  }
+
+  @Test
+  public void testCompletionProperties() throws URISyntaxException {
+    var adapter = new NewspeakAdapter();
+    String path1 = "file:" + NewspeakAdapter.CORE_LIB_PATH + "/Hello1.ns";
+    var structures = adapter.parse("class Hello1 usingPlatform: platform = Value (\n"
+        + "| field |)(\n"
+        + "run = (\n"
+        + " fi\n"
+        + ")\n"
+        + ")\n", path1);
+    assertNull(structures.getDiagnostics());
+
+    CompletionList result = adapter.getCompletions(path1, new Position(3, 3));
+    assertFalse(result.isIncomplete());
+
+    var items = result.getItems();
+    assertEquals(1, items.size());
+
+    var i = items.get(0);
+    assertEquals(CompletionItemKind.Property, i.getKind());
+    assertEquals("field", i.getLabel());
+  }
+
+  @Test
+  public void testCompletionMethods() throws URISyntaxException {
+    var adapter = new NewspeakAdapter();
+    String path1 = "file:" + NewspeakAdapter.CORE_LIB_PATH + "/Hello1.ns";
+    var structures = adapter.parse("class Hello1 usingPlatform: platform = Value ()(\n"
+        + "method = (\n"
+        + " self me\n"
+        + ")\n"
+        + ")\n", path1);
+    assertNull(structures.getDiagnostics());
+
+    CompletionList result = adapter.getCompletions(path1, new Position(2, 8));
+    assertFalse(result.isIncomplete());
+
+    var items = result.getItems();
+    assertEquals(1, items.size());
+
+    var i = items.get(0);
+    assertEquals(CompletionItemKind.Method, i.getKind());
+    assertEquals("method", i.getDetail());
+    assertEquals("method", i.getLabel());
   }
 }
