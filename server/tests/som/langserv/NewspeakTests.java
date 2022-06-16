@@ -357,4 +357,43 @@ public class NewspeakTests {
     assertEquals(1, m1.getTargetSelectionRange().getStart().getLine());
     assertEquals(2, m1.getOriginSelectionRange().getStart().getLine());
   }
+
+  @Test
+  public void testGotoDefinitionInBlockNested() throws URISyntaxException {
+    var adapter = new NewspeakAdapter();
+    String path1 = "file:" + NewspeakAdapter.CORE_LIB_PATH + "/Hello1.ns";
+    var structures = adapter.parse("class Hello1 usingPlatform: platform = Value ()(\n"
+        + "method1: arg = (\n"
+        + " [:arg |\n"
+        + "    arg ]\n"
+        + ")\n"
+        + "method2: arg = (\n"
+        + " arg )\n"
+        + ")\n", path1);
+    assertNull(structures.getDiagnostics());
+
+    String path2 = "file:" + NewspeakAdapter.CORE_LIB_PATH + "/Hello2.ns";
+    structures = adapter.parse("class Hello2 usingPlatform: platform = Value ()(\n"
+        + "method1: arg = (\n"
+        + " arg\n"
+        + ")\n"
+        + ")\n", path2);
+    assertNull(structures.getDiagnostics());
+
+    var locations = adapter.getDefinitions(path1, new Position(3, 5));
+    assertEquals(1, locations.size());
+
+    var blockArg = locations.get(0);
+    assertEquals(path1, blockArg.getTargetUri());
+    assertEquals(2, blockArg.getTargetSelectionRange().getStart().getLine());
+    assertEquals(3, blockArg.getOriginSelectionRange().getStart().getLine());
+
+    locations = adapter.getDefinitions(path1, new Position(6, 2));
+    assertEquals(1, locations.size());
+
+    var m2Arg = locations.get(0);
+    assertEquals(path1, blockArg.getTargetUri());
+    assertEquals(5, m2Arg.getTargetSelectionRange().getStart().getLine());
+    assertEquals(6, m2Arg.getOriginSelectionRange().getStart().getLine());
+  }
 }
