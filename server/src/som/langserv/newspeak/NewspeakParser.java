@@ -419,6 +419,17 @@ public class NewspeakParser extends Parser {
   }
 
   @Override
+  protected Local localDefinition(final MethodBuilder builder,
+      final List<ExpressionNode> expressions) throws ProgramDefinitionError {
+    Local local = super.localDefinition(builder, expressions);
+    if (local != null) {
+      recordSymbolDefinition(local.name.getString(), new VariableId(local),
+          SymbolKind.Variable, local.source, false, 0);
+    }
+    return local;
+  }
+
+  @Override
   protected LiteralNode literalNumber() throws ParseError {
     int coord = getStartIndex();
     var result = super.literalNumber();
