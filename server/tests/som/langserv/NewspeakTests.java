@@ -18,10 +18,12 @@ import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.SignatureHelp;
+import org.eclipse.lsp4j.SymbolInformation;
 import org.junit.Test;
 
 import som.langserv.newspeak.NewspeakAdapter;
 import som.langserv.structure.SemanticTokenType;
+import util.ArrayListIgnoreIfLastIdentical;
 
 
 public class NewspeakTests {
@@ -233,5 +235,35 @@ public class NewspeakTests {
 
     var param = params.get(0);
     assertEquals("arg", param.getLabel().getLeft());
+  }
+
+  @Test
+  public void testWorkspaceSymbols() throws URISyntaxException {
+    var adapter = new NewspeakAdapter();
+    String path1 = "file:" + NewspeakAdapter.CORE_LIB_PATH + "/Hello1.ns";
+    var structures = adapter.parse("class Hello1 usingPlatform: platform = Value ()(\n"
+        + "run1: arg1 with: arg2 = ()\n"
+        + "run2: arg3 = (\n"
+        + "  self run: 123 )\n"
+        + ")\n", path1);
+    assertNull(structures.getDiagnostics());
+
+    String path2 = "file:" + NewspeakAdapter.CORE_LIB_PATH + "/Hello2.ns";
+    structures = adapter.parse("class Hello2 usingPlatform: platform = Value ()(\n"
+        + "run3: arg4 with: arg5 = ()\n"
+        + "run4: arg6 = (\n"
+        + "  self run: 123 )\n"
+        + ")\n", path2);
+    assertNull(structures.getDiagnostics());
+
+    List<SymbolInformation> results = new ArrayListIgnoreIfLastIdentical<>();
+    adapter.workspaceSymbol(results, "");
+
+    assertEquals(16, results.size());
+
+    results = new ArrayListIgnoreIfLastIdentical<>();
+    adapter.workspaceSymbol(results, "run");
+
+    assertEquals(4, results.size());
   }
 }
