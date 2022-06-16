@@ -198,12 +198,17 @@ public class NewspeakParser extends Parser {
 
     assert numParts >= 1;
     int[] starts = new int[numParts];
+    String[] parts = new String[numParts];
 
     StringBuilder kw = new StringBuilder();
 
     for (int i = numParts - 1; i >= 0; i--) {
-      kw.append(keywordParts.remove(keywordParts.size() - 1));
+      parts[i] = keywordParts.remove(keywordParts.size() - 1);
       starts[i] = keywordStart.remove(keywordStart.size() - 1);
+    }
+
+    for (String p : parts) {
+      kw.append(p);
     }
 
     SSymbol msg = symbolFor(kw.toString());
