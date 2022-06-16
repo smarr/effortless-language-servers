@@ -4,8 +4,8 @@
 	<property name="lib.dir"       value="libs" />
 	<property name="somns.dir"     value="${lib.dir}/SOMns" />
 	<property name="som.dir"       value="${lib.dir}/TruffleSOM" />
-	<property name="simple.dir"    value="${lib.dir}/simplelanguage" />
-	<property name="simple.build"  value="${simple.dir}/language/target" />
+	<property name="simple.dir"    value="${lib.dir}/simple-antlr" />
+    <property name="simple.src"    value="${simple.dir}/src" />
 	<property name="bd.dir"        value="${somns.dir}/libs/black-diamonds" />
 	<property name="truffle.dir"   value="${somns.dir}/libs/truffle/truffle" />
 	<property name="truffle.build" value="${truffle.dir}/mxbuild/dists" />
@@ -16,16 +16,11 @@
 
 	<property name="mvn.repo"      value="https://repo1.maven.org/maven2" />
 
-	<exec executable="mvn" dir="${simple.dir}" outputproperty="mvn.home">
-		<arg line='help:evaluate -Dexpression=settings.localRepository -q -DforceStdout' />
-	</exec>
-
-	<echo>mvn.home: ${mvn.home}</echo>
-
 	<property name="checkstyle.version" value="8.11" />
 	<property name="guava.version"  value="19.0" />
 	<property name="gson.version"   value="2.8.6" />
 	<property name="xtend.version"  value="2.24.0" />
+    <property name="antlr.version"  value="4.9.2" />
 
 	<property name="build.dir"   value="bin"/>
 	<property name="classes.dir" value="${build.dir}"/>
@@ -36,9 +31,7 @@
 		<pathelement location="${lib.dir}/org.eclipse.xtext.xbase.lib-${xtend.version}.jar" />
 		<pathelement location="${lib.dir}/org.eclipse.xtend.lib-${xtend.version}.jar" />
 		<pathelement location="${lib.dir}/org.eclipse.xtend.lib.macro-${xtend.version}.jar" />
-
-		<pathelement location="${simple.build}/simplelanguage-22.0.0.2.jar" />
-		<pathelement location="${mvn.home}/org/antlr/antlr4-runtime/4.9.2/antlr4-runtime-4.9.2.jar" />
+		<pathelement location="${lib.dir}/antlr4-runtime-${antlr.version}.jar" />
 
 		<pathelement location="${sdk.build}/graal-sdk.jar" />
 
@@ -84,12 +77,6 @@
 		<jar destfile="${bd.dir}/build/black-diamonds.jar" basedir="${bd.dir}/build/classes" />
 	</target>
 
-	<target name="simple" depends="somns-submodule">
-		<exec executable="mvn" dir="${simple.dir}">
-			<arg line="--no-transfer-progress -pl '!native' package" />
-		</exec>
-	</target>
-
 	<target name="trufflesom" depends="somns-submodule">
 		<exec executable="ant" dir="${som.dir}">
 			<arg value="-e" />
@@ -97,7 +84,10 @@
 		</exec>
 	</target>
 
-	<target name="libs" depends="somns,trufflesom,simple">
+	<target name="libs" depends="somns,trufflesom,get-libs">
+    </target>
+
+    <target name="get-libs">
 		<get src="${mvn.repo}/com/google/code/gson/gson/${gson.version}/gson-${gson.version}.jar"
 				usetimestamp="true"
 				dest="${lib.dir}/gson-${gson.version}.jar" />
@@ -113,6 +103,9 @@
 		<get src="${mvn.repo}/org/eclipse/xtend/org.eclipse.xtend.lib.macro/${xtend.version}/org.eclipse.xtend.lib.macro-${xtend.version}.jar"
 				usetimestamp="true"
 				dest="${lib.dir}/org.eclipse.xtend.lib.macro-${xtend.version}.jar" />
+		<get src="${mvn.repo}/org/antlr/antlr4-runtime/${antlr.version}/antlr4-runtime-${antlr.version}.jar"
+				usetimestamp="true"
+				dest="${lib.dir}/antlr4-runtime-${antlr.version}.jar" />
 	</target>
 
 	<target name="checkstyle-jar">
@@ -137,6 +130,7 @@
 		<mkdir dir="${classes.dir}" />
 		<javac includeantruntime="false" destdir="${classes.dir}" debug="true">
 			<src path="${src.dir}" />
+			<src path="${simple.src}" />
 			<src path="org.eclipse.lsp4j" />
 			<src path="org.eclipse.lsp4j-gen" />
 			<src path="org.eclipse.lsp4j.generator" />

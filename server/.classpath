@@ -16,12 +16,13 @@
 	<classpathentry kind="lib" path="libs/org.eclipse.xtend.lib-2.24.0.jar"/>
 	<classpathentry kind="lib" path="libs/org.eclipse.xtext.xbase.lib-2.24.0.jar"/>
 	<classpathentry kind="lib" path="libs/org.eclipse.xtend.lib.macro-2.24.0.jar"/>
+	<classpathentry kind="lib" path="libs/antlr4-runtime-4.9.2.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
-	<classpathentry kind="src" path="/simplelanguage"/>
-	<classpathentry kind="src" path="/BlackDiamonds"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/com.oracle.truffle.api.instrumentation"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/TruffleSOM"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/SOMns"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/com.oracle.truffle.api.exception"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/SOMns"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/TruffleSOM"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/com.oracle.truffle.api.instrumentation"/>
+	<classpathentry kind="src" path="/BlackDiamonds"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/simple-antlr"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
