@@ -467,6 +467,38 @@ public class NewspeakParser extends Parser {
   }
 
   @Override
+  public ExpressionNode nestedBlock(final MethodBuilder mbuilder)
+      throws ProgramDefinitionError {
+    int coord = getStartIndex();
+    LanguageElement block = symbols.startSymbol(SymbolKind.Function, true);
+    ExpressionNode result = super.nestedBlock(mbuilder);
+
+    block.setName(mbuilder.getSignature().getString());
+
+    StringBuilder sb = new StringBuilder();
+    sb.append('[');
+
+    for (int i = 1; i < mbuilder.getNumberOfArguments(); i += 1) {
+      if (i > 1) {
+        sb.append(' ');
+      }
+
+      var a = mbuilder.getArgument(i);
+      sb.append(':');
+      sb.append(a.name.getString());
+    }
+
+    sb.append(']');
+
+    block.setDetail(sb.toString());
+    block.setId(new BlockId(block.getName()));
+    symbols.completeSymbol(block, toRange(getSource(coord)));
+    block.setSelectionRange(block.getRange());
+
+    return result;
+  }
+
+  @Override
   protected void reportSyntaxElement(final Class<? extends Tag> type,
       final SourceSection source) {
     if (type == CommentTag.class) {
