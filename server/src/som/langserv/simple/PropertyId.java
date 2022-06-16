@@ -34,7 +34,7 @@ public class PropertyId extends LanguageElementId {
   }
 
   @Override
-  protected String getName() {
+  public String getName() {
     return name;
   }
 

@@ -13,7 +13,7 @@ public class VariableId extends LanguageElementId {
   }
 
   @Override
-  protected String getName() {
+  public String getName() {
     return var.getName().getString();
   }
 

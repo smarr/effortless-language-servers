@@ -32,7 +32,7 @@ public abstract class LanguageElementId {
   /**
    * Used to match against queries for symbols.
    */
-  protected abstract String getName();
+  public abstract String getName();
 
   @Override
   public abstract int hashCode();

@@ -23,7 +23,7 @@ public class FieldId extends LanguageElementId {
   }
 
   @Override
-  protected String getName() {
+  public String getName() {
     if (field == null) {
       return "" + fieldIndex;
     }

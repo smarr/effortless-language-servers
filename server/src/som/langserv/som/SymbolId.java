@@ -12,7 +12,7 @@ public class SymbolId extends LanguageElementId {
   }
 
   @Override
-  protected String getName() {
+  public String getName() {
     return sym.getString();
   }
 
