@@ -296,8 +296,9 @@ public class NewspeakParser extends Parser {
   @Override
   protected Argument argument(final MethodBuilder builder) throws ParseError {
     Argument arg = super.argument(builder);
-    recordSymbolDefinition(
+    LanguageElement a = recordSymbolDefinition(
         arg.name.getString(), new VariableId(arg), SymbolKind.Variable, arg.source, false);
+    a.setDetail(arg.name.getString());
     return arg;
   }
 
@@ -546,9 +547,10 @@ public class NewspeakParser extends Parser {
     return toRange(source, startCoord, name.length());
   }
 
-  private void recordSymbolDefinition(final String string, final LanguageElementId id,
+  private LanguageElement recordSymbolDefinition(final String string,
+      final LanguageElementId id,
       final SymbolKind kind, final SourceSection ss, final boolean listAsSymbol) {
-    symbols.recordDefinition(string, id, kind, toRange(ss), false,
+    return symbols.recordDefinition(string, id, kind, toRange(ss), false,
         listAsSymbol);
   }
 }

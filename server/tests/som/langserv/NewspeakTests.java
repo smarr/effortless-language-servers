@@ -245,6 +245,77 @@ public class NewspeakTests {
   }
 
   @Test
+  public void testSymbolDetails() throws URISyntaxException {
+    var adapter = new NewspeakAdapter();
+    String path = "file:" + NewspeakAdapter.CORE_LIB_PATH + "/Hello.ns";
+    var structures = adapter.parse("class Hello usingPlatform: platform = Value ()(\n"
+        + "run = ()\n"
+        + "run:   arg = ()\n"
+        + "+   arg = ()\n"
+        + "run: arg   with:  arg2   = ()\n"
+        + ")\n", path);
+    assertNull(structures.getDiagnostics());
+
+    var symbols = adapter.documentSymbol(path);
+    assertEquals(1, symbols.size());
+    var classSymbol = symbols.get(0);
+    assertEquals("Hello", classSymbol.getName());
+
+    var children = classSymbol.getAllChildren();
+    assertEquals(5, children.size());
+    assertEquals("usingPlatform:", children.get(0).getName());
+    assertEquals("usingPlatform: platform", children.get(0).getDetail());
+
+    assertEquals("run", children.get(1).getName());
+    assertEquals("run", children.get(1).getDetail());
+
+    assertEquals("run:", children.get(2).getName());
+    assertEquals("run: arg", children.get(2).getDetail());
+
+    assertEquals("+", children.get(3).getName());
+    assertEquals("+ arg", children.get(3).getDetail());
+
+    assertEquals("run:with:", children.get(4).getName());
+    assertEquals("run: arg with: arg2", children.get(4).getDetail());
+  }
+
+  @Test
+  public void testSymbolLineAndPositionInfo() throws URISyntaxException {
+    var adapter = new NewspeakAdapter();
+    String path = "file:" + NewspeakAdapter.CORE_LIB_PATH + "/Hello.ns";
+    var structures = adapter.parse("class Hello usingPlatform: platform = Value ()(\n"
+        + "run = ()\n"
+        + "run:   arg = ()\n"
+        + "+   arg = ()\n"
+        + "run: arg   with:  arg2   = ()\n"
+        + ")\n", path);
+    assertNull(structures.getDiagnostics());
+
+    var symbols = adapter.documentSymbol(path);
+    assertEquals(1, symbols.size());
+    var classSymbol = symbols.get(0);
+    assertEquals("Hello", classSymbol.getName());
+    assertRange(0, 6, 0, 11, classSymbol.getSelectionRange());
+
+    var children = classSymbol.getAllChildren();
+    assertEquals(5, children.size());
+    assertEquals("usingPlatform:", children.get(0).getName());
+    assertRange(0, 12, 0, 26, children.get(0).getSelectionRange());
+
+    assertEquals("run", children.get(1).getName());
+    assertRange(1, 0, 1, 3, children.get(1).getSelectionRange());
+
+    assertEquals("run:", children.get(2).getName());
+    assertRange(2, 0, 2, 4, children.get(2).getSelectionRange());
+
+    assertEquals("+", children.get(3).getName());
+    assertRange(3, 0, 3, 1, children.get(3).getSelectionRange());
+
+    assertEquals("run:with:", children.get(4).getName());
+    assertRange(4, 0, 4, 16, children.get(4).getSelectionRange());
+  }
+
+  @Test
   public void testHover() throws URISyntaxException {
     var adapter = new NewspeakAdapter();
     String path = "file:" + NewspeakAdapter.CORE_LIB_PATH + "/Hello.ns";
