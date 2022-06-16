@@ -297,7 +297,7 @@ public class NewspeakParser extends Parser {
   protected Argument argument(final MethodBuilder builder) throws ParseError {
     Argument arg = super.argument(builder);
     LanguageElement a = recordSymbolDefinition(
-        arg.name.getString(), new VariableId(arg), SymbolKind.Variable, arg.source, false);
+        arg.name.getString(), new VariableId(arg), SymbolKind.Variable, arg.source, false, 0);
     a.setDetail(arg.name.getString());
     return arg;
   }
@@ -409,6 +409,10 @@ public class NewspeakParser extends Parser {
     var slotName = super.slotDecl();
 
     recordTokenSemantics(coord, slotName, SemanticTokenType.PROPERTY);
+    int inOuterScope = currentMethod == null ? 0 : 1;
+    recordSymbolDefinition(slotName,
+        new SymbolId(symbolFor(slotName)), SymbolKind.Property, getSource(coord), true,
+        inOuterScope);
 
     return slotName;
   }
@@ -549,8 +553,9 @@ public class NewspeakParser extends Parser {
 
   private LanguageElement recordSymbolDefinition(final String string,
       final LanguageElementId id,
-      final SymbolKind kind, final SourceSection ss, final boolean listAsSymbol) {
+      final SymbolKind kind, final SourceSection ss, final boolean listAsSymbol,
+      final int inOuterScope) {
     return symbols.recordDefinition(string, id, kind, toRange(ss), false,
-        listAsSymbol);
+        listAsSymbol, inOuterScope);
   }
 }
