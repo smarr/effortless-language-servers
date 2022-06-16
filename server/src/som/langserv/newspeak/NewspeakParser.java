@@ -77,7 +77,8 @@ public class NewspeakParser extends Parser {
     var name = super.className();
     recordTokenSemantics(coord, name, SemanticTokenType.CLASS);
 
-    LanguageElement clazz = startSymbol(name, SymbolKind.Class, coord, new SlotId(name));
+    LanguageElement clazz =
+        startSymbol(name, SymbolKind.Class, coord, new SymbolId(symbolFor(name)));
     currentClass.push(clazz);
     clazz.setDetail(name);
 
