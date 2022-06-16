@@ -30,8 +30,11 @@ public class Helpers {
   }
 
   public static void printAllToken(final List<int[]> tokens) {
+    int i = 0;
     for (int[] t : tokens) {
+      System.out.print(i + ": ");
       printToken(t);
+      i += 1;
     }
   }
 
