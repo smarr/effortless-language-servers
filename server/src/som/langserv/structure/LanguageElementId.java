@@ -39,4 +39,9 @@ public abstract class LanguageElementId {
 
   @Override
   public abstract boolean equals(Object obj);
+
+  @Override
+  public String toString() {
+    return getClass().getSimpleName() + "(" + getName() + ")";
+  }
 }
