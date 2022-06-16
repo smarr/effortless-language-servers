@@ -125,6 +125,7 @@ public class DocumentStructures {
     // i.e., when unwinding the stack with an error
     // in this case, we remove everything up to the closed element
     // TODO: do we need to try to complete the other bits? we probably need a range on them...
+    assert symbolsScope.contains(symbol);
     boolean removed = false;
     while (!removed) {
       int lastSymbolIdx = symbolsScope.size() - 1;
