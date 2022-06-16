@@ -243,7 +243,7 @@ public class DocumentStructures {
     }
   }
 
-  private Hover createHover(final LanguageElement e) {
+  private static Hover createHover(final LanguageElement e) {
     assert e.getDetail() != null;
     Hover hover = new Hover();
     hover.setRange(e.getSelectionRange());
@@ -253,7 +253,7 @@ public class DocumentStructures {
     return hover;
   }
 
-  private Hover createHover(final Reference ref, final Set<LanguageElement> similar) {
+  private static Hover createHover(final Reference ref, final Set<LanguageElement> similar) {
     Hover hover = new Hover();
     hover.setRange(ref.getRange());
 
@@ -351,12 +351,13 @@ public class DocumentStructures {
 
   private void addAllReferences(final LanguageElementId id,
       final List<DocumentHighlight> result) {
-    if (allReferences != null) {
-      List<Reference> list = allReferences.get(id);
-      if (list != null) {
-        for (var r : list) {
-          result.add(r.createHighlight());
-        }
+    if (allReferences == null) {
+      return;
+    }
+    List<Reference> list = allReferences.get(id);
+    if (list != null) {
+      for (var r : list) {
+        result.add(r.createHighlight());
       }
     }
   }
@@ -370,6 +371,10 @@ public class DocumentStructures {
 
   private WithRange getMostPrecise(final Position pos,
       final List<? extends WithRange> es) {
+    if (es == null) {
+      return null;
+    }
+
     for (var e : es) {
       if (isIn(pos, e)) {
         if (e instanceof LanguageElement le) {
@@ -397,13 +402,14 @@ public class DocumentStructures {
     return null;
   }
 
-  private boolean isIn(final Position pos, final WithRange e) {
+  private static boolean isIn(final Position pos, final WithRange e) {
     Range r = e.getRange();
+    assert r != null;
 
     return isIn(pos, r);
   }
 
-  private boolean isIn(final Position pos, final Range range) {
+  private static boolean isIn(final Position pos, final Range range) {
     if (range.getStart().getLine() < pos.getLine()
         && pos.getLine() < range.getEnd().getLine()) {
       // strictly within a multiline range
@@ -432,6 +438,10 @@ public class DocumentStructures {
   }
 
   public void find(final List<SymbolInformation> results, final String query) {
+    if (symbols == null) {
+      return;
+    }
+
     for (var e : symbols.entrySet()) {
       if (e.getKey().matches(query)) {
         for (var s : e.getValue()) {
@@ -444,12 +454,14 @@ public class DocumentStructures {
 
   private void findIn(final String partialName, final Position pos,
       final List<LanguageElement> es, final List<CompletionItem> results) {
+    if (es == null) {
+      return;
+    }
+
     for (var e : es) {
       if (isIn(pos, e)) {
         List<LanguageElement> children = e.getAllChildren();
-        if (children != null) {
-          findIn(partialName, pos, children, results);
-        }
+        findIn(partialName, pos, children, results);
       }
 
       if (e.matches(partialName)) {
@@ -509,6 +521,10 @@ public class DocumentStructures {
 
   public void lookupDefinitionsLocation(final Pair<LanguageElementId, Range> element,
       final List<Location> definitions) {
+    if (symbols == null) {
+      return;
+    }
+
     var defs = symbols.get(element.v1);
 
     if (defs == null) {
