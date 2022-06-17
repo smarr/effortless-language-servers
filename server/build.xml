@@ -1,30 +1,30 @@
 <project name="som-language-server" default="compile">
 
-	<property name="src.dir"       location="src"/>
-	<property name="lib.dir"       location="libs" />
-	<property name="test.dir"      location="tests" />
-	<property name="somns.dir"     location="${lib.dir}/SOMns" />
-	<property name="som.dir"       location="${lib.dir}/TruffleSOM" />
-	<property name="simple.dir"    location="${lib.dir}/simple-antlr" />
-    <property name="simple.src"    location="${simple.dir}/src" />
-	<property name="bd.dir"        location="${somns.dir}/libs/black-diamonds" />
+	<property name="src.dir"	   location="src"/>
+	<property name="lib.dir"	   location="libs" />
+	<property name="test.dir"	   location="tests" />
+	<property name="somns.dir"	   location="${lib.dir}/SOMns" />
+	<property name="som.dir"	   location="${lib.dir}/TruffleSOM" />
+	<property name="simple.dir"	   location="${lib.dir}/simple-antlr" />
+	<property name="simple.src"	   location="${simple.dir}/src" />
+	<property name="bd.dir"		   location="${somns.dir}/libs/black-diamonds" />
 	<property name="truffle.dir"   location="${somns.dir}/libs/truffle/truffle" />
 	<property name="truffle.build" location="${truffle.dir}/mxbuild/dists" />
-	<property name="sdk.build"     location="${somns.dir}/libs/truffle/sdk/mxbuild/dists" />
-	<property name="svm.build"     location="${somns.dir}/libs/truffle/substratevm/mxbuild/dists" />
-	<property name="somns.jar"     location="${somns.dir}/build/som.jar" />
-	<property name="som.jar"       location="${som.dir}/build/som.jar" />
+	<property name="sdk.build"	   location="${somns.dir}/libs/truffle/sdk/mxbuild/dists" />
+	<property name="svm.build"	   location="${somns.dir}/libs/truffle/substratevm/mxbuild/dists" />
+	<property name="somns.jar"	   location="${somns.dir}/build/som.jar" />
+	<property name="som.jar"	   location="${som.dir}/build/som.jar" />
 
-	<property name="mvn.repo"      value="https://repo1.maven.org/maven2" />
+	<property name="mvn.repo"	   value="https://repo1.maven.org/maven2" />
 
 	<property name="checkstyle.version" value="8.11" />
-	<property name="guava.version"  value="19.0" />
-	<property name="gson.version"   value="2.8.6" />
-	<property name="xtend.version"  value="2.24.0" />
-    <property name="antlr.version"  value="4.9.2" />
-    <property name="junit.version" value="4.12" />
+	<property name="guava.version"	value="19.0" />
+	<property name="gson.version"	value="2.8.6" />
+	<property name="xtend.version"	value="2.24.0" />
+	<property name="antlr.version"	value="4.9.2" />
+	<property name="junit.version" value="4.12" />
 
-	<property name="build.dir"   value="bin"/>
+	<property name="build.dir"	 value="bin"/>
 
 	<path id="jar.classpath">
 		<pathelement location="${lib.dir}/gson-${gson.version}.jar" />
@@ -51,9 +51,9 @@
 		<pathelement location="${build.dir}" />
 		<pathelement location="${som.jar}" />
 		<pathelement location="${somns.jar}" />
-        
-        <pathelement location="${som.dir}/libs/junit-${junit.version}.jar" />
-        <pathelement location="${som.dir}/libs/hamcrest-core-1.3.jar" />
+		
+		<pathelement location="${som.dir}/libs/junit-${junit.version}.jar" />
+		<pathelement location="${som.dir}/libs/hamcrest-core-1.3.jar" />
 	</path>
 
 	<target name="clean" description="Remove build directories and generated code">
@@ -89,9 +89,9 @@
 	</target>
 
 	<target name="libs" depends="somns,trufflesom,get-libs">
-    </target>
+	</target>
 
-    <target name="get-libs">
+	<target name="get-libs">
 		<get src="${mvn.repo}/com/google/code/gson/gson/${gson.version}/gson-${gson.version}.jar"
 				usetimestamp="true"
 				dest="${lib.dir}/gson-${gson.version}.jar" />
@@ -145,29 +145,29 @@
 		</javac>
 	</target>
 
-    <target name="unit-test" description="Run unit tests">
-        <junit>
-            <jvmarg line="-ea -esa" />
-            <jvmarg value="-Dsom.langserv.som-core-lib=${som.dir}/core-lib" />
-            <jvmarg value="-Dsom.langserv.somns-core-lib=${somns.dir}/core-lib" />
-            <jvmarg value="-Dpolyglot.engine.WarnInterpreterOnly=false" />
+	<target name="unit-test" description="Run unit tests">
+		<junit>
+			<jvmarg line="-ea -esa" />
+			<jvmarg value="-Dsom.langserv.som-core-lib=${som.dir}/core-lib" />
+			<jvmarg value="-Dsom.langserv.somns-core-lib=${somns.dir}/core-lib" />
+			<jvmarg value="-Dpolyglot.engine.WarnInterpreterOnly=false" />
 
-            <classpath refid="project.classpath" />
-            <batchtest fork="yes" filtertrace="true" skipNonTests="true" haltonfailure="true" haltonerror="true">
-              <fileset dir="${test.dir}">
-                  <include name="**/*.java"/>
-              </fileset>
-            </batchtest>
-            <formatter type="brief" usefile="false"/>
-        </junit>
-    </target>
+			<classpath refid="project.classpath" />
+			<batchtest fork="yes" filtertrace="true" skipNonTests="true" haltonfailure="true" haltonerror="true">
+			  <fileset dir="${test.dir}">
+				  <include name="**/*.java"/>
+			  </fileset>
+			</batchtest>
+			<formatter type="brief" usefile="false"/>
+		</junit>
+	</target>
 
 	<target name="jar" depends="compile,compile-jar" description="Package as JAR">
 	</target>
-    
-    <target name="compile-jar">
-        <jar destfile="som-language-server.jar" basedir="${build.dir}"></jar>
-    </target>
+	
+	<target name="compile-jar">
+		<jar destfile="som-language-server.jar" basedir="${build.dir}"></jar>
+	</target>
 
 	<target name="deploy" depends="jar,copy-jars" description="Deploy Language Server files to client">
 	</target>
