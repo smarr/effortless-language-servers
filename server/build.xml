@@ -164,9 +164,12 @@
         </junit>
     </target>
 
-	<target name="jar" depends="compile" description="Package as JAR">
-		<jar destfile="som-language-server.jar" basedir="${classes.dir}"></jar>
+	<target name="jar" depends="compile,compile-jar" description="Package as JAR">
 	</target>
+    
+    <target name="compile-jar">
+        <jar destfile="som-language-server.jar" basedir="${classes.dir}"></jar>
+    </target>
 
 	<target name="deploy" depends="jar,copy-jars" description="Deploy Language Server files to client">
 	</target>
