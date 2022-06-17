@@ -38,6 +38,9 @@ import trufflesom.interpreter.nodes.ArgumentReadNode.NonLocalArgumentReadNode;
 import trufflesom.interpreter.nodes.ExpressionNode;
 import trufflesom.interpreter.nodes.FieldNode.FieldReadNode;
 import trufflesom.interpreter.nodes.GlobalNode;
+import trufflesom.interpreter.nodes.GlobalNode.FalseGlobalNode;
+import trufflesom.interpreter.nodes.GlobalNode.NilGlobalNode;
+import trufflesom.interpreter.nodes.GlobalNode.TrueGlobalNode;
 import trufflesom.interpreter.nodes.LocalVariableNode.LocalVariableReadNode;
 import trufflesom.interpreter.nodes.NonLocalVariableNode.NonLocalVariableReadNode;
 import trufflesom.vm.SymbolTable;
@@ -198,8 +201,15 @@ public class SomParser extends ParserAst {
       recordTokenSemantics(sourceSection, SemanticTokenType.PROPERTY);
       referenceSymbol(new FieldId(((FieldReadNode) result).getFieldIndex()), sourceSection);
     } else if (result instanceof GlobalNode) {
-      recordTokenSemantics(sourceSection, SemanticTokenType.CLASS);
-      referenceSymbol(new GlobalId(variableName), sourceSection);
+      if (result instanceof NilGlobalNode || result instanceof TrueGlobalNode
+          || result instanceof FalseGlobalNode) {
+        recordTokenSemantics(sourceSection, SemanticTokenType.KEYWORD);
+      } else if (variableName.getString().equals("system")) {
+        recordTokenSemantics(sourceSection, SemanticTokenType.VARIABLE);
+      } else {
+        recordTokenSemantics(sourceSection, SemanticTokenType.CLASS);
+        referenceSymbol(new GlobalId(variableName), sourceSection);
+      }
     }
     return result;
   }
