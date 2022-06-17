@@ -14,23 +14,20 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SymbolKind;
 
 import com.google.common.collect.Lists;
 
-import som.compiler.MixinDefinition;
-import som.interpreter.nodes.dispatch.Dispatchable;
 import som.langserv.LanguageAdapter;
 import som.langserv.lense.FileLens;
-import som.langserv.som.PositionConversion;
 import som.langserv.structure.DocumentStructures;
-import som.vm.Symbols;
-import som.vmobjects.SInvokable;
-import som.vmobjects.SSymbol;
+import som.langserv.structure.LanguageElement;
 
 
 public class Minitest implements FileLens {
-  private static final SSymbol TEST_CONTEXT = Symbols.symbolFor("TEST_CONTEXT");
-  private static final String  TEST_PREFIX  = "test";
+  private static final String TEST_CONTEXT = "TEST_CONTEXT";
+  private static final String TEST_PREFIX  = "test";
+  private static final String CLASS        = "class";
 
   public static final String COMMAND = "minitest";
 
@@ -46,61 +43,95 @@ public class Minitest implements FileLens {
 
   @Override
   public List<CodeLens> getCodeLenses(final DocumentStructures symbols) {
-    for (SSymbol s : def.getFactoryMethods().getKeys()) {
-      if (s == TEST_CONTEXT) {
-        CodeLens lens = createTestLense(def, documentUri);
+    List<CodeLens> result = new ArrayList<>();
 
-        codeLenses.add(lens);
+    for (var sym : symbols.getRootSymbols()) {
+      checkForTestContextAndAddLenses(result, sym, symbols.getUri());
+    }
 
-        addTestMethods(def, codeLenses, documentUri);
-        return;
+    if (result.isEmpty()) {
+      return null;
+    } else {
+      return result;
+    }
+  }
+
+  private static void checkForTestContextAndAddLenses(final List<CodeLens> results,
+      final LanguageElement elem, final String documentUri) {
+    // apply recursive to all classes
+    for (var c : elem.getChildren()) {
+      if (c.getKind() == SymbolKind.Class && !c.getName().equals(CLASS)) {
+        checkForTestContextAndAddLenses(results, (LanguageElement) c, documentUri);
+      }
+    }
+
+    // now look whether we have the marker method
+    LanguageElement clazz = null;
+    for (var c : elem.getChildren()) {
+      if (c.getKind() == SymbolKind.Class && c.getName().equals(CLASS)) {
+        clazz = (LanguageElement) c;
+        break;
+      }
+    }
+
+    if (clazz == null) {
+      return;
+    }
+
+    for (var method : clazz.getChildren()) {
+      LanguageElement m = (LanguageElement) method;
+      if (m.getId().getName().equals(TEST_CONTEXT)) {
+        createLenses(results, elem, documentUri);
       }
     }
   }
 
-  private static CodeLens createTestLense(final MixinDefinition def,
+  private static void createLenses(final List<CodeLens> results, final LanguageElement elem,
       final String documentUri) {
-    CodeLens lens = new CodeLens();
-    Command cmd = new Command();
-    cmd.setCommand(COMMAND);
-    cmd.setTitle("Run tests");
-    Range r = PositionConversion.toRange(def.getNameSourceSection());
-    cmd.setArguments(Lists.newArrayList(documentUri, def.getName().getString(),
-        r.getStart().getLine(), r.getStart().getCharacter(), r.getEnd().getLine(),
-        r.getEnd().getCharacter()));
+    // add a lens for the whole class
+    results.add(createTestLensForClass(elem, documentUri));
 
-    lens.setCommand(cmd);
-    lens.setRange(r);
-    return lens;
-  }
-
-  private static void addTestMethods(final MixinDefinition def,
-      final List<CodeLens> codeLenses, final String documentUri) {
-    for (Dispatchable d : def.getInstanceDispatchables().getValues()) {
-      if (d instanceof SInvokable) {
-        SInvokable i = (SInvokable) d;
-        if (i.getSignature().getString().startsWith(TEST_PREFIX)) {
-          CodeLens lens = addTestMethod(def, documentUri, i);
-          codeLenses.add(lens);
-        }
+    // find all methods with the test prefix, and add a lens each
+    for (var m : elem.getChildren()) {
+      if (m.getKind() == SymbolKind.Method && m.getName().startsWith(TEST_PREFIX)) {
+        results.add(createTestLensForMethod(elem, (LanguageElement) m, documentUri));
       }
     }
   }
 
-  private static CodeLens addTestMethod(final MixinDefinition def, final String documentUri,
-      final SInvokable i) {
+  private static CodeLens createTestLensForClass(final LanguageElement clazz,
+      final String documentUri) {
+    return createTestLens(clazz.getName(), "Run tests", clazz.getSelectionRange(),
+        documentUri);
+  }
+
+  private static CodeLens createTestLensForMethod(final LanguageElement clazz,
+      final LanguageElement method, final String documentUri) {
+    return createTestLens(
+        clazz.getName() + "." + method.getName(),
+        "Run test",
+        method.getSelectionRange(),
+        documentUri);
+  }
+
+  private static CodeLens createTestLens(final String testName, final String title,
+      final Range select, final String documentUri) {
     CodeLens lens = new CodeLens();
     Command cmd = new Command();
     cmd.setCommand(COMMAND);
-    cmd.setTitle("Run test");
-    Range r = PositionConversion.toRange(i.getSourceSection());
-    cmd.setArguments(Lists.newArrayList(documentUri,
-        def.getName().getString() + "." + i.getSignature().getString(),
-        r.getStart().getLine(), r.getStart().getCharacter(), r.getEnd().getLine(),
-        r.getEnd().getCharacter()));
+    cmd.setTitle(title);
+
+    cmd.setArguments(
+        Lists.newArrayList(
+            documentUri,
+            testName,
+            select.getStart().getLine(),
+            select.getStart().getCharacter(),
+            select.getEnd().getLine(),
+            select.getEnd().getCharacter()));
 
     lens.setCommand(cmd);
-    lens.setRange(r);
+    lens.setRange(select);
     return lens;
   }
 
@@ -190,6 +221,7 @@ public class Minitest implements FileLens {
           diagnostics.add(new Diagnostic(range,
               "Test " + test + " succeeded", DiagnosticSeverity.Information, documentUri));
         }
+
         adapter.reportDiagnostics(diagnostics, documentUri);
       } catch (InterruptedException e) {
         repeat = true;
