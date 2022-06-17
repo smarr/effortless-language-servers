@@ -9,7 +9,6 @@ import static som.langserv.Helpers.assertToken;
 import static som.langserv.Helpers.printAllToken;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
 
@@ -39,16 +38,6 @@ public class SimpleLanguageTests {
                                   .getLocation().toURI().getPath());
 
     return new File(f.getParentFile().getAbsolutePath() + File.separator + "src");
-  }
-
-  @Test
-  public void testLoadFile() throws IOException, URISyntaxException {
-    var adapter = new SimpleAdapter();
-    var structures =
-        adapter.loadFile(
-            new File(getRootForSimpleLanguageExamples() + File.separator + "HelloWorld.sl"));
-
-    assertNull(structures.getDiagnostics());
   }
 
   @Test
