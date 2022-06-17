@@ -16,7 +16,6 @@ import org.graalvm.polyglot.Context.Builder;
 import org.graalvm.polyglot.Value;
 
 import com.oracle.truffle.api.source.Source;
-import com.oracle.truffle.api.source.SourceSection;
 
 import bd.tools.structure.StructuralProbe;
 import som.Launcher;
@@ -126,11 +125,12 @@ public class NewspeakAdapter extends LanguageAdapter {
     try {
       compiler.compileModule(source, newProbe);
     } catch (ParseError e) {
-      return toDiagnostics(e, structures);
+      return toErrorDiagnostics(e, toRangeMax(e.getLine(), e.getColumn()), structures);
     } catch (SemanticDefinitionError e) {
-      return toDiagnostics(e, structures);
+      return toErrorDiagnostics(e, toRange(e.getSourceSection()), structures);
     } catch (Throwable e) {
-      return toDiagnostics(e.getMessage(), structures);
+      return toErrorDiagnostics(e,
+          new Range(new Position(0, 0), new Position(1, Short.MAX_VALUE)), structures);
     } finally {
       assert structures != null;
       putStructures(path, structures);
@@ -138,42 +138,9 @@ public class NewspeakAdapter extends LanguageAdapter {
     return structures;
   }
 
-  private DocumentStructures toDiagnostics(final ParseError e,
+  private DocumentStructures toErrorDiagnostics(final Throwable e, final Range range,
       final DocumentStructures structures) {
-    Diagnostic d = new Diagnostic();
-    d.setSeverity(DiagnosticSeverity.Error);
-
-    d.setRange(toRangeMax(e.getLine(), e.getColumn()));
-    d.setMessage(e.getMessage());
-    d.setSource("Parser");
-
-    structures.addDiagnostic(d);
-    return structures;
-  }
-
-  private DocumentStructures toDiagnostics(final SemanticDefinitionError e,
-      final DocumentStructures structures) {
-    SourceSection source = e.getSourceSection();
-
-    Diagnostic d = new Diagnostic();
-    d.setSeverity(DiagnosticSeverity.Error);
-    d.setRange(toRange(source));
-    d.setMessage(e.getMessage());
-    d.setSource("Parser");
-
-    structures.addDiagnostic(d);
-    return structures;
-  }
-
-  private DocumentStructures toDiagnostics(final String msg,
-      final DocumentStructures structures) {
-    Diagnostic d = new Diagnostic();
-    d.setSeverity(DiagnosticSeverity.Error);
-
-    d.setMessage(msg);
-    d.setSource("Parser");
-    d.setRange(new Range(new Position(0, 0), new Position(1, Short.MAX_VALUE)));
-
+    Diagnostic d = new Diagnostic(range, e.getMessage(), DiagnosticSeverity.Error, "Parser");
     structures.addDiagnostic(d);
     return structures;
   }
