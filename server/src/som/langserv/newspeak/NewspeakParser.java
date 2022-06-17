@@ -1,9 +1,9 @@
 package som.langserv.newspeak;
 
-import static som.langserv.som.PositionConversion.getEnd;
-import static som.langserv.som.PositionConversion.getStart;
-import static som.langserv.som.PositionConversion.toRange;
 import static som.vm.Symbols.symbolFor;
+import static util.PositionConversion.getEnd;
+import static util.PositionConversion.getStart;
+import static util.PositionConversion.toRange;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;

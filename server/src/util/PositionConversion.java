@@ -1,4 +1,4 @@
-package som.langserv.som;
+package util;
 
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;

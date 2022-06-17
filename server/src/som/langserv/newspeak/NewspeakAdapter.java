@@ -1,7 +1,7 @@
 package som.langserv.newspeak;
 
-import static som.langserv.som.PositionConversion.toRange;
-import static som.langserv.som.PositionConversion.toRangeMax;
+import static util.PositionConversion.toRange;
+import static util.PositionConversion.toRangeMax;
 
 import java.net.URI;
 import java.net.URISyntaxException;

@@ -43,6 +43,7 @@ import trufflesom.vm.Universe;
 import trufflesom.vmobjects.SClass;
 import trufflesom.vmobjects.SInvokable;
 import trufflesom.vmobjects.SSymbol;
+import util.PositionConversion;
 
 
 public class SomAdapter extends LanguageAdapter {

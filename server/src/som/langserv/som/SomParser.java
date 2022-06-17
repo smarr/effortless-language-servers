@@ -1,10 +1,10 @@
 package som.langserv.som;
 
-import static som.langserv.som.PositionConversion.getEnd;
-import static som.langserv.som.PositionConversion.getStart;
-import static som.langserv.som.PositionConversion.toRange;
 import static trufflesom.compiler.Symbol.Identifier;
 import static trufflesom.vm.SymbolTable.symbolFor;
+import static util.PositionConversion.getEnd;
+import static util.PositionConversion.getStart;
+import static util.PositionConversion.toRange;
 
 import java.util.ArrayList;
 import java.util.List;
