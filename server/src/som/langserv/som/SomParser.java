@@ -180,7 +180,10 @@ public class SomParser extends ParserAst {
       } else {
         arg = ((NonLocalArgumentReadNode) result).arg;
       }
-      referenceSymbol(new VariableId(arg), sourceSection);
+      // let's ignore self, like in Eclipse, where this is also ignored
+      if (!arg.isSelf()) {
+        referenceSymbol(new VariableId(arg), sourceSection);
+      }
     } else if (result instanceof LocalVariableReadNode
         || result instanceof NonLocalVariableReadNode) {
       recordTokenSemantics(sourceSection, SemanticTokenType.VARIABLE);
