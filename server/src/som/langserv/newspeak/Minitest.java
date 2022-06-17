@@ -19,7 +19,7 @@ import org.eclipse.lsp4j.SymbolKind;
 import com.google.common.collect.Lists;
 
 import som.langserv.LanguageAdapter;
-import som.langserv.lense.FileLens;
+import som.langserv.lens.FileLens;
 import som.langserv.structure.DocumentStructures;
 import som.langserv.structure.LanguageElement;
 

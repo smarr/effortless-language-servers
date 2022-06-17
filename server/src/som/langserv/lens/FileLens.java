@@ -1,4 +1,4 @@
-package som.langserv.lense;
+package som.langserv.lens;
 
 import java.util.List;
 

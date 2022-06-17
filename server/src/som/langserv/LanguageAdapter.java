@@ -31,7 +31,7 @@ import org.eclipse.lsp4j.SignatureHelpContext;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.services.LanguageClient;
 
-import som.langserv.lense.FileLens;
+import som.langserv.lens.FileLens;
 import som.langserv.lint.FileLinter;
 import som.langserv.lint.WorkspaceLinter;
 import som.langserv.structure.DocumentStructures;
