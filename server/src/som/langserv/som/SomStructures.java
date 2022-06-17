@@ -40,10 +40,6 @@ public class SomStructures
     return result;
   }
 
-  public String getDocumentUri() {
-    return source.getURI().toString();
-  }
-
   @Override
   public String toString() {
     return source.getName();

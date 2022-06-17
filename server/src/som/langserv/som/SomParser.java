@@ -483,15 +483,10 @@ public class SomParser extends ParserAst {
 
   private void recordTokenSemantics(final int startCoord, final String token,
       final SemanticTokenType type) {
-    recordTokenSemantics(startCoord, token, type, (SemanticTokenModifier[]) null);
-  }
-
-  private void recordTokenSemantics(final int startCoord, final String token,
-      final SemanticTokenType type, final SemanticTokenModifier... modifiers) {
     int line = SourceCoordinate.getLine(source, startCoord);
     int column = SourceCoordinate.getColumn(source, startCoord);
     symbols.getSemanticTokens().addSemanticToken(line - 1, column - 1, token.length(), type,
-        modifiers);
+        (SemanticTokenModifier[]) null);
   }
 
   private void recordTokenSemantics(final long coord,
