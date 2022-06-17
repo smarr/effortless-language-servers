@@ -11,7 +11,7 @@ import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.eclipse.lsp4j.services.WorkspaceService;
 
-import som.langserv.newspeak.Minitest;
+import som.langserv.lens.Minitest;
 import som.langserv.newspeak.NewspeakAdapter;
 
 

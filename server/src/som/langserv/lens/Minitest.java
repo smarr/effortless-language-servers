@@ -1,4 +1,4 @@
-package som.langserv.newspeak;
+package som.langserv.lens;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,7 +19,7 @@ import org.eclipse.lsp4j.SymbolKind;
 import com.google.common.collect.Lists;
 
 import som.langserv.LanguageAdapter;
-import som.langserv.lens.FileLens;
+import som.langserv.newspeak.NewspeakAdapter;
 import som.langserv.structure.DocumentStructures;
 import som.langserv.structure.LanguageElement;
 

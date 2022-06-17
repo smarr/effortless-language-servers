@@ -27,7 +27,7 @@ import org.eclipse.lsp4j.services.WorkspaceService;
 
 import com.google.common.collect.Lists;
 
-import som.langserv.newspeak.Minitest;
+import som.langserv.lens.Minitest;
 import som.langserv.newspeak.NewspeakAdapter;
 import som.langserv.simple.SimpleAdapter;
 import som.langserv.som.SomAdapter;

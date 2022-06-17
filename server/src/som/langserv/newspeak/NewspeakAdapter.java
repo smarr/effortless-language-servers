@@ -31,6 +31,7 @@ import som.interpreter.SomLanguage;
 import som.interpreter.objectstorage.StorageAccessor;
 import som.langserv.LanguageAdapter;
 import som.langserv.lens.FileLens;
+import som.langserv.lens.Minitest;
 import som.langserv.lint.FileLinter;
 import som.langserv.lint.LintEndsWithNewline;
 import som.langserv.lint.LintUseNeedsDefine;
