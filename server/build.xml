@@ -25,7 +25,6 @@
     <property name="junit.version" value="4.12" />
 
 	<property name="build.dir"   value="bin"/>
-	<property name="classes.dir" value="${build.dir}"/>
 
 	<path id="jar.classpath">
 		<pathelement location="${lib.dir}/gson-${gson.version}.jar" />
@@ -49,8 +48,7 @@
 
 	<path id="project.classpath">
 		<path refid="jar.classpath" />
-		<pathelement location="${classes.dir}" />
-		<pathelement location="${test.dir}" />
+		<pathelement location="${build.dir}" />
 		<pathelement location="${som.jar}" />
 		<pathelement location="${somns.jar}" />
         
@@ -133,10 +131,10 @@
 
 	<target name="compile-ls" description="Compile Language Server">
 		<mkdir dir="${build.dir}"/>
-		<mkdir dir="${classes.dir}" />
-		<javac includeantruntime="false" destdir="${classes.dir}" debug="true">
+		<javac includeantruntime="false" destdir="${build.dir}" debug="true">
 			<src path="${src.dir}" />
 			<src path="${simple.src}" />
+			<src path="${test.dir}" />
 			<src path="org.eclipse.lsp4j" />
 			<src path="org.eclipse.lsp4j-gen" />
 			<src path="org.eclipse.lsp4j.generator" />
@@ -148,16 +146,16 @@
 	</target>
 
     <target name="unit-test" description="Run unit tests">
-        <junit haltonerror="true" haltonfailure="true" outputtoformatters="true">
+        <junit>
             <jvmarg line="-ea -esa" />
             <jvmarg value="-Dsom.langserv.som-core-lib=${som.dir}/core-lib" />
             <jvmarg value="-Dsom.langserv.somns-core-lib=${somns.dir}/core-lib" />
             <jvmarg value="-Dpolyglot.engine.WarnInterpreterOnly=false" />
 
             <classpath refid="project.classpath" />
-            <batchtest fork="yes" filtertrace="false">
-              <fileset dir="tests">
-                  <include name="**/*Test*.java"/>
+            <batchtest fork="yes" filtertrace="true" skipNonTests="true" haltonfailure="true" haltonerror="true">
+              <fileset dir="${test.dir}">
+                  <include name="**/*.java"/>
               </fileset>
             </batchtest>
             <formatter type="brief" usefile="false"/>
@@ -168,7 +166,7 @@
 	</target>
     
     <target name="compile-jar">
-        <jar destfile="som-language-server.jar" basedir="${classes.dir}"></jar>
+        <jar destfile="som-language-server.jar" basedir="${build.dir}"></jar>
     </target>
 
 	<target name="deploy" depends="jar,copy-jars" description="Deploy Language Server files to client">
