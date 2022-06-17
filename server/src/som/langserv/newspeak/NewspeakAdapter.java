@@ -34,6 +34,7 @@ import som.langserv.lens.FileLens;
 import som.langserv.lens.Minitest;
 import som.langserv.lint.FileLinter;
 import som.langserv.lint.LintEndsWithNewline;
+import som.langserv.lint.LintFileHasNSEnding;
 import som.langserv.lint.LintUseNeedsDefine;
 import som.langserv.lint.WorkspaceLinter;
 import som.langserv.structure.DocumentStructures;
