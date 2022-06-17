@@ -1,4 +1,5 @@
 package som.langserv.benchmarks;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -118,7 +119,7 @@ public class SOMBenchmarking extends Benchmark {
           str.toString(),
           testFilePath);
 
-      List<Integer> tokens = adapter.getTokenPositions(testFilePath);
+      List<Integer> tokens = adapter.getSemanticTokensFull(testFilePath);
 
       tokens = sort(tokens);
       if (!tokens.isEmpty()) {
