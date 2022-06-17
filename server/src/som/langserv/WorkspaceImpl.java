@@ -11,15 +11,15 @@ import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.eclipse.lsp4j.services.WorkspaceService;
 
-import som.langserv.newspeak.Minitest;
+import som.langserv.lens.Minitest;
 import som.langserv.newspeak.NewspeakAdapter;
 
 
-public class SomWorkspace implements WorkspaceService {
+public class WorkspaceImpl implements WorkspaceService {
 
-  private final LanguageAdapter<?> adapters[];
+  private final LanguageAdapter adapters[];
 
-  public SomWorkspace(final LanguageAdapter<?> languageAdapters[]) {
+  public WorkspaceImpl(final LanguageAdapter languageAdapters[]) {
     this.adapters = languageAdapters;
   }
 
@@ -28,10 +28,9 @@ public class SomWorkspace implements WorkspaceService {
       final WorkspaceSymbolParams params) {
     ArrayList<SymbolInformation> result = new ArrayList<>();
 
-    for (LanguageAdapter<?> adapter : adapters) {
-      result.addAll(adapter.getAllSymbolInfo(params.getQuery()));
+    for (LanguageAdapter adapter : adapters) {
+      adapter.workspaceSymbol(result, params.getQuery());
     }
-
     return CompletableFuture.completedFuture(result);
   }
 

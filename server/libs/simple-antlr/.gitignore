@@ -1,0 +1,4 @@
+/bin/
+/libs/antlr.jar
+/src/simple/*.interp
+/src/simple/*.tokens

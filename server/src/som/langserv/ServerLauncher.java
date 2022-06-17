@@ -61,7 +61,7 @@ public class ServerLauncher {
   }
 
   public static void main(final String[] args) {
-    SomLanguageServer tls = new SomLanguageServer();
+    LanguageServerImpl tls = new LanguageServerImpl();
 
     if (TCP_CONNECTION) {
       try (ServerSocket serverSocket = new ServerSocket(SERVER_PORT)) {

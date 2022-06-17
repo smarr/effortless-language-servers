@@ -92,7 +92,7 @@ describe("Basic Tests", () => {
     client.addDiagnosticsHandler(function (params) {
       try {
         expect(params.uri).to.equal(examplesUri.toString() + '/Hello.ns');
-        expect(params.diagnostics).to.have.lengthOf(8);
+        expect(params.diagnostics).to.have.lengthOf(9);
         done();
       } catch (e) {
         done(e);
@@ -100,7 +100,7 @@ describe("Basic Tests", () => {
     });
   });
 
-  it("Load SOM Hello World and expect no problems", done => {
+  it("Load SOM Hello World and expect diagnostics", done => {
     const content = readFileSync(examplesPath + '/Hello.som').toString();
     client.sendNotification("textDocument/didChange", {
       textDocument: {
@@ -115,7 +115,7 @@ describe("Basic Tests", () => {
     client.addDiagnosticsHandler(function (params) {
       try {
         expect(params.uri).to.equal(examplesUri.toString() + '/Hello.som');
-        expect(params.diagnostics).to.have.lengthOf(0);
+        expect(params.diagnostics).to.have.lengthOf(2);
         done();
       } catch (e) {
         done(e);
@@ -139,7 +139,7 @@ describe("Basic Tests", () => {
       try {
         console.log(params);
         expect(params.uri).to.equal(examplesUri.toString() + '/HelloWithError.som');
-        expect(params.diagnostics).to.have.lengthOf(1);
+        expect(params.diagnostics).to.have.lengthOf(5);
         const error = params.diagnostics[0];
         expect(error.source).to.equal('Parser');
         expect(error.message).to.contain('Unexpected symbol');

@@ -20,7 +20,11 @@ jobs:
         run: |
           npm install .
 
-      - name: NPM Tests
+      - name: Server Unit Tests
+        run: |
+          (cd server && ant -e unit-test)
+
+      - name: Integration Tests
         run: |
           sudo apt-get install xvfb
           xvfb-run --auto-servernum npm test
