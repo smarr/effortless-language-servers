@@ -23,6 +23,7 @@ import bd.basic.ProgramDefinitionError;
 import som.compiler.AccessModifier;
 import som.compiler.MethodBuilder;
 import som.compiler.MixinBuilder;
+import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Parser;
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
@@ -413,18 +414,30 @@ public class NewspeakParser extends Parser {
   }
 
   @Override
-  protected String slotDecl() throws ParseError {
-    int coord = getStartIndex();
-    var slotName = super.slotDecl();
+  protected SlotDefinition slotDefinition(final MixinBuilder mxnBuilder)
+      throws ProgramDefinitionError {
+    SlotDefinition slot = super.slotDefinition(mxnBuilder);
+    if (slot == null) {
+      return null;
+    }
 
-    recordTokenSemantics(coord, slotName, SemanticTokenType.PROPERTY);
+    recordTokenSemantics(slot.getSourceSection(), SemanticTokenType.PROPERTY);
     int inOuterScope = currentMethod == null ? 0 : 1;
-    LanguageElement elem = recordSymbolDefinition(slotName,
-        new SymbolId(symbolFor(slotName)), SymbolKind.Property, getSource(coord), true,
+    LanguageElement elem = recordSymbolDefinition(slot.getName().getString(),
+        new SymbolId(slot.getName()), SymbolKind.Property, slot.getSourceSection(), true,
         inOuterScope);
-    elem.setDetail(slotName);
+    elem.setDetail(slot.getName().getString());
 
-    return slotName;
+    if (!slot.isImmutable()) {
+      SSymbol setterName = MixinBuilder.getSetterName(slot.getName());
+
+      elem = recordSymbolDefinition(setterName.getString(),
+          new SymbolId(setterName), SymbolKind.Property, slot.getSourceSection(), true,
+          inOuterScope);
+      elem.setDetail(slot.getName().getString());
+    }
+
+    return slot;
   }
 
   @Override
