@@ -45,6 +45,7 @@ function getServerOptions(asAbsolutePath: PathConverter, enableDebug:
 		asAbsolutePath('out/server/org.eclipse.xtend.lib.macro-2.24.0.jar'),
 		asAbsolutePath('out/server/org.eclipse.xtend.lib-2.24.0.jar'),
 		asAbsolutePath('out/server/org.eclipse.xtext.xbase.lib-2.24.0.jar'),
+		asAbsolutePath('out/server/antlr4-runtime-4.9.2.jar'),
 		asAbsolutePath('out/server/som-language-server.jar')];
 
 	const somnsLib = '-Dsom.langserv.somns-core-lib=' + asAbsolutePath('out/server/somns-core-lib')
