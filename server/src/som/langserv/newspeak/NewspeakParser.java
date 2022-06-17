@@ -348,6 +348,8 @@ public class NewspeakParser extends Parser {
   @Override
   protected void keywordPattern(final MethodBuilder builder) throws ParseError {
     assert currentMethod == null;
+    // TODO: the following asserts assume that we do not support object literals, I think, just
+    // copied from TruffleSOM
     assert keywordParts.size() == 0 : "We are not in any method, so, this is expected to be zero";
     assert keywordStart.size() == 0 : "We are not in any method, so, this is expected to be zero";
     assert keywordStart.size() == keywordParts.size();
@@ -553,13 +555,9 @@ public class NewspeakParser extends Parser {
 
   protected void recordTokenSemantics(final int coords, final String length,
       final SemanticTokenType tokenType) {
-    recordTokenSemantics(coords, length, tokenType, (SemanticTokenModifier[]) null);
-  }
-
-  protected void recordTokenSemantics(final int coords, final String length,
-      final SemanticTokenType tokenType, final SemanticTokenModifier... modifiers) {
     symbols.getSemanticTokens().addSemanticToken(source.getLineNumber(coords) - 1,
-        source.getColumnNumber(coords) - 1, length.length(), tokenType, modifiers);
+        source.getColumnNumber(coords) - 1, length.length(), tokenType,
+        (SemanticTokenModifier[]) null);
   }
 
   protected void recordTokenSemantics(final SourceSection source,
