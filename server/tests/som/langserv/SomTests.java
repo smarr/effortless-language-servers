@@ -18,10 +18,13 @@ import java.util.concurrent.ForkJoinTask;
 
 import org.eclipse.lsp4j.CompletionItemKind;
 import org.eclipse.lsp4j.CompletionList;
+import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SymbolInformation;
@@ -53,11 +56,31 @@ public class SomTests {
     ForkJoinTask<?> task = adapter.loadWorkspace("file:" + SomAdapter.CORE_LIB_PATH);
     task.join();
 
+    int warnings = 0;
+    int errors = 0;
+    int others = 0;
+
+    for (PublishDiagnosticsParams dp : client.diagnostics) {
+      for (Diagnostic d : dp.getDiagnostics()) {
+        if (d.getSeverity() == DiagnosticSeverity.Error) {
+          errors += 1;
+        } else if (d.getSeverity() == DiagnosticSeverity.Warning) {
+          warnings += 1;
+        } else {
+          others += 1;
+        }
+      }
+    }
+
     // there are currently two known parse errors in the core lib:
     // - Self.som, where super is assigned to
     // - Examples/Benchmarks/DeltaBlue/SortedCollection.som where we trigger "Currently #dnu
     // with super sent is not yet implemented. "
-    assertEquals(2, client.diagnostics.size());
+    assertEquals(2, errors);
+
+    // these are all linter warnings, which are benign
+    assertEquals(116, warnings);
+    assertEquals(0, others);
   }
 
   @Test
