@@ -499,7 +499,7 @@ public class DocumentStructures {
     }
   }
 
-  private String getUri() {
+  public String getUri() {
     return (remoteUri != null) ? remoteUri : normalizedUri;
   }
 

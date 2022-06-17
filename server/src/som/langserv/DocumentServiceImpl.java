@@ -105,7 +105,7 @@ public class DocumentServiceImpl implements TextDocumentService {
     }
   }
 
-  protected static void reportDiagnostics(final List<Diagnostic> diagnostics,
+  public static void reportDiagnostics(final List<Diagnostic> diagnostics,
       final String documentUri, final LanguageClient client) {
     PublishDiagnosticsParams result = new PublishDiagnosticsParams();
     result.setUri(documentUri);

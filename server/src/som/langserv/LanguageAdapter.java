@@ -43,7 +43,7 @@ import util.ArrayListIgnoreIfLastIdentical;
 
 
 public abstract class LanguageAdapter {
-  private LanguageClient client;
+  protected LanguageClient client;
 
   private final Map<String, DocumentStructures> structures;
 
@@ -165,6 +165,10 @@ public abstract class LanguageAdapter {
     }
   }
 
+  public void reportDiagnostics(final List<Diagnostic> diagnostics, final String documentUri) {
+    DocumentServiceImpl.reportDiagnostics(diagnostics, documentUri, client);
+  }
+
   public void reportError(final String msgStr) {
     MessageParams msg = new MessageParams();
     msg.setType(MessageType.Log);
@@ -184,7 +188,9 @@ public abstract class LanguageAdapter {
     List<CodeLens> codeLenses = new ArrayList<>();
     for (var lens : fileLenses) {
       var results = lens.getCodeLenses(doc);
-      codeLenses.addAll(results);
+      if (results != null) {
+        codeLenses.addAll(results);
+      }
     }
 
     return codeLenses;
