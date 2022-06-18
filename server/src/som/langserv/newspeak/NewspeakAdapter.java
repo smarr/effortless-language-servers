@@ -86,7 +86,7 @@ public class NewspeakAdapter extends LanguageAdapter {
     putStructures("internal:vmMirror.ns", vmStructures);
   }
 
-  private VM initializePolyglot() {
+  public static VM initializePolyglot() {
     String coreLib = CORE_LIB_PATH;
     if (coreLib == null) {
       throw new IllegalArgumentException(
@@ -115,9 +115,7 @@ public class NewspeakAdapter extends LanguageAdapter {
   public DocumentStructures parse(final String text, final String sourceUri)
       throws URISyntaxException {
     String path = docUriToNormalizedPath(sourceUri);
-    Source source = Source.newBuilder(SomLanguage.LANG_ID, text, path)
-                          .mimeType(SomLanguage.MIME_TYPE)
-                          .uri(new URI(sourceUri).normalize()).build();
+    Source source = createSource(text, sourceUri, path);
 
     DocumentStructures structures = new DocumentStructures(sourceUri, "file:" + path);
     NewspeakStructures newProbe = new NewspeakStructures(source, structures);
@@ -136,6 +134,14 @@ public class NewspeakAdapter extends LanguageAdapter {
       putStructures(path, structures);
     }
     return structures;
+  }
+
+  public static Source createSource(final String text, final String sourceUri,
+      final String path) throws URISyntaxException {
+    Source source = Source.newBuilder(SomLanguage.LANG_ID, text, path)
+                          .mimeType(SomLanguage.MIME_TYPE)
+                          .uri(new URI(sourceUri).normalize()).build();
+    return source;
   }
 
   private DocumentStructures toErrorDiagnostics(final Throwable e, final Range range,

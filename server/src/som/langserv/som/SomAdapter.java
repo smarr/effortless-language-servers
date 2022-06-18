@@ -65,7 +65,8 @@ public class SomAdapter extends LanguageAdapter {
     this.pool = new ForkJoinPool(1);
     this.somCompiler = new SomCompiler();
 
-    ForkJoinTask<?> task = this.pool.submit(() -> initializePolyglot());
+    ForkJoinTask<?> task =
+        this.pool.submit(() -> context = initializePolyglot(somCompiler, systemClassNames));
     task.join();
   }
 
@@ -74,7 +75,8 @@ public class SomAdapter extends LanguageAdapter {
     return ".som";
   }
 
-  private void initializePolyglot() {
+  public static Context initializePolyglot(final SourcecodeCompiler somCompiler,
+      final SSymbol[] systemClassNames) {
     if (CORE_LIB_PATH == null) {
       throw new IllegalArgumentException(
           "The " + CORE_LIB_PROP + " system property needs to be set. For instance: -D"
@@ -85,7 +87,7 @@ public class SomAdapter extends LanguageAdapter {
     Universe.setSourceCompiler(somCompiler);
     Builder builder = Universe.createContextBuilder();
     builder.arguments(SomLanguage.LANG_ID, args);
-    context = builder.build();
+    Context context = builder.build();
 
     context.eval(SomLanguage.INIT);
 
@@ -119,9 +121,11 @@ public class SomAdapter extends LanguageAdapter {
     systemClassNames[15] = Classes.blockClasses[0].getName();
 
     context.leave();
+
+    return context;
   }
 
-  private String constructClassPath(final String rootPath) {
+  private static String constructClassPath(final String rootPath) {
     List<File> allFolders = new ArrayList<>();
 
     File root = new File(rootPath);
@@ -141,7 +145,7 @@ public class SomAdapter extends LanguageAdapter {
     return builder.toString();
   }
 
-  private void findClassPathFolders(final File root, final List<File> allFolders) {
+  private static void findClassPathFolders(final File root, final List<File> allFolders) {
     for (File f : root.listFiles()) {
       if (f.isDirectory()) {
         allFolders.add(f);
@@ -213,10 +217,7 @@ public class SomAdapter extends LanguageAdapter {
   public DocumentStructures parseSync(final String text, final String sourceUri)
       throws URISyntaxException {
     String path = docUriToNormalizedPath(sourceUri);
-    Source source =
-        Source.newBuilder(SomLanguage.LANG_ID, text, path).name(path)
-              .mimeType(SomLanguage.MIME_TYPE)
-              .uri(new URI(sourceUri).normalize()).build();
+    Source source = createSource(text, sourceUri, path);
 
     SomStructures newProbe = new SomStructures(source, sourceUri, "file:" + path);
     DocumentStructures structures = newProbe.getDocumentStructures();
@@ -242,6 +243,16 @@ public class SomAdapter extends LanguageAdapter {
     }
 
     return structures;
+  }
+
+  public static Source createSource(final String text, final String sourceUri,
+      final String path)
+      throws URISyntaxException {
+    Source source =
+        Source.newBuilder(SomLanguage.LANG_ID, text, path).name(path)
+              .mimeType(SomLanguage.MIME_TYPE)
+              .uri(new URI(sourceUri).normalize()).build();
+    return source;
   }
 
   private String getStackTrace(final Throwable e) {
@@ -276,7 +287,7 @@ public class SomAdapter extends LanguageAdapter {
     return structures;
   }
 
-  private static class SomCompiler extends SourcecodeCompiler {
+  public static class SomCompiler extends SourcecodeCompiler {
 
     private boolean sourceIsForPath(final Source s, final String path) {
       if (s.getPath() != null) {
