@@ -193,4 +193,14 @@
 			<fileset dir="${som.dir}/core-lib"/>
 		</copy>
 	</target>
+    
+    <target name="print-classpath" description="Used by benchmark.sh to avoid duplicating info">
+        <echo>${toString:project.classpath}</echo>
+    </target>
+    <target name="print-som-dir" description="Used by benchmark.sh to avoid duplicating info">
+        <echo>${som.dir}</echo>
+    </target>
+    <target name="print-somns-dir" description="Used by benchmark.sh to avoid duplicating info">
+        <echo>${somns.dir}</echo>
+    </target>
 </project>
