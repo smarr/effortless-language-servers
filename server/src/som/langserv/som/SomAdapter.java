@@ -27,7 +27,6 @@ import bdt.tools.structure.StructuralProbe;
 import som.langserv.LanguageAdapter;
 import som.langserv.lint.FileLinter;
 import som.langserv.lint.LintEndsWithNewline;
-import som.langserv.lint.LintFileHasNSEnding;
 import som.langserv.lint.LintUseNeedsDefine;
 import som.langserv.lint.WorkspaceLinter;
 import som.langserv.structure.DocumentStructures;
@@ -60,7 +59,7 @@ public class SomAdapter extends LanguageAdapter {
 
   public SomAdapter() {
     super(
-        new FileLinter[] {new LintEndsWithNewline(), new LintFileHasNSEnding()},
+        new FileLinter[] {new LintEndsWithNewline()},
         new WorkspaceLinter[] {new LintUseNeedsDefine()});
     this.pool = new ForkJoinPool(1);
     this.somCompiler = new SomCompiler();
