@@ -24,6 +24,8 @@ package awfy;
  */
 public abstract class Benchmark {
 
+  public void initialize(final int problemSize) {}
+
   public abstract Object benchmark();
 
   public abstract boolean verifyResult(Object result);

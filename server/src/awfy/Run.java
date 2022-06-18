@@ -46,6 +46,7 @@ public final class Run {
     }
   }
 
+  @SuppressWarnings("deprecation")
   public void runBenchmark() {
     // Checkstyle: stop
     System.out.println("Starting " + name + " benchmark ...");
@@ -79,6 +80,7 @@ public final class Run {
   }
 
   private void doRuns(final Benchmark bench) {
+    bench.initialize(innerIterations);
     for (int i = 0; i < numIterations; i++) {
       measure(bench);
     }
