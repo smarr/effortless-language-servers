@@ -78,7 +78,7 @@ public class DocumentServiceImpl implements TextDocumentService {
   @Override
   public void didSave(final DidSaveTextDocumentParams params) {}
 
-  private void parseDocument(final String documentUri, final String text) {
+  public DocumentStructures parseDocument(final String documentUri, final String text) {
     try {
       for (LanguageAdapter adapter : adapters) {
         if (adapter.handlesUri(documentUri)) {
@@ -96,13 +96,14 @@ public class DocumentServiceImpl implements TextDocumentService {
           }
 
           reportDiagnostics(structures.getDiagnostics(), documentUri, client);
-          return;
+          return structures;
         }
       }
       assert false : "LanguageServer does not support file type: " + documentUri;
     } catch (URISyntaxException ex) {
       ex.printStackTrace(ServerLauncher.errWriter());
     }
+    return null;
   }
 
   public static void reportDiagnostics(final List<Diagnostic> diagnostics,
