@@ -120,7 +120,9 @@ public class DocumentServiceImpl implements TextDocumentService {
       result.setDiagnostics(new ArrayList<>());
     }
 
-    client.publishDiagnostics(result);
+    if (client != null) {
+      client.publishDiagnostics(result);
+    }
   }
 
   private void validateTextDocument(final String documentUri,
