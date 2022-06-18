@@ -24,6 +24,14 @@ package awfy;
  */
 public final class Harness {
 
+  public static final class IncorrectResult extends RuntimeException {
+    private static final long serialVersionUID = 5813157927637620861L;
+
+    public IncorrectResult(final String msg) {
+      super(msg);
+    }
+  }
+
   private static Run processArguments(final String[] args) {
     Run run = new Run(args[0]);
 
@@ -56,7 +64,13 @@ public final class Harness {
     }
 
     Run run = processArguments(args);
-    run.runBenchmark();
-    run.printTotal();
+
+    try {
+      run.runBenchmark();
+      run.printTotal();
+    } catch (IncorrectResult e) {
+      System.err.println(e.getMessage());
+      System.exit(1);
+    }
   }
 }

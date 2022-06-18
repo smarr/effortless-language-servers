@@ -1,5 +1,8 @@
 package awfy;
 
+import awfy.Harness.IncorrectResult;
+
+
 /* This code is based on the SOM class library.
  *
  * Copyright (c) 2001-2016 see AUTHORS.md file
@@ -69,7 +72,7 @@ public final class Run {
   private void measure(final Benchmark bench) {
     long startTime = System.nanoTime();
     if (!bench.innerBenchmarkLoop(innerIterations)) {
-      throw new RuntimeException("Benchmark failed with incorrect result");
+      throw new IncorrectResult("Benchmark failed with incorrect result");
     }
     long endTime = System.nanoTime();
     long runTime = (endTime - startTime) / 1000;
