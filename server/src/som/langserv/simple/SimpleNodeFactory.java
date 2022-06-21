@@ -56,7 +56,7 @@ public class SimpleNodeFactory extends SLNodeFactory {
     addSemanticToken(identifier, SemanticTokenType.FUNCTION);
 
     currentFunction = structures.startSymbol(identifier.getText(), SymbolKind.Function,
-        new VarId(identifier.getText()), getRange(identifier), true);
+        new VarId(identifier.getText(), null), getRange(identifier), true);
 
     paramNames = new ArrayList<>(3);
   }
@@ -112,7 +112,8 @@ public class SimpleNodeFactory extends SLNodeFactory {
   @Override
   public void addFormalParameter(final Token identifier) {
     addSemanticToken(identifier, SemanticTokenType.PARAMETER);
-    recordDefinition(identifier, new VarId(identifier.getText()), SymbolKind.Variable);
+    recordDefinition(identifier, new VarId(identifier.getText(), currentFunction),
+        SymbolKind.Variable);
     paramNames.add(identifier.getText());
   }
 
@@ -156,13 +157,25 @@ public class SimpleNodeFactory extends SLNodeFactory {
     return super.createNumericLiteral(numeric_LITERAL);
   }
 
+  private LanguageElement getCurrentFunIfItHasDefinition(final String varName) {
+    if (currentFunction.getAllChildren() != null) {
+      for (var c : currentFunction.getAllChildren()) {
+        if (c.getName().equals(varName)) {
+          return currentFunction;
+        }
+      }
+    }
+    return null;
+  }
+
   @Override
   public SLExpressionNode createRead(final SLExpressionNode assignmentName) {
     if (assignmentName instanceof SimpleString t) {
       addSemanticToken(
           t.identifier,
           SemanticTokenType.VARIABLE);
-      referenceSymbol(new VarId(t.identifier.getText()), t.identifier);
+      referenceSymbol(new VarId(t.identifier.getText(),
+          getCurrentFunIfItHasDefinition(t.identifier.getText())), t.identifier);
     } else {
       throw new RuntimeException("Not yet implemented " + assignmentName.getClass());
     }
@@ -173,7 +186,8 @@ public class SimpleNodeFactory extends SLNodeFactory {
   public SLExpressionNode createAssignment(final SLExpressionNode assignmentName,
       final SLExpressionNode result) {
     if (assignmentName instanceof SimpleString s) {
-      recordDefinition(s.identifier, new VarId(s.identifier.getText()), SymbolKind.Variable);
+      recordDefinition(s.identifier, new VarId(s.identifier.getText(), currentFunction),
+          SymbolKind.Variable);
     } else {
       throw new RuntimeException("Not yet implemented " + assignmentName.getClass());
     }
@@ -185,7 +199,7 @@ public class SimpleNodeFactory extends SLNodeFactory {
       final List<SLExpressionNode> parameters, final Token e) {
     Token name = receiver.getLastName();
     addSemanticToken(name, SemanticTokenType.FUNCTION);
-    referenceSymbol(new VarId(name.getText()), name);
+    referenceSymbol(new VarId(name.getText(), currentFunction), name);
 
     return super.createCall(receiver, parameters, e);
   }
@@ -198,7 +212,10 @@ public class SimpleNodeFactory extends SLNodeFactory {
     } else if (nestedAssignmentName instanceof SLRead r) {
       SLExpressionNode name = r.assignmentName;
       if (name instanceof SimpleString s) {
-        referenceSymbol(new VarId(s.identifier.getText()), s.identifier).markAsRead();
+        referenceSymbol(
+            new VarId(s.identifier.getText(),
+                getCurrentFunIfItHasDefinition(s.identifier.getText())),
+            s.identifier).markAsRead();
       } else {
         throw new RuntimeException("Not yet implemented for " + name.getClass());
       }

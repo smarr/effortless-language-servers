@@ -2,20 +2,23 @@ package som.langserv.simple;
 
 import java.util.Objects;
 
+import som.langserv.structure.LanguageElement;
 import som.langserv.structure.LanguageElementId;
 
 
 public class VarId extends LanguageElementId {
 
-  private final String name;
+  private final String          name;
+  private final LanguageElement containingFn;
 
-  public VarId(final String name) {
+  public VarId(final String name, final LanguageElement fn) {
     this.name = name;
+    this.containingFn = fn;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name);
+    return Objects.hash(name, containingFn);
   }
 
   @Override
@@ -30,7 +33,10 @@ public class VarId extends LanguageElementId {
       return false;
     }
     VarId other = (VarId) obj;
-    return Objects.equals(name, other.name);
+    if (!name.equals(other.name)) {
+      return false;
+    }
+    return containingFn == other.containingFn;
   }
 
   @Override
