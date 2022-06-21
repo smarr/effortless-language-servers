@@ -14,6 +14,7 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SignatureInformation;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
+import org.eclipse.xtext.xbase.lib.Pure;
 
 
 public final class LanguageElement extends DocumentSymbol implements WithRange {
@@ -31,6 +32,8 @@ public final class LanguageElement extends DocumentSymbol implements WithRange {
    * requests.
    */
   private transient final boolean listAsSymbol;
+
+  private transient int stableHash;
 
   public LanguageElement(final String name, final SymbolKind kind,
       final LanguageElementId id, final Range identifierRange, final boolean listAsSymbol) {
@@ -216,4 +219,53 @@ public final class LanguageElement extends DocumentSymbol implements WithRange {
     }
   }
 
+  @Override
+  @Pure
+  public int hashCode() {
+    if (stableHash != 0) {
+      return stableHash;
+    }
+
+    final int prime = 31;
+    int result = 1;
+
+    boolean incomplete = false;
+
+    if (getName() == null) {
+      incomplete = true;
+      result = prime * result;
+    } else {
+      result = prime * result + getName().hashCode();
+    }
+
+    result = prime * result + ((getKind() == null) ? 0 : getKind().hashCode());
+
+    if (getRange() == null) {
+      incomplete = true;
+      result = prime * result;
+    } else {
+      result = prime * result + getRange().hashCode();
+    }
+
+    if (getSelectionRange() == null) {
+      incomplete = true;
+      result = prime * result;
+    } else {
+      result = prime * result + getSelectionRange().hashCode();
+    }
+
+    result = prime * result + ((getDetail() == null) ? 0 : getDetail().hashCode());
+    result = prime * result + ((getTags() == null) ? 0 : getTags().hashCode());
+
+    if (incomplete) {
+      // the idea here is that we have a stable, predictable hash if the element is complete
+      // but are happy with just a stable hash if it is incomplete,
+      // when we requested the hash for the first time
+      result = prime * result + System.identityHashCode(this);
+    }
+
+    stableHash = prime * result + ((getChildren() == null) ? 0 : getChildren().hashCode());
+
+    return stableHash;
+  }
 }
