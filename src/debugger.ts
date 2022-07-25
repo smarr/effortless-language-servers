@@ -150,7 +150,7 @@ class SomDebugSession extends DebugSession {
 
   private connectDebugger(response: DebugProtocol.Response, ports: {msg: number, trace: number}): void {
     this.socket = new WebSocket('ws://localhost:' + ports.msg);
-    new WebSocket('ws://localhost:' + ":" + ports.trace);
+    new WebSocket('ws://localhost:' + ports.trace);
 
     this.socket.on('open', () => {
       this.sendInitialBreakpoints();
