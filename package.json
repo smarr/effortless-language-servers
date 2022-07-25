@@ -208,6 +208,6 @@
 		"vscode-languageclient": "7.0.0",
 		"@vscode/debugprotocol": "1.55.1",
 		"@vscode/debugadapter": "1.55.1",
-		"ws": "8.5.0"
+		"ws": "8.8.1"
 	}
 }
