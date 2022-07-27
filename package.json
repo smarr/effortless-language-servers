@@ -213,6 +213,10 @@
 		},
 		"commands": [
 			{
+				"command": "updateFile",
+				"title": "Update Class"
+			},
+			{
 				"command": "extension.effortless-language-servers.debugEditorContents",
 				"title": "Debug File",
 				"category": "SOMns Debug",

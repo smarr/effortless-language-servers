@@ -12,7 +12,9 @@ import { BreakpointData, Source as WDSource, Respond,
   StackTraceResponse, StackTraceRequest, ScopesRequest, ScopesResponse,
   StepMessage, VariablesRequest, VariablesResponse,
   createLineBreakpointData,
-  InitializationResponse} from './messages';
+  InitializationResponse,
+  UpdateClass
+} from './messages';
 import { determinePorts } from "./launch-connector";
 
 export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
@@ -462,5 +464,24 @@ export class SomDebugSession extends DebugSession {
   protected pauseRequest(response: DebugProtocol.PauseResponse,
       args: DebugProtocol.PauseArguments): void {
     this.sendStep("stop", response, args);
+  }
+
+  protected customRequest(command: string, response: DebugProtocol.Response, args: any): void {
+		switch (command) {
+			case 'updateClassRequest':
+				this.updateClassRequest(args);
+				break;
+			default:
+				super.customRequest(command, response, args);
+				break;
+		}
+	}
+
+  protected updateClassRequest(args: String): void {
+    const message: UpdateClass = {
+      type: "UpdateClass",
+      class: args
+    };
+    this.send(message);
   }
 }

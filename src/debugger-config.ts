@@ -96,4 +96,17 @@ export function activateDebuggerFeatures(context: ExtensionContext) {
 	const debugAdapterFactory = debug.registerDebugAdapterDescriptorFactory('SOMns', adapterFactory);
 
   context.subscriptions.push(configProvider, runEditor, debugEditor, debugAdapterFactory);
+
+	defineCommands(context);
+}
+
+function defineCommands(ctx: ExtensionContext) : void {
+	const updateFileHandler = () => {
+		debug.activeDebugSession.customRequest('updateClassRequest','{$file}');
+	};
+	registerCommand('updateFile', updateFileHandler, ctx);
+}
+
+function registerCommand(command: string, commandHandler: (any) => any, ctx: ExtensionContext) {
+	ctx.subscriptions.push(commands.registerCommand(command, commandHandler));
 }
