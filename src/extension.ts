@@ -183,13 +183,17 @@ export function deactivate(): Thenable<void> | undefined {
 }
 
 export function defineCommands(ctx: ExtensionContext) : void {
+	
 	const updateFileHandler = () => {
-		debug.activeDebugSession.customRequest('updateClassRequest','{$file}');
+		const file : String = window.activeTextEditor.document.uri.toString(true);
+		debug.activeDebugSession.customRequest('updateClassRequest', file);
 	  };
+
 	registerCommand('updateFile',updateFileHandler,ctx);
 }
 
 function registerCommand(command: string, commandHandler : (any) => any, ctx : ExtensionContext) {
+
 	ctx.subscriptions.push(commands.registerCommand(command, commandHandler));
   }
 
