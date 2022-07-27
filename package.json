@@ -181,7 +181,14 @@
 					}
 				]
 			}
-		]
+		],
+
+		"commands": [
+			{
+			  "command": "updateFile",
+			  "title": "Update Class"
+			}
+		  ]
 	},
 	"scripts": {
 		"compile:server": "cd server && ant -e deploy",

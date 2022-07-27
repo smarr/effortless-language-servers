@@ -1,10 +1,12 @@
 'use strict';
 
+import { DebugSession } from '@vscode/debugadapter';
 import { ChildProcess, spawn } from 'child_process';
 import { Socket } from 'net';
 
-import { workspace, ExtensionContext, window, debug, DebugConfigurationProvider, WorkspaceFolder, DebugConfiguration, CancellationToken, ProviderResult } from 'vscode';
+import { workspace, ExtensionContext, window, debug, DebugConfigurationProvider, WorkspaceFolder, DebugConfiguration, CancellationToken, ProviderResult, commands } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, StreamInfo } from 'vscode-languageclient/node';
+
 
 const LSPort = 8123;  // TODO: make configurable
 const EnableExtensionDebugging : boolean = <boolean> workspace.getConfiguration('somns').get('debugMode');
@@ -159,7 +161,10 @@ export function activate(context: ExtensionContext) {
 	}
 
 	// Registering the configuration provider for starting opened file
-	debug.registerDebugConfigurationProvider('SOMns', new SOMnsConfigurationProvider)
+	debug.registerDebugConfigurationProvider('SOMns', new SOMnsConfigurationProvider);
+
+	// Adding commands
+	defineCommands(context);
 
 	// Create the language client and start the client.
 	client = new LanguageClient('SOMns Language Server', createLSPServer, CLIENT_OPTION);
@@ -176,6 +181,17 @@ export function deactivate(): Thenable<void> | undefined {
 	}
 	return client.stop();
 }
+
+export function defineCommands(ctx: ExtensionContext) : void {
+	const updateFileHandler = () => {
+		debug.activeDebugSession.customRequest('updateClassRequest','{$file}');
+	  };
+	registerCommand('updateFile',updateFileHandler,ctx);
+}
+
+function registerCommand(command: string, commandHandler : (any) => any, ctx : ExtensionContext) {
+	ctx.subscriptions.push(commands.registerCommand(command, commandHandler));
+  }
 
 /**
  * This SOMnsConfigurationProvider is a dynamic provider that can change the debug configuration parameters
@@ -195,3 +211,4 @@ class SOMnsConfigurationProvider implements DebugConfigurationProvider {
 		return config;
 	}
 }
+
