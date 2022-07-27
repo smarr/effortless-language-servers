@@ -6,7 +6,6 @@ import { Socket } from 'net';
 import { workspace, ExtensionContext, window, debug, DebugConfigurationProvider, WorkspaceFolder, DebugConfiguration, CancellationToken, ProviderResult } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, StreamInfo } from 'vscode-languageclient/node';
 
-
 const LSPort = 8123;  // TODO: make configurable
 const EnableExtensionDebugging : boolean = <boolean> workspace.getConfiguration('somns').get('debugMode');
 
