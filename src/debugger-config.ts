@@ -102,7 +102,8 @@ export function activateDebuggerFeatures(context: ExtensionContext) {
 
 function defineCommands(ctx: ExtensionContext) : void {
 	const updateFileHandler = () => {
-		debug.activeDebugSession.customRequest('updateClassRequest','{$file}');
+		const file = window.activeTextEditor.document.uri.toString(true);
+		debug.activeDebugSession.customRequest('updateClassRequest', file);
 	};
 	registerCommand('updateFile', updateFileHandler, ctx);
 }
