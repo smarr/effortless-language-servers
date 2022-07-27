@@ -3,7 +3,7 @@
 import { ChildProcess, spawn } from 'child_process';
 import { Socket } from 'net';
 
-import { workspace, ExtensionContext, window } from 'vscode';
+import { workspace, ExtensionContext, window, debug, DebugConfigurationProvider, WorkspaceFolder, DebugConfiguration, CancellationToken, ProviderResult } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, StreamInfo } from 'vscode-languageclient/node';
 
 const LSPort = 8123;  // TODO: make configurable
@@ -158,7 +158,8 @@ export function activate(context: ExtensionContext) {
 		});
 	}
 
-
+	// Registering the configuration provider for starting opened file
+	debug.registerDebugConfigurationProvider('SOMns', new SOMnsConfigurationProvider)
 
 	// Create the language client and start the client.
 	client = new LanguageClient('SOMns Language Server', createLSPServer, CLIENT_OPTION);
@@ -174,4 +175,23 @@ export function deactivate(): Thenable<void> | undefined {
 		return undefined;
 	}
 	return client.stop();
+}
+
+/**
+ * This SOMnsConfigurationProvider is a dynamic provider that can change the debug configuration parameters
+ */
+class SOMnsConfigurationProvider implements DebugConfigurationProvider {
+
+	/** Resolve the debug configuration to debug currently selected file */
+	resolveDebugConfiguration(folder: WorkspaceFolder | undefined, config: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
+
+		// retrieve the active file, if it is a SOMns file then substitute the program variable with the file path
+		const editor = window.activeTextEditor;
+		if (editor && editor.document.languageId === 'SOMns') {
+			config.program = '${file}';
+			config.stopOnEntry = true;
+		}
+
+		return config;
+	}
 }
