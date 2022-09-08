@@ -270,7 +270,10 @@ public class DocumentStructures {
   }
 
   private static Hover createHover(final LanguageElement e) {
-    assert e.getDetail() != null;
+    if (e.getDetail() == null) {
+      return null;
+    }
+
     Hover hover = new Hover();
     hover.setRange(e.getSelectionRange());
     MarkupContent content = new MarkupContent("plaintext", e.getDetail());
