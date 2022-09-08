@@ -1,16 +1,37 @@
-# SOMns
+# Effortless Language Servers
 
-This is a VS code extension for the [SOMns][SOMns] research language.
-The extension provides support for:
+The goal of the *Effortless Language Servers* project is to
+enable the creation of language servers for dynamic languages
+based on a share language-agnostic infrastructure.
+
+Building a language server with standard features should not take
+more than a few hundred lines of code.
+
+Currently, we support the following features:
 
  - semantic highlighting (Som, Newspeak, Simple Language)
- - syntax highlighting
- - parse errors
- - code navigation
+ - file and workspace symbols
+ - goto definition
  - code completion
+ - references and highlights
+ - signature help
+ - hover information
+ - parse errors
  - basic linting
- - CodeLens for running minitests
- - and debugging of SOMns programs
+ - CodeLens for running unit tests
+
+## Supported Languages and IDEs
+
+We are building on top of the [Language Server Protocol](https://github.com/Microsoft/language-server-protocol),
+but provide currently only a VS code extension.
+
+The following languages are supported:
+
+ - [SOM], the Simple Object Machine, a language for research and teaching
+ - [SOMns], a Newspeak for concurrency research language
+ - [SimpleLanguage], a language to document Oracle's Truffle framework
+
+Additionally, we also provide support for the [Debug Adapter Protocol](https://microsoft.github.io/debug-adapter-protocol/) for SOMns programs.
 
 #### Screenshot of SOMns Semantic Highlighting
 
@@ -38,21 +59,16 @@ npm run compile
 
 When working on the extension, it is better to not install it via the
 Marketplace, but link the code repo directly into the VS Code extension
-directory. Please replace `$pathToCheckout` in the following with the actual
+directory. Please replace `$pathToCheckout` in the following example with the actual
 path to your checkout:
 
 ```bash
 cd ~/.vscode/extensions
-ln -s /$pathToCheckout/SOMns-vscode SOMns-vscode
+ln -s /$pathToCheckout/effortless-language-servers effortless-language-servers
 ```
 
-This extension is based on the [Language Server
-Protocol](https://github.com/Microsoft/language-server-protocol) to connect to
-a SOMns language server, which provides the IDE capabilities.
-
-Once the setup is completed with the instructions above, you can work on it. To
-for instance debug it, open the main folder in VS code, for instance with
-`code .`. Now, you can run the extension from the debug menu.
+To debug the extension, open the main folder in VS code and select
+"Launch Extension" in the debug menu.
 
 Because of current restrictions in VS Code, the same project cannot be opened
 twice, and it is not possible to debug the debugger and the language server at
@@ -105,3 +121,5 @@ instance next to the `"program"` setting.
 
 
 [SOMns]: https://github.com/smarr/SOMns
+[SOM]: https://som-st.github.io
+[SimpleLanguage]: https://github.com/graalvm/simplelanguage
