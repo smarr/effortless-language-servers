@@ -39,7 +39,7 @@ import som.langserv.structure.LanguageElement;
 import som.langserv.structure.Pair;
 import som.langserv.structure.ParseContextKind;
 import som.langserv.structure.SemanticTokens;
-import util.ArrayListIgnoreIfLastIdentical;
+import util.ArrayListSet;
 
 
 public abstract class LanguageAdapter {
@@ -81,6 +81,18 @@ public abstract class LanguageAdapter {
     synchronized (structures) {
       structures.put(normalizedPath, docStructures);
     }
+  }
+
+  protected DocumentStructures updateDiagnostics(final Diagnostic d,
+      final DocumentStructures structures) {
+    DocumentStructures old = getStructures(structures.getUri());
+
+    DocumentStructures result = (old == null) ? structures : old;
+    result.resetDiagnosticsAndAdd(d, old == null);
+    if (old == null) {
+      putStructures(structures.getNormalizedUri(), structures);
+    }
+    return result;
   }
 
   public abstract String getFileEnding();
@@ -206,23 +218,39 @@ public abstract class LanguageAdapter {
 
   public final List<LanguageElement> documentSymbol(final String documentUri) {
     DocumentStructures doc = getStructures(documentUri);
+    if (doc == null) {
+      return null;
+    }
+
     return doc.getRootSymbols();
   }
 
   public final Hover hover(final String uri, final Position position) {
     DocumentStructures doc = getStructures(uri);
+    if (doc == null) {
+      return null;
+    }
+
     return doc.getHover(position);
   }
 
   public final SignatureHelp signatureHelp(final String uri, final Position position,
       final SignatureHelpContext context) {
     DocumentStructures doc = getStructures(uri);
+    if (doc == null) {
+      return null;
+    }
+
     return doc.getSignatureHelp(position, context);
   }
 
   public final List<? extends LocationLink> getDefinitions(final String uri,
       final Position pos) {
     DocumentStructures doc = getStructures(uri);
+    if (doc == null) {
+      return null;
+    }
+
     var element = doc.getElement(pos);
     if (element == null) {
       return null;
@@ -246,6 +274,10 @@ public abstract class LanguageAdapter {
   public final List<DocumentHighlight> getHighlight(final String uri,
       final Position position) {
     DocumentStructures doc = getStructures(uri);
+    if (doc == null) {
+      return null;
+    }
+
     return doc.getHighlight(position);
   }
 
@@ -262,7 +294,7 @@ public abstract class LanguageAdapter {
       return null;
     }
 
-    List<Location> result = new ArrayListIgnoreIfLastIdentical<>();
+    List<Location> result = new ArrayListSet<>();
 
     for (DocumentStructures d : getDocuments()) {
       if (includeDeclaration) {
@@ -277,6 +309,10 @@ public abstract class LanguageAdapter {
 
   public final CompletionList getCompletions(final String uri, final Position position) {
     DocumentStructures doc = getStructures(uri);
+    if (doc == null) {
+      return null;
+    }
+
     Pair<ParseContextKind, String> element = doc.getPossiblyIncompleteElement(position);
 
     if (element == null) {
@@ -286,7 +322,7 @@ public abstract class LanguageAdapter {
     CompletionList completion = new CompletionList();
     completion.setIsIncomplete(false);
 
-    List<CompletionItem> items = new ArrayListIgnoreIfLastIdentical<>();
+    List<CompletionItem> items = new ArrayListSet<>();
     completion.setItems(items);
 
     doc.find(element.v2, element.v1, position, items);
@@ -303,6 +339,10 @@ public abstract class LanguageAdapter {
 
   public final List<Integer> getSemanticTokensFull(final String uri) {
     DocumentStructures doc = getStructures(uri);
+    if (doc == null) {
+      return null;
+    }
+
     List<int[]> tokens = doc.getSemanticTokens().getSemanticTokens();
 
     Diagnostic error = doc.getFirstErrorOrNull();

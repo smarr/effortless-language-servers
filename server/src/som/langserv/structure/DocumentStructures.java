@@ -23,7 +23,7 @@ import org.eclipse.lsp4j.SignatureInformation;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
 
-import util.ArrayListIgnoreIfLastIdentical;
+import util.ArrayListSet;
 
 
 public class DocumentStructures {
@@ -87,6 +87,37 @@ public class DocumentStructures {
   public void addDiagnostic(final Diagnostic diag) {
     if (diagnostics == null) {
       diagnostics = new ArrayList<>(1);
+    }
+
+    diagnostics.add(diag);
+  }
+
+  public void resetDiagnosticsAndAdd(final Diagnostic diag, final boolean clearAll) {
+    if (diagnostics == null) {
+      diagnostics = new ArrayList<>(1);
+    } else {
+      diagnostics.clear();
+    }
+
+    if (clearAll) {
+      symbolsScope.clear();
+      rootSymbols.clear();
+
+      if (symbols != null) {
+        symbols.clear();
+      }
+
+      if (allReferences != null) {
+        allReferences.clear();
+      }
+
+      if (afterNavigationSymbols != null) {
+        afterNavigationSymbols.clear();
+      }
+
+      if (rootReference != null) {
+        rootReference.clear();
+      }
     }
 
     diagnostics.add(diag);
@@ -260,7 +291,10 @@ public class DocumentStructures {
   }
 
   private static Hover createHover(final LanguageElement e) {
-    assert e.getDetail() != null;
+    if (e.getDetail() == null) {
+      return null;
+    }
+
     Hover hover = new Hover();
     hover.setRange(e.getSelectionRange());
     MarkupContent content = new MarkupContent("plaintext", e.getDetail());
@@ -337,7 +371,7 @@ public class DocumentStructures {
     }
 
     if (symbol instanceof LanguageElement e) {
-      List<DocumentHighlight> result = new ArrayListIgnoreIfLastIdentical<>();
+      List<DocumentHighlight> result = new ArrayListSet<>();
       result.add(e.createHighlight());
       addAllReferences(e.getId(), result);
       return result;
@@ -347,7 +381,7 @@ public class DocumentStructures {
         return null;
       }
 
-      var result = new ArrayListIgnoreIfLastIdentical<DocumentHighlight>(similar.size());
+      var result = new ArrayListSet<DocumentHighlight>(similar.size());
 
       for (LanguageElement e : similar) {
         result.add(e.createHighlight());
@@ -501,6 +535,10 @@ public class DocumentStructures {
 
   public String getUri() {
     return (remoteUri != null) ? remoteUri : normalizedUri;
+  }
+
+  public String getNormalizedUri() {
+    return normalizedUri;
   }
 
   public Pair<LanguageElementId, Range> getElement(final Position pos) {

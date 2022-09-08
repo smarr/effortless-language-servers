@@ -29,7 +29,7 @@ import org.junit.Test;
 
 import som.langserv.newspeak.NewspeakAdapter;
 import som.langserv.structure.SemanticTokenType;
-import util.ArrayListIgnoreIfLastIdentical;
+import util.ArrayListSet;
 
 
 public class NewspeakTests {
@@ -401,12 +401,12 @@ public class NewspeakTests {
         + ")\n", path2);
     assertNull(structures.getDiagnostics());
 
-    List<SymbolInformation> results = new ArrayListIgnoreIfLastIdentical<>();
+    List<SymbolInformation> results = new ArrayListSet<>();
     adapter.workspaceSymbol(results, "");
 
     assertEquals(16, results.size());
 
-    results = new ArrayListIgnoreIfLastIdentical<>();
+    results = new ArrayListSet<>();
     adapter.workspaceSymbol(results, "run");
 
     assertEquals(4, results.size());

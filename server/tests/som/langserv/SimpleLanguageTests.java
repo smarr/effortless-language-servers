@@ -27,7 +27,7 @@ import org.junit.Test;
 import simple.SimpleLanguageParser;
 import som.langserv.simple.SimpleAdapter;
 import som.langserv.structure.SemanticTokenType;
-import util.ArrayListIgnoreIfLastIdentical;
+import util.ArrayListSet;
 
 
 public class SimpleLanguageTests {
@@ -320,12 +320,12 @@ public class SimpleLanguageTests {
         path);
     assertNull(structures.getDiagnostics());
 
-    List<SymbolInformation> results = new ArrayListIgnoreIfLastIdentical<>();
+    List<SymbolInformation> results = new ArrayListSet<>();
     adapter.workspaceSymbol(results, "");
 
     assertEquals(11, results.size());
 
-    results = new ArrayListIgnoreIfLastIdentical<>();
+    results = new ArrayListSet<>();
     adapter.workspaceSymbol(results, "l");
 
     assertEquals(2, results.size());

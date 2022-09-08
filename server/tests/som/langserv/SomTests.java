@@ -33,7 +33,7 @@ import org.junit.Test;
 
 import som.langserv.som.SomAdapter;
 import som.langserv.structure.SemanticTokenType;
-import util.ArrayListIgnoreIfLastIdentical;
+import util.ArrayListSet;
 
 
 public class SomTests {
@@ -79,7 +79,7 @@ public class SomTests {
     assertEquals(2, errors);
 
     // these are all linter warnings, which are benign
-    assertEquals(116, warnings);
+    assertEquals(107, warnings);
     assertEquals(0, others);
   }
 
@@ -118,7 +118,7 @@ public class SomTests {
         + "| f1 field2\n"
         + "  anotherField |\n"
         + "----\n"
-        + "| abcd \n"
+        + "| abcd | \n"
         + ")\n", path);
 
     List<int[]> tokens =
@@ -422,12 +422,12 @@ public class SomTests {
         path);
     assertNull(structures.getDiagnostics());
 
-    List<SymbolInformation> results = new ArrayListIgnoreIfLastIdentical<>();
+    List<SymbolInformation> results = new ArrayListSet<>();
     adapter.workspaceSymbol(results, "");
 
     assertEquals(5, results.size());
 
-    results = new ArrayListIgnoreIfLastIdentical<>();
+    results = new ArrayListSet<>();
     adapter.workspaceSymbol(results, "m");
 
     assertEquals(2, results.size());
