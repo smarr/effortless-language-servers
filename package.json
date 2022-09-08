@@ -1,10 +1,10 @@
 {
-	"name": "SOMns",
-	"description": "Support for the SOMns Research Language",
-	"readme": "This plugin provides support for syntax highlighting, parse errors, code navigation, and debugging of SOMns programs.",
+	"name": "effortless-language-servers",
+	"description": "IDE Support for SOM, SOMns, and SimpleLanguage",
+	"readme": "This plugin provides support for many common IDE features.",
 	"author": "Stefan Marr",
 	"license": "MIT",
-	"version": "0.6.1",
+	"version": "0.8.0",
 	"publisher": "MetaConcProject",
 	"engines": {
 		"vscode": "^1.43.0"
