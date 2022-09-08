@@ -139,7 +139,7 @@ describe("Basic Tests", () => {
       try {
         console.log(params);
         expect(params.uri).to.equal(examplesUri.toString() + '/HelloWithError.som');
-        expect(params.diagnostics).to.have.lengthOf(5);
+        expect(params.diagnostics).to.have.lengthOf(3);
         const error = params.diagnostics[0];
         expect(error.source).to.equal('Parser');
         expect(error.message).to.contain('Unexpected symbol');
