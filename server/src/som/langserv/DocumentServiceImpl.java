@@ -140,7 +140,7 @@ public class DocumentServiceImpl implements TextDocumentService {
 
     List<Integer> tokens = adapter.getSemanticTokensFull(params.getTextDocument().getUri());
     if (tokens == null) {
-      return null;
+      return CompletableFuture.completedFuture(null);
     }
     return CompletableFuture.completedFuture(new SemanticTokens(tokens));
   }
@@ -192,12 +192,16 @@ public class DocumentServiceImpl implements TextDocumentService {
     if (adapter != null) {
       var result = adapter.documentSymbol(params.getTextDocument().getUri());
 
-      ArrayList<Either<SymbolInformation, DocumentSymbol>> eitherList =
-          new ArrayList<>(result.size());
-      for (DocumentSymbol s : result) {
-        eitherList.add(Either.forRight(s));
+      if (result != null) {
+        ArrayList<Either<SymbolInformation, DocumentSymbol>> eitherList =
+            new ArrayList<>(result.size());
+
+        for (DocumentSymbol s : result) {
+          eitherList.add(Either.forRight(s));
+        }
+
+        return CompletableFuture.completedFuture(eitherList);
       }
-      return CompletableFuture.completedFuture(eitherList);
     }
 
     return CompletableFuture.completedFuture(null);

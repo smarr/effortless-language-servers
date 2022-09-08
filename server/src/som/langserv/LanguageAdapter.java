@@ -206,23 +206,39 @@ public abstract class LanguageAdapter {
 
   public final List<LanguageElement> documentSymbol(final String documentUri) {
     DocumentStructures doc = getStructures(documentUri);
+    if (doc == null) {
+      return null;
+    }
+
     return doc.getRootSymbols();
   }
 
   public final Hover hover(final String uri, final Position position) {
     DocumentStructures doc = getStructures(uri);
+    if (doc == null) {
+      return null;
+    }
+
     return doc.getHover(position);
   }
 
   public final SignatureHelp signatureHelp(final String uri, final Position position,
       final SignatureHelpContext context) {
     DocumentStructures doc = getStructures(uri);
+    if (doc == null) {
+      return null;
+    }
+
     return doc.getSignatureHelp(position, context);
   }
 
   public final List<? extends LocationLink> getDefinitions(final String uri,
       final Position pos) {
     DocumentStructures doc = getStructures(uri);
+    if (doc == null) {
+      return null;
+    }
+
     var element = doc.getElement(pos);
     if (element == null) {
       return null;
@@ -246,6 +262,10 @@ public abstract class LanguageAdapter {
   public final List<DocumentHighlight> getHighlight(final String uri,
       final Position position) {
     DocumentStructures doc = getStructures(uri);
+    if (doc == null) {
+      return null;
+    }
+
     return doc.getHighlight(position);
   }
 
@@ -277,6 +297,10 @@ public abstract class LanguageAdapter {
 
   public final CompletionList getCompletions(final String uri, final Position position) {
     DocumentStructures doc = getStructures(uri);
+    if (doc == null) {
+      return null;
+    }
+
     Pair<ParseContextKind, String> element = doc.getPossiblyIncompleteElement(position);
 
     if (element == null) {
@@ -303,6 +327,10 @@ public abstract class LanguageAdapter {
 
   public final List<Integer> getSemanticTokensFull(final String uri) {
     DocumentStructures doc = getStructures(uri);
+    if (doc == null) {
+      return null;
+    }
+
     List<int[]> tokens = doc.getSemanticTokens().getSemanticTokens();
 
     Diagnostic error = doc.getFirstErrorOrNull();
