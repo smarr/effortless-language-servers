@@ -23,7 +23,7 @@ import org.eclipse.lsp4j.SignatureInformation;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
 
-import util.ArrayListIgnoreIfLastIdentical;
+import util.ArrayListSet;
 
 
 public class DocumentStructures {
@@ -350,7 +350,7 @@ public class DocumentStructures {
     }
 
     if (symbol instanceof LanguageElement e) {
-      List<DocumentHighlight> result = new ArrayListIgnoreIfLastIdentical<>();
+      List<DocumentHighlight> result = new ArrayListSet<>();
       result.add(e.createHighlight());
       addAllReferences(e.getId(), result);
       return result;
@@ -360,7 +360,7 @@ public class DocumentStructures {
         return null;
       }
 
-      var result = new ArrayListIgnoreIfLastIdentical<DocumentHighlight>(similar.size());
+      var result = new ArrayListSet<DocumentHighlight>(similar.size());
 
       for (LanguageElement e : similar) {
         result.add(e.createHighlight());

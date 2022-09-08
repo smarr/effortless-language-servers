@@ -39,7 +39,7 @@ import som.langserv.structure.LanguageElement;
 import som.langserv.structure.Pair;
 import som.langserv.structure.ParseContextKind;
 import som.langserv.structure.SemanticTokens;
-import util.ArrayListIgnoreIfLastIdentical;
+import util.ArrayListSet;
 
 
 public abstract class LanguageAdapter {
@@ -282,7 +282,7 @@ public abstract class LanguageAdapter {
       return null;
     }
 
-    List<Location> result = new ArrayListIgnoreIfLastIdentical<>();
+    List<Location> result = new ArrayListSet<>();
 
     for (DocumentStructures d : getDocuments()) {
       if (includeDeclaration) {
@@ -310,7 +310,7 @@ public abstract class LanguageAdapter {
     CompletionList completion = new CompletionList();
     completion.setIsIncomplete(false);
 
-    List<CompletionItem> items = new ArrayListIgnoreIfLastIdentical<>();
+    List<CompletionItem> items = new ArrayListSet<>();
     completion.setItems(items);
 
     doc.find(element.v2, element.v1, position, items);
