@@ -58,6 +58,10 @@ public class Minitest implements FileLens {
 
   private static void checkForTestContextAndAddLenses(final List<CodeLens> results,
       final LanguageElement elem, final String documentUri) {
+    if (elem.getChildren() == null) {
+      return;
+    }
+
     // apply recursive to all classes
     for (var c : elem.getChildren()) {
       if (c.getKind() == SymbolKind.Class && !c.getName().equals(CLASS)) {
