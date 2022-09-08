@@ -140,13 +140,8 @@ public class NewspeakAdapter extends LanguageAdapter {
 
   private DocumentStructures toErrorDiagnostics(final Throwable e, final Range range,
       final DocumentStructures structures) {
-    DocumentStructures old = getStructures(structures.getUri());
-
-    DocumentStructures result = old == null ? structures : old;
-
     Diagnostic d = new Diagnostic(range, e.getMessage(), DiagnosticSeverity.Error, "Parser");
-    result.resetDiagnosticsAndAdd(d);
-    return result;
+    return updateDiagnostics(d, structures);
   }
 
   private static final class SomCompiler extends SourcecodeCompiler {

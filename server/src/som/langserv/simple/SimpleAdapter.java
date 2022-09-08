@@ -80,15 +80,6 @@ public class SimpleAdapter extends LanguageAdapter {
     return updateDiagnostics(d, structures);
   }
 
-  private DocumentStructures updateDiagnostics(final Diagnostic d,
-      final DocumentStructures structures) {
-    DocumentStructures old = getStructures(structures.getUri());
-
-    DocumentStructures result = (old == null) ? structures : old;
-    result.resetDiagnosticsAndAdd(d);
-    return result;
-  }
-
   public void parse(final String source, final DocumentStructures structures) {
     SimpleLanguageLexer lexer =
         new SimpleLanguageLexer(CharStreams.fromString(source));

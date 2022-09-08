@@ -92,11 +92,32 @@ public class DocumentStructures {
     diagnostics.add(diag);
   }
 
-  public void resetDiagnosticsAndAdd(final Diagnostic diag) {
+  public void resetDiagnosticsAndAdd(final Diagnostic diag, final boolean clearAll) {
     if (diagnostics == null) {
       diagnostics = new ArrayList<>(1);
     } else {
       diagnostics.clear();
+    }
+
+    if (clearAll) {
+      symbolsScope.clear();
+      rootSymbols.clear();
+
+      if (symbols != null) {
+        symbols.clear();
+      }
+
+      if (allReferences != null) {
+        allReferences.clear();
+      }
+
+      if (afterNavigationSymbols != null) {
+        afterNavigationSymbols.clear();
+      }
+
+      if (rootReference != null) {
+        rootReference.clear();
+      }
     }
 
     diagnostics.add(diag);
@@ -514,6 +535,10 @@ public class DocumentStructures {
 
   public String getUri() {
     return (remoteUri != null) ? remoteUri : normalizedUri;
+  }
+
+  public String getNormalizedUri() {
+    return normalizedUri;
   }
 
   public Pair<LanguageElementId, Range> getElement(final Position pos) {

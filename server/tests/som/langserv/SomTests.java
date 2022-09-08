@@ -79,7 +79,7 @@ public class SomTests {
     assertEquals(2, errors);
 
     // these are all linter warnings, which are benign
-    assertEquals(116, warnings);
+    assertEquals(107, warnings);
     assertEquals(0, others);
   }
 

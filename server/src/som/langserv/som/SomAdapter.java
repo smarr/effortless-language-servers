@@ -247,15 +247,6 @@ public class SomAdapter extends LanguageAdapter {
     return sw.toString();
   }
 
-  private DocumentStructures updateDiagnostics(final Diagnostic d,
-      final DocumentStructures structures) {
-    DocumentStructures old = getStructures(structures.getUri());
-
-    DocumentStructures result = (old == null) ? structures : old;
-    result.resetDiagnosticsAndAdd(d);
-    return result;
-  }
-
   private DocumentStructures toDiagnostics(final ParseError e,
       final DocumentStructures structures) {
     Diagnostic d = new Diagnostic();

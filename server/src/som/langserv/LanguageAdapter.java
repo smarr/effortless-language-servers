@@ -83,6 +83,18 @@ public abstract class LanguageAdapter {
     }
   }
 
+  protected DocumentStructures updateDiagnostics(final Diagnostic d,
+      final DocumentStructures structures) {
+    DocumentStructures old = getStructures(structures.getUri());
+
+    DocumentStructures result = (old == null) ? structures : old;
+    result.resetDiagnosticsAndAdd(d, old == null);
+    if (old == null) {
+      putStructures(structures.getNormalizedUri(), structures);
+    }
+    return result;
+  }
+
   public abstract String getFileEnding();
 
   public boolean handlesUri(final String uri) {
