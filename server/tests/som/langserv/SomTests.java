@@ -118,7 +118,7 @@ public class SomTests {
         + "| f1 field2\n"
         + "  anotherField |\n"
         + "----\n"
-        + "| abcd \n"
+        + "| abcd | \n"
         + ")\n", path);
 
     List<int[]> tokens =
