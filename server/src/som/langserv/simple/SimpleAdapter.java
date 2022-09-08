@@ -38,18 +38,17 @@ public class SimpleAdapter extends LanguageAdapter {
     String path = docUriToNormalizedPath(sourceUri);
 
     DocumentStructures structures = new DocumentStructures(sourceUri, "file:" + path);
+    assert structures != null;
 
     try {
       parse(text, structures);
+      putStructures(path, structures);
+      return structures;
     } catch (SLParseError e) {
       return toDiagnostics(e, structures);
     } catch (Throwable e) {
       return toDiagnostics(e, structures);
-    } finally {
-      assert structures != null;
-      putStructures(path, structures);
     }
-    return structures;
   }
 
   private DocumentStructures toDiagnostics(final SLParseError e,
@@ -65,8 +64,7 @@ public class SimpleAdapter extends LanguageAdapter {
     d.setMessage(msg);
     d.setSource("Parser");
 
-    structures.addDiagnostic(d);
-    return structures;
+    return updateDiagnostics(d, structures);
   }
 
   private DocumentStructures toDiagnostics(final Throwable e,
@@ -79,8 +77,16 @@ public class SimpleAdapter extends LanguageAdapter {
 
     d.setSource("Parser");
 
-    structures.addDiagnostic(d);
-    return structures;
+    return updateDiagnostics(d, structures);
+  }
+
+  private DocumentStructures updateDiagnostics(final Diagnostic d,
+      final DocumentStructures structures) {
+    DocumentStructures old = getStructures(structures.getUri());
+
+    DocumentStructures result = (old == null) ? structures : old;
+    result.resetDiagnosticsAndAdd(d);
+    return result;
   }
 
   public void parse(final String source, final DocumentStructures structures) {

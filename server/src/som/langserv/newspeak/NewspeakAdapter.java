@@ -120,10 +120,14 @@ public class NewspeakAdapter extends LanguageAdapter {
                           .uri(new URI(sourceUri).normalize()).build();
 
     DocumentStructures structures = new DocumentStructures(sourceUri, "file:" + path);
+    assert structures != null;
+
     NewspeakStructures newProbe = new NewspeakStructures(source, structures);
 
     try {
       compiler.compileModule(source, newProbe);
+      putStructures(path, structures);
+      return structures;
     } catch (ParseError e) {
       return toErrorDiagnostics(e, toRangeMax(e.getLine(), e.getColumn()), structures);
     } catch (SemanticDefinitionError e) {
@@ -131,18 +135,18 @@ public class NewspeakAdapter extends LanguageAdapter {
     } catch (Throwable e) {
       return toErrorDiagnostics(e,
           new Range(new Position(0, 0), new Position(1, Short.MAX_VALUE)), structures);
-    } finally {
-      assert structures != null;
-      putStructures(path, structures);
     }
-    return structures;
   }
 
   private DocumentStructures toErrorDiagnostics(final Throwable e, final Range range,
       final DocumentStructures structures) {
+    DocumentStructures old = getStructures(structures.getUri());
+
+    DocumentStructures result = old == null ? structures : old;
+
     Diagnostic d = new Diagnostic(range, e.getMessage(), DiagnosticSeverity.Error, "Parser");
-    structures.addDiagnostic(d);
-    return structures;
+    result.resetDiagnosticsAndAdd(d);
+    return result;
   }
 
   private static final class SomCompiler extends SourcecodeCompiler {

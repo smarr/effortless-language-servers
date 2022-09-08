@@ -222,23 +222,19 @@ public class SomAdapter extends LanguageAdapter {
     DocumentStructures structures = newProbe.getDocumentStructures();
 
     try {
-      try {
-        SClass def = somCompiler.compileClass(text, source, newProbe);
-        if (!isSystemClass(def.getName())) {
-          Globals.setGlobal(def.getName(), def);
-        }
-        // SomLint.checkModuleName(path, def, diagnostics);
-      } catch (ParseError e) {
-        return toDiagnostics(e, structures);
-      } catch (Throwable e) {
-        String msg = e.getMessage();
-        if (msg == null) {
-          msg = getStackTrace(e);
-        }
-        return toDiagnostics(msg, structures);
+      SClass def = somCompiler.compileClass(text, source, newProbe);
+      if (!isSystemClass(def.getName())) {
+        Globals.setGlobal(def.getName(), def);
       }
-    } finally {
       putStructures(path, structures);
+    } catch (ParseError e) {
+      return toDiagnostics(e, structures);
+    } catch (Throwable e) {
+      String msg = e.getMessage();
+      if (msg == null) {
+        msg = getStackTrace(e);
+      }
+      return toDiagnostics(msg, structures);
     }
 
     return structures;
@@ -251,6 +247,15 @@ public class SomAdapter extends LanguageAdapter {
     return sw.toString();
   }
 
+  private DocumentStructures updateDiagnostics(final Diagnostic d,
+      final DocumentStructures structures) {
+    DocumentStructures old = getStructures(structures.getUri());
+
+    DocumentStructures result = (old == null) ? structures : old;
+    result.resetDiagnosticsAndAdd(d);
+    return result;
+  }
+
   private DocumentStructures toDiagnostics(final ParseError e,
       final DocumentStructures structures) {
     Diagnostic d = new Diagnostic();
@@ -259,8 +264,7 @@ public class SomAdapter extends LanguageAdapter {
     d.setMessage(e.toString());
     d.setSource("Parser");
 
-    structures.addDiagnostic(d);
-    return structures;
+    return updateDiagnostics(d, structures);
   }
 
   private DocumentStructures toDiagnostics(final String msg,
@@ -272,8 +276,7 @@ public class SomAdapter extends LanguageAdapter {
     d.setSource("Parser");
     d.setRange(PositionConversion.toRangeMax(1, 1));
 
-    structures.addDiagnostic(d);
-    return structures;
+    return updateDiagnostics(d, structures);
   }
 
   private static class SomCompiler extends SourcecodeCompiler {

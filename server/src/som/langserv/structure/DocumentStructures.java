@@ -92,6 +92,16 @@ public class DocumentStructures {
     diagnostics.add(diag);
   }
 
+  public void resetDiagnosticsAndAdd(final Diagnostic diag) {
+    if (diagnostics == null) {
+      diagnostics = new ArrayList<>(1);
+    } else {
+      diagnostics.clear();
+    }
+
+    diagnostics.add(diag);
+  }
+
   /**
    * Start a new symbol, which is implicitly nested in the last one that was
    * started.
