@@ -13,7 +13,7 @@ import { BreakpointData, Source as WDSource, Respond,
   StepMessage, VariablesRequest, VariablesResponse,
   createLineBreakpointData,
   InitializationResponse,
-  UpdateClass} from './messages';
+  UpdateClass, RestartFrame} from './messages';
 import { determinePorts } from "./launch-connector";
 
 export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
@@ -106,7 +106,8 @@ class SomDebugSession extends DebugSession {
   protected launchRequest(response: DebugProtocol.LaunchResponse,
       args: LaunchRequestArguments): void {
     const options = {cwd: args.cwd};
-    let somArgs = ['-G', '-wd', args.program];
+    //, '-d'
+    let somArgs = ['-G' , '-wd', args.program];
     if (args.runtimeArgs) {
       somArgs = args.runtimeArgs.concat(somArgs);
     }
@@ -341,10 +342,10 @@ class SomDebugSession extends DebugSession {
     const frames = [];
     for (let frame of data.stackFrames) {
       if (frame.sourceUri) {
-        frames.push(new StackFrame(frame.id, frame.name,
+        frames.push(new StackFrame(frame.id, frame.frameId, frame.name,
           this.vsSourceFromUri(frame.sourceUri), frame.line, frame.column));
       } else {
-        frames.push(new StackFrame(frame.id, frame.name))
+        frames.push(new StackFrame(frame.id, frame.frameId, frame.name))
       }
     }
 
@@ -352,6 +353,7 @@ class SomDebugSession extends DebugSession {
       stackFrames: frames,
       totalFrames: data.totalFrames
     };
+    1/0;
     this.sendResponse(ideResponse);
   }
 
@@ -457,12 +459,22 @@ class SomDebugSession extends DebugSession {
     this.sendStep("stop", response, args);
   }
 
-  protected customRequest(command: string, response: DebugProtocol.Response, args: any): void {
+  protected restartFrameRequest(response: DebugProtocol.RestartFrameResponse, args: DebugProtocol.RestartFrameArguments, request?: DebugProtocol.Request): void {
+    const message: RestartFrame = {
+      action: "RestartFrame",
+       frameId: args.frameId
+    };
+    console.log(`Restarting at frame id '${args.frameId}'`)
+    this.send(message);
+  }
 
+  protected customRequest(command: string, response: DebugProtocol.Response, args: any): void {
 		switch (command) {
 			case 'updateClassRequest':
 				this.updateClassRequest(args);
 				break;
+      // case 'restartFrame':
+      //   this.restartFrameRequest(response,args)
 			default:
 				super.customRequest(command, response, args);
 				break;
@@ -472,8 +484,8 @@ class SomDebugSession extends DebugSession {
   protected  updateClassRequest(
     args: String): void {
       const message: UpdateClass = {
-        type: "UpdateClass",
-        class: args};
+        action: "UpdateClass",
+        classToRecompile: args};
       this.send(message);
   }
 }
