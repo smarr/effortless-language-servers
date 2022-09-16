@@ -102,10 +102,16 @@ export function activateDebuggerFeatures(context: ExtensionContext) {
 
 function defineCommands(ctx: ExtensionContext) : void {
 	const updateFileHandler = () => {
-		const file = window.activeTextEditor.document.uri.toString(true);
+		const file = window.activeTextEditor.document.uri.fsPath;
 		debug.activeDebugSession.customRequest('updateClassRequest', file);
 	};
 	registerCommand('updateFile', updateFileHandler, ctx);
+
+	// const restartFrameHandler = () => {
+	// 	debug.activeDebugSession.customRequest('restartFrame', debug.activeDebugSession.id);
+	// };
+
+	// registerCommand('restartFrame',restartFrameHandler,ctx);
 }
 
 function registerCommand(command: string, commandHandler: (any) => any, ctx: ExtensionContext) {

@@ -13,7 +13,8 @@ import { BreakpointData, Source as WDSource, Respond,
   StepMessage, VariablesRequest, VariablesResponse,
   createLineBreakpointData,
   InitializationResponse,
-  UpdateClass
+  UpdateClass,
+  RestartFrame
 } from './messages';
 import { determinePorts } from "./launch-connector";
 
@@ -350,10 +351,10 @@ export class SomDebugSession extends DebugSession {
     const frames = [];
     for (let frame of data.stackFrames) {
       if (frame.sourceUri) {
-        frames.push(new StackFrame(frame.id, frame.name,
+        frames.push(new StackFrame(frame.id, frame.frameId, frame.name,
           this.vsSourceFromUri(frame.sourceUri), frame.line, frame.column));
       } else {
-        frames.push(new StackFrame(frame.id, frame.name))
+        frames.push(new StackFrame(frame.id, frame.frameId, frame.name))
       }
     }
 
@@ -466,11 +467,22 @@ export class SomDebugSession extends DebugSession {
     this.sendStep("stop", response, args);
   }
 
+  protected restartFrameRequest(response: DebugProtocol.RestartFrameResponse, args: DebugProtocol.RestartFrameArguments, request?: DebugProtocol.Request): void {
+    const message: RestartFrame = {
+      action: "RestartFrame",
+       frameId: args.frameId
+    };
+    console.log(`Restarting at frame id '${args.frameId}'`)
+    this.send(message);
+  }
+
   protected customRequest(command: string, response: DebugProtocol.Response, args: any): void {
 		switch (command) {
 			case 'updateClassRequest':
 				this.updateClassRequest(args);
 				break;
+      // case 'restartFrame':
+      //   this.restartFrameRequest(response,args)
 			default:
 				super.customRequest(command, response, args);
 				break;
