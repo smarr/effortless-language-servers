@@ -1,5 +1,10 @@
 // Place your settings in this file to overwrite default and user settings.
 {
+	
+		"terminal.integrated.shellArgs.linux": [
+		  "-i"
+		],
+	
 	"files.exclude": {
 		"out": false // set this to true to hide the "out" folder with the compiled JS files
 	},

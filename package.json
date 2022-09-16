@@ -143,6 +143,8 @@
 							}
 						}
 					},
+
+
 					"attach": {
 						"required": [
 							"msgPort",
@@ -173,12 +175,23 @@
 						"stopOnEntry": false
 					},
 					{
+						"name": "Launch and Debug Interpreter",
+						"type": "SOMns",
+						"request": "launch",
+						"program": "${workspaceRoot}/Application.ns",
+						"cwd": "${workspaceRoot}",
+						"runtime": "PLEASE ENTER PATH TO `som` launcher",
+						"runtimeArgs": ["-d"],
+						"stopOnEntry": false
+					},
+					{
 						"name": "Attach to SOM program",
 						"type": "SOMns",
 						"request": "attach",
 						"msgPort": 7977,
 						"tracePort": 7978
 					}
+					
 				]
 			}
 		],
