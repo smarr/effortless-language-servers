@@ -342,10 +342,10 @@ class SomDebugSession extends DebugSession {
     const frames = [];
     for (let frame of data.stackFrames) {
       if (frame.sourceUri) {
-        frames.push(new StackFrame(frame.id, frame.frameId, frame.name,
+        frames.push(new StackFrame(frame.id, frame.name,
           this.vsSourceFromUri(frame.sourceUri), frame.line, frame.column));
       } else {
-        frames.push(new StackFrame(frame.id, frame.frameId, frame.name))
+        frames.push(new StackFrame(frame.id, frame.name))
       }
     }
 
@@ -353,7 +353,6 @@ class SomDebugSession extends DebugSession {
       stackFrames: frames,
       totalFrames: data.totalFrames
     };
-    1/0;
     this.sendResponse(ideResponse);
   }
 
@@ -462,9 +461,8 @@ class SomDebugSession extends DebugSession {
   protected restartFrameRequest(response: DebugProtocol.RestartFrameResponse, args: DebugProtocol.RestartFrameArguments, request?: DebugProtocol.Request): void {
     const message: RestartFrame = {
       action: "RestartFrame",
-       frameId: args.frameId
+       frameId: request.arguments.frameId
     };
-    console.log(`Restarting at frame id '${args.frameId}'`)
     this.send(message);
   }
 
