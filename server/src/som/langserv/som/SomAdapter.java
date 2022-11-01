@@ -82,7 +82,7 @@ public class SomAdapter extends LanguageAdapter {
     }
     String[] args = new String[] {"-cp", CORE_LIB_PATH + "/Smalltalk"};
 
-    Universe.setSourceCompiler(somCompiler);
+    Universe.setSourceCompiler(somCompiler, true);
     Builder builder = Universe.createContextBuilder();
     builder.arguments(SomLanguage.LANG_ID, args);
     context = builder.build();
