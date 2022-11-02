@@ -75,7 +75,7 @@ public class NewspeakTests {
     // these are all methods on vmMirror, currently not known,
     // they used to be captured, but I am not yet extracting those
     // from the structural probe
-    assertEquals(368, warnings);
+    assertEquals(364, warnings);
     assertEquals(0, others);
   }
 
@@ -403,8 +403,11 @@ public class NewspeakTests {
 
     List<SymbolInformation> results = new ArrayListSet<>();
     adapter.workspaceSymbol(results, "");
+    var testData =
+        results.stream().filter(s -> !(s.getLocation().getUri().endsWith("Kernel.ns")
+            || s.getLocation().getUri().endsWith("Platform.ns"))).toList();
 
-    assertEquals(16, results.size());
+    assertEquals(16, testData.size());
 
     results = new ArrayListSet<>();
     adapter.workspaceSymbol(results, "run");
@@ -660,7 +663,7 @@ public class NewspeakTests {
     assertFalse(result.isIncomplete());
 
     var items = result.getItems();
-    assertEquals(2, items.size());
+    assertEquals(3, items.size());
 
     var i = items.get(0);
     assertEquals(CompletionItemKind.Property, i.getKind());
@@ -669,6 +672,11 @@ public class NewspeakTests {
     i = items.get(1);
     assertEquals(CompletionItemKind.Property, i.getKind());
     assertEquals("field:", i.getLabel());
+
+    // this one comes from Platform.ns
+    i = items.get(2);
+    assertEquals(CompletionItemKind.Property, i.getKind());
+    assertEquals("files", i.getLabel());
   }
 
   @Test
