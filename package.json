@@ -190,7 +190,8 @@
 		"watch": "tsc --build --watch",
 		"compile": "tsc --build && cp -R test/examples out/test/",
 		"postinstall": "npm run compile:server",
-		"test": "node ./out/test/runTest.js"
+		"test": "node ./out/test/runTest.js",
+		"create-server-shell-script": "npx run-func out/src/command-line.js getShellScript false false > out/server/start.sh; chmod +x out/server/start.sh"
 	},
 	"devDependencies": {
 		"@types/node": "18.7.16",
@@ -200,7 +201,8 @@
 		"@vscode/test-electron": "2.1.5",
 		"typescript": "4.8.2",
 		"chai": "4.3.6",
-		"mocha": "10.0.0"
+		"mocha": "10.0.0",
+		"run-func": "3.0.0"
 	},
 	"dependencies": {
 		"vscode-languageserver-protocol": "3.16.0",
