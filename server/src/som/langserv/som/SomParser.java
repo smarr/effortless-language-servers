@@ -60,6 +60,7 @@ import trufflesom.vmobjects.SSymbol;
 public class SomParser extends ParserAst {
 
   private final DocumentStructures symbols;
+  private final SomAdapter         somAdapter;
 
   private LanguageElement currentClass;
   private LanguageElement currentMethod;
@@ -68,13 +69,14 @@ public class SomParser extends ParserAst {
   private final ArrayList<String>  keywordParts;
 
   public SomParser(final String content, final Source source,
-      final SomStructures structuralProbe) {
+      final SomStructures structuralProbe, final SomAdapter somAdapter) {
     super(content, source, structuralProbe);
     assert structuralProbe != null : "Needed for this extended parser.";
     assert structuralProbe.source == source;
     this.keywordParts = new ArrayList<>();
     this.keywordStart = new ArrayList<>();
     this.symbols = structuralProbe.getSymbols();
+    this.somAdapter = somAdapter;
   }
 
   @Override
@@ -124,6 +126,8 @@ public class SomParser extends ParserAst {
   public void classdef(final ClassGenerationContext cgenc) throws ProgramDefinitionError {
     try {
       super.classdef(cgenc);
+      // this happens only in the success case
+      somAdapter.putStructures(symbols);
     } finally {
       if (currentClass != null) {
         completeSymbol(currentClass, cgenc.getSourceCoord());
