@@ -4,7 +4,14 @@
 
  -
 
-## [0.7.0] - In progress 2021-??-??
+## [0.8.0] - Effortless Language Servers
+
+ - completely reengineer how the language servers work based on our approach to [Effortless Language Servers](https://stefan-marr.de/2022/10/effortless-language-servers/)
+ - support Newspeak, SOM, and SimpleLanguage with the key LSP features
+ - update TruffleSOM and SOMns to the latest versions
+ - add support for semantic highlighting
+
+## [0.7.0] - Unpublished
 
  - update TruffleSOM and SOMns to the latest version as of August 2021
  - update LSP4J to latest version to support latest language server protocol
