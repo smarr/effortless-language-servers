@@ -270,7 +270,6 @@ public class SomAdapter extends LanguageAdapter {
     @Override
     public Parser<?> createParser(final String code, final Source source,
         final StructuralProbe<SSymbol, SClass, SInvokable, Field, Variable> probe) {
-      assert probe == null;
       String sourcePath = source.getPath();
       if (sourcePath == null) {
         sourcePath = source.getName();
