@@ -40,6 +40,7 @@ import trufflesom.interpreter.nodes.ArgumentReadNode.NonLocalArgumentWriteNode;
 import trufflesom.interpreter.nodes.ExpressionNode;
 import trufflesom.interpreter.nodes.FieldNode.FieldReadNode;
 import trufflesom.interpreter.nodes.FieldNode.FieldWriteNode;
+import trufflesom.interpreter.nodes.FieldNode.UninitFieldIncNode;
 import trufflesom.interpreter.nodes.GlobalNode;
 import trufflesom.interpreter.nodes.GlobalNode.FalseGlobalNode;
 import trufflesom.interpreter.nodes.GlobalNode.NilGlobalNode;
@@ -255,6 +256,9 @@ public class SomParser extends ParserAst {
       }
       referenceSymbol(new VariableId(l), sourceSection);
     } else if (result instanceof FieldWriteNode w) {
+      recordTokenSemantics(sourceSection, SemanticTokenType.PROPERTY);
+      referenceSymbol(new FieldId(w.getFieldIndex()), sourceSection);
+    } else if (result instanceof UninitFieldIncNode w) {
       recordTokenSemantics(sourceSection, SemanticTokenType.PROPERTY);
       referenceSymbol(new FieldId(w.getFieldIndex()), sourceSection);
     } else {
