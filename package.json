@@ -7,7 +7,7 @@
 	"version": "0.8.0",
 	"publisher": "MetaConcProject",
 	"engines": {
-		"vscode": "^1.43.0"
+		"vscode": "^1.66.0"
 	},
 	"categories": [
 		"Debuggers",
