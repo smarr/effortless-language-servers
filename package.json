@@ -4,7 +4,7 @@
 	"readme": "This plugin provides support for many common IDE features.",
 	"author": "Stefan Marr",
 	"license": "MIT",
-	"version": "0.8.0",
+	"version": "0.8.1",
 	"publisher": "MetaConcProject",
 	"engines": {
 		"vscode": "^1.66.0"
@@ -85,6 +85,11 @@
 					"type": "boolean",
 					"default": false,
 					"description": "Enables debug mode for the extension, language server, and debug adapter. This is only used to develop the SOMns extension."
+				},
+				"els.javaHome": {
+					"type": "string",
+					"default": null,
+					"description": "Path to the Java 17 or later installation. On macOS, it might be /Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home. On Linux perhaps /usr/lib/jvm/java-17-openjdk-amd64"
 				}
 			}
 		},

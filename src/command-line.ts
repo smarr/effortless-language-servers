@@ -1,9 +1,13 @@
-export function getCommandLine(asAbsolutePath: (string) => string,
+import { spawnSync } from "child_process";
+
+export function getCommandLine(
+		javaHome: unknown,
+		asAbsolutePath: (string) => string,
     enableDebug: boolean, enableTcp: boolean): {
       command: string,
       args: string[]
 } {
-  const javaCmd = 'java';
+  const javaCmd = optionalJavaHomeToJavaCmd(javaHome);
 
   const javaClassPath = [
 		asAbsolutePath('out/server/som.jar'),
@@ -55,7 +59,7 @@ export function getCommandLine(asAbsolutePath: (string) => string,
 }
 
 export function getShellScript(enableDebug: boolean, enableTcp: boolean) {
-  const cmd = getCommandLine((p) => p, enableDebug, enableTcp);
+  const cmd = getCommandLine(undefined, (p) => p, enableDebug, enableTcp);
   return `#!/bin/bash
 SCRIPT_DIR=$(dirname $0)
 pushd $\{SCRIPT_DIR\}/../../ > /dev/null
@@ -79,4 +83,22 @@ export function getMajorVersionFromJavaVersionString(version: string): string {
 	const versionParts = versionNumber.split('.');
 
 	return versionParts[0]; // return the major version part
+}
+
+export function optionalJavaHomeToJavaCmd(javaHome: unknown) {
+	if (javaHome) {
+		return `${javaHome}/bin/java`;
+	} else {
+		return "java";
+	}
+}
+
+export function isJavaAvailableAndCompatible(javaHome: unknown) {
+	const javaCmd = optionalJavaHomeToJavaCmd(javaHome);
+	const result = spawnSync(javaCmd, ['-version'], { encoding: 'utf-8'} );
+	if (result.error) {
+		return false;
+	}
+	const major = getMajorVersionFromJavaVersionString(result.stderr);
+	return parseInt(major) >= 17;
 }

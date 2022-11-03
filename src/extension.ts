@@ -5,10 +5,13 @@ import { Socket } from 'net';
 
 import { workspace, ExtensionContext, window, debug, DebugConfigurationProvider, WorkspaceFolder, DebugConfiguration, CancellationToken, ProviderResult } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, StreamInfo } from 'vscode-languageclient/node';
-import { getCommandLine } from './command-line';
+import { getCommandLine, isJavaAvailableAndCompatible } from './command-line';
 
 const LSPort = 8123;  // TODO: make configurable
-const EnableExtensionDebugging : boolean = <boolean> workspace.getConfiguration('els').get('debugMode');
+
+const configuration = workspace.getConfiguration('els');
+const EnableExtensionDebugging : boolean = <boolean> configuration.get('debugMode');
+const JavaHomeConfig = configuration.get('javaHome');
 
 export const CLIENT_OPTION: LanguageClientOptions = {
 	documentSelector: ['SOMns', 'SOM','simple']
@@ -21,7 +24,7 @@ let serverProcess: ChildProcess = null;
 
 function getServerOptions(asAbsolutePath: PathConverter, enableDebug:
 	  boolean, enableTcp: boolean): ServerOptions {
-	const cmdLine = getCommandLine(asAbsolutePath, enableDebug, enableTcp);
+	const cmdLine = getCommandLine(JavaHomeConfig, asAbsolutePath, enableDebug, enableTcp);
 
 	return {
 		run:   cmdLine,
@@ -107,6 +110,9 @@ export function activate(context: ExtensionContext) {
 				window.showInformationMessage("SOMns Debug Mode: Trying to connect to Language Server on port " + LSPort);
 				connectToLanguageServer(resolve, reject);
 			} else {
+				if (!isJavaAvailableAndCompatible(JavaHomeConfig)) {
+					window.showErrorMessage('Java 17 or new was not found. Please configure it in the settings under the `els.javaHome` key.');
+				}
 				window.showInformationMessage("SOMns Starting Language Server");
 				startLanguageServer(context.asAbsolutePath, resolve, reject);
 			}
