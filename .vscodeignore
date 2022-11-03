@@ -1,3 +1,4 @@
+out/server/som-core-lib/.github
 out/server/som-core-lib/Examples
 out/server/som-core-lib/SomSom
 out/server/som-core-lib/specification
@@ -8,11 +9,15 @@ out/server/somns-core-lib/TestSuite
 .vscode/**
 .vscode-test/**
 typings/**
-out/test/**
+out/src
+node_modules
+out/test
 test/**
 server/**
 src/**
 **/*.map
+.github
+.git
 .gitignore
 .gitmodules
 .travis.yml
