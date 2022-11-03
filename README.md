@@ -96,15 +96,22 @@ To instruct VS code to use an already running instance of the language server,
 add the following to your VS Code User Settings:
 
 ```JavaScript
-"somns.debugMode" : true
+"els.debugMode" : true
 ```
 
 The server can also be started from the command line:
 
 ```bash
-cd /$pathToCheckout/SOMns-vscode/server
-./run.sh # executes the server, the console will show all communication
+npm run create-server-shell-script
+out/server/start.sh
 ```
+
+This will run the server exactly as VScode would run it.
+In this mode it will accept communication from stdin.
+To configure it for use with TCP, see the `create-server-shell-script`
+script in `package.json`. It currently configure the generated script
+to disable the debugging mode and TCP, which can be enable individually
+by changing the corresponding `false` in the script.
 
 ## Debugging the Debugger Adapter
 
