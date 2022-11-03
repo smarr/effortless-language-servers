@@ -1,3 +1,10 @@
+out/server/som-core-lib/Examples
+out/server/som-core-lib/SomSom
+out/server/som-core-lib/specification
+out/server/som-core-lib/TestSuite
+out/server/somns-core-lib/Benchmarks
+out/server/somns-core-lib/demos
+out/server/somns-core-lib/TestSuite
 .vscode/**
 .vscode-test/**
 typings/**
