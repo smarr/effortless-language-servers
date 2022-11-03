@@ -82,7 +82,7 @@ public class SomAdapter extends LanguageAdapter {
     }
     String[] args = new String[] {"-cp", CORE_LIB_PATH + "/Smalltalk"};
 
-    Universe.setSourceCompiler(somCompiler);
+    Universe.setSourceCompiler(somCompiler, true);
     Builder builder = Universe.createContextBuilder();
     builder.arguments(SomLanguage.LANG_ID, args);
     context = builder.build();
@@ -96,10 +96,6 @@ public class SomAdapter extends LanguageAdapter {
 
     Universe.setupClassPath(constructClassPath(CORE_LIB_PATH));
 
-    SomStructures systemClassProbe = new SomStructures(
-        Source.newBuilder(SomLanguage.LANG_ID, "systemClasses", null).internal(true).build(),
-        null, null);
-    Universe.setStructuralProbe(systemClassProbe);
     Universe.initializeObjectSystem();
     systemClassNames[0] = Classes.objectClass.getName();
     systemClassNames[1] = Classes.classClass.getName();
@@ -226,7 +222,6 @@ public class SomAdapter extends LanguageAdapter {
       if (!isSystemClass(def.getName())) {
         Globals.setGlobal(def.getName(), def);
       }
-      putStructures(path, structures);
     } catch (ParseError e) {
       return toDiagnostics(e, structures);
     } catch (Throwable e) {
@@ -270,25 +265,17 @@ public class SomAdapter extends LanguageAdapter {
     return updateDiagnostics(d, structures);
   }
 
-  private static class SomCompiler extends SourcecodeCompiler {
-
-    private boolean sourceIsForPath(final Source s, final String path) {
-      if (s.getPath() != null) {
-        return s.getPath().equals(path);
-      }
-      return s.getName().equals(path);
-    }
+  private class SomCompiler extends SourcecodeCompiler {
 
     @Override
     public Parser<?> createParser(final String code, final Source source,
         final StructuralProbe<SSymbol, SClass, SInvokable, Field, Variable> probe) {
-      SomStructures p = (SomStructures) probe;
-
-      if (!sourceIsForPath(source, p.getPath())) {
-        p = new SomStructures(source, null, "file:" + p.getPath());
+      String sourcePath = source.getPath();
+      if (sourcePath == null) {
+        sourcePath = source.getName();
       }
-
-      return new SomParser(code, source, p);
+      SomStructures p = new SomStructures(source, null, "file:" + sourcePath);
+      return new SomParser(code, source, p, SomAdapter.this);
     }
 
     public SClass compileClass(final String text, final Source source,

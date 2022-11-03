@@ -51,14 +51,16 @@ public class NewspeakAdapter extends LanguageAdapter {
   public final static String  CORE_LIB_PATH = System.getProperty(CORE_LIB_PROP);
 
   private final SomCompiler compiler;
+  private final VM          vm;
 
   public NewspeakAdapter() {
     super(
         new FileLinter[] {new LintEndsWithNewline(), new LintFileHasNSEnding()},
         new WorkspaceLinter[] {new LintUseNeedsDefine()},
         new FileLens[] {new Minitest()});
-    VM vm = initializePolyglot();
-    this.compiler = new SomCompiler(vm.getLanguage());
+    this.compiler = new SomCompiler();
+    VM.setCompiler(compiler);
+    this.vm = initializePolyglot(this.compiler);
     registerVmMirrorPrimitives(vm);
   }
 
@@ -86,7 +88,7 @@ public class NewspeakAdapter extends LanguageAdapter {
     putStructures("internal:vmMirror.ns", vmStructures);
   }
 
-  private VM initializePolyglot() {
+  private VM initializePolyglot(final SomCompiler compiler) {
     String coreLib = CORE_LIB_PATH;
     if (coreLib == null) {
       throw new IllegalArgumentException(
@@ -120,13 +122,10 @@ public class NewspeakAdapter extends LanguageAdapter {
                           .uri(new URI(sourceUri).normalize()).build();
 
     DocumentStructures structures = new DocumentStructures(sourceUri, "file:" + path);
-    assert structures != null;
-
     NewspeakStructures newProbe = new NewspeakStructures(source, structures);
 
     try {
-      compiler.compileModule(source, newProbe);
-      putStructures(path, structures);
+      compiler.compileModule(source, vm.getLanguage(), newProbe);
       return structures;
     } catch (ParseError e) {
       return toErrorDiagnostics(e, toRangeMax(e.getLine(), e.getColumn()), structures);
@@ -144,21 +143,28 @@ public class NewspeakAdapter extends LanguageAdapter {
     return updateDiagnostics(d, structures);
   }
 
-  private static final class SomCompiler extends SourcecodeCompiler {
-
-    public SomCompiler(final SomLanguage language) {
-      super(language);
-      assert language != null;
-    }
+  private final class SomCompiler extends SourcecodeCompiler {
 
     @Override
-    public MixinDefinition compileModule(final Source source,
+    public MixinDefinition compileModule(final Source source, final SomLanguage language,
         final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe)
         throws bd.basic.ProgramDefinitionError {
+      NewspeakStructures probe = (NewspeakStructures) structuralProbe;
+      if (probe == null) {
+        String path = source.getPath();
+        String sourceUri = source.getURI().toString();
+        if (path == null) {
+          path = source.getName();
+        }
+
+        DocumentStructures structures = new DocumentStructures(sourceUri, "file:" + path);
+        probe = new NewspeakStructures(source, structures);
+      }
+
       NewspeakParser parser =
           new NewspeakParser(source.getCharacters().toString(), source,
-              (NewspeakStructures) structuralProbe, language);
-      return compile(parser, source);
+              probe, language, NewspeakAdapter.this);
+      return compile(parser, source, language);
     }
   }
 }

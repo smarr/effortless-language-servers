@@ -34,15 +34,22 @@ import trufflesom.compiler.Symbol;
 import trufflesom.compiler.Variable.Argument;
 import trufflesom.compiler.Variable.Local;
 import trufflesom.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
+import trufflesom.interpreter.nodes.ArgumentReadNode.LocalArgumentWriteNode;
 import trufflesom.interpreter.nodes.ArgumentReadNode.NonLocalArgumentReadNode;
+import trufflesom.interpreter.nodes.ArgumentReadNode.NonLocalArgumentWriteNode;
 import trufflesom.interpreter.nodes.ExpressionNode;
 import trufflesom.interpreter.nodes.FieldNode.FieldReadNode;
+import trufflesom.interpreter.nodes.FieldNode.FieldWriteNode;
+import trufflesom.interpreter.nodes.FieldNode.UninitFieldIncNode;
 import trufflesom.interpreter.nodes.GlobalNode;
 import trufflesom.interpreter.nodes.GlobalNode.FalseGlobalNode;
 import trufflesom.interpreter.nodes.GlobalNode.NilGlobalNode;
 import trufflesom.interpreter.nodes.GlobalNode.TrueGlobalNode;
 import trufflesom.interpreter.nodes.LocalVariableNode.LocalVariableReadNode;
+import trufflesom.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
 import trufflesom.interpreter.nodes.NonLocalVariableNode.NonLocalVariableReadNode;
+import trufflesom.interpreter.nodes.NonLocalVariableNode.NonLocalVariableWriteNode;
+import trufflesom.vm.NotYetImplementedException;
 import trufflesom.vm.SymbolTable;
 import trufflesom.vmobjects.SSymbol;
 
@@ -54,6 +61,7 @@ import trufflesom.vmobjects.SSymbol;
 public class SomParser extends ParserAst {
 
   private final DocumentStructures symbols;
+  private final SomAdapter         somAdapter;
 
   private LanguageElement currentClass;
   private LanguageElement currentMethod;
@@ -62,13 +70,14 @@ public class SomParser extends ParserAst {
   private final ArrayList<String>  keywordParts;
 
   public SomParser(final String content, final Source source,
-      final SomStructures structuralProbe) {
+      final SomStructures structuralProbe, final SomAdapter somAdapter) {
     super(content, source, structuralProbe);
     assert structuralProbe != null : "Needed for this extended parser.";
     assert structuralProbe.source == source;
     this.keywordParts = new ArrayList<>();
     this.keywordStart = new ArrayList<>();
     this.symbols = structuralProbe.getSymbols();
+    this.somAdapter = somAdapter;
   }
 
   @Override
@@ -118,6 +127,8 @@ public class SomParser extends ParserAst {
   public void classdef(final ClassGenerationContext cgenc) throws ProgramDefinitionError {
     try {
       super.classdef(cgenc);
+      // this happens only in the success case
+      somAdapter.putStructures(symbols);
     } finally {
       if (currentClass != null) {
         completeSymbol(currentClass, cgenc.getSourceCoord());
@@ -197,9 +208,9 @@ public class SomParser extends ParserAst {
         l = ((NonLocalVariableReadNode) result).getLocal();
       }
       referenceSymbol(new VariableId(l), sourceSection);
-    } else if (result instanceof FieldReadNode) {
+    } else if (result instanceof FieldReadNode r) {
       recordTokenSemantics(sourceSection, SemanticTokenType.PROPERTY);
-      referenceSymbol(new FieldId(((FieldReadNode) result).getFieldIndex()), sourceSection);
+      referenceSymbol(new FieldId((r).getFieldIndex()), sourceSection);
     } else if (result instanceof GlobalNode) {
       if (result instanceof NilGlobalNode || result instanceof TrueGlobalNode
           || result instanceof FalseGlobalNode) {
@@ -210,6 +221,49 @@ public class SomParser extends ParserAst {
         recordTokenSemantics(sourceSection, SemanticTokenType.CLASS);
         referenceSymbol(new GlobalId(variableName), sourceSection);
       }
+    }
+    return result;
+  }
+
+  @Override
+  protected ExpressionNode variableWrite(final MethodGenerationContext mgenc,
+      final SSymbol variableName, final ExpressionNode exp, final long coord)
+      throws ParseError {
+    ExpressionNode result = super.variableWrite(mgenc, variableName, exp, coord);
+    SourceSection sourceSection = SourceCoordinate.createSourceSection(source, coord);
+
+    if (result instanceof LocalArgumentWriteNode
+        || result instanceof NonLocalArgumentWriteNode) {
+      recordTokenSemantics(sourceSection, SemanticTokenType.PARAMETER);
+
+      Argument arg;
+      if (result instanceof LocalArgumentWriteNode w) {
+        arg = w.arg;
+      } else {
+        arg = ((NonLocalArgumentWriteNode) result).arg;
+      }
+
+      assert !arg.isSelf();
+      referenceSymbol(new VariableId(arg), sourceSection);
+    } else if (result instanceof LocalVariableWriteNode
+        || result instanceof NonLocalVariableWriteNode) {
+      recordTokenSemantics(sourceSection, SemanticTokenType.VARIABLE);
+      Local l;
+      if (result instanceof LocalVariableWriteNode w) {
+        l = w.getLocal();
+      } else {
+        l = ((NonLocalVariableWriteNode) result).getLocal();
+      }
+      referenceSymbol(new VariableId(l), sourceSection);
+    } else if (result instanceof FieldWriteNode w) {
+      recordTokenSemantics(sourceSection, SemanticTokenType.PROPERTY);
+      referenceSymbol(new FieldId(w.getFieldIndex()), sourceSection);
+    } else if (result instanceof UninitFieldIncNode w) {
+      recordTokenSemantics(sourceSection, SemanticTokenType.PROPERTY);
+      referenceSymbol(new FieldId(w.getFieldIndex()), sourceSection);
+    } else {
+      throw new NotYetImplementedException(
+          "odd, what am I missing here?: " + result.getClass().getName());
     }
     return result;
   }

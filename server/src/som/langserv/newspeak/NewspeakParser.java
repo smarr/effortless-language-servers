@@ -55,6 +55,7 @@ import tools.debugger.Tags.LocalVariableTag;
 public class NewspeakParser extends Parser {
 
   private final DocumentStructures symbols;
+  private final NewspeakAdapter    adapter;
 
   private final ArrayDeque<LanguageElement> currentClass;
 
@@ -64,14 +65,23 @@ public class NewspeakParser extends Parser {
   private final ArrayList<String>  keywordParts;
 
   public NewspeakParser(final String content, final Source source,
-      final NewspeakStructures structuralProbe, final SomLanguage lang) throws ParseError {
+      final NewspeakStructures structuralProbe, final SomLanguage lang,
+      final NewspeakAdapter adapter) throws ParseError {
     super(content, source, structuralProbe, lang);
     this.symbols = structuralProbe.getSymbols();
+    this.adapter = adapter;
 
     currentClass = new ArrayDeque<>();
 
     keywordStart = new ArrayList<>();
     keywordParts = new ArrayList<>();
+  }
+
+  @Override
+  public MixinBuilder moduleDeclaration() throws ProgramDefinitionError {
+    MixinBuilder result = super.moduleDeclaration();
+    adapter.putStructures(symbols);
+    return result;
   }
 
   @Override

@@ -73,6 +73,13 @@
 		</exec>
 	</target>
 
+	<target name="ideinit" depends="somns-submodule">
+		<exec executable="ant" dir="${somns.dir}">
+			<arg value="-e" />
+			<arg value="ideinit" />
+		</exec>
+	</target>
+
 	<target name="somns" depends="somns-submodule">
 		<exec executable="ant" dir="${somns.dir}">
 			<arg value="-e" />

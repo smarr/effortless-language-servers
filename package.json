@@ -7,7 +7,7 @@
 	"version": "0.8.0",
 	"publisher": "MetaConcProject",
 	"engines": {
-		"vscode": "^1.43.0"
+		"vscode": "^1.66.0"
 	},
 	"categories": [
 		"Debuggers",
@@ -26,7 +26,7 @@
 		"onLanguage:SOM",
 		"onLanguage:simple"
 	],
-	"main": "./out/src/extension",
+	"main": "./out/main",
 	"icon": "resources/logo.png",
 	"contributes": {
 		"languages": [
@@ -184,29 +184,33 @@
 		]
 	},
 	"scripts": {
+		"vscode:prepublish": "npm run compile && npm run esbuild-base -- --minify",
+		"esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/main.js --external:vscode --format=cjs --platform=node",
 		"compile:server": "cd server && ant -e deploy",
-		"vscode:prepublish": "npm run compile",
 		"pretest": "npm run compile",
 		"watch": "tsc --build --watch",
 		"compile": "tsc --build && cp -R test/examples out/test/",
 		"postinstall": "npm run compile:server",
-		"test": "node ./out/test/runTest.js"
+		"test": "node ./out/test/runTest.js",
+		"create-server-shell-script": "npx run-func out/src/command-line.js getShellScript false false > out/server/start.sh; chmod +x out/server/start.sh"
 	},
 	"devDependencies": {
-		"@types/node": "18.7.16",
 		"@types/chai": "4.3.3",
 		"@types/mocha": "9.1.1",
+		"@types/node": "18.7.16",
 		"@types/vscode": "1.66.0",
 		"@vscode/test-electron": "2.1.5",
-		"typescript": "4.8.2",
 		"chai": "4.3.6",
-		"mocha": "10.0.0"
+		"esbuild": "^0.15.12",
+		"mocha": "10.0.0",
+		"run-func": "3.0.0",
+		"typescript": "4.8.2"
 	},
 	"dependencies": {
-		"vscode-languageserver-protocol": "3.16.0",
-		"vscode-languageclient": "7.0.0",
-		"@vscode/debugprotocol": "1.55.1",
 		"@vscode/debugadapter": "1.55.1",
+		"@vscode/debugprotocol": "1.55.1",
+		"vscode-languageclient": "7.0.0",
+		"vscode-languageserver-protocol": "3.16.0",
 		"ws": "8.8.1"
 	}
 }

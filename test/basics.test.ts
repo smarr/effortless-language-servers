@@ -92,7 +92,7 @@ describe("Basic Tests", () => {
     client.addDiagnosticsHandler(function (params) {
       try {
         expect(params.uri).to.equal(examplesUri.toString() + '/Hello.ns');
-        expect(params.diagnostics).to.have.lengthOf(9);
+        expect(params.diagnostics).to.have.lengthOf(0);
         done();
       } catch (e) {
         done(e);
@@ -115,7 +115,7 @@ describe("Basic Tests", () => {
     client.addDiagnosticsHandler(function (params) {
       try {
         expect(params.uri).to.equal(examplesUri.toString() + '/Hello.som');
-        expect(params.diagnostics).to.have.lengthOf(2);
+        expect(params.diagnostics).to.have.lengthOf(1);
         done();
       } catch (e) {
         done(e);

@@ -76,10 +76,25 @@ public abstract class LanguageAdapter {
     return workspaceLinters;
   }
 
+  private static String withoutSchema(final String path) {
+    if (path.startsWith("file:")) {
+      return path.substring("file:".length());
+    }
+    return path;
+  }
+
+  /** Only for use when parsing succeeded in the language's parser. */
+  public void putStructures(final DocumentStructures docStructures) {
+    synchronized (structures) {
+      String pathWithoutFileSchema = withoutSchema(docStructures.getNormalizedUri());
+      structures.put(pathWithoutFileSchema, docStructures);
+    }
+  }
+
   protected void putStructures(final String normalizedPath,
       final DocumentStructures docStructures) {
     synchronized (structures) {
-      structures.put(normalizedPath, docStructures);
+      structures.put(withoutSchema(normalizedPath), docStructures);
     }
   }
 
