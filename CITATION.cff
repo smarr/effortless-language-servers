@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+title: Effortless Language Servers Framework
+message: >-
+  If you use or build on this framework, please cite
+  it using the metadata from this file.
+type: software
+authors:
+  - given-names: Stefan
+    family-names: Marr
+    affiliation: University of Kent
+    orcid: 'https://orcid.org/0000-0001-9059-5180'
+    email: s.marr@kent.ac.uk
+  - given-names: Humphrey
+    family-names: Burchell
+    email: h.burchell@kent.ac.uk
+    affiliation: University of Kent
+    orcid: 'https://orcid.org/0000-0003-4728-5819'
+repository-code: >-
+  https://github.com/smarr/effortless-language-servers
+url: >-
+  https://stefan-marr.de/papers/dls-marr-et-al-execution-vs-parse-based-language-servers/
+license: MIT
+date-released: '2022-11-03'
