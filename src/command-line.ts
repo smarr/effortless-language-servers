@@ -61,3 +61,22 @@ SCRIPT_DIR=$(dirname $0)
 pushd $\{SCRIPT_DIR\}/../../ > /dev/null
 exec ${cmd.command} '${cmd.args.join("' '")}'`
 }
+
+export function getMajorVersionFromJavaVersionString(version: string): string {
+	const lines = version.split("\n");
+	const partsOfFirstLine = lines[0].split(" ");
+	partsOfFirstLine.shift(); // remove the java name
+
+	// remove the version keyword, if it's there
+	if (partsOfFirstLine[0] === "version") {
+		partsOfFirstLine.shift();
+	}
+
+	// now the first bit should be the version number, maybe with quotes around it
+	let versionNumber = partsOfFirstLine[0];
+	versionNumber = versionNumber.replace(/"/g, ''); // replace the quotes
+
+	const versionParts = versionNumber.split('.');
+
+	return versionParts[0]; // return the major version part
+}
