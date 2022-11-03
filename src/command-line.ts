@@ -55,7 +55,7 @@ export function getCommandLine(asAbsolutePath: (string) => string,
 }
 
 export function getShellScript(enableDebug: boolean, enableTcp: boolean) {
-  const cmd = getCommandLine((p) => p, false, false);
+  const cmd = getCommandLine((p) => p, enableDebug, enableTcp);
   return `#!/bin/bash
 SCRIPT_DIR=$(dirname $0)
 pushd $\{SCRIPT_DIR\}/../../ > /dev/null
