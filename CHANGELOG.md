@@ -2,7 +2,7 @@
 
 ## [Not Started]
 
- -
+ - changed config to be in `els` namespace, so `els.debugMode`
 
 ## [0.8.0] - Effortless Language Servers
 

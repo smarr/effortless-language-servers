@@ -8,7 +8,7 @@ import { LanguageClient, LanguageClientOptions, ServerOptions, StreamInfo } from
 import { getCommandLine } from './command-line';
 
 const LSPort = 8123;  // TODO: make configurable
-const EnableExtensionDebugging : boolean = <boolean> workspace.getConfiguration('somns').get('debugMode');
+const EnableExtensionDebugging : boolean = <boolean> workspace.getConfiguration('els').get('debugMode');
 
 export const CLIENT_OPTION: LanguageClientOptions = {
 	documentSelector: ['SOMns', 'SOM','simple']

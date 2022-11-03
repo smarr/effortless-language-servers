@@ -96,7 +96,7 @@ To instruct VS code to use an already running instance of the language server,
 add the following to your VS Code User Settings:
 
 ```JavaScript
-"somns.debugMode" : true
+"els.debugMode" : true
 ```
 
 The server can also be started from the command line:
