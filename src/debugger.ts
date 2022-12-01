@@ -13,8 +13,21 @@ import { BreakpointData, Source as WDSource, Respond,
   StepMessage, VariablesRequest, VariablesResponse,
   createLineBreakpointData,
   InitializationResponse,
-  UpdateClass, RestartFrame} from './messages';
+  UpdateClass, RestartFrame, EvaluateExpressionRequest, StackFrame as SFM} from './messages';
+
+
+
 import { determinePorts } from "./launch-connector";
+import { writeFileSync } from 'fs';
+import { resolveCliArgsFromVSCodeExecutablePath } from '@vscode/test-electron';
+import { networkInterfaces } from 'os';
+//import { window , CancellationToken, Event, TreeDataProvider, TreeItem, ProviderResult } from 'vscode';
+import { VersionedTextDocumentIdentifier } from 'vscode-languageserver-protocol';
+import { getVSCodeDownloadUrl } from '@vscode/test-electron/out/util';
+import { normalize } from 'path';
+import { Breakpoint, TreeItem, TreeItemCollapsibleState } from 'vscode';
+import { AsyncStackViewProvider } from './extension';
+
 
 export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
   /** Path to the main program */
@@ -42,6 +55,58 @@ export interface AttachRequestArguments extends DebugProtocol.AttachRequestArgum
   tracePort: number;
 }
 
+
+
+// class AsyncStackViewProvider implements TreeDataProvider<StackFrameTreeItem> {
+//   onDidChangeTreeData?: Event<void | StackFrameTreeItem | StackFrameTreeItem[]>;
+//   getTreeItem(element: StackFrameTreeItem): TreeItem | Thenable<TreeItem> {
+//     return element;
+//   }
+//   getChildren(element?: StackFrameTreeItem): ProviderResult<StackFrameTreeItem[]> {
+//     if (element.children){
+//       return element.children;
+//     }
+//     if (element.innerStack){
+//       return element.innerStack;
+//     }
+//   }
+//   getParent?(element: StackFrameTreeItem): ProviderResult<StackFrameTreeItem> {
+//     throw new Error('Method not implemented.');
+//   }
+//   resolveTreeItem?(item: TreeItem, element: StackFrameTreeItem, token: CancellationToken): ProviderResult<TreeItem> {
+//     throw new Error('Method not implemented.');
+//   }
+// }
+
+
+// class AsyncStackFrameTreeItem extends TreeItem {
+//     // public children : StackFrameTreeItem[];
+//     // public innerStack: StackFrameTreeItem[];
+  
+  
+//     // constructor(stackFrame: SFM, innerStack?: AsyncStackFrameTreeItem[]) {
+//     //   super(stackFrame.name);
+//     //  if(innerStack){
+//     //     super("Parallel Stack");
+//     //     this.innerStack = innerStack;
+//     //  } else {
+  
+//     //   // var isParallel = stackFrame.parallelStacks == null;
+//     //   // super(stackFrame.name);
+//     //   // if (isParallel) {
+//     //   //   this.children = stackFrame.parallelStacks.map( (fullStack : SFM[]) => {
+//     //   //     var internalFrames = fullStack.map( singleFrame => new StackFrameTreeItem(singleFrame));
+//     //   //     return new StackFrameTreeItem(null,internalFrames);
+//     //   //   } )
+//     //   //     //  this.children = stackFrame.parallelStacks.map((fullStack : StackFrameMessage[])=> {
+//     //   //     //     return fullStack.map((singleFrame : StackFrameMessage) => {
+//     //   //     //       return new StackFrameTreeItem(singleFrame);
+//     //   //     //     })        
+//     //   //     //  })
+//     //  } 
+// //  }
+//   }
+
 interface BreakpointPair {
   vs:  DebugProtocol.Breakpoint;
   som: BreakpointData;
@@ -61,8 +126,17 @@ class SomDebugSession extends DebugSession {
 
   private varHandles : Handles<string>;
 
+  
+  private log = "/Users/matteo/TruffleStuff/SOMns-vscode/src/log.txt";
+
+  private addToLog(text : string) {
+    writeFileSync(this.log,text,{flag:'a+'})
+  }
+
   private /* readonly */ activityTypes: string[];
   private /* readonly */ knownActivities: Map<number, DebugProtocol.Thread>;
+
+  public asyncStackViewProvider? : AsyncStackViewProvider;
 
   public constructor() {
     super();
@@ -107,10 +181,16 @@ class SomDebugSession extends DebugSession {
       args: LaunchRequestArguments): void {
     const options = {cwd: args.cwd};
     //, '-d'
-    let somArgs = ['-G' , '-wd', args.program];
+    // let somArgs = ['-G' , '-wd', args.program];
+    // if (args.runtimeArgs) {
+    //   somArgs = args.runtimeArgs.concat(somArgs);
+    // }
+    debugger
+    let somArgs = ['-G', '-wd']
     if (args.runtimeArgs) {
-      somArgs = args.runtimeArgs.concat(somArgs);
+      somArgs = somArgs.concat(args.runtimeArgs)
     }
+    somArgs = somArgs.concat(args.program)
     if (args.args) {
       somArgs = somArgs.concat(args.args);
     }
@@ -137,6 +217,15 @@ class SomDebugSession extends DebugSession {
     this.somProc.on('close', code => {
       this.sendEvent(new TerminatedEvent());
     })
+   
+    this.addToLog("**************I AM IN THE CONSOLE!************");
+   //var avp = new AsyncStackViewProvider();
+
+    // try{t} catch (e) {
+    //   this.addToLog(`${e}`);
+    // }
+    
+    //window.registerTreeDataProvider("asyncStacksView", this.asyncStackViewProvider);
   }
 
   protected attachRequest(response: DebugProtocol.AttachResponse,
@@ -341,12 +430,16 @@ class SomDebugSession extends DebugSession {
       ideResponse: DebugProtocol.StackTraceResponse) {
     const frames = [];
     for (let frame of data.stackFrames) {
+      if (frame.parallelStacks != null){
+        frames.push(new StackFrame(frame.id, "PARALLEL STACKS: " + frame.parallelStacks.length));
+      } else {
       if (frame.sourceUri) {
         frames.push(new StackFrame(frame.id, frame.name,
           this.vsSourceFromUri(frame.sourceUri), frame.line, frame.column));
       } else {
         frames.push(new StackFrame(frame.id, frame.name))
       }
+    }
     }
 
     ideResponse.body = {
@@ -462,6 +555,16 @@ class SomDebugSession extends DebugSession {
     const message: RestartFrame = {
       action: "RestartFrame",
        frameId: request.arguments.frameId
+    };
+    this.send(message);
+  }
+
+  protected evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments, request?: DebugProtocol.Request): void {
+    const message: EvaluateExpressionRequest = {
+      action: "EvaluateExpressionRequest",
+       expression: args.expression,
+     
+       frameId: args.frameId
     };
     this.send(message);
   }
