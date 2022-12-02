@@ -4,12 +4,12 @@ import { DebugSession } from '@vscode/debugadapter';
 import { ChildProcess, spawn } from 'child_process';
 import { Socket } from 'net';
 
-import { workspace, ExtensionContext, window, debug, DebugConfigurationProvider, WorkspaceFolder, DebugConfiguration, CancellationToken, ProviderResult, commands } from 'vscode';
+import { workspace, ExtensionContext, window, debug, DebugConfigurationProvider, WorkspaceFolder, DebugConfiguration, CancellationToken, ProviderResult, commands, TreeDataProvider, Event, TreeItem } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, StreamInfo } from 'vscode-languageclient/node';
-
+import { StackFrame } from './messages';
 
 const LSPort = 8123;  // TODO: make configurable
-const EnableExtensionDebugging : boolean = <boolean> workspace.getConfiguration('somns').get('debugMode');
+const EnableExtensionDebugging : boolean = true;//<boolean> workspace.getConfiguration('somns').get('debugMode');
 
 export const CLIENT_OPTION: LanguageClientOptions = {
 	documentSelector: ['SOMns', 'SOM','simple']
@@ -106,18 +106,18 @@ export function startLanguageServer(asAbsolutePath: PathConverter,
 	const cmd = `${serverOptions.run.command} ${serverOptions.run.args.join(" ")}`;
 	console.log(`[SOM-EXT] spawn '${cmd}'`);
 	const lsProc = spawn(serverOptions.run.command, serverOptions.run.args, {shell: true});
-
-	let stderr = '';
+	console.log("THE CONSOLE IS HERE")
+	let stderrBuffer = '';
 
 	lsProc.stderr.on('data', data => {
-		stderr += data.toString();
+		stderrBuffer += data.toString();
 	});
-
+	
 	lsProc.on('exit', code => {
 		if (code !== 0) {
 			console.log(`[SOM-EXT] Server processes exited with code: ${code}
 	-------
-	stderr: ${stderr}
+	stderr: ${stderrBuffer}
 	-------`);
 		}
 	});
@@ -169,6 +169,8 @@ export function activate(context: ExtensionContext) {
 	// Create the language client and start the client.
 	client = new LanguageClient('SOMns Language Server', createLSPServer, CLIENT_OPTION);
 	client.start();
+	this.asyncStackViewProvider = new AsyncStackViewProvider();
+
 }
 
 export function deactivate(): Thenable<void> | undefined {
@@ -221,4 +223,53 @@ class SOMnsConfigurationProvider implements DebugConfigurationProvider {
 		return config;
 	}
 }
+
+export class AsyncStackViewProvider implements TreeDataProvider<StackFrameTreeItem> {
+	onDidChangeTreeData?: Event<void | StackFrameTreeItem | StackFrameTreeItem[]>;
+	getTreeItem(element: StackFrameTreeItem): TreeItem | Thenable<TreeItem> {
+	  return element;
+	}
+	getChildren(element?: StackFrameTreeItem): ProviderResult<StackFrameTreeItem[]> {
+	  if (element.children){
+		return element.children;
+	  }
+	  if (element.innerStack){
+		return element.innerStack;
+	  }
+	}
+	getParent?(element: StackFrameTreeItem): ProviderResult<StackFrameTreeItem> {
+	  throw new Error('Method not implemented.');
+	}
+	resolveTreeItem?(item: TreeItem, element: StackFrameTreeItem, token: CancellationToken): ProviderResult<TreeItem> {
+	  throw new Error('Method not implemented.');
+	}
+  }
+  
+	
+  export class StackFrameTreeItem extends TreeItem {
+	  public children : StackFrameTreeItem[];
+	  public innerStack: StackFrameTreeItem[];
+	
+	
+	  constructor(stackFrame: StackFrame, innerStack? : StackFrameTreeItem[]) {
+	   if(innerStack){
+		  super("Parallel Stack");
+		  this.innerStack = innerStack;
+	   } else {
+	
+	   var isParallel = stackFrame.parallelStacks == null;
+	   super(stackFrame.name);
+	   if (isParallel) {
+		this.children = stackFrame.parallelStacks.map( (fullStack : StackFrame[]) => {
+		  var internalFrames = fullStack.map( singleFrame => new StackFrameTreeItem(singleFrame));
+		  return new StackFrameTreeItem(null,internalFrames);
+		} )
+		  //  this.children = stackFrame.parallelStacks.map((fullStack : StackFrameMessage[])=> {
+		  //     return fullStack.map((singleFrame : StackFrameMessage) => {
+		  //       return new StackFrameTreeItem(singleFrame);
+		  //     })        
+		  //  })
+	   } 
+	  }}
+	}
 
