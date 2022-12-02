@@ -12,7 +12,7 @@ import { BreakpointData, Source as WDSource, Respond,
   StackTraceResponse, StackTraceRequest, ScopesRequest, ScopesResponse,
   StepMessage, VariablesRequest, VariablesResponse,
   createLineBreakpointData, InitializationResponse} from './messages';
-import {UpdateClass, RestartFrame , Message} from './extension-messages'
+import {UpdateClass, RestartFrame, EvaluateExpressionRequest, Message} from './extension-messages'
 import { determinePorts } from "./launch-connector";
 import { writeFileSync } from 'fs';
 import { resolveCliArgsFromVSCodeExecutablePath } from '@vscode/test-electron';
@@ -79,7 +79,6 @@ class SomDebugSession extends DebugSession {
   private /* readonly */ activityTypes: string[];
   private /* readonly */ knownActivities: Map<number, DebugProtocol.Thread>;
 
-  public asyncStackViewProvider? : AsyncStackViewProvider;
 
   public constructor() {
     super();

@@ -169,8 +169,6 @@ export function activate(context: ExtensionContext) {
 	// Create the language client and start the client.
 	client = new LanguageClient('SOMns Language Server', createLSPServer, CLIENT_OPTION);
 	client.start();
-	this.asyncStackViewProvider = new AsyncStackViewProvider();
-
 }
 
 export function deactivate(): Thenable<void> | undefined {
@@ -224,52 +222,4 @@ class SOMnsConfigurationProvider implements DebugConfigurationProvider {
 	}
 }
 
-export class AsyncStackViewProvider implements TreeDataProvider<StackFrameTreeItem> {
-	onDidChangeTreeData?: Event<void | StackFrameTreeItem | StackFrameTreeItem[]>;
-	getTreeItem(element: StackFrameTreeItem): TreeItem | Thenable<TreeItem> {
-	  return element;
-	}
-	getChildren(element?: StackFrameTreeItem): ProviderResult<StackFrameTreeItem[]> {
-	  if (element.children){
-		return element.children;
-	  }
-	  if (element.innerStack){
-		return element.innerStack;
-	  }
-	}
-	getParent?(element: StackFrameTreeItem): ProviderResult<StackFrameTreeItem> {
-	  throw new Error('Method not implemented.');
-	}
-	resolveTreeItem?(item: TreeItem, element: StackFrameTreeItem, token: CancellationToken): ProviderResult<TreeItem> {
-	  throw new Error('Method not implemented.');
-	}
-  }
-  
-	
-  export class StackFrameTreeItem extends TreeItem {
-	  public children : StackFrameTreeItem[];
-	  public innerStack: StackFrameTreeItem[];
-	
-	
-	  constructor(stackFrame: StackFrame, innerStack? : StackFrameTreeItem[]) {
-	   if(innerStack){
-		  super("Parallel Stack");
-		  this.innerStack = innerStack;
-	   } else {
-	
-	   var isParallel = stackFrame.parallelStacks == null;
-	   super(stackFrame.name);
-	   if (isParallel) {
-		this.children = stackFrame.parallelStacks.map( (fullStack : StackFrame[]) => {
-		  var internalFrames = fullStack.map( singleFrame => new StackFrameTreeItem(singleFrame));
-		  return new StackFrameTreeItem(null,internalFrames);
-		} )
-		  //  this.children = stackFrame.parallelStacks.map((fullStack : StackFrameMessage[])=> {
-		  //     return fullStack.map((singleFrame : StackFrameMessage) => {
-		  //       return new StackFrameTreeItem(singleFrame);
-		  //     })        
-		  //  })
-	   } 
-	  }}
-	}
 
