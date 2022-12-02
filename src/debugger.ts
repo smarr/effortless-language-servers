@@ -231,6 +231,9 @@ class SomDebugSession extends DebugSession {
       case "SymbolMessage":
         // Not necessary to know symbols at the moment
         break;
+      case "resumeActorResponse":
+        // Currently causing error, but not supported yet
+        break;
       default:
         this.sendEvent(new OutputEvent("[didn't understand msg] " + event.data, 'dbg-adapter'));
     }
