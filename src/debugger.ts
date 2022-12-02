@@ -137,7 +137,6 @@ export class SomDebugSession extends DebugSession {
   private /* readonly */ activityTypes: string[];
   private /* readonly */ knownActivities: Map<number, DebugProtocol.Thread>;
 
-  public asyncStackViewProvider? : AsyncStackViewProvider;
 
   public constructor() {
     super();
