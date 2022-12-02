@@ -11,12 +11,8 @@ import { BreakpointData, Source as WDSource, Respond,
   InitializeConnection, SourceMessage, IdMap, StoppedMessage,
   StackTraceResponse, StackTraceRequest, ScopesRequest, ScopesResponse,
   StepMessage, VariablesRequest, VariablesResponse,
-  createLineBreakpointData,
-  InitializationResponse,
-  UpdateClass, RestartFrame, EvaluateExpressionRequest, StackFrame as SFM} from './messages';
-
-
-
+  createLineBreakpointData, InitializationResponse} from './messages';
+import {UpdateClass, RestartFrame , Message} from './extension-messages'
 import { determinePorts } from "./launch-connector";
 import { writeFileSync } from 'fs';
 import { resolveCliArgsFromVSCodeExecutablePath } from '@vscode/test-electron';
@@ -26,7 +22,6 @@ import { VersionedTextDocumentIdentifier } from 'vscode-languageserver-protocol'
 import { getVSCodeDownloadUrl } from '@vscode/test-electron/out/util';
 import { normalize } from 'path';
 import { Breakpoint, TreeItem, TreeItemCollapsibleState } from 'vscode';
-import { AsyncStackViewProvider } from './extension';
 
 
 export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
@@ -54,58 +49,6 @@ export interface AttachRequestArguments extends DebugProtocol.AttachRequestArgum
   msgPort: number;
   tracePort: number;
 }
-
-
-
-// class AsyncStackViewProvider implements TreeDataProvider<StackFrameTreeItem> {
-//   onDidChangeTreeData?: Event<void | StackFrameTreeItem | StackFrameTreeItem[]>;
-//   getTreeItem(element: StackFrameTreeItem): TreeItem | Thenable<TreeItem> {
-//     return element;
-//   }
-//   getChildren(element?: StackFrameTreeItem): ProviderResult<StackFrameTreeItem[]> {
-//     if (element.children){
-//       return element.children;
-//     }
-//     if (element.innerStack){
-//       return element.innerStack;
-//     }
-//   }
-//   getParent?(element: StackFrameTreeItem): ProviderResult<StackFrameTreeItem> {
-//     throw new Error('Method not implemented.');
-//   }
-//   resolveTreeItem?(item: TreeItem, element: StackFrameTreeItem, token: CancellationToken): ProviderResult<TreeItem> {
-//     throw new Error('Method not implemented.');
-//   }
-// }
-
-
-// class AsyncStackFrameTreeItem extends TreeItem {
-//     // public children : StackFrameTreeItem[];
-//     // public innerStack: StackFrameTreeItem[];
-  
-  
-//     // constructor(stackFrame: SFM, innerStack?: AsyncStackFrameTreeItem[]) {
-//     //   super(stackFrame.name);
-//     //  if(innerStack){
-//     //     super("Parallel Stack");
-//     //     this.innerStack = innerStack;
-//     //  } else {
-  
-//     //   // var isParallel = stackFrame.parallelStacks == null;
-//     //   // super(stackFrame.name);
-//     //   // if (isParallel) {
-//     //   //   this.children = stackFrame.parallelStacks.map( (fullStack : SFM[]) => {
-//     //   //     var internalFrames = fullStack.map( singleFrame => new StackFrameTreeItem(singleFrame));
-//     //   //     return new StackFrameTreeItem(null,internalFrames);
-//     //   //   } )
-//     //   //     //  this.children = stackFrame.parallelStacks.map((fullStack : StackFrameMessage[])=> {
-//     //   //     //     return fullStack.map((singleFrame : StackFrameMessage) => {
-//     //   //     //       return new StackFrameTreeItem(singleFrame);
-//     //   //     //     })        
-//     //   //     //  })
-//     //  } 
-// //  }
-//   }
 
 interface BreakpointPair {
   vs:  DebugProtocol.Breakpoint;
@@ -389,11 +332,12 @@ class SomDebugSession extends DebugSession {
     return id;
   }
 
-  private send(respond: Respond) {
+  private send(respond: Respond | Message) {
     if (this.socket) {
       this.socket.send(JSON.stringify(respond));
     }
   }
+
 
   private sendBreakpoint(bpP: BreakpointPair, connected: boolean): void {
     if (connected) {
