@@ -12,8 +12,8 @@ import { BreakpointData, Source as WDSource, Respond,
   StackTraceResponse, StackTraceRequest, ScopesRequest, ScopesResponse,
   StepMessage, VariablesRequest, VariablesResponse,
   createLineBreakpointData,
-  InitializationResponse,
-  UpdateClass, RestartFrame} from './messages';
+  InitializationResponse} from './messages';
+import {UpdateClass, RestartFrame , Message} from './extension-messages'
 import { determinePorts } from "./launch-connector";
 
 export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
@@ -300,11 +300,12 @@ class SomDebugSession extends DebugSession {
     return id;
   }
 
-  private send(respond: Respond) {
+  private send(respond: Respond | Message) {
     if (this.socket) {
       this.socket.send(JSON.stringify(respond));
     }
   }
+
 
   private sendBreakpoint(bpP: BreakpointPair, connected: boolean): void {
     if (connected) {
