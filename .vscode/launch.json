@@ -15,20 +15,6 @@
 			"preLaunchTask": "npm prerun"
 		},
 		{
-			"name": "Run Debugger as Server",
-			"type": "node",
-			"request": "launch",
-			"runtimeArgs": [ "--nolazy" ],
-			"program": "${workspaceRoot}/src/debugger.ts",
-			"stopOnEntry": false,
-			"args": [ "--server=4711" ],
-			"sourceMaps": true,
-			"outFiles": [
-				"${workspaceRoot}/out/**/*.js"
-			],
-			"cwd": "${workspaceRoot}"
-		},
-		{
 			"name": "Launch Tests",
 			"type": "extensionHost",
 			"request": "launch",
