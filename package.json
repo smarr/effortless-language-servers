@@ -97,11 +97,6 @@
 			{
 				"type": "SOMns",
 				"label": "SOMns",
-				"enableBreakpointsFor": {
-					"languageIds": [
-						"SOMns"
-					]
-				},
 				"program": "./out/src/debugger.js",
 				"runtime": "node",
 				"configurationAttributes": {
