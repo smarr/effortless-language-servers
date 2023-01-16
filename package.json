@@ -190,6 +190,7 @@
 		"pretest": "npm run compile",
 		"watch": "tsc --build --watch",
 		"compile": "tsc --build && cp -R test/examples out/test/",
+		"prerun": "npm run compile && npm run esbuild-base -- --sourcemap",
 		"postinstall": "npm run compile:server",
 		"test": "node ./out/test/runTest.js",
 		"create-server-shell-script": "npx run-func out/src/command-line.js getShellScript false false > out/server/start.sh; chmod +x out/server/start.sh"

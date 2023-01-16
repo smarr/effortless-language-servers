@@ -8,12 +8,11 @@
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": ["--extensionDevelopmentPath=${workspaceRoot}" ],
-			"stopOnEntry": false,
 			"sourceMaps": true,
 			"outFiles": [
 				"${workspaceRoot}/out/**/*.js"
 			],
-			"preLaunchTask": "npm"
+			"preLaunchTask": "npm prerun"
 		},
 		{
 			"name": "Run Debugger as Server",
@@ -36,10 +35,9 @@
 			"runtimeExecutable": "${execPath}",
 			"args": ["--extensionDevelopmentPath=${workspaceFolder}",
 							 "--extensionTestsPath=${workspaceFolder}/out/test"],
-			"stopOnEntry": false,
 			"sourceMaps": true,
 			"outFiles": ["${workspaceFolder}/out/test/**/*.js"],
-			// "preLaunchTask": "npm"
+			"preLaunchTask": "npm prerun"
 		}
 	]
 }

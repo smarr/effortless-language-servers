@@ -38,6 +38,17 @@
 				"_id": "build",
 				"isDefault": false
 			}
+		},
+		{
+			"label": "npm prerun",
+			"type": "shell",
+			"command": "npm",
+			"args": ["run", "prerun"],
+			"problemMatcher": "$tsc-watch",
+			"group": {
+				"_id": "build",
+				"isDefault": false
+			}
 		}
 	]
 }
