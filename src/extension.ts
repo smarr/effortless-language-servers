@@ -12,19 +12,19 @@ const LSPort = 8123;  // TODO: make configurable
 
 const configuration = workspace.getConfiguration('els');
 const EnableExtensionDebugging : boolean = <boolean> configuration.get('debugMode');
-const JavaHomeConfig = configuration.get('javaHome');
 
 export const CLIENT_OPTION: LanguageClientOptions = {
 	documentSelector: ['SOMns', 'SOM','simple']
 }
 
 type PathConverter = (path: string) => string;
-let client: LanguageClient = null;
+
+let client: LanguageClient = null;
 let serverProcess: ChildProcess = null;
 
 function getServerOptions(asAbsolutePath: PathConverter, enableDebug:
 	  boolean, enableTcp: boolean): ServerOptions {
-	const cmdLine = getCommandLine(JavaHomeConfig, asAbsolutePath, enableDebug, enableTcp);
+	const cmdLine = getCommandLine(configuration.get('javaHome'), asAbsolutePath, enableDebug, enableTcp);
 
 	return {
 		run:   cmdLine,
@@ -110,10 +110,10 @@ export function activate(context: ExtensionContext) {
 				window.showInformationMessage("SOMns Debug Mode: Trying to connect to Language Server on port " + LSPort);
 				connectToLanguageServer(resolve, reject);
 			} else {
-				if (!isJavaAvailableAndCompatible(JavaHomeConfig)) {
+				if (!isJavaAvailableAndCompatible(configuration.get('javaHome'))) {
 					window.showErrorMessage('Java 17 or new was not found. Please configure it in the settings under the `els.javaHome` key.');
 				}
-				window.showInformationMessage("SOMns Starting Language Server");
+				// window.showInformationMessage("SOMns Starting Language Server");
 				startLanguageServer(context.asAbsolutePath, resolve, reject);
 			}
 		});
