@@ -24,7 +24,9 @@
 	"activationEvents": [
 		"onLanguage:SOMns",
 		"onLanguage:SOM",
-		"onLanguage:simple"
+		"onLanguage:simple",
+		"onCommand:extension.effortless-language-servers.runEditorContents",
+		"onCommand:extension.effortless-language-servers.debugEditorContents"
 	],
 	"main": "./out/main",
 	"icon": "resources/logo.png",
@@ -90,6 +92,11 @@
 					"type": "string",
 					"default": null,
 					"description": "Path to the Java 17 or later installation. On macOS, it might be /Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home. On Linux perhaps /usr/lib/jvm/java-17-openjdk-amd64"
+				},
+				"els.somnsExecutable": {
+					"type": "string",
+					"default": null,
+					"description": "Absolute path to the SOMns launcher to be used for debugging and executing programs."
 				}
 			}
 		},
@@ -97,8 +104,6 @@
 			{
 				"type": "SOMns",
 				"label": "SOMns",
-				"program": "./out/src/debugger.js",
-				"runtime": "node",
 				"configurationAttributes": {
 					"launch": {
 						"required": [
@@ -180,6 +185,46 @@
 						"tracePort": 7978
 					}
 				]
+			}
+		],
+		"menus": {
+			"editor/title/run": [
+				{
+					"command": "extension.effortless-language-servers.runEditorContents",
+					"when": "resourceLangId == SOMns",
+					"group": "navigation@1"
+				},
+				{
+					"command": "extension.effortless-language-servers.debugEditorContents",
+					"when": "resourceLangId == SOMns",
+					"group": "navigation@2"
+				}
+			],
+			"commandPalette": [
+				{
+					"command": "extension.effortless-language-servers.debugEditorContents",
+					"when": "resourceLangId == SOMns"
+				},
+				{
+					"command": "extension.effortless-language-servers.runEditorContents",
+					"when": "resourceLangId == SOMns"
+				}
+			]
+		},
+		"commands": [
+			{
+				"command": "extension.effortless-language-servers.debugEditorContents",
+				"title": "Debug File",
+				"category": "SOMns Debug",
+				"enablement": "!inDebugMode",
+				"icon": "$(debug-alt)"
+			},
+			{
+				"command": "extension.effortless-language-servers.runEditorContents",
+				"title": "Run File",
+				"category": "SOMns Debug",
+				"enablement": "!inDebugMode",
+				"icon": "$(play)"
 			}
 		]
 	},

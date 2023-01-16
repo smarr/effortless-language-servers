@@ -5,7 +5,7 @@ import { BreakpointEvent, DebugSession, Handles, InitializedEvent, Scope,
   Source as VSSource, StackFrame, StoppedEvent, OutputEvent,
   TerminatedEvent } from '@vscode/debugadapter';
 import { DebugProtocol } from '@vscode/debugprotocol';
-import * as WebSocket from 'ws';
+import { WebSocket } from 'ws';
 
 import { BreakpointData, Source as WDSource, Respond,
   InitializeConnection, SourceMessage, IdMap, StoppedMessage,
@@ -46,7 +46,7 @@ interface BreakpointPair {
   som: BreakpointData;
 }
 
-class SomDebugSession extends DebugSession {
+export class SomDebugSession extends DebugSession {
   private socket: WebSocket;
   private somProc: ChildProcess;
 
@@ -105,7 +105,13 @@ class SomDebugSession extends DebugSession {
   protected launchRequest(response: DebugProtocol.LaunchResponse,
       args: LaunchRequestArguments): void {
     const options = {cwd: args.cwd};
-    let somArgs = ['-G', '-wd', args.program];
+    let somArgs = ['-G'];
+
+    if (!args.noDebug) {
+      somArgs.push('-wd');
+    }
+    somArgs.push(args.program);
+
     if (args.runtimeArgs) {
       somArgs = args.runtimeArgs.concat(somArgs);
     }
@@ -123,9 +129,11 @@ class SomDebugSession extends DebugSession {
     this.somProc.stdout.on('data', (data) => {
       const str = data.toString();
       this.sendEvent(new OutputEvent(str, 'stdout'));
-      determinePorts(str, ports);
-      if (str.includes("Started HTTP Server") && !connecting) {
-        this.connectDebugger(response, ports);
+      if (!args.noDebug) {
+        determinePorts(str, ports);
+        if (str.includes("Started HTTP Server") && !connecting) {
+          this.connectDebugger(response, ports);
+        }
       }
     });
     this.somProc.stderr.on('data', (data) => {
@@ -134,7 +142,7 @@ class SomDebugSession extends DebugSession {
     });
     this.somProc.on('close', code => {
       this.sendEvent(new TerminatedEvent());
-    })
+    });
   }
 
   protected attachRequest(response: DebugProtocol.AttachResponse,
@@ -456,5 +464,3 @@ class SomDebugSession extends DebugSession {
     this.sendStep("stop", response, args);
   }
 }
-
-DebugSession.run(SomDebugSession);
