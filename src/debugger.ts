@@ -14,6 +14,7 @@ import { BreakpointData, Source as WDSource, Respond,
   createLineBreakpointData,
   InitializationResponse} from './messages';
 import { determinePorts } from "./launch-connector";
+import { Event, EventEmitter, ProviderResult, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView } from 'vscode';
 
 export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
   /** Path to the main program */
@@ -167,6 +168,8 @@ export class SomDebugSession extends DebugSession {
     this.socket.onmessage = this.onWDMessage.bind(this);
 
     this.sendResponse(response);
+
+    addPromise("connected");
   }
 
   private onWDMessage(event): void {
@@ -223,6 +226,7 @@ export class SomDebugSession extends DebugSession {
   }
 
   private onStoppedMessage(data: StoppedMessage): void {
+    addPromise("onStoppedMessage");
     const known = this.knownActivities.get(data.activityId) !== undefined;
     if (!known) {
       this.knownActivities.set(data.activityId,
@@ -432,6 +436,8 @@ export class SomDebugSession extends DebugSession {
   }
 
   private sendStep(stepType: string, response, args) {
+    addPromise(stepType);
+
     const step: StepMessage = {
       action: "StepMessage", activityId: args.threadId, step: stepType};
     this.send(step);
@@ -462,5 +468,50 @@ export class SomDebugSession extends DebugSession {
   protected pauseRequest(response: DebugProtocol.PauseResponse,
       args: DebugProtocol.PauseArguments): void {
     this.sendStep("stop", response, args);
+  }
+}
+
+const promiseViewItems = [];
+
+let lastPromiseView = null;
+
+const _onDidChangeTreeData: EventEmitter<PromiseItem | undefined | null | void> = new EventEmitter<PromiseItem | undefined | null | void>();
+
+function addPromise(label: string) {
+  promiseViewItems.push(new PromiseItem(label, TreeItemCollapsibleState.None));
+  if (lastPromiseView !== null) {
+    _onDidChangeTreeData.fire();
+  }
+}
+
+
+export class PromiseView implements TreeDataProvider<PromiseItem> {
+  private treeView: TreeView<PromiseItem> | null;
+  private elements: PromiseItem[];
+
+  constructor() {
+    lastPromiseView = this;
+    this.treeView = null;
+    this.elements = promiseViewItems;
+  }
+
+  public readonly onDidChangeTreeData: Event<PromiseItem | undefined | null | void> = _onDidChangeTreeData.event;
+
+  public getTreeItem(elem: PromiseItem): TreeItem {
+    return elem;
+  }
+
+  public getChildren(element?: PromiseItem): ProviderResult<PromiseItem[]> {
+    return this.elements;
+  }
+
+  public setTreeView(treeView: TreeView<PromiseItem>) {
+    this.treeView = treeView;
+  }
+}
+
+class PromiseItem extends TreeItem {
+  constructor(label: string, collapsibleState: TreeItemCollapsibleState) {
+    super(label, collapsibleState);
   }
 }

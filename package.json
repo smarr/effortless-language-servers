@@ -226,7 +226,15 @@
 				"enablement": "!inDebugMode",
 				"icon": "$(play)"
 			}
-		]
+		],
+		"views": {
+			"debug": [
+				{
+					"id": "somnsPromiseView",
+					"name": "Promises"
+				}
+			]
+		}
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile && npm run esbuild-base -- --minify",

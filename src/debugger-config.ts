@@ -15,7 +15,7 @@ import {
   workspace,
   WorkspaceFolder
 } from "vscode";
-import { SomDebugSession } from "./debugger";
+import { PromiseView, SomDebugSession } from "./debugger";
 
 const configuration = workspace.getConfiguration('els');
 
@@ -96,4 +96,11 @@ export function activateDebuggerFeatures(context: ExtensionContext) {
 	const debugAdapterFactory = debug.registerDebugAdapterDescriptorFactory('SOMns', adapterFactory);
 
   context.subscriptions.push(configProvider, runEditor, debugEditor, debugAdapterFactory);
+
+  const promiseView = new PromiseView();
+  const treeView = window.createTreeView('somnsPromiseView', {
+    treeDataProvider: promiseView
+  });
+
+  promiseView.setTreeView(treeView);
 }
