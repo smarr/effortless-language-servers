@@ -7,7 +7,7 @@
 	"version": "0.8.1",
 	"publisher": "MetaConcProject",
 	"engines": {
-		"vscode": "^1.66.0"
+		"vscode": "^1.74.0"
 	},
 	"categories": [
 		"Debuggers",
@@ -24,7 +24,9 @@
 	"activationEvents": [
 		"onLanguage:SOMns",
 		"onLanguage:SOM",
-		"onLanguage:simple"
+		"onLanguage:simple",
+		"onCommand:extension.effortless-language-servers.runEditorContents",
+		"onCommand:extension.effortless-language-servers.debugEditorContents"
 	],
 	"main": "./out/main",
 	"icon": "resources/logo.png",
@@ -90,6 +92,11 @@
 					"type": "string",
 					"default": null,
 					"description": "Path to the Java 17 or later installation. On macOS, it might be /Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home. On Linux perhaps /usr/lib/jvm/java-17-openjdk-amd64"
+				},
+				"els.somnsExecutable": {
+					"type": "string",
+					"default": null,
+					"description": "Absolute path to the SOMns launcher to be used for debugging and executing programs."
 				}
 			}
 		},
@@ -97,13 +104,6 @@
 			{
 				"type": "SOMns",
 				"label": "SOMns",
-				"enableBreakpointsFor": {
-					"languageIds": [
-						"SOMns"
-					]
-				},
-				"program": "./out/src/debugger.js",
-				"runtime": "node",
 				"configurationAttributes": {
 					"launch": {
 						"required": [
@@ -186,6 +186,46 @@
 					}
 				]
 			}
+		],
+		"menus": {
+			"editor/title/run": [
+				{
+					"command": "extension.effortless-language-servers.runEditorContents",
+					"when": "resourceLangId == SOMns",
+					"group": "navigation@1"
+				},
+				{
+					"command": "extension.effortless-language-servers.debugEditorContents",
+					"when": "resourceLangId == SOMns",
+					"group": "navigation@2"
+				}
+			],
+			"commandPalette": [
+				{
+					"command": "extension.effortless-language-servers.debugEditorContents",
+					"when": "resourceLangId == SOMns"
+				},
+				{
+					"command": "extension.effortless-language-servers.runEditorContents",
+					"when": "resourceLangId == SOMns"
+				}
+			]
+		},
+		"commands": [
+			{
+				"command": "extension.effortless-language-servers.debugEditorContents",
+				"title": "Debug File",
+				"category": "SOMns Debug",
+				"enablement": "!inDebugMode",
+				"icon": "$(debug-alt)"
+			},
+			{
+				"command": "extension.effortless-language-servers.runEditorContents",
+				"title": "Run File",
+				"category": "SOMns Debug",
+				"enablement": "!inDebugMode",
+				"icon": "$(play)"
+			}
 		]
 	},
 	"scripts": {
@@ -195,27 +235,28 @@
 		"pretest": "npm run compile",
 		"watch": "tsc --build --watch",
 		"compile": "tsc --build && cp -R test/examples out/test/",
+		"prerun": "npm run compile && npm run esbuild-base -- --sourcemap",
 		"postinstall": "npm run compile:server",
 		"test": "node ./out/test/runTest.js",
 		"create-server-shell-script": "npx run-func out/src/command-line.js getShellScript false false > out/server/start.sh; chmod +x out/server/start.sh"
 	},
 	"devDependencies": {
-		"@types/chai": "4.3.3",
-		"@types/mocha": "9.1.1",
-		"@types/node": "18.7.16",
-		"@types/vscode": "1.66.0",
-		"@vscode/test-electron": "2.1.5",
-		"chai": "4.3.6",
-		"esbuild": "^0.15.12",
-		"mocha": "10.0.0",
+		"@types/chai": "4.3.4",
+		"@types/mocha": "10.0.1",
+		"@types/node": "18.11.18",
+		"@types/vscode": "1.74.0",
+		"@vscode/test-electron": "2.2.2",
+		"chai": "4.3.7",
+		"esbuild": "0.17.3",
+		"mocha": "10.2.0",
 		"run-func": "3.0.0",
-		"typescript": "4.8.2"
+		"typescript": "4.9.4"
 	},
 	"dependencies": {
 		"@vscode/debugadapter": "1.55.1",
 		"@vscode/debugprotocol": "1.55.1",
 		"vscode-languageclient": "7.0.0",
 		"vscode-languageserver-protocol": "3.16.0",
-		"ws": "8.8.1"
+		"ws": "8.12.0"
 	}
 }

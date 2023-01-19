@@ -8,26 +8,11 @@
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": ["--extensionDevelopmentPath=${workspaceRoot}" ],
-			"stopOnEntry": false,
 			"sourceMaps": true,
 			"outFiles": [
 				"${workspaceRoot}/out/**/*.js"
 			],
-			"preLaunchTask": "npm"
-		},
-		{
-			"name": "Run Debugger as Server",
-			"type": "node",
-			"request": "launch",
-			"runtimeArgs": [ "--nolazy" ],
-			"program": "${workspaceRoot}/src/debugger.ts",
-			"stopOnEntry": false,
-			"args": [ "--server=4711" ],
-			"sourceMaps": true,
-			"outFiles": [
-				"${workspaceRoot}/out/**/*.js"
-			],
-			"cwd": "${workspaceRoot}"
+			"preLaunchTask": "npm prerun"
 		},
 		{
 			"name": "Launch Tests",
@@ -36,10 +21,9 @@
 			"runtimeExecutable": "${execPath}",
 			"args": ["--extensionDevelopmentPath=${workspaceFolder}",
 							 "--extensionTestsPath=${workspaceFolder}/out/test"],
-			"stopOnEntry": false,
 			"sourceMaps": true,
 			"outFiles": ["${workspaceFolder}/out/test/**/*.js"],
-			// "preLaunchTask": "npm"
+			"preLaunchTask": "npm prerun"
 		}
 	]
 }

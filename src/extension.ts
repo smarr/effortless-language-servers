@@ -3,15 +3,15 @@
 import { ChildProcess, spawn } from 'child_process';
 import { Socket } from 'net';
 
-import { workspace, ExtensionContext, window, debug, DebugConfigurationProvider, WorkspaceFolder, DebugConfiguration, CancellationToken, ProviderResult } from 'vscode';
+import { workspace, window, ExtensionContext } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, StreamInfo } from 'vscode-languageclient/node';
 import { getCommandLine, isJavaAvailableAndCompatible } from './command-line';
+import { activateDebuggerFeatures } from './debugger-config';
 
 const LSPort = 8123;  // TODO: make configurable
 
 const configuration = workspace.getConfiguration('els');
 const EnableExtensionDebugging : boolean = <boolean> configuration.get('debugMode');
-const JavaHomeConfig = configuration.get('javaHome');
 
 export const CLIENT_OPTION: LanguageClientOptions = {
 	documentSelector: ['SOMns', 'SOM','simple']
@@ -24,7 +24,7 @@ let serverProcess: ChildProcess = null;
 
 function getServerOptions(asAbsolutePath: PathConverter, enableDebug:
 	  boolean, enableTcp: boolean): ServerOptions {
-	const cmdLine = getCommandLine(JavaHomeConfig, asAbsolutePath, enableDebug, enableTcp);
+	const cmdLine = getCommandLine(configuration.get('javaHome'), asAbsolutePath, enableDebug, enableTcp);
 
 	return {
 		run:   cmdLine,
@@ -110,21 +110,22 @@ export function activate(context: ExtensionContext) {
 				window.showInformationMessage("SOMns Debug Mode: Trying to connect to Language Server on port " + LSPort);
 				connectToLanguageServer(resolve, reject);
 			} else {
-				if (!isJavaAvailableAndCompatible(JavaHomeConfig)) {
+				if (!isJavaAvailableAndCompatible(configuration.get('javaHome'))) {
 					window.showErrorMessage('Java 17 or new was not found. Please configure it in the settings under the `els.javaHome` key.');
 				}
-				window.showInformationMessage("SOMns Starting Language Server");
+				// window.showInformationMessage("SOMns Starting Language Server");
 				startLanguageServer(context.asAbsolutePath, resolve, reject);
 			}
 		});
 	}
 
-	// Registering the configuration provider for starting opened file
-	debug.registerDebugConfigurationProvider('SOMns', new SOMnsConfigurationProvider)
-
 	// Create the language client and start the client.
 	client = new LanguageClient('SOMns Language Server', createLSPServer, CLIENT_OPTION);
-	client.start();
+	const clientHandle = client.start();
+
+	context.subscriptions.push(clientHandle);
+
+	activateDebuggerFeatures(context);
 }
 
 export function deactivate(): Thenable<void> | undefined {
@@ -136,23 +137,4 @@ export function deactivate(): Thenable<void> | undefined {
 		return undefined;
 	}
 	return client.stop();
-}
-
-/**
- * This SOMnsConfigurationProvider is a dynamic provider that can change the debug configuration parameters
- */
-class SOMnsConfigurationProvider implements DebugConfigurationProvider {
-
-	/** Resolve the debug configuration to debug currently selected file */
-	resolveDebugConfiguration(folder: WorkspaceFolder | undefined, config: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
-
-		// retrieve the active file, if it is a SOMns file then substitute the program variable with the file path
-		const editor = window.activeTextEditor;
-		if (editor && editor.document.languageId === 'SOMns') {
-			config.program = '${file}';
-			config.stopOnEntry = true;
-		}
-
-		return config;
-	}
 }
