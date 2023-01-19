@@ -20,15 +20,6 @@ import { UpdateClass, RestartFrame, EvaluateExpressionRequest, Message } from '.
 
 import { determinePorts } from "./launch-connector";
 import { writeFileSync } from 'fs';
-import { resolveCliArgsFromVSCodeExecutablePath } from '@vscode/test-electron';
-import { networkInterfaces } from 'os';
-//import { window , CancellationToken, Event, TreeDataProvider, TreeItem, ProviderResult } from 'vscode';
-import { VersionedTextDocumentIdentifier } from 'vscode-languageserver-protocol';
-import { getVSCodeDownloadUrl } from '@vscode/test-electron/out/util';
-import { normalize } from 'path';
-import { Breakpoint, TreeItem, TreeItemCollapsibleState } from 'vscode';
-import { AsyncStackViewProvider } from './extension';
-
 
 export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
   /** Path to the main program */
