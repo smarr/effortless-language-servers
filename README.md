@@ -2,7 +2,7 @@
 
 The goal of the *Effortless Language Servers* project is to
 enable the creation of language servers for dynamic languages
-based on a share language-agnostic infrastructure.
+based on a shared language-agnostic infrastructure.
 
 Building a language server with standard features should not take
 more than a few hundred lines of code.
