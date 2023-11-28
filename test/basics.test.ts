@@ -47,11 +47,10 @@ class TestLanguageClient extends LanguageClient {
 }
 
 describe("Basic Tests", () => {
-  let clientDisposable: Disposable;
   let client: TestLanguageClient;
 
-  after(done => {
-    clientDisposable.dispose();
+  after(async done => {
+    await client.stop();
     deactivate();
     done();
   });
@@ -64,17 +63,15 @@ describe("Basic Tests", () => {
     const errorHandler: ErrorHandler = {
       error: (error: Error, message: Message, count: number) => {
         console.error(error, message, count);
-        return ErrorAction.Continue;
+        return {action: ErrorAction.Continue};
       },
       closed: () => {
-        return CloseAction.DoNotRestart;
+        return {action: CloseAction.DoNotRestart};
       }
     };
     const options = Object.assign({}, CLIENT_OPTION, { errorHandler: errorHandler });
     client = new TestLanguageClient('SOMns Language Server', createLSPServer, options);
-    clientDisposable = client.start();
-
-    return client.onReady();
+    return client.start();
   });
 
   it("Load SOMns Hello World and expect diagnostics", done => {
