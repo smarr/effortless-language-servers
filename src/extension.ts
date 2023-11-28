@@ -103,7 +103,7 @@ export function connectToLanguageServer(resolve: (value?: StreamInfo | PromiseLi
 	});
 }
 
-export function activate(context: ExtensionContext) {
+export async function activate(context: ExtensionContext) {
 	function createLSPServer() : Promise<StreamInfo> {
 		return new Promise((resolve, reject) => {
 			if (EnableExtensionDebugging) {
@@ -121,9 +121,7 @@ export function activate(context: ExtensionContext) {
 
 	// Create the language client and start the client.
 	client = new LanguageClient('SOMns Language Server', createLSPServer, CLIENT_OPTION);
-	const clientHandle = client.start();
-
-	context.subscriptions.push(clientHandle);
+	await client.start();
 
 	activateDebuggerFeatures(context);
 }
