@@ -241,13 +241,13 @@
 		"create-server-shell-script": "npx run-func out/src/command-line.js getShellScript false false > out/server/start.sh; chmod +x out/server/start.sh"
 	},
 	"devDependencies": {
-		"@types/chai": "4.3.4",
-		"@types/mocha": "10.0.1",
+		"@types/chai": "4.3.11",
+		"@types/mocha": "10.0.6",
 		"@types/node": "18.11.18",
 		"@types/vscode": "1.74.0",
 		"@vscode/test-electron": "2.2.2",
-		"chai": "4.3.7",
-		"esbuild": "0.17.3",
+		"chai": "4.3.10",
+		"esbuild": "0.19.8",
 		"mocha": "10.2.0",
 		"run-func": "3.0.0",
 		"typescript": "4.9.4"
