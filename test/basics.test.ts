@@ -49,15 +49,13 @@ class TestLanguageClient extends LanguageClient {
 describe("Basic Tests", () => {
   let client: TestLanguageClient;
 
-  after(async done => {
+  after(async () => {
     await client.stop();
     deactivate();
-    done();
   });
 
   const examplesPath = resolvePath("out/test/examples");
   const examplesUri = vscode.Uri.file(examplesPath);
-  const wsF = vscode.workspace.getWorkspaceFolder(examplesUri);
 
   it("Start Client", () => {
     const errorHandler: ErrorHandler = {
