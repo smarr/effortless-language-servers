@@ -14,7 +14,6 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SignatureInformation;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
-import org.eclipse.xtext.xbase.lib.Pure;
 
 
 public final class LanguageElement extends DocumentSymbol implements WithRange {
@@ -220,7 +219,6 @@ public final class LanguageElement extends DocumentSymbol implements WithRange {
   }
 
   @Override
-  @Pure
   public int hashCode() {
     if (stableHash != 0) {
       return stableHash;

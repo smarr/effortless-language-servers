@@ -17,9 +17,8 @@
 	<property name="mvn.repo"	   value="https://repo1.maven.org/maven2" />
 
 	<property name="checkstyle.version" value="8.11" />
-	<property name="guava.version"	value="19.0" />
-	<property name="gson.version"	value="2.8.6" />
-	<property name="xtend.version"	value="2.24.0" />
+	<property name="gson.version"	value="2.14.0" />
+	<property name="lsp4j.version"	value="1.0.0" />
 	<property name="antlr.version"	value="4.9.2" />
 	<property name="junit.version" value="4.13.2" />
 	<property name="hamcrest.version" value="1.3" />
@@ -28,10 +27,8 @@
 
 	<path id="jar.classpath">
 		<pathelement location="${lib.dir}/gson-${gson.version}.jar" />
-		<pathelement location="${lib.dir}/guava-${guava.version}.jar" />
-		<pathelement location="${lib.dir}/org.eclipse.xtext.xbase.lib-${xtend.version}.jar" />
-		<pathelement location="${lib.dir}/org.eclipse.xtend.lib-${xtend.version}.jar" />
-		<pathelement location="${lib.dir}/org.eclipse.xtend.lib.macro-${xtend.version}.jar" />
+		<pathelement location="${lib.dir}/org.eclipse.lsp4j-${lsp4j.version}.jar" />
+		<pathelement location="${lib.dir}/org.eclipse.lsp4j.jsonrpc-${lsp4j.version}.jar" />
 		<pathelement location="${lib.dir}/antlr4-runtime-${antlr.version}.jar" />
 
 		<pathelement location="${sdk.build}/collections.jar" />
@@ -89,18 +86,12 @@
 		<get src="${mvn.repo}/com/google/code/gson/gson/${gson.version}/gson-${gson.version}.jar"
 				usetimestamp="true"
 				dest="${lib.dir}/gson-${gson.version}.jar" />
-		<get src="${mvn.repo}/com/google/guava/guava/${guava.version}/guava-${guava.version}.jar"
+		<get src="${mvn.repo}/org/eclipse/lsp4j/org.eclipse.lsp4j/${lsp4j.version}/org.eclipse.lsp4j-${lsp4j.version}.jar"
 				usetimestamp="true"
-				dest="${lib.dir}/guava-${guava.version}.jar" />
-		<get src="${mvn.repo}/org/eclipse/xtext/org.eclipse.xtext.xbase.lib/${xtend.version}/org.eclipse.xtext.xbase.lib-${xtend.version}.jar"
+				dest="${lib.dir}/org.eclipse.lsp4j-${lsp4j.version}.jar" />
+		<get src="${mvn.repo}/org/eclipse/lsp4j/org.eclipse.lsp4j.jsonrpc/${lsp4j.version}/org.eclipse.lsp4j.jsonrpc-${lsp4j.version}.jar"
 				usetimestamp="true"
-				dest="${lib.dir}/org.eclipse.xtext.xbase.lib-${xtend.version}.jar" />
-		<get src="${mvn.repo}/org/eclipse/xtend/org.eclipse.xtend.lib/${xtend.version}/org.eclipse.xtend.lib-${xtend.version}.jar"
-				usetimestamp="true"
-				dest="${lib.dir}/org.eclipse.xtend.lib-${xtend.version}.jar" />
-		<get src="${mvn.repo}/org/eclipse/xtend/org.eclipse.xtend.lib.macro/${xtend.version}/org.eclipse.xtend.lib.macro-${xtend.version}.jar"
-				usetimestamp="true"
-				dest="${lib.dir}/org.eclipse.xtend.lib.macro-${xtend.version}.jar" />
+				dest="${lib.dir}/org.eclipse.lsp4j.jsonrpc-${lsp4j.version}.jar" />
 		<get src="${mvn.repo}/org/antlr/antlr4-runtime/${antlr.version}/antlr4-runtime-${antlr.version}.jar"
 				usetimestamp="true"
 				dest="${lib.dir}/antlr4-runtime-${antlr.version}.jar" />
@@ -135,10 +126,6 @@
 			<src path="${src.dir}" />
 			<src path="${simple.src}" />
 			<src path="${test.dir}" />
-			<src path="org.eclipse.lsp4j" />
-			<src path="org.eclipse.lsp4j-gen" />
-			<src path="org.eclipse.lsp4j.generator" />
-			<src path="org.eclipse.lsp4j.jsonrpc" />
 			<!-- SOMns support is currently disabled -->
 			<exclude name="som/langserv/newspeak/**" />
 			<exclude name="som/langserv/lens/Minitest.java" />

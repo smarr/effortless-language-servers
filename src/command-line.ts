@@ -22,11 +22,9 @@ export function getCommandLine(
 		asAbsolutePath('out/server/truffle-api.jar'),
 		asAbsolutePath('out/server/truffle-runtime.jar'),
 
-		asAbsolutePath('out/server/gson-2.8.6.jar'),
-		asAbsolutePath('out/server/guava-19.0.jar'),
-		asAbsolutePath('out/server/org.eclipse.xtend.lib.macro-2.24.0.jar'),
-		asAbsolutePath('out/server/org.eclipse.xtend.lib-2.24.0.jar'),
-		asAbsolutePath('out/server/org.eclipse.xtext.xbase.lib-2.24.0.jar'),
+		asAbsolutePath('out/server/gson-2.14.0.jar'),
+		asAbsolutePath('out/server/org.eclipse.lsp4j-1.0.0.jar'),
+		asAbsolutePath('out/server/org.eclipse.lsp4j.jsonrpc-1.0.0.jar'),
 		asAbsolutePath('out/server/antlr4-runtime-4.9.2.jar'),
 		asAbsolutePath('out/server/som-language-server.jar')];
 

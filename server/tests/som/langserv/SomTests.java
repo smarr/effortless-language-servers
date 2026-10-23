@@ -717,7 +717,7 @@ public class SomTests {
     var diag = structures.getDiagnostics();
     assertEquals(1, diag.size());
 
-    assertTrue(diag.get(0).getMessage().contains("Unexpected symbol."));
+    assertTrue(diag.get(0).getMessage().getLeft().contains("Unexpected symbol."));
     assertEquals(3, diag.get(0).getRange().getStart().getLine());
     assertEquals(0, diag.get(0).getRange().getStart().getCharacter());
   }
