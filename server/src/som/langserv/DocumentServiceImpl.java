@@ -48,6 +48,10 @@ import org.eclipse.lsp4j.SignatureHelpParams;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
+import org.eclipse.lsp4j.TypeHierarchyItem;
+import org.eclipse.lsp4j.TypeHierarchyPrepareParams;
+import org.eclipse.lsp4j.TypeHierarchySubtypesParams;
+import org.eclipse.lsp4j.TypeHierarchySupertypesParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.TextDocumentService;
@@ -293,6 +297,43 @@ public class DocumentServiceImpl implements TextDocumentService {
     var adapter = getResponsibleAdapter(new TextDocumentIdentifier(item.getUri()));
     if (adapter != null) {
       return CompletableFuture.completedFuture(adapter.getOutgoingCalls(item));
+    }
+
+    return CompletableFuture.completedFuture(null);
+  }
+
+  @Override
+  public CompletableFuture<List<TypeHierarchyItem>> prepareTypeHierarchy(
+      final TypeHierarchyPrepareParams params) {
+    var adapter = getResponsibleAdapter(params.getTextDocument());
+    if (adapter != null) {
+      String uri = params.getTextDocument().getUri();
+      return CompletableFuture.completedFuture(
+          adapter.prepareTypeHierarchy(uri, params.getPosition()));
+    }
+
+    return CompletableFuture.completedFuture(null);
+  }
+
+  @Override
+  public CompletableFuture<List<TypeHierarchyItem>> typeHierarchySupertypes(
+      final TypeHierarchySupertypesParams params) {
+    var item = params.getItem();
+    var adapter = getResponsibleAdapter(new TextDocumentIdentifier(item.getUri()));
+    if (adapter != null) {
+      return CompletableFuture.completedFuture(adapter.getSupertypes(item));
+    }
+
+    return CompletableFuture.completedFuture(null);
+  }
+
+  @Override
+  public CompletableFuture<List<TypeHierarchyItem>> typeHierarchySubtypes(
+      final TypeHierarchySubtypesParams params) {
+    var item = params.getItem();
+    var adapter = getResponsibleAdapter(new TextDocumentIdentifier(item.getUri()));
+    if (adapter != null) {
+      return CompletableFuture.completedFuture(adapter.getSubtypes(item));
     }
 
     return CompletableFuture.completedFuture(null);

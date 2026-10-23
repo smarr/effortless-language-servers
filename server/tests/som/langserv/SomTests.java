@@ -584,6 +584,44 @@ public class SomTests {
   }
 
   @Test
+  public void testTypeHierarchy() {
+    var adapter = new SomAdapter();
+    String shape = "file:" + SomAdapter.CORE_LIB_PATH + "/Shape.som";
+    String circle = "file:" + SomAdapter.CORE_LIB_PATH + "/Circle.som";
+    String square = "file:" + SomAdapter.CORE_LIB_PATH + "/Square.som";
+    // the core-lib is only loaded by the first adapter, so define Object here
+    adapter.parse("Object = nil ()\n", "file:" + SomAdapter.CORE_LIB_PATH + "/Object.som");
+    adapter.parse("Shape = (\n  area = ( ^ 0 )\n)\n", shape);
+    adapter.parse("Circle = Shape (\n  area = ( ^ 3 )\n)\n", circle);
+    adapter.parse("Square = Shape ()\n", square);
+
+    var items = adapter.prepareTypeHierarchy(circle, new Position(0, 0));
+    assertEquals(1, items.size());
+    var circleItem = items.get(0);
+    assertEquals("Circle", circleItem.getName());
+
+    var supertypes = adapter.getSupertypes(circleItem);
+    assertEquals(1, supertypes.size());
+    var shapeItem = supertypes.get(0);
+    assertEquals("Shape", shapeItem.getName());
+    assertEquals(shape, shapeItem.getUri());
+
+    // without explicit superclass, it is Object, which has no superclass
+    supertypes = adapter.getSupertypes(shapeItem);
+    assertEquals(1, supertypes.size());
+    assertEquals("Object", supertypes.get(0).getName());
+    assertTrue(adapter.getSupertypes(supertypes.get(0)).isEmpty());
+
+    var subtypes = adapter.getSubtypes(shapeItem);
+    assertEquals(2, subtypes.size());
+    var names = List.of(subtypes.get(0).getName(), subtypes.get(1).getName());
+    assertTrue(names.contains("Circle"));
+    assertTrue(names.contains("Square"));
+
+    assertTrue(adapter.getSubtypes(circleItem).isEmpty());
+  }
+
+  @Test
   public void testHover() {
     var adapter = new SomAdapter();
     String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";

@@ -78,6 +78,12 @@ public class SomAdapter extends LanguageAdapter {
     return ".som";
   }
 
+  /** The class side is a class, too, but it is not part of the type hierarchy. */
+  @Override
+  protected boolean isType(final LanguageElement e) {
+    return e.getKind() == SymbolKind.Class && !e.getName().equals("class");
+  }
+
   /** Blocks are functions, too, but we only consider methods in the call hierarchy. */
   @Override
   protected boolean isCallable(final LanguageElement e) {

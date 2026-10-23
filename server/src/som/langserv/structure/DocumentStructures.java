@@ -391,6 +391,26 @@ public class DocumentStructures {
     return null;
   }
 
+  /** All elements that satisfy the predicate. */
+  public void collectElements(final Predicate<LanguageElement> predicate,
+      final List<LanguageElement> result) {
+    collectElements(rootSymbols, predicate, result);
+  }
+
+  private static void collectElements(final List<LanguageElement> elements,
+      final Predicate<LanguageElement> predicate, final List<LanguageElement> result) {
+    if (elements == null) {
+      return;
+    }
+
+    for (var e : elements) {
+      if (predicate.test(e)) {
+        result.add(e);
+      }
+      collectElements(e.getAllChildren(), predicate, result);
+    }
+  }
+
   /** The innermost element around the position that satisfies the predicate. */
   public LanguageElement findEnclosing(final Position position,
       final Predicate<LanguageElement> predicate) {

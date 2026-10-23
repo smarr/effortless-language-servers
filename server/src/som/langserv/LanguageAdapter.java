@@ -15,6 +15,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Predicate;
 
 import org.eclipse.lsp4j.CallHierarchyIncomingCall;
 import org.eclipse.lsp4j.CallHierarchyItem;
@@ -38,6 +40,7 @@ import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SignatureHelpContext;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
+import org.eclipse.lsp4j.TypeHierarchyItem;
 import org.eclipse.lsp4j.services.LanguageClient;
 
 import som.langserv.lens.FileLens;
@@ -286,21 +289,27 @@ public abstract class LanguageAdapter {
     return item;
   }
 
-  /** All callable definitions of the element, in all documents. */
-  private List<CallHierarchyItem> findCallables(final LanguageElementId id) {
-    List<CallHierarchyItem> result = new ArrayList<>();
+  /** All definitions of the element that satisfy the predicate, in all documents. */
+  private <T> List<T> findDefinitions(final LanguageElementId id,
+      final Predicate<LanguageElement> predicate,
+      final BiFunction<LanguageElement, String, T> create) {
+    List<T> result = new ArrayList<>();
     for (DocumentStructures d : getDocuments()) {
       var allDefs = d.getAllDefinitions();
       var defs = allDefs == null ? null : allDefs.get(id);
       if (defs != null) {
         for (var e : defs) {
-          if (isCallable(e)) {
-            result.add(createCallHierarchyItem(e, d.getUri()));
+          if (predicate.test(e)) {
+            result.add(create.apply(e, d.getUri()));
           }
         }
       }
     }
     return result;
+  }
+
+  private List<CallHierarchyItem> findCallables(final LanguageElementId id) {
+    return findDefinitions(id, this::isCallable, LanguageAdapter::createCallHierarchyItem);
   }
 
   public final List<CallHierarchyItem> prepareCallHierarchy(final String uri,
@@ -384,6 +393,85 @@ public abstract class LanguageAdapter {
     for (var c : calls.entrySet()) {
       for (var callee : findCallables(c.getKey())) {
         result.add(new CallHierarchyOutgoingCall(callee, c.getValue()));
+      }
+    }
+    return result;
+  }
+
+  /** Whether the element is a type, and is thus part of a type hierarchy. */
+  protected boolean isType(final LanguageElement e) {
+    return e.getKind() == SymbolKind.Class || e.getKind() == SymbolKind.Interface;
+  }
+
+  private static TypeHierarchyItem createTypeHierarchyItem(final LanguageElement e,
+      final String uri) {
+    var item = new TypeHierarchyItem(
+        e.getName(), e.getKind(), uri, e.getRange(), e.getSelectionRange());
+    item.setDetail(e.getDetail());
+    return item;
+  }
+
+  private List<TypeHierarchyItem> findTypes(final LanguageElementId id) {
+    return findDefinitions(id, this::isType, LanguageAdapter::createTypeHierarchyItem);
+  }
+
+  public final List<TypeHierarchyItem> prepareTypeHierarchy(final String uri,
+      final Position position) {
+    DocumentStructures doc = getStructures(uri);
+    if (doc == null) {
+      return null;
+    }
+
+    var element = doc.getElement(position);
+    if (element == null || element.v1 == null) {
+      return null;
+    }
+
+    // on a definition, it's only this one, otherwise all with the same name
+    var definition = doc.findElement(element.v2, e -> isType(e));
+    if (definition != null) {
+      return List.of(createTypeHierarchyItem(definition, doc.getUri()));
+    }
+
+    var result = findTypes(element.v1);
+    return result.isEmpty() ? null : result;
+  }
+
+  private LanguageElement getType(final TypeHierarchyItem item) {
+    DocumentStructures doc = getStructures(item.getUri());
+    if (doc == null) {
+      return null;
+    }
+    return doc.findElement(item.getSelectionRange(), e -> isType(e));
+  }
+
+  public final List<TypeHierarchyItem> getSupertypes(final TypeHierarchyItem item) {
+    var type = getType(item);
+    if (type == null || type.getSupertypes() == null) {
+      return List.of();
+    }
+
+    List<TypeHierarchyItem> result = new ArrayList<>();
+    for (var id : type.getSupertypes()) {
+      result.addAll(findTypes(id));
+    }
+    return result;
+  }
+
+  public final List<TypeHierarchyItem> getSubtypes(final TypeHierarchyItem item) {
+    var type = getType(item);
+    if (type == null) {
+      return List.of();
+    }
+
+    List<TypeHierarchyItem> result = new ArrayList<>();
+    for (DocumentStructures d : getDocuments()) {
+      List<LanguageElement> subtypes = new ArrayList<>();
+      d.collectElements(e -> isType(e) && e.getSupertypes() != null
+          && e.getSupertypes().contains(type.getId()), subtypes);
+
+      for (var e : subtypes) {
+        result.add(createTypeHierarchyItem(e, d.getUri()));
       }
     }
     return result;

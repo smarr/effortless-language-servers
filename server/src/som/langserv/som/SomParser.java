@@ -94,12 +94,19 @@ public class SomParser extends ParserAst {
 
   @Override
   protected void superclass(final ClassGenerationContext cgenc) throws ParseError {
+    // without explicit superclass, it's Object, and nil means there is none
+    String superName = "Object";
     if (sym == Identifier) {
       int coord = getStartIndex();
       recordTokenSemantics(coord, text, SemanticTokenType.CLASS);
+      superName = text;
     }
 
     super.superclass(cgenc);
+
+    if (!superName.equals("nil")) {
+      currentClass.addSupertype(new GlobalId(symbolFor(superName)));
+    }
   }
 
   @Override

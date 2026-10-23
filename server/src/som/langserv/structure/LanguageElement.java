@@ -26,6 +26,9 @@ public final class LanguageElement extends DocumentSymbol implements WithRange {
 
   private transient SignatureInformation signature;
 
+  /** For types, the identifiers of the direct supertypes. */
+  private transient List<LanguageElementId> supertypes;
+
   /**
    * If true, this element will be listed as a symbol on document and workspace symbol
    * requests.
@@ -105,6 +108,17 @@ public final class LanguageElement extends DocumentSymbol implements WithRange {
 
   public void setSignature(final SignatureInformation sig) {
     signature = sig;
+  }
+
+  public void addSupertype(final LanguageElementId supertype) {
+    if (supertypes == null) {
+      supertypes = new ArrayList<>(1);
+    }
+    supertypes.add(supertype);
+  }
+
+  public List<LanguageElementId> getSupertypes() {
+    return supertypes;
   }
 
   public SymbolInformation createSymbolInfo(final String containerUri) {
