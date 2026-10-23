@@ -1,6 +1,11 @@
 name: Tests
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  # attach the extension to releases created on GitHub
+  release:
+    types: [published]
 
 jobs:
   build-and-test:
@@ -54,6 +59,14 @@ jobs:
         run: |
           npm run package
 
+      - name: Upload Extension for Release
+        if: github.event_name == 'release'
+        uses: actions/upload-artifact@v7
+        with:
+          name: vsix
+          path: '*.vsix'
+          if-no-files-found: error
+
       # - name: CheckStyle
       #   run: |
       #     ant -e checkstyle
@@ -69,3 +82,32 @@ jobs:
       #   run: |
       #     export ECLIPSE_EXE=${GITHUB_WORKSPACE}/../eclipse/eclipse
       #     ant -e eclipseformat
+
+  # Attach the tested extension to a release, whose tag is for instance v0.9.0
+  release:
+    needs: build-and-test
+    if: github.event_name == 'release'
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Check Version
+        run: |
+          VERSION=$(jq -r .version package.json)
+          if [ "v$VERSION" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match version $VERSION in package.json"
+            exit 1
+          fi
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: vsix
+
+      - name: Attach Extension to Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "$GITHUB_REF_NAME" *.vsix --clobber
