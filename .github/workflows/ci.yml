@@ -9,9 +9,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      # SOMns support is currently disabled, so we only need TruffleSOM
-      - name: Checkout TruffleSOM
+      # SOMns support is currently disabled. We only need its debugger
+      # protocol, which src/ links to, so skip SOMns' own submodules.
+      - name: Checkout Submodules
         run: |
+          git submodule update --init server/libs/SOMns
           git submodule update --init server/libs/TruffleSOM
           (cd server/libs/TruffleSOM && git submodule update --init)
 
