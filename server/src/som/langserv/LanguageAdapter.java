@@ -9,6 +9,7 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -147,7 +148,11 @@ public abstract class LanguageAdapter {
   }
 
   public void loadFolder(final File folder) {
-    for (File f : folder.listFiles()) {
+    // listFiles() has no guaranteed order, but files may define classes
+    // with the same name, so make the loading order deterministic
+    File[] files = folder.listFiles();
+    Arrays.sort(files);
+    for (File f : files) {
       if (f.isDirectory()) {
         loadFolder(f);
       } else if (f.getName().endsWith(getFileEnding())) {

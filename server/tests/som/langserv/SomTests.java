@@ -78,7 +78,8 @@ public class SomTests {
     // with super sent is not yet implemented. "
     // - Examples/Benchmarks/Json/JsonLiteral.som, which triggers the same #dnu error,
     // because the superclass is resolved to Examples/AreWeFastYet/Json/JsonValue.som,
-    // which does not have #asBoolean
+    // which does not have #asBoolean. Files are loaded in sorted order, so it's loaded
+    // before Examples/Benchmarks/Json/JsonLiteral.som and JsonValue.som.
     // - IntegrationTests/Tests/{call2, unknown_field_write, binary_super,
     // test_literals_limit_1}.som, which are expected to fail
     assertEquals(7, errors);

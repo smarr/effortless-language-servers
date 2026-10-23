@@ -9,6 +9,7 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
@@ -139,7 +140,11 @@ public class SomAdapter extends LanguageAdapter {
   }
 
   private void findClassPathFolders(final File root, final List<File> allFolders) {
-    for (File f : root.listFiles()) {
+    // listFiles() has no guaranteed order, but with duplicate class names
+    // the order decides which class is found, so make it deterministic
+    File[] files = root.listFiles();
+    Arrays.sort(files);
+    for (File f : files) {
       if (f.isDirectory()) {
         allFolders.add(f);
         findClassPathFolders(f, allFolders);
