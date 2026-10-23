@@ -13,8 +13,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
@@ -40,7 +42,12 @@ import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SignatureHelpContext;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
+import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.TypeHierarchyItem;
+import org.eclipse.lsp4j.WorkspaceEdit;
+import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
+import org.eclipse.lsp4j.jsonrpc.messages.ResponseError;
+import org.eclipse.lsp4j.jsonrpc.messages.ResponseErrorCode;
 import org.eclipse.lsp4j.services.LanguageClient;
 
 import som.langserv.lens.FileLens;
@@ -475,6 +482,68 @@ public abstract class LanguageAdapter {
       }
     }
     return result;
+  }
+
+  /** Whether the element can be renamed. Renaming changes only its document. */
+  protected boolean isRenamable(final LanguageElementId id) {
+    return false;
+  }
+
+  /** Whether the name can be used as new name for a renamed element. */
+  protected boolean isValidName(final String name) {
+    return false;
+  }
+
+  public final Range prepareRename(final String uri, final Position position) {
+    DocumentStructures doc = getStructures(uri);
+    if (doc == null) {
+      return null;
+    }
+
+    var element = doc.getElement(position);
+    if (element == null || element.v1 == null || !isRenamable(element.v1)) {
+      return null;
+    }
+    return element.v2;
+  }
+
+  public final WorkspaceEdit rename(final String uri, final Position position,
+      final String newName) {
+    DocumentStructures doc = getStructures(uri);
+    if (doc == null) {
+      return null;
+    }
+
+    var element = doc.getElement(position);
+    if (element == null || element.v1 == null || !isRenamable(element.v1)) {
+      return null;
+    }
+
+    if (!isValidName(newName)) {
+      throw new ResponseErrorException(new ResponseError(ResponseErrorCode.InvalidParams,
+          "'" + newName + "' is not a valid name", null));
+    }
+
+    Set<Range> ranges = new LinkedHashSet<>();
+    var defs = doc.getAllDefinitions() == null ? null : doc.getAllDefinitions().get(element.v1);
+    if (defs != null) {
+      for (var e : defs) {
+        ranges.add(e.getSelectionRange());
+      }
+    }
+
+    var refs = doc.getAllReferences() == null ? null : doc.getAllReferences().get(element.v1);
+    if (refs != null) {
+      for (var r : refs) {
+        ranges.add(r.getRange());
+      }
+    }
+
+    List<TextEdit> edits = new ArrayList<>(ranges.size());
+    for (var r : ranges) {
+      edits.add(new TextEdit(r, newName));
+    }
+    return new WorkspaceEdit(Map.of(uri, edits));
   }
 
   public final List<CodeAction> getCodeActions(final String uri,

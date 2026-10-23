@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
@@ -34,6 +35,7 @@ import som.langserv.lint.LintUseNeedsDefine;
 import som.langserv.lint.WorkspaceLinter;
 import som.langserv.structure.DocumentStructures;
 import som.langserv.structure.LanguageElement;
+import som.langserv.structure.LanguageElementId;
 import trufflesom.compiler.Field;
 import trufflesom.compiler.Parser;
 import trufflesom.compiler.Parser.ParseError;
@@ -76,6 +78,24 @@ public class SomAdapter extends LanguageAdapter {
   @Override
   public String getFileEnding() {
     return ".som";
+  }
+
+  private static final Set<String> RESERVED =
+      Set.of("self", "super", "nil", "true", "false", "primitive");
+
+  /**
+   * Only variables and arguments can be renamed, since their references are all in the
+   * same document. Classes would also need to rename the file, and superclass names are not
+   * referenced. Field identity is not specific to a class.
+   */
+  @Override
+  protected boolean isRenamable(final LanguageElementId id) {
+    return id instanceof VariableId && !RESERVED.contains(id.getName());
+  }
+
+  @Override
+  protected boolean isValidName(final String name) {
+    return name.matches("[A-Za-z][A-Za-z0-9_]*") && !RESERVED.contains(name);
   }
 
   /** The class side is a class, too, but it is not part of the type hierarchy. */

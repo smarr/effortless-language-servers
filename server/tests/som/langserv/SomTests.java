@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static som.langserv.Helpers.assertRange;
 import static som.langserv.Helpers.assertStart;
 import static som.langserv.Helpers.assertToken;
@@ -13,6 +14,7 @@ import static som.langserv.Helpers.printAllToken;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ForkJoinTask;
 
@@ -28,6 +30,8 @@ import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SymbolInformation;
+import org.eclipse.lsp4j.TextEdit;
+import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -619,6 +623,97 @@ public class SomTests {
     assertTrue(names.contains("Square"));
 
     assertTrue(adapter.getSubtypes(circleItem).isEmpty());
+  }
+
+  private static final String RENAME_EXAMPLE = "Hello = (\n"
+      + "  | field |\n"
+      + "  run: arg = (\n"
+      + "    | a |\n"
+      + "    a := arg.\n"
+      + "    ^ [:x | a + x + arg ]\n"
+      + "  )\n"
+      + ")\n";
+
+  /** Apply the edits, which must not overlap, to the text. */
+  private static String applyEdits(final String text, final List<TextEdit> edits) {
+    var lines = new ArrayList<>(List.of(text.split("\n", -1)));
+    var sorted = new ArrayList<>(edits);
+    sorted.sort((a, b) -> {
+      int line = b.getRange().getStart().getLine() - a.getRange().getStart().getLine();
+      return line != 0 ? line
+          : b.getRange().getStart().getCharacter() - a.getRange().getStart().getCharacter();
+    });
+    for (var e : sorted) {
+      var r = e.getRange();
+      assertEquals(r.getStart().getLine(), r.getEnd().getLine());
+      String l = lines.get(r.getStart().getLine());
+      lines.set(r.getStart().getLine(), l.substring(0, r.getStart().getCharacter())
+          + e.getNewText() + l.substring(r.getEnd().getCharacter()));
+    }
+    return String.join("\n", lines);
+  }
+
+  @Test
+  public void testPrepareRename() {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    assertNull(adapter.parse(RENAME_EXAMPLE, path).getDiagnostics());
+
+    assertRange(3, 6, 3, 7, adapter.prepareRename(path, new Position(3, 6)));
+    assertRange(5, 20, 5, 23, adapter.prepareRename(path, new Position(5, 21)));
+
+    // fields and methods can't be renamed
+    assertNull(adapter.prepareRename(path, new Position(1, 4)));
+    assertNull(adapter.prepareRename(path, new Position(2, 2)));
+  }
+
+  @Test
+  public void testRenameLocal() {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    assertNull(adapter.parse(RENAME_EXAMPLE, path).getDiagnostics());
+
+    // from the use in the block
+    var edit = adapter.rename(path, new Position(5, 12), "b");
+    var edits = edit.getChanges().get(path);
+    assertEquals(3, edits.size());
+
+    String renamed = applyEdits(RENAME_EXAMPLE, edits);
+    assertEquals(RENAME_EXAMPLE.replace("| a |", "| b |").replace("a := arg", "b := arg")
+                               .replace("| a + x", "| b + x"),
+        renamed);
+    assertNull(adapter.parse(renamed, path).getDiagnostics());
+  }
+
+  @Test
+  public void testRenameArgument() {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    assertNull(adapter.parse(RENAME_EXAMPLE, path).getDiagnostics());
+
+    // from the definition
+    var edits = adapter.rename(path, new Position(2, 7), "param").getChanges().get(path);
+    assertEquals(3, edits.size());
+
+    String renamed = applyEdits(RENAME_EXAMPLE, edits);
+    assertEquals(RENAME_EXAMPLE.replace("arg", "param"), renamed);
+    assertNull(adapter.parse(renamed, path).getDiagnostics());
+  }
+
+  @Test
+  public void testRenameRejectsInvalidNames() {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    assertNull(adapter.parse(RENAME_EXAMPLE, path).getDiagnostics());
+
+    for (String name : List.of("1a", "a-b", "self", "nil", "")) {
+      try {
+        adapter.rename(path, new Position(3, 6), name);
+        fail("Expected an error for " + name);
+      } catch (ResponseErrorException e) {
+        assertTrue(e.getMessage().contains("not a valid name"));
+      }
+    }
   }
 
   @Test

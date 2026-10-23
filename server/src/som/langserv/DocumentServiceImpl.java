@@ -38,6 +38,11 @@ import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.ReferenceParams;
+import org.eclipse.lsp4j.PrepareRenameDefaultBehavior;
+import org.eclipse.lsp4j.PrepareRenameParams;
+import org.eclipse.lsp4j.PrepareRenameResult;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.SelectionRange;
 import org.eclipse.lsp4j.SelectionRangeParams;
 import org.eclipse.lsp4j.SemanticTokens;
@@ -52,7 +57,9 @@ import org.eclipse.lsp4j.TypeHierarchyItem;
 import org.eclipse.lsp4j.TypeHierarchyPrepareParams;
 import org.eclipse.lsp4j.TypeHierarchySubtypesParams;
 import org.eclipse.lsp4j.TypeHierarchySupertypesParams;
+import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.eclipse.lsp4j.jsonrpc.messages.Either3;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.TextDocumentService;
 
@@ -334,6 +341,32 @@ public class DocumentServiceImpl implements TextDocumentService {
     var adapter = getResponsibleAdapter(new TextDocumentIdentifier(item.getUri()));
     if (adapter != null) {
       return CompletableFuture.completedFuture(adapter.getSubtypes(item));
+    }
+
+    return CompletableFuture.completedFuture(null);
+  }
+
+  @Override
+  public CompletableFuture<Either3<Range, PrepareRenameResult, PrepareRenameDefaultBehavior>> prepareRename(
+      final PrepareRenameParams params) {
+    var adapter = getResponsibleAdapter(params.getTextDocument());
+    if (adapter != null) {
+      Range range = adapter.prepareRename(
+          params.getTextDocument().getUri(), params.getPosition());
+      if (range != null) {
+        return CompletableFuture.completedFuture(Either3.forFirst(range));
+      }
+    }
+
+    return CompletableFuture.completedFuture(null);
+  }
+
+  @Override
+  public CompletableFuture<WorkspaceEdit> rename(final RenameParams params) {
+    var adapter = getResponsibleAdapter(params.getTextDocument());
+    if (adapter != null) {
+      return CompletableFuture.completedFuture(adapter.rename(
+          params.getTextDocument().getUri(), params.getPosition(), params.getNewName()));
     }
 
     return CompletableFuture.completedFuture(null);

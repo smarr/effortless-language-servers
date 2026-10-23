@@ -13,6 +13,7 @@ import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
+import org.eclipse.lsp4j.RenameOptions;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensServerFull;
 import org.eclipse.lsp4j.SemanticTokensWithRegistrationOptions;
@@ -71,6 +72,7 @@ public class LanguageServerImpl implements LanguageServer, LanguageClientAware {
     cap.setSelectionRangeProvider(true);
     cap.setCallHierarchyProvider(true);
     cap.setTypeHierarchyProvider(true);
+    cap.setRenameProvider(new RenameOptions(true));
     cap.setCodeActionProvider(new CodeActionOptions(List.of(CodeActionKind.QuickFix)));
 
     cap.setTextDocumentSync(TextDocumentSyncKind.Full);
