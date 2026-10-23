@@ -17,8 +17,11 @@ Currently, we support the following features:
  - signature help
  - hover information
  - parse errors
- - basic linting
+ - basic linting, with quick fixes
  - CodeLens for running unit tests
+ - folding and selection ranges
+ - call and type hierarchy
+ - renaming of variables and arguments (SOM)
 
 ## Supported Languages and IDEs
 
