@@ -72,14 +72,19 @@ public class SomTests {
       }
     }
 
-    // there are currently two known parse errors in the core lib:
+    // there are currently seven known parse errors in the core lib:
     // - Self.som, where super is assigned to
     // - Examples/Benchmarks/DeltaBlue/SortedCollection.som where we trigger "Currently #dnu
     // with super sent is not yet implemented. "
-    assertEquals(2, errors);
+    // - Examples/Benchmarks/Json/JsonLiteral.som, which triggers the same #dnu error,
+    // because the superclass is resolved to Examples/AreWeFastYet/Json/JsonValue.som,
+    // which does not have #asBoolean
+    // - IntegrationTests/Tests/{call2, unknown_field_write, binary_super,
+    // test_literals_limit_1}.som, which are expected to fail
+    assertEquals(7, errors);
 
     // these are all linter warnings, which are benign
-    assertEquals(107, warnings);
+    assertEquals(142, warnings);
     assertEquals(0, others);
   }
 
