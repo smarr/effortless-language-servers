@@ -121,15 +121,41 @@ public class SomParser extends ParserAst {
 
   @Override
   public void classdef(final ClassGenerationContext cgenc) throws ProgramDefinitionError {
+    boolean success = false;
     try {
       super.classdef(cgenc);
+      success = true;
       // this happens only in the success case
       somAdapter.putStructures(symbols);
     } finally {
       if (currentClass != null) {
-        completeSymbol(currentClass, cgenc.getSourceCoord());
+        long coord = cgenc.getSourceCoord();
+        if (success) {
+          coord = includeClosingParenthesis(coord);
+        }
+        completeSymbol(currentClass, coord);
       }
     }
+  }
+
+  /**
+   * At the end of the file, the lexer does not update the end of the last token,
+   * so the class's coordinate ends before its closing parenthesis.
+   */
+  private long includeClosingParenthesis(final long classCoord) {
+    CharSequence text = source.getCharacters();
+    int i = text.length() - 1;
+    while (i >= 0 && Character.isWhitespace(text.charAt(i))) {
+      i -= 1;
+    }
+
+    // something else, e.g., a comment, follows the class, leave it unchanged
+    if (i < 0 || text.charAt(i) != ')') {
+      return classCoord;
+    }
+
+    int start = SourceCoordinate.getStartIndex(classCoord);
+    return SourceCoordinate.create(start, i + 1 - start);
   }
 
   @Override

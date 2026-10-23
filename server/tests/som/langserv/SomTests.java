@@ -348,6 +348,32 @@ public class SomTests {
   }
 
   @Test
+  public void testClassRangeIncludesClosingParenthesis() {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    adapter.parse("Hello = (\n"
+        + "  run = ( ^ 1 )\n"
+        + ")\n", path);
+
+    var classSymbol = adapter.documentSymbol(path).get(0);
+    assertRange(0, 0, 2, 1, classSymbol.getRange());
+  }
+
+  @Test
+  public void testClassRangeWithTrailingComment() {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    adapter.parse("Hello = (\n"
+        + "  run = ( ^ 1 )\n"
+        + ")\n"
+        + "\"comment\"\n", path);
+
+    // we don't know where the class ends, so keep the range as is
+    var classSymbol = adapter.documentSymbol(path).get(0);
+    assertRange(0, 0, 1, 15, classSymbol.getRange());
+  }
+
+  @Test
   public void testHover() {
     var adapter = new SomAdapter();
     String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
