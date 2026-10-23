@@ -85,12 +85,13 @@ export function optionalJavaHomeToJavaCmd(javaHome: unknown) {
 	}
 }
 
-export function isJavaAvailableAndCompatible(javaHome: unknown) {
+/** The major version of the Java, or undefined if it can't be run. */
+export function getJavaMajorVersion(javaHome: unknown): number | undefined {
 	const javaCmd = optionalJavaHomeToJavaCmd(javaHome);
-	const result = spawnSync(javaCmd, ['-version'], { encoding: 'utf-8'} );
-	if (result.error) {
-		return false;
+	const result = spawnSync(javaCmd, ['-version'], { encoding: 'utf-8', timeout: 10000 });
+	if (result.error || result.status !== 0) {
+		return undefined;
 	}
-	const major = getMajorVersionFromJavaVersionString(result.stderr);
-	return parseInt(major) >= 25;
+	const major = parseInt(getMajorVersionFromJavaVersionString(result.stderr));
+	return isNaN(major) ? undefined : major;
 }
