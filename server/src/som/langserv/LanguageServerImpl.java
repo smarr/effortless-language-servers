@@ -137,7 +137,7 @@ public class LanguageServerImpl implements LanguageServer, LanguageClientAware {
     SemanticTokensLegend legend = new SemanticTokensLegend(tokenTypes, tokenModifiers);
 
     semanticTokens.setLegend(legend);
-    semanticTokens.setRange(false);
+    semanticTokens.setRange(true);
 
     SemanticTokensServerFull serverFull = new SemanticTokensServerFull();
 

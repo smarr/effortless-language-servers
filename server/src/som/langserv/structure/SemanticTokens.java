@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 
 
 public class SemanticTokens {
@@ -91,6 +92,33 @@ public class SemanticTokens {
       result.add(token[4]);
     }
 
+    return result;
+  }
+
+  /** The sorted tokens with absolute positions that overlap with the range. */
+  public static List<int[]> inRange(final List<int[]> tokenList, final Range range) {
+    int startLine = range.getStart().getLine();
+    int startCol = range.getStart().getCharacter();
+    int endLine = range.getEnd().getLine();
+    int endCol = range.getEnd().getCharacter();
+
+    List<int[]> result = new ArrayList<>();
+    for (int[] token : tokenList) {
+      int line = token[0];
+      int col = token[1];
+      int length = token[2];
+
+      if (line < startLine || line > endLine) {
+        continue;
+      }
+      if (line == startLine && col + length <= startCol) {
+        continue;
+      }
+      if (line == endLine && col >= endCol) {
+        continue;
+      }
+      result.add(token);
+    }
     return result;
   }
 

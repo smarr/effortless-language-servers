@@ -29,6 +29,7 @@ import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SelectionRange;
 import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SignatureHelpContext;
@@ -395,6 +396,23 @@ public abstract class LanguageAdapter {
   }
 
   public final List<Integer> getSemanticTokensFull(final String uri) {
+    List<int[]> tokens = getAbsoluteSemanticTokens(uri);
+    if (tokens == null) {
+      return null;
+    }
+    return SemanticTokens.makeRelativeTo00(tokens);
+  }
+
+  public final List<Integer> getSemanticTokensRange(final String uri, final Range range) {
+    List<int[]> tokens = getAbsoluteSemanticTokens(uri);
+    if (tokens == null) {
+      return null;
+    }
+    return SemanticTokens.makeRelativeTo00(SemanticTokens.inRange(tokens, range));
+  }
+
+  /** Tokens with absolute positions, using the previous ones for an erroneous line. */
+  private List<int[]> getAbsoluteSemanticTokens(final String uri) {
     DocumentStructures doc = getStructures(uri);
     if (doc == null) {
       return null;
@@ -405,7 +423,7 @@ public abstract class LanguageAdapter {
     Diagnostic error = doc.getFirstErrorOrNull();
     if (error == null) {
       semanticTokenCache.put(uri, tokens);
-      return SemanticTokens.makeRelativeTo00(tokens);
+      return tokens;
     }
 
     List<int[]> prevTokens = semanticTokenCache.get(uri);
@@ -413,9 +431,7 @@ public abstract class LanguageAdapter {
       return null;
     }
 
-    List<int[]> withOldAndWithoutError =
-        combineTokensRemovingErroneousLine(
-            error.getRange().getStart(), prevTokens, tokens);
-    return SemanticTokens.makeRelativeTo00(withOldAndWithoutError);
+    return combineTokensRemovingErroneousLine(
+        error.getRange().getStart(), prevTokens, tokens);
   }
 }

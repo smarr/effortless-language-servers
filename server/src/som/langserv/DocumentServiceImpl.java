@@ -36,6 +36,7 @@ import org.eclipse.lsp4j.SelectionRange;
 import org.eclipse.lsp4j.SelectionRangeParams;
 import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensParams;
+import org.eclipse.lsp4j.SemanticTokensRangeParams;
 import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SignatureHelpParams;
 import org.eclipse.lsp4j.SymbolInformation;
@@ -146,6 +147,22 @@ public class DocumentServiceImpl implements TextDocumentService {
     }
 
     List<Integer> tokens = adapter.getSemanticTokensFull(params.getTextDocument().getUri());
+    if (tokens == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+    return CompletableFuture.completedFuture(new SemanticTokens(tokens));
+  }
+
+  @Override
+  public CompletableFuture<SemanticTokens> semanticTokensRange(
+      final SemanticTokensRangeParams params) {
+    var adapter = getResponsibleAdapter(params.getTextDocument());
+    if (adapter == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+
+    List<Integer> tokens = adapter.getSemanticTokensRange(
+        params.getTextDocument().getUri(), params.getRange());
     if (tokens == null) {
       return CompletableFuture.completedFuture(null);
     }

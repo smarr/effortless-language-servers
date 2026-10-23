@@ -458,6 +458,29 @@ public class SomTests {
   }
 
   @Test
+  public void testSemanticTokensRange() {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    var structures = adapter.parse("Hello = (\n"
+        + "  run = ( ^ 1 )\n"
+        + "  other: a = ( ^ a )\n"
+        + ")\n", path);
+
+    assertNull(structures.getDiagnostics());
+
+    var tokens = adapter.getSemanticTokensRange(path,
+        new Range(new Position(2, 0), new Position(2, 100)));
+
+    // other:, a, and a, relative to the start of the document
+    assertEquals(3 * 5, tokens.size());
+    assertEquals(2, (int) tokens.get(0));
+    assertEquals(2, (int) tokens.get(1));
+    assertEquals("other:".length(), (int) tokens.get(2));
+    assertEquals(0, (int) tokens.get(5));
+    assertEquals(0, (int) tokens.get(10));
+  }
+
+  @Test
   public void testHover() {
     var adapter = new SomAdapter();
     String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";

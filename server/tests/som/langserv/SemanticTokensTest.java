@@ -7,12 +7,33 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.junit.Test;
 
 import som.langserv.structure.SemanticTokens;
 
 
 public class SemanticTokensTest {
+
+  @Test
+  public void testInRange() {
+    List<int[]> tokens = new ArrayList<>();
+    tokens.add(new int[] {1, 0, 3, 0, 0}); // before the range
+    tokens.add(new int[] {2, 0, 6, 0, 0}); // ends where the range starts
+    tokens.add(new int[] {2, 5, 3, 0, 0}); // overlaps the start of the range
+    tokens.add(new int[] {3, 0, 4, 0, 0}); // within the range
+    tokens.add(new int[] {4, 2, 3, 0, 0}); // overlaps the end of the range
+    tokens.add(new int[] {4, 3, 3, 0, 0}); // starts where the range ends
+    tokens.add(new int[] {5, 0, 3, 0, 0}); // after the range
+
+    var range = new Range(new Position(2, 6), new Position(4, 3));
+    List<int[]> result = SemanticTokens.inRange(tokens, range);
+
+    assertEquals(3, result.size());
+    assertEquals(tokens.get(2), result.get(0));
+    assertEquals(tokens.get(3), result.get(1));
+    assertEquals(tokens.get(4), result.get(2));
+  }
 
   @Test
   public void testMakeRelativeWithExampleFromLSPSpec() {
