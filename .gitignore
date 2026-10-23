@@ -6,3 +6,5 @@ server/som-language-server.jar
 /node_modules
 /out
 /.vscode-test
+server/libs/mx
+server/libs/graal

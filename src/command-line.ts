@@ -11,21 +11,16 @@ export function getCommandLine(
 
   const javaClassPath = [
 		asAbsolutePath('out/server/som.jar'),
-		asAbsolutePath('out/server/somns.jar'),
-		asAbsolutePath('out/server/black-diamonds.jar'),
-		asAbsolutePath('out/server/graal-sdk.jar'),
-		asAbsolutePath('out/server/word-api.jar'),
+		asAbsolutePath('out/server/collections.jar'),
+		asAbsolutePath('out/server/polyglot.jar'),
+		asAbsolutePath('out/server/word.jar'),
+		asAbsolutePath('out/server/nativeimage.jar'),
+		asAbsolutePath('out/server/nativebridge.jar'),
+		asAbsolutePath('out/server/jniutils.jar'),
+		asAbsolutePath('out/server/truffle-json.jar'),
+		asAbsolutePath('out/server/truffle-compiler.jar'),
 		asAbsolutePath('out/server/truffle-api.jar'),
-		asAbsolutePath('out/server/truffle-debug.jar'),
-		asAbsolutePath('out/server/svm-core.jar'),
-		asAbsolutePath('out/server/truffle-profiler.jar'),
-		asAbsolutePath('out/server/somns-deps.jar'),
-
-		asAbsolutePath('out/server/affinity.jar'),
-		asAbsolutePath('out/server/slf4j-api.jar'),
-		asAbsolutePath('out/server/slf4j-simple.jar'),
-		asAbsolutePath('out/server/jna-platform.jar'),
-		asAbsolutePath('out/server/jna.jar'),
+		asAbsolutePath('out/server/truffle-runtime.jar'),
 
 		asAbsolutePath('out/server/gson-2.8.6.jar'),
 		asAbsolutePath('out/server/guava-19.0.jar'),
@@ -35,12 +30,11 @@ export function getCommandLine(
 		asAbsolutePath('out/server/antlr4-runtime-4.9.2.jar'),
 		asAbsolutePath('out/server/som-language-server.jar')];
 
-	const somnsLib = '-Dsom.langserv.somns-core-lib=' + asAbsolutePath('out/server/somns-core-lib')
 	const somLib = '-Dsom.langserv.som-core-lib=' + asAbsolutePath('out/server/som-core-lib')
 
 	let javaArgs = [
 		'-cp', javaClassPath.join(':'),
-		somLib, somnsLib,
+		somLib,
 		'-Dpolyglot.engine.WarnInterpreterOnly=false', // to disable warnings on stdout/stderr
 		'som.langserv.ServerLauncher'];
 
