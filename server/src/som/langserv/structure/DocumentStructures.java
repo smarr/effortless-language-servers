@@ -11,6 +11,7 @@ import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.DocumentHighlight;
+import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
@@ -287,6 +288,28 @@ public class DocumentStructures {
       return createHover(ref, similar);
     } else {
       throw new RuntimeException("Not yet implemented for " + symbol.getClass());
+    }
+  }
+
+  public List<FoldingRange> getFoldingRanges() {
+    List<FoldingRange> result = new ArrayList<>();
+    collectFoldingRanges(rootSymbols, result);
+    return result;
+  }
+
+  private static void collectFoldingRanges(final List<LanguageElement> elements,
+      final List<FoldingRange> result) {
+    if (elements == null) {
+      return;
+    }
+
+    for (var e : elements) {
+      Range r = e.getRange();
+      // keep the last line visible, since it usually has the closing parenthesis
+      if (r != null && r.getEnd().getLine() - 1 > r.getStart().getLine()) {
+        result.add(new FoldingRange(r.getStart().getLine(), r.getEnd().getLine() - 1));
+      }
+      collectFoldingRanges(e.getAllChildren(), result);
     }
   }
 

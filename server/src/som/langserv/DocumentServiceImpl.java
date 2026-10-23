@@ -21,6 +21,8 @@ import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.DocumentSymbolParams;
+import org.eclipse.lsp4j.FoldingRange;
+import org.eclipse.lsp4j.FoldingRangeRequestParams;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.Location;
@@ -215,6 +217,19 @@ public class DocumentServiceImpl implements TextDocumentService {
       List<CodeLens> result = adapter.getCodeLenses(uri);
       return CompletableFuture.completedFuture(result);
     }
+    return CompletableFuture.completedFuture(null);
+  }
+
+  @Override
+  public CompletableFuture<List<FoldingRange>> foldingRange(
+      final FoldingRangeRequestParams params) {
+    var adapter = getResponsibleAdapter(params.getTextDocument());
+    if (adapter != null) {
+      String uri = params.getTextDocument().getUri();
+      List<FoldingRange> result = adapter.getFoldingRanges(uri);
+      return CompletableFuture.completedFuture(result);
+    }
+
     return CompletableFuture.completedFuture(null);
   }
 

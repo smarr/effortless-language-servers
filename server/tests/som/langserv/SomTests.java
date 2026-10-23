@@ -374,6 +374,33 @@ public class SomTests {
   }
 
   @Test
+  public void testFoldingRanges() {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    var structures = adapter.parse("Hello = (\n"
+        + "  run = (\n"
+        + "    | a |\n"
+        + "    a := [:x |\n"
+        + "      x ]\n"
+        + "  )\n"
+        + "  short = ( ^ 1 )\n"
+        + ")\n", path);
+
+    assertNull(structures.getDiagnostics());
+
+    // the last line of an element stays visible, so the two-line block,
+    // and the single-line method are not folded
+    var ranges = adapter.getFoldingRanges(path);
+    assertEquals(2, ranges.size());
+
+    assertEquals(0, ranges.get(0).getStartLine());
+    assertEquals(6, ranges.get(0).getEndLine());
+
+    assertEquals(1, ranges.get(1).getStartLine());
+    assertEquals(4, ranges.get(1).getEndLine());
+  }
+
+  @Test
   public void testHover() {
     var adapter = new SomAdapter();
     String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";

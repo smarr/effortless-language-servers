@@ -21,6 +21,7 @@ import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DocumentHighlight;
+import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
@@ -252,6 +253,15 @@ public abstract class LanguageAdapter {
     }
 
     return doc.getHover(position);
+  }
+
+  public final List<FoldingRange> getFoldingRanges(final String uri) {
+    DocumentStructures doc = getStructures(uri);
+    if (doc == null) {
+      return null;
+    }
+
+    return doc.getFoldingRanges();
   }
 
   public final SignatureHelp signatureHelp(final String uri, final Position position,
