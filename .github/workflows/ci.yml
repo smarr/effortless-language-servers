@@ -20,6 +20,11 @@ jobs:
           distribution: 'temurin'
           java-version: '25'
 
+      # Node 24 matches VS Code 1.140, and the test tools need at least Node 22
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
       # TruffleSOM expects mx and graal next to it, i.e., in server/libs
       - name: Setup MX, LabsJDK, and Graal
         run: |
