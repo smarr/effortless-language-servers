@@ -7,7 +7,7 @@
 	"version": "0.8.1",
 	"publisher": "MetaConcProject",
 	"engines": {
-		"vscode": "^1.74.0"
+		"vscode": "^1.84.0"
 	},
 	"categories": [
 		"Debuggers",
@@ -238,6 +238,7 @@
 		"prerun": "npm run compile && npm run esbuild-base -- --sourcemap",
 		"postinstall": "npm run compile:server",
 		"test": "node ./out/test/runTest.js",
+		"package": "vsce package",
 		"create-server-shell-script": "npx run-func out/src/command-line.js getShellScript false false > out/server/start.sh; chmod +x out/server/start.sh"
 	},
 	"devDependencies": {
@@ -246,6 +247,7 @@
 		"@types/node": "20.10.0",
 		"@types/vscode": "1.84.2",
 		"@vscode/test-electron": "2.3.8",
+		"@vscode/vsce": "4.0.0",
 		"chai": "4.3.10",
 		"esbuild": "0.19.8",
 		"mocha": "10.2.0",

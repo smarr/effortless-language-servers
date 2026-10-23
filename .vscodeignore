@@ -1,5 +1,6 @@
 out/server/som-core-lib/.github
 out/server/som-core-lib/Examples
+out/server/som-core-lib/IntegrationTests
 out/server/som-core-lib/SomSom
 out/server/som-core-lib/specification
 out/server/som-core-lib/TestSuite

@@ -8,3 +8,4 @@ server/som-language-server.jar
 /.vscode-test
 server/libs/mx
 server/libs/graal
+*.vsix
