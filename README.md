@@ -51,6 +51,21 @@ Additionally, we also provide support for the [Debug Adapter Protocol](https://m
 ![Screencast of SOMns debug session](https://som-st.github.io/images/vscode-somns-debugger.gif)
 
 
+# Installation
+
+Download the `.vsix` file of the [latest release](https://github.com/smarr/effortless-language-servers/releases/latest),
+and install it with the *Extensions: Install from VSIX...* command in VS Code,
+or on the command line:
+
+```bash
+code --install-extension effortless-language-servers-*.vsix
+```
+
+The language server needs Java 25 or newer. It uses the Java configured in
+the `els.javaHome` or `java.jdt.ls.java.home` settings, `JDK_HOME`, `JAVA_HOME`,
+or the `java` on the `PATH`.
+
+
 # Development Setup
 
 To work on the extension, you can build it with the following commands:
@@ -128,6 +143,12 @@ instance next to the `"program"` setting.
 ```
   "debugServer": 4711,
 ```
+
+## Creating a Release
+
+1. Update the `version` in `package.json` and `CHANGELOG.md`, and push the commit.
+2. On GitHub, create a release with a new tag `v<version>`, for instance `v0.9.0`, and publish it.
+3. The CI then builds and tests the tag, and attaches the `.vsix` to the release.
 
 
 [SOMns]: https://github.com/smarr/SOMns
