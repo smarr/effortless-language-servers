@@ -4,7 +4,7 @@
 		"module": "node20",
 		"outDir": "out",
 		"lib": ["ES2023"],
-		"strict": false,
+		"strict": true,
 		"skipLibCheck": true,
 		"sourceMap": true
 	},

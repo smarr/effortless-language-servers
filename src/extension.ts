@@ -19,8 +19,8 @@ export const CLIENT_OPTION: LanguageClientOptions = {
 
 type PathConverter = (path: string) => string;
 
-let client: LanguageClient = null;
-let serverProcess: ChildProcess = null;
+let client: LanguageClient | null = null;
+let serverProcess: ChildProcess | null = null;
 
 function getServerOptions(asAbsolutePath: PathConverter, enableDebug:
 	  boolean, enableTcp: boolean): ServerOptions {
@@ -33,7 +33,7 @@ function getServerOptions(asAbsolutePath: PathConverter, enableDebug:
 }
 
 function startLanguageServerAndConnectTCP(context: ExtensionContext,
-													   resolve: (value?: StreamInfo | PromiseLike<StreamInfo>) => void,
+													   resolve: (value: StreamInfo | PromiseLike<StreamInfo>) => void,
 														 reject: (reason?: any) => void): void {
 	const serverOptions: any = getServerOptions(context.asAbsolutePath, true, true);
 	const lsProc = spawn(serverOptions.run.command, serverOptions.run.args);
@@ -55,7 +55,7 @@ function startLanguageServerAndConnectTCP(context: ExtensionContext,
 }
 
 export function startLanguageServer(asAbsolutePath: PathConverter,
-													   resolve: (value?: StreamInfo | PromiseLike<StreamInfo>) => void,
+													   resolve: (value: StreamInfo | PromiseLike<StreamInfo>) => void,
 														 reject: (reason?: any) => void): void {
 	const serverOptions: any = getServerOptions(asAbsolutePath, EnableExtensionDebugging, false);
 
@@ -86,7 +86,7 @@ export function startLanguageServer(asAbsolutePath: PathConverter,
 	serverProcess = lsProc;
 }
 
-export function connectToLanguageServer(resolve: (value?: StreamInfo | PromiseLike<StreamInfo>) => void,
+export function connectToLanguageServer(resolve: (value: StreamInfo | PromiseLike<StreamInfo>) => void,
 														     reject: (reason?: any) => void) {
 	console.log("[SOM-EXT] Create socket to connect to SOM Language Server");
 	const clientSocket = new Socket();

@@ -2,7 +2,7 @@ import { spawnSync } from "child_process";
 
 export function getCommandLine(
 		javaHome: unknown,
-		asAbsolutePath: (string) => string,
+		asAbsolutePath: (path: string) => string,
     enableDebug: boolean, enableTcp: boolean): {
       command: string,
       args: string[]
