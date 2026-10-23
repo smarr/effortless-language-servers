@@ -29,6 +29,8 @@ import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.ReferenceParams;
+import org.eclipse.lsp4j.SelectionRange;
+import org.eclipse.lsp4j.SelectionRangeParams;
 import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensParams;
 import org.eclipse.lsp4j.SignatureHelp;
@@ -227,6 +229,19 @@ public class DocumentServiceImpl implements TextDocumentService {
     if (adapter != null) {
       String uri = params.getTextDocument().getUri();
       List<FoldingRange> result = adapter.getFoldingRanges(uri);
+      return CompletableFuture.completedFuture(result);
+    }
+
+    return CompletableFuture.completedFuture(null);
+  }
+
+  @Override
+  public CompletableFuture<List<SelectionRange>> selectionRange(
+      final SelectionRangeParams params) {
+    var adapter = getResponsibleAdapter(params.getTextDocument());
+    if (adapter != null) {
+      String uri = params.getTextDocument().getUri();
+      List<SelectionRange> result = adapter.getSelectionRanges(uri, params.getPositions());
       return CompletableFuture.completedFuture(result);
     }
 

@@ -28,6 +28,7 @@ import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.SelectionRange;
 import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SignatureHelpContext;
 import org.eclipse.lsp4j.SymbolInformation;
@@ -262,6 +263,20 @@ public abstract class LanguageAdapter {
     }
 
     return doc.getFoldingRanges();
+  }
+
+  public final List<SelectionRange> getSelectionRanges(final String uri,
+      final List<Position> positions) {
+    DocumentStructures doc = getStructures(uri);
+    if (doc == null) {
+      return null;
+    }
+
+    List<SelectionRange> result = new ArrayList<>(positions.size());
+    for (Position p : positions) {
+      result.add(doc.getSelectionRange(p));
+    }
+    return result;
   }
 
   public final SignatureHelp signatureHelp(final String uri, final Position position,

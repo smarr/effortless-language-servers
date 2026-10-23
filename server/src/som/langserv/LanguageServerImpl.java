@@ -66,6 +66,7 @@ public class LanguageServerImpl implements LanguageServer, LanguageClientAware {
     cap.setReferencesProvider(true);
     cap.setHoverProvider(true);
     cap.setFoldingRangeProvider(true);
+    cap.setSelectionRangeProvider(true);
 
     cap.setTextDocumentSync(TextDocumentSyncKind.Full);
 

@@ -18,6 +18,7 @@ import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SelectionRange;
 import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SignatureHelpContext;
 import org.eclipse.lsp4j.SignatureInformation;
@@ -311,6 +312,57 @@ public class DocumentStructures {
       }
       collectFoldingRanges(e.getAllChildren(), result);
     }
+  }
+
+  /**
+   * Returns the innermost selection range, which links to the enclosing ones,
+   * for instance from a variable reference, to its block, method, and class.
+   */
+  public SelectionRange getSelectionRange(final Position position) {
+    SelectionRange current = null;
+    LanguageElement innermost = null;
+
+    List<LanguageElement> elements = rootSymbols;
+    while (elements != null) {
+      LanguageElement enclosing = null;
+      for (var e : elements) {
+        if (e.getRange() != null && isIn(position, e)) {
+          enclosing = e;
+          break;
+        }
+      }
+
+      if (enclosing == null) {
+        break;
+      }
+
+      current = createSelectionRange(enclosing.getRange(), current);
+      innermost = enclosing;
+      elements = enclosing.getAllChildren();
+    }
+
+    if (innermost != null && innermost.getReferences() != null) {
+      for (var ref : innermost.getReferences()) {
+        if (isIn(position, ref)) {
+          current = createSelectionRange(ref.getRange(), current);
+          break;
+        }
+      }
+    }
+
+    if (current == null) {
+      // the protocol requires a result for each position
+      return new SelectionRange(new Range(position, position), null);
+    }
+    return current;
+  }
+
+  private static SelectionRange createSelectionRange(final Range range,
+      final SelectionRange parent) {
+    if (parent != null && parent.getRange().equals(range)) {
+      return parent;
+    }
+    return new SelectionRange(range, parent);
   }
 
   private static Hover createHover(final LanguageElement e) {

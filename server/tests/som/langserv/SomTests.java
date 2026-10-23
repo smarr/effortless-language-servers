@@ -418,6 +418,46 @@ public class SomTests {
   }
 
   @Test
+  public void testSelectionRanges() {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    var structures = adapter.parse("Hello = (\n"
+        + "  run = (\n"
+        + "    | a |\n"
+        + "    a := [:x |\n"
+        + "      x ]\n"
+        + "  )\n"
+        + "  short = ( ^ 1 )\n"
+        + ")\n", path);
+
+    assertNull(structures.getDiagnostics());
+
+    var ranges = adapter.getSelectionRanges(path,
+        List.of(new Position(4, 6), new Position(3, 4), new Position(8, 0)));
+    assertEquals(3, ranges.size());
+
+    // x in the block, the block, the method, the class
+    var r = ranges.get(0);
+    assertRange(4, 6, 4, 7, r.getRange());
+    assertRange(3, 9, 4, 9, r.getParent().getRange());
+    assertRange(1, 2, 5, 3, r.getParent().getParent().getRange());
+    assertRange(0, 0, 7, 1, r.getParent().getParent().getParent().getRange());
+    assertNull(r.getParent().getParent().getParent().getParent());
+
+    // a in the method, the method, the class
+    r = ranges.get(1);
+    assertRange(3, 4, 3, 5, r.getRange());
+    assertRange(1, 2, 5, 3, r.getParent().getRange());
+    assertRange(0, 0, 7, 1, r.getParent().getParent().getRange());
+    assertNull(r.getParent().getParent().getParent());
+
+    // outside of the class, just the position
+    r = ranges.get(2);
+    assertRange(8, 0, 8, 0, r.getRange());
+    assertNull(r.getParent());
+  }
+
+  @Test
   public void testHover() {
     var adapter = new SomAdapter();
     String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
