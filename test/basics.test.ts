@@ -72,7 +72,8 @@ describe("Basic Tests", () => {
     return client.start();
   });
 
-  it("Load SOMns Hello World and expect diagnostics", done => {
+  // SOMns support is currently disabled in the language server
+  it.skip("Load SOMns Hello World and expect diagnostics", done => {
     const content = readFileSync(examplesPath + '/Hello.ns').toString();
     client.sendNotification("textDocument/didChange", {
       textDocument: {
