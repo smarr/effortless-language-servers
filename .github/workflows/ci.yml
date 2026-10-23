@@ -8,13 +8,27 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-        with:
-          submodules: true
+
+      # SOMns support is currently disabled, so we only need TruffleSOM
+      - name: Checkout TruffleSOM
+        run: |
+          git submodule update --init server/libs/TruffleSOM
+          (cd server/libs/TruffleSOM && git submodule update --init)
 
       - uses: actions/setup-java@v6
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '25'
+
+      # TruffleSOM expects mx and graal next to it, i.e., in server/libs
+      - name: Setup MX, LabsJDK, and Graal
+        run: |
+          cd server/libs/TruffleSOM
+          ./som --setup mx
+          echo "$(pwd)/../mx" >> "$GITHUB_PATH"
+          export PATH=$PATH:$(pwd)/../mx
+          source .github/ci.sh
+          ensure_labsjdk_and_graal_version
 
       - name: NPM Install
         run: |
