@@ -252,7 +252,11 @@ public class SomParser extends ParserAst {
       final String variableName, final ExpressionNode exp, final long coord)
       throws ParseError {
     ExpressionNode result = super.variableWrite(mgenc, variableName, exp, coord);
-    SourceSection sourceSection = SourceCoordinate.createSourceSection(source, coord);
+
+    // the coord covers the whole assignment, but we only want the variable
+    long varCoord =
+        SourceCoordinate.create(SourceCoordinate.getStartIndex(coord), variableName.length());
+    SourceSection sourceSection = SourceCoordinate.createSourceSection(source, varCoord);
 
     if (result instanceof LocalArgumentWriteNode
         || result instanceof NonLocalArgumentWriteNode) {

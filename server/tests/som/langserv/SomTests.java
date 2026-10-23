@@ -374,6 +374,23 @@ public class SomTests {
   }
 
   @Test
+  public void testHighlightOfAssignedVariable() {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    var structures = adapter.parse("Hello = (\n"
+        + "  run = ( | a | a := 1 + 2 )\n"
+        + ")\n", path);
+
+    assertNull(structures.getDiagnostics());
+
+    // only the variable, not the whole assignment
+    var highlights = adapter.getHighlight(path, new Position(1, 16));
+    assertEquals(2, highlights.size());
+    assertRange(1, 12, 1, 13, highlights.get(0).getRange());
+    assertRange(1, 16, 1, 17, highlights.get(1).getRange());
+  }
+
+  @Test
   public void testFoldingRanges() {
     var adapter = new SomAdapter();
     String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
