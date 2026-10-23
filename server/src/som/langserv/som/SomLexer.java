@@ -3,6 +3,7 @@ package som.langserv.som;
 import som.langserv.structure.SemanticTokenType;
 import som.langserv.structure.SemanticTokens;
 import trufflesom.compiler.Lexer;
+import trufflesom.compiler.Symbol;
 
 
 public class SomLexer extends Lexer {
@@ -11,6 +12,15 @@ public class SomLexer extends Lexer {
   protected SomLexer(final String content, final SemanticTokens semanticTokens) {
     super(content);
     this.semanticTokens = semanticTokens;
+  }
+
+  /** Lex the whole content to record the semantic tokens of all comments. */
+  public static void recordComments(final String content,
+      final SemanticTokens semanticTokens) {
+    SomLexer lexer = new SomLexer(content, semanticTokens);
+    while (lexer.getSym() != Symbol.NONE) {
+      // only interested in the side effect of skipComment()
+    }
   }
 
   @Override

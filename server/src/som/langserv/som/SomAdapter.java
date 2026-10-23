@@ -21,9 +21,9 @@ import org.graalvm.polyglot.Context.Builder;
 
 import com.oracle.truffle.api.source.Source;
 
-import bdt.basic.ProgramDefinitionError;
-import bdt.source.SourceCoordinate;
-import bdt.tools.structure.StructuralProbe;
+import trufflesom.bdt.basic.ProgramDefinitionError;
+import trufflesom.bdt.source.SourceCoordinate;
+import trufflesom.bdt.tools.structure.StructuralProbe;
 import som.langserv.LanguageAdapter;
 import som.langserv.lint.FileLinter;
 import som.langserv.lint.LintEndsWithNewline;
@@ -39,6 +39,7 @@ import trufflesom.compiler.Variable;
 import trufflesom.interpreter.SomLanguage;
 import trufflesom.vm.Classes;
 import trufflesom.vm.Globals;
+import trufflesom.Launcher;
 import trufflesom.vm.Universe;
 import trufflesom.vmobjects.SClass;
 import trufflesom.vmobjects.SInvokable;
@@ -83,7 +84,7 @@ public class SomAdapter extends LanguageAdapter {
     String[] args = new String[] {"-cp", CORE_LIB_PATH + "/Smalltalk"};
 
     Universe.setSourceCompiler(somCompiler, true);
-    Builder builder = Universe.createContextBuilder();
+    Builder builder = Launcher.createContextBuilder();
     builder.arguments(SomLanguage.LANG_ID, args);
     context = builder.build();
 

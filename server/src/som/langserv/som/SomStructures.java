@@ -2,7 +2,7 @@ package som.langserv.som;
 
 import com.oracle.truffle.api.source.Source;
 
-import bdt.tools.structure.StructuralProbe;
+import trufflesom.bdt.tools.structure.StructuralProbe;
 import som.langserv.structure.DocumentStructures;
 import trufflesom.compiler.Field;
 import trufflesom.compiler.Variable;

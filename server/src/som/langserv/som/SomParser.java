@@ -18,8 +18,8 @@ import org.eclipse.lsp4j.SymbolKind;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
-import bdt.basic.ProgramDefinitionError;
-import bdt.source.SourceCoordinate;
+import trufflesom.bdt.basic.ProgramDefinitionError;
+import trufflesom.bdt.source.SourceCoordinate;
 import som.langserv.structure.DocumentStructures;
 import som.langserv.structure.LanguageElement;
 import som.langserv.structure.LanguageElementId;
@@ -27,7 +27,6 @@ import som.langserv.structure.SemanticTokenModifier;
 import som.langserv.structure.SemanticTokenType;
 import trufflesom.compiler.ClassGenerationContext;
 import trufflesom.compiler.Field;
-import trufflesom.compiler.Lexer;
 import trufflesom.compiler.MethodGenerationContext;
 import trufflesom.compiler.ParserAst;
 import trufflesom.compiler.Symbol;
@@ -38,17 +37,17 @@ import trufflesom.interpreter.nodes.ArgumentReadNode.LocalArgumentWriteNode;
 import trufflesom.interpreter.nodes.ArgumentReadNode.NonLocalArgumentReadNode;
 import trufflesom.interpreter.nodes.ArgumentReadNode.NonLocalArgumentWriteNode;
 import trufflesom.interpreter.nodes.ExpressionNode;
+import trufflesom.interpreter.nodes.FieldNode;
 import trufflesom.interpreter.nodes.FieldNode.FieldReadNode;
 import trufflesom.interpreter.nodes.FieldNode.FieldWriteNode;
-import trufflesom.interpreter.nodes.FieldNode.UninitFieldIncNode;
 import trufflesom.interpreter.nodes.GlobalNode;
 import trufflesom.interpreter.nodes.GlobalNode.FalseGlobalNode;
 import trufflesom.interpreter.nodes.GlobalNode.NilGlobalNode;
 import trufflesom.interpreter.nodes.GlobalNode.TrueGlobalNode;
+import trufflesom.interpreter.nodes.LocalVariableNode;
 import trufflesom.interpreter.nodes.LocalVariableNode.LocalVariableReadNode;
-import trufflesom.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
+import trufflesom.interpreter.nodes.NonLocalVariableNode;
 import trufflesom.interpreter.nodes.NonLocalVariableNode.NonLocalVariableReadNode;
-import trufflesom.interpreter.nodes.NonLocalVariableNode.NonLocalVariableWriteNode;
 import trufflesom.vm.NotYetImplementedException;
 import trufflesom.vm.SymbolTable;
 import trufflesom.vmobjects.SSymbol;
@@ -73,17 +72,14 @@ public class SomParser extends ParserAst {
       final SomStructures structuralProbe, final SomAdapter somAdapter) {
     super(content, source, structuralProbe);
     assert structuralProbe != null : "Needed for this extended parser.";
+    // The parser's lexer cannot be replaced anymore,
+    // so we lex the content separately to record comments
+    SomLexer.recordComments(content, structuralProbe.getSymbols().getSemanticTokens());
     assert structuralProbe.source == source;
     this.keywordParts = new ArrayList<>();
     this.keywordStart = new ArrayList<>();
     this.symbols = structuralProbe.getSymbols();
     this.somAdapter = somAdapter;
-  }
-
-  @Override
-  protected Lexer createLexer(final String content) {
-    return new SomLexer(content,
-        ((SomStructures) super.structuralProbe).getSymbols().getSemanticTokens());
   }
 
   @Override
@@ -162,7 +158,7 @@ public class SomParser extends ParserAst {
 
       var a = mgenc.getArgument(i);
       sb.append(':');
-      sb.append(a.getName().getString());
+      sb.append(a.getName());
     }
 
     sb.append(']');
@@ -177,13 +173,13 @@ public class SomParser extends ParserAst {
 
   @Override
   protected ExpressionNode variableRead(final MethodGenerationContext mgenc,
-      final SSymbol variableName, final long coord) {
+      final String variableName, final long coord) {
     ExpressionNode result = super.variableRead(mgenc, variableName, coord);
     SourceSection sourceSection = SourceCoordinate.createSourceSection(source, coord);
 
     if (result instanceof LocalArgumentReadNode
         || result instanceof NonLocalArgumentReadNode) {
-      if (variableName == SymbolTable.symSelf && sourceSection.getCharLength() == 0) {
+      if ("self".equals(variableName) && sourceSection.getCharLength() == 0) {
         // skip, this is a synthetic self read, at the end of a block
       } else {
         recordTokenSemantics(sourceSection, SemanticTokenType.PARAMETER);
@@ -215,11 +211,11 @@ public class SomParser extends ParserAst {
       if (result instanceof NilGlobalNode || result instanceof TrueGlobalNode
           || result instanceof FalseGlobalNode) {
         recordTokenSemantics(sourceSection, SemanticTokenType.KEYWORD);
-      } else if (variableName.getString().equals("system")) {
+      } else if (variableName.equals("system")) {
         recordTokenSemantics(sourceSection, SemanticTokenType.VARIABLE);
       } else {
         recordTokenSemantics(sourceSection, SemanticTokenType.CLASS);
-        referenceSymbol(new GlobalId(variableName), sourceSection);
+        referenceSymbol(new GlobalId(symbolFor(variableName)), sourceSection);
       }
     }
     return result;
@@ -227,7 +223,7 @@ public class SomParser extends ParserAst {
 
   @Override
   protected ExpressionNode variableWrite(final MethodGenerationContext mgenc,
-      final SSymbol variableName, final ExpressionNode exp, final long coord)
+      final String variableName, final ExpressionNode exp, final long coord)
       throws ParseError {
     ExpressionNode result = super.variableWrite(mgenc, variableName, exp, coord);
     SourceSection sourceSection = SourceCoordinate.createSourceSection(source, coord);
@@ -245,22 +241,26 @@ public class SomParser extends ParserAst {
 
       assert !arg.isSelf();
       referenceSymbol(new VariableId(arg), sourceSection);
-    } else if (result instanceof LocalVariableWriteNode
-        || result instanceof NonLocalVariableWriteNode) {
+    } else if (result instanceof LocalVariableNode
+        || result instanceof NonLocalVariableNode) {
+      // includes the write nodes, as well as supernodes such as for increments
       recordTokenSemantics(sourceSection, SemanticTokenType.VARIABLE);
       Local l;
-      if (result instanceof LocalVariableWriteNode w) {
+      if (result instanceof LocalVariableNode w) {
         l = w.getLocal();
       } else {
-        l = ((NonLocalVariableWriteNode) result).getLocal();
+        l = ((NonLocalVariableNode) result).getLocal();
       }
       referenceSymbol(new VariableId(l), sourceSection);
     } else if (result instanceof FieldWriteNode w) {
       recordTokenSemantics(sourceSection, SemanticTokenType.PROPERTY);
       referenceSymbol(new FieldId(w.getFieldIndex()), sourceSection);
-    } else if (result instanceof UninitFieldIncNode w) {
+    } else if (result instanceof FieldNode) {
+      // field increment supernodes and similar
       recordTokenSemantics(sourceSection, SemanticTokenType.PROPERTY);
-      referenceSymbol(new FieldId(w.getFieldIndex()), sourceSection);
+      referenceSymbol(
+          new FieldId(mgenc.getHolder().getFieldIndex(symbolFor(variableName))),
+          sourceSection);
     } else {
       throw new NotYetImplementedException(
           "odd, what am I missing here?: " + result.getClass().getName());
@@ -352,7 +352,7 @@ public class SomParser extends ParserAst {
     Argument arg = super.argument(mgenc);
     recordTokenSemantics(arg.coord, SemanticTokenType.PARAMETER);
     recordSymbolDefinition(
-        arg.getName().getString(), new VariableId(arg), SymbolKind.Variable, arg.coord, false);
+        arg.getName(), new VariableId(arg), SymbolKind.Variable, arg.coord, false);
     return arg;
   }
 
@@ -362,7 +362,7 @@ public class SomParser extends ParserAst {
 
     recordTokenSemantics(l.coord, SemanticTokenType.VARIABLE);
     recordSymbolDefinition(
-        l.getName().getString(), new VariableId(l), SymbolKind.Variable, l.coord, false);
+        l.getName(), new VariableId(l), SymbolKind.Variable, l.coord, false);
     return l;
   }
 
@@ -460,7 +460,7 @@ public class SomParser extends ParserAst {
 
     for (int i = 1; i < mgenc.getNumberOfArguments(); i += 1) {
       ParameterInformation p = new ParameterInformation();
-      p.setLabel(mgenc.getArgument(i).getName().getString());
+      p.setLabel(mgenc.getArgument(i).getName());
       params.add(p);
     }
 
@@ -495,7 +495,7 @@ public class SomParser extends ParserAst {
     currentMethod.setId(new SymbolId(mgenc.getSignature()));
     currentMethod.setSelectionRange(getRange(coord, name));
 
-    currentMethod.setDetail(name + " " + mgenc.getArgument(1).getName().getString());
+    currentMethod.setDetail(name + " " + mgenc.getArgument(1).getName());
   }
 
   @Override
@@ -523,7 +523,7 @@ public class SomParser extends ParserAst {
     for (int i = 0; i < keywordParts.size(); i += 1) {
       builder.append(keywordParts.get(i));
       builder.append(' ');
-      builder.append(mgenc.getArgument(i + 1).getName().getString());
+      builder.append(mgenc.getArgument(i + 1).getName());
       if (i < keywordParts.size() - 1) {
         builder.append(' ');
       }

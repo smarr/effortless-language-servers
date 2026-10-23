@@ -7,7 +7,7 @@ import org.eclipse.lsp4j.Range;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
-import bdt.source.SourceCoordinate;
+import trufflesom.bdt.source.SourceCoordinate;
 
 
 public class PositionConversion {
