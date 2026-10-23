@@ -4,14 +4,14 @@ on: [push, pull_request]
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-20.04 # ubuntu-latest
+    runs-on: ubuntu-26.04 # ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: true
 
-      - uses: actions/setup-java@v3
+      - uses: actions/setup-java@v6
         with:
           distribution: 'temurin'
           java-version: '17'
