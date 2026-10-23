@@ -17,6 +17,7 @@ import java.util.concurrent.ForkJoinTask;
 
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.eclipse.lsp4j.SymbolKind;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Context.Builder;
 
@@ -32,6 +33,7 @@ import som.langserv.lint.LintFileHasNSEnding;
 import som.langserv.lint.LintUseNeedsDefine;
 import som.langserv.lint.WorkspaceLinter;
 import som.langserv.structure.DocumentStructures;
+import som.langserv.structure.LanguageElement;
 import trufflesom.compiler.Field;
 import trufflesom.compiler.Parser;
 import trufflesom.compiler.Parser.ParseError;
@@ -74,6 +76,12 @@ public class SomAdapter extends LanguageAdapter {
   @Override
   public String getFileEnding() {
     return ".som";
+  }
+
+  /** Blocks are functions, too, but we only consider methods in the call hierarchy. */
+  @Override
+  protected boolean isCallable(final LanguageElement e) {
+    return e.getKind() == SymbolKind.Method;
   }
 
   private void initializePolyglot() {

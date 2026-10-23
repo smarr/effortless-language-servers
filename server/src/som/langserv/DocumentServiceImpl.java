@@ -6,6 +6,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import org.eclipse.lsp4j.CallHierarchyIncomingCall;
+import org.eclipse.lsp4j.CallHierarchyIncomingCallsParams;
+import org.eclipse.lsp4j.CallHierarchyItem;
+import org.eclipse.lsp4j.CallHierarchyOutgoingCall;
+import org.eclipse.lsp4j.CallHierarchyOutgoingCallsParams;
+import org.eclipse.lsp4j.CallHierarchyPrepareParams;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
@@ -250,6 +256,43 @@ public class DocumentServiceImpl implements TextDocumentService {
       String uri = params.getTextDocument().getUri();
       List<FoldingRange> result = adapter.getFoldingRanges(uri);
       return CompletableFuture.completedFuture(result);
+    }
+
+    return CompletableFuture.completedFuture(null);
+  }
+
+  @Override
+  public CompletableFuture<List<CallHierarchyItem>> prepareCallHierarchy(
+      final CallHierarchyPrepareParams params) {
+    var adapter = getResponsibleAdapter(params.getTextDocument());
+    if (adapter != null) {
+      String uri = params.getTextDocument().getUri();
+      return CompletableFuture.completedFuture(
+          adapter.prepareCallHierarchy(uri, params.getPosition()));
+    }
+
+    return CompletableFuture.completedFuture(null);
+  }
+
+  @Override
+  public CompletableFuture<List<CallHierarchyIncomingCall>> callHierarchyIncomingCalls(
+      final CallHierarchyIncomingCallsParams params) {
+    var item = params.getItem();
+    var adapter = getResponsibleAdapter(new TextDocumentIdentifier(item.getUri()));
+    if (adapter != null) {
+      return CompletableFuture.completedFuture(adapter.getIncomingCalls(item));
+    }
+
+    return CompletableFuture.completedFuture(null);
+  }
+
+  @Override
+  public CompletableFuture<List<CallHierarchyOutgoingCall>> callHierarchyOutgoingCalls(
+      final CallHierarchyOutgoingCallsParams params) {
+    var item = params.getItem();
+    var adapter = getResponsibleAdapter(new TextDocumentIdentifier(item.getUri()));
+    if (adapter != null) {
+      return CompletableFuture.completedFuture(adapter.getOutgoingCalls(item));
     }
 
     return CompletableFuture.completedFuture(null);

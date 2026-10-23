@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.Diagnostic;
@@ -363,6 +364,77 @@ public class DocumentStructures {
       return parent;
     }
     return new SelectionRange(range, parent);
+  }
+
+  /** The element with the given selection range that satisfies the predicate. */
+  public LanguageElement findElement(final Range selectionRange,
+      final Predicate<LanguageElement> predicate) {
+    return findElement(rootSymbols, selectionRange, predicate);
+  }
+
+  private static LanguageElement findElement(final List<LanguageElement> elements,
+      final Range selectionRange, final Predicate<LanguageElement> predicate) {
+    if (elements == null) {
+      return null;
+    }
+
+    for (var e : elements) {
+      if (selectionRange.equals(e.getSelectionRange()) && predicate.test(e)) {
+        return e;
+      }
+
+      var found = findElement(e.getAllChildren(), selectionRange, predicate);
+      if (found != null) {
+        return found;
+      }
+    }
+    return null;
+  }
+
+  /** The innermost element around the position that satisfies the predicate. */
+  public LanguageElement findEnclosing(final Position position,
+      final Predicate<LanguageElement> predicate) {
+    LanguageElement result = null;
+
+    List<LanguageElement> elements = rootSymbols;
+    while (elements != null) {
+      LanguageElement enclosing = null;
+      for (var e : elements) {
+        if (e.getRange() != null && isIn(position, e)) {
+          enclosing = e;
+          break;
+        }
+      }
+
+      if (enclosing == null) {
+        break;
+      }
+
+      if (predicate.test(enclosing)) {
+        result = enclosing;
+      }
+      elements = enclosing.getAllChildren();
+    }
+    return result;
+  }
+
+  /**
+   * The references within the element, including nested elements, except the
+   * ones that satisfy the predicate, for instance nested methods.
+   */
+  public static void collectReferences(final LanguageElement element,
+      final Predicate<LanguageElement> exclude, final List<Reference> result) {
+    if (element.getReferences() != null) {
+      result.addAll(element.getReferences());
+    }
+
+    if (element.getAllChildren() != null) {
+      for (var child : element.getAllChildren()) {
+        if (!exclude.test(child)) {
+          collectReferences(child, exclude, result);
+        }
+      }
+    }
   }
 
   private static Hover createHover(final LanguageElement e) {

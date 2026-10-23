@@ -16,6 +16,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.lsp4j.CallHierarchyIncomingCall;
+import org.eclipse.lsp4j.CallHierarchyItem;
+import org.eclipse.lsp4j.CallHierarchyOutgoingCall;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CompletionItem;
@@ -34,6 +37,7 @@ import org.eclipse.lsp4j.SelectionRange;
 import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SignatureHelpContext;
 import org.eclipse.lsp4j.SymbolInformation;
+import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.services.LanguageClient;
 
 import som.langserv.lens.FileLens;
@@ -41,8 +45,10 @@ import som.langserv.lint.FileLinter;
 import som.langserv.lint.WorkspaceLinter;
 import som.langserv.structure.DocumentStructures;
 import som.langserv.structure.LanguageElement;
+import som.langserv.structure.LanguageElementId;
 import som.langserv.structure.Pair;
 import som.langserv.structure.ParseContextKind;
+import som.langserv.structure.Reference;
 import som.langserv.structure.SemanticTokens;
 import util.ArrayListSet;
 
@@ -265,6 +271,122 @@ public abstract class LanguageAdapter {
     }
 
     return doc.getFoldingRanges();
+  }
+
+  /** Whether the element can be called, and is thus part of a call hierarchy. */
+  protected boolean isCallable(final LanguageElement e) {
+    return e.getKind() == SymbolKind.Method || e.getKind() == SymbolKind.Function;
+  }
+
+  private static CallHierarchyItem createCallHierarchyItem(final LanguageElement e,
+      final String uri) {
+    var item = new CallHierarchyItem(
+        e.getName(), e.getKind(), uri, e.getRange(), e.getSelectionRange());
+    item.setDetail(e.getDetail());
+    return item;
+  }
+
+  /** All callable definitions of the element, in all documents. */
+  private List<CallHierarchyItem> findCallables(final LanguageElementId id) {
+    List<CallHierarchyItem> result = new ArrayList<>();
+    for (DocumentStructures d : getDocuments()) {
+      var allDefs = d.getAllDefinitions();
+      var defs = allDefs == null ? null : allDefs.get(id);
+      if (defs != null) {
+        for (var e : defs) {
+          if (isCallable(e)) {
+            result.add(createCallHierarchyItem(e, d.getUri()));
+          }
+        }
+      }
+    }
+    return result;
+  }
+
+  public final List<CallHierarchyItem> prepareCallHierarchy(final String uri,
+      final Position position) {
+    DocumentStructures doc = getStructures(uri);
+    if (doc == null) {
+      return null;
+    }
+
+    var element = doc.getElement(position);
+    if (element == null || element.v1 == null) {
+      return null;
+    }
+
+    // on a definition, it's only this one, otherwise all with the same name
+    var definition = doc.findElement(element.v2, e -> isCallable(e));
+    if (definition != null) {
+      return List.of(createCallHierarchyItem(definition, doc.getUri()));
+    }
+
+    var result = findCallables(element.v1);
+    return result.isEmpty() ? null : result;
+  }
+
+  private LanguageElement getCallable(final CallHierarchyItem item) {
+    DocumentStructures doc = getStructures(item.getUri());
+    if (doc == null) {
+      return null;
+    }
+    return doc.findElement(item.getSelectionRange(), e -> isCallable(e));
+  }
+
+  public final List<CallHierarchyIncomingCall> getIncomingCalls(
+      final CallHierarchyItem item) {
+    var callee = getCallable(item);
+    if (callee == null) {
+      return List.of();
+    }
+
+    List<CallHierarchyIncomingCall> result = new ArrayList<>();
+    for (DocumentStructures d : getDocuments()) {
+      var allRefs = d.getAllReferences();
+      var refs = allRefs == null ? null : allRefs.get(callee.getId());
+      if (refs == null) {
+        continue;
+      }
+
+      Map<LanguageElement, List<Range>> callers = new LinkedHashMap<>();
+      for (var ref : refs) {
+        var caller = d.findEnclosing(ref.getRange().getStart(), e -> isCallable(e));
+        if (caller != null) {
+          callers.computeIfAbsent(caller, k -> new ArrayList<>()).add(ref.getRange());
+        }
+      }
+
+      for (var c : callers.entrySet()) {
+        result.add(new CallHierarchyIncomingCall(
+            createCallHierarchyItem(c.getKey(), d.getUri()), c.getValue()));
+      }
+    }
+    return result;
+  }
+
+  public final List<CallHierarchyOutgoingCall> getOutgoingCalls(
+      final CallHierarchyItem item) {
+    var caller = getCallable(item);
+    if (caller == null) {
+      return List.of();
+    }
+
+    // nested callables make their own calls
+    List<Reference> refs = new ArrayList<>();
+    DocumentStructures.collectReferences(caller, e -> e != caller && isCallable(e), refs);
+
+    Map<LanguageElementId, List<Range>> calls = new LinkedHashMap<>();
+    for (var ref : refs) {
+      calls.computeIfAbsent(ref.getId(), k -> new ArrayList<>()).add(ref.getRange());
+    }
+
+    List<CallHierarchyOutgoingCall> result = new ArrayList<>();
+    for (var c : calls.entrySet()) {
+      for (var callee : findCallables(c.getKey())) {
+        result.add(new CallHierarchyOutgoingCall(callee, c.getValue()));
+      }
+    }
+    return result;
   }
 
   public final List<CodeAction> getCodeActions(final String uri,

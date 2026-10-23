@@ -498,6 +498,91 @@ public class SomTests {
     assertEquals(0, (int) tokens.get(10));
   }
 
+  private static SomAdapter parseCallHierarchyExample() {
+    var adapter = new SomAdapter();
+    adapter.parse("Hello1 = (\n"
+        + "  helper: x = ( ^ x )\n"
+        + "  run = (\n"
+        + "    self helper: 1.\n"
+        + "    #(1 2) do: [:e | self helper: e ]\n"
+        + "  )\n"
+        + ")\n", "file:" + SomAdapter.CORE_LIB_PATH + "/Hello1.som");
+    adapter.parse("Hello2 = (\n"
+        + "  helper: y = ( ^ y )\n"
+        + "  main = ( ^ Hello1 new helper: 3 )\n"
+        + ")\n", "file:" + SomAdapter.CORE_LIB_PATH + "/Hello2.som");
+    // without any references
+    adapter.parse("Hello3 = ()\n", "file:" + SomAdapter.CORE_LIB_PATH + "/Hello3.som");
+    return adapter;
+  }
+
+  @Test
+  public void testPrepareCallHierarchy() {
+    var adapter = parseCallHierarchyExample();
+    String path1 = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello1.som";
+    String path2 = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello2.som";
+
+    // on the definition, only the definition
+    var items = adapter.prepareCallHierarchy(path1, new Position(1, 2));
+    assertEquals(1, items.size());
+    assertEquals("helper:", items.get(0).getName());
+    assertEquals(path1, items.get(0).getUri());
+
+    // on a call, all methods with the selector
+    items = adapter.prepareCallHierarchy(path1, new Position(3, 9));
+    assertEquals(2, items.size());
+    var uris = List.of(items.get(0).getUri(), items.get(1).getUri());
+    assertTrue(uris.contains(path1));
+    assertTrue(uris.contains(path2));
+
+    // not a method
+    assertNull(adapter.prepareCallHierarchy(path1, new Position(1, 19)));
+  }
+
+  @Test
+  public void testIncomingCalls() {
+    var adapter = parseCallHierarchyExample();
+    String path1 = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello1.som";
+    String path2 = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello2.som";
+
+    var helper = adapter.prepareCallHierarchy(path1, new Position(1, 2)).get(0);
+    var calls = adapter.getIncomingCalls(helper);
+    assertEquals(2, calls.size());
+
+    var fromRun = calls.stream().filter(c -> c.getFrom().getName().equals("run")).findFirst();
+    assertTrue(fromRun.isPresent());
+    assertEquals(path1, fromRun.get().getFrom().getUri());
+    // the call in the block is attributed to the method
+    assertEquals(2, fromRun.get().getFromRanges().size());
+    assertRange(3, 9, 3, 16, fromRun.get().getFromRanges().get(0));
+    assertRange(4, 26, 4, 33, fromRun.get().getFromRanges().get(1));
+
+    var fromMain = calls.stream().filter(c -> c.getFrom().getName().equals("main")).findFirst();
+    assertTrue(fromMain.isPresent());
+    assertEquals(path2, fromMain.get().getFrom().getUri());
+    assertEquals(1, fromMain.get().getFromRanges().size());
+  }
+
+  @Test
+  public void testOutgoingCalls() {
+    var adapter = parseCallHierarchyExample();
+    String path1 = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello1.som";
+
+    var run = adapter.prepareCallHierarchy(path1, new Position(2, 2)).get(0);
+    assertEquals("run", run.getName());
+
+    var helperCalls = adapter.getOutgoingCalls(run).stream()
+                             .filter(c -> c.getTo().getName().equals("helper:")).toList();
+
+    // one for each definition, both with the two calls in run
+    assertEquals(2, helperCalls.size());
+    for (var c : helperCalls) {
+      assertEquals(2, c.getFromRanges().size());
+      assertRange(3, 9, 3, 16, c.getFromRanges().get(0));
+      assertRange(4, 26, 4, 33, c.getFromRanges().get(1));
+    }
+  }
+
   @Test
   public void testHover() {
     var adapter = new SomAdapter();
