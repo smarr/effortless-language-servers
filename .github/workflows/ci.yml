@@ -43,6 +43,10 @@ jobs:
           sudo apt-get install xvfb
           xvfb-run --auto-servernum npm test
 
+      - name: Package Extension
+        run: |
+          npm run package
+
       # - name: CheckStyle
       #   run: |
       #     ant -e checkstyle
