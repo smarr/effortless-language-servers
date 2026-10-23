@@ -391,6 +391,24 @@ public class SomTests {
   }
 
   @Test
+  public void testHighlightOfKeywordMessageParts() {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    var structures = adapter.parse("Hello = (\n"
+        + "  at: i put: v = ( )\n"
+        + "  run = ( self at: 1 put: 2 )\n"
+        + ")\n", path);
+
+    assertNull(structures.getDiagnostics());
+
+    // the definition, and each part of the selector with its own length
+    var highlights = adapter.getHighlight(path, new Position(2, 15));
+    assertEquals(3, highlights.size());
+    assertRange(2, 15, 2, 18, highlights.get(1).getRange());
+    assertRange(2, 21, 2, 25, highlights.get(2).getRange());
+  }
+
+  @Test
   public void testFoldingRanges() {
     var adapter = new SomAdapter();
     String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";

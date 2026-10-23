@@ -361,7 +361,7 @@ public class SomParser extends ParserAst {
     SymbolId call = new SymbolId(msg);
 
     for (int i = 0; i < numParts; i += 1) {
-      referenceSymbol(call, starts[i], msg.getString().length());
+      referenceSymbol(call, starts[i], parts[i].length());
     }
     return result;
   }
