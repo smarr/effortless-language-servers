@@ -36,7 +36,7 @@ function startLanguageServerAndConnectTCP(context: ExtensionContext,
 													   resolve: (value?: StreamInfo | PromiseLike<StreamInfo>) => void,
 														 reject: (reason?: any) => void): void {
 	const serverOptions: any = getServerOptions(context.asAbsolutePath, true, true);
-	const lsProc = spawn(serverOptions.run.command, serverOptions.run.args, {shell: true});
+	const lsProc = spawn(serverOptions.run.command, serverOptions.run.args);
 	let sawServerStarted = false;
 	lsProc.stdout.on('data', data => {
 		if (!sawServerStarted && data.toString().includes('Server started and waiting')) {
@@ -61,7 +61,7 @@ export function startLanguageServer(asAbsolutePath: PathConverter,
 
 	const cmd = `${serverOptions.run.command} ${serverOptions.run.args.join(" ")}`;
 	console.log(`[SOM-EXT] spawn '${cmd}'`);
-	const lsProc = spawn(serverOptions.run.command, serverOptions.run.args, {shell: true});
+	const lsProc = spawn(serverOptions.run.command, serverOptions.run.args);
 
 	let stderr = '';
 
