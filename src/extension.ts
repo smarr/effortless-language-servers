@@ -111,7 +111,7 @@ export async function activate(context: ExtensionContext) {
 				connectToLanguageServer(resolve, reject);
 			} else {
 				if (!isJavaAvailableAndCompatible(configuration.get('javaHome'))) {
-					window.showErrorMessage('Java 17 or new was not found. Please configure it in the settings under the `els.javaHome` key.');
+					window.showErrorMessage('Java 25 or newer was not found. Please configure it in the settings under the `els.javaHome` key.');
 				}
 				// window.showInformationMessage("SOMns Starting Language Server");
 				startLanguageServer(context.asAbsolutePath, resolve, reject);

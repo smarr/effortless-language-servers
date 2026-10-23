@@ -91,7 +91,7 @@
 				"els.javaHome": {
 					"type": "string",
 					"default": null,
-					"description": "Path to the Java 17 or later installation. On macOS, it might be /Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home. On Linux perhaps /usr/lib/jvm/java-17-openjdk-amd64"
+					"description": "Path to the Java 25 or later installation. On macOS, it might be /Library/Java/JavaVirtualMachines/temurin-25.jdk/Contents/Home. On Linux perhaps /usr/lib/jvm/java-25-openjdk-amd64"
 				},
 				"els.somnsExecutable": {
 					"type": "string",

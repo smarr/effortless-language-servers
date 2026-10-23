@@ -94,5 +94,5 @@ export function isJavaAvailableAndCompatible(javaHome: unknown) {
 		return false;
 	}
 	const major = getMajorVersionFromJavaVersionString(result.stderr);
-	return parseInt(major) >= 17;
+	return parseInt(major) >= 25;
 }
