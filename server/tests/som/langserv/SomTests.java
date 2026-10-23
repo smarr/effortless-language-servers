@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static som.langserv.Helpers.assertRange;
 import static som.langserv.Helpers.assertStart;
 import static som.langserv.Helpers.assertToken;
@@ -13,6 +14,7 @@ import static som.langserv.Helpers.printAllToken;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ForkJoinTask;
 
@@ -28,6 +30,8 @@ import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SymbolInformation;
+import org.eclipse.lsp4j.TextEdit;
+import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -72,14 +76,20 @@ public class SomTests {
       }
     }
 
-    // there are currently two known parse errors in the core lib:
+    // there are currently seven known parse errors in the core lib:
     // - Self.som, where super is assigned to
     // - Examples/Benchmarks/DeltaBlue/SortedCollection.som where we trigger "Currently #dnu
     // with super sent is not yet implemented. "
-    assertEquals(2, errors);
+    // - Examples/Benchmarks/Json/JsonLiteral.som, which triggers the same #dnu error,
+    // because the superclass is resolved to Examples/AreWeFastYet/Json/JsonValue.som,
+    // which does not have #asBoolean. Files are loaded in sorted order, so it's loaded
+    // before Examples/Benchmarks/Json/JsonLiteral.som and JsonValue.som.
+    // - IntegrationTests/Tests/{call2, unknown_field_write, binary_super,
+    // test_literals_limit_1}.som, which are expected to fail
+    assertEquals(7, errors);
 
     // these are all linter warnings, which are benign
-    assertEquals(107, warnings);
+    assertEquals(142, warnings);
     assertEquals(0, others);
   }
 
@@ -339,6 +349,371 @@ public class SomTests {
 
     assertEquals("run:with:", children.get(3).getName());
     assertRange(4, 0, 4, 16, children.get(3).getSelectionRange());
+  }
+
+  @Test
+  public void testClassRangeIncludesClosingParenthesis() {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    adapter.parse("Hello = (\n"
+        + "  run = ( ^ 1 )\n"
+        + ")\n", path);
+
+    var classSymbol = adapter.documentSymbol(path).get(0);
+    assertRange(0, 0, 2, 1, classSymbol.getRange());
+  }
+
+  @Test
+  public void testClassRangeWithTrailingComment() {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    adapter.parse("Hello = (\n"
+        + "  run = ( ^ 1 )\n"
+        + ")\n"
+        + "\"comment\"\n", path);
+
+    // we don't know where the class ends, so keep the range as is
+    var classSymbol = adapter.documentSymbol(path).get(0);
+    assertRange(0, 0, 1, 15, classSymbol.getRange());
+  }
+
+  @Test
+  public void testHighlightOfAssignedVariable() {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    var structures = adapter.parse("Hello = (\n"
+        + "  run = ( | a | a := 1 + 2 )\n"
+        + ")\n", path);
+
+    assertNull(structures.getDiagnostics());
+
+    // only the variable, not the whole assignment
+    var highlights = adapter.getHighlight(path, new Position(1, 16));
+    assertEquals(2, highlights.size());
+    assertRange(1, 12, 1, 13, highlights.get(0).getRange());
+    assertRange(1, 16, 1, 17, highlights.get(1).getRange());
+  }
+
+  @Test
+  public void testHighlightOfKeywordMessageParts() {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    var structures = adapter.parse("Hello = (\n"
+        + "  at: i put: v = ( )\n"
+        + "  run = ( self at: 1 put: 2 )\n"
+        + ")\n", path);
+
+    assertNull(structures.getDiagnostics());
+
+    // the definition, and each part of the selector with its own length
+    var highlights = adapter.getHighlight(path, new Position(2, 15));
+    assertEquals(3, highlights.size());
+    assertRange(2, 15, 2, 18, highlights.get(1).getRange());
+    assertRange(2, 21, 2, 25, highlights.get(2).getRange());
+  }
+
+  @Test
+  public void testFoldingRanges() {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    var structures = adapter.parse("Hello = (\n"
+        + "  run = (\n"
+        + "    | a |\n"
+        + "    a := [:x |\n"
+        + "      x ]\n"
+        + "  )\n"
+        + "  short = ( ^ 1 )\n"
+        + ")\n", path);
+
+    assertNull(structures.getDiagnostics());
+
+    // the last line of an element stays visible, so the two-line block,
+    // and the single-line method are not folded
+    var ranges = adapter.getFoldingRanges(path);
+    assertEquals(2, ranges.size());
+
+    assertEquals(0, ranges.get(0).getStartLine());
+    assertEquals(6, ranges.get(0).getEndLine());
+
+    assertEquals(1, ranges.get(1).getStartLine());
+    assertEquals(4, ranges.get(1).getEndLine());
+  }
+
+  @Test
+  public void testSelectionRanges() {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    var structures = adapter.parse("Hello = (\n"
+        + "  run = (\n"
+        + "    | a |\n"
+        + "    a := [:x |\n"
+        + "      x ]\n"
+        + "  )\n"
+        + "  short = ( ^ 1 )\n"
+        + ")\n", path);
+
+    assertNull(structures.getDiagnostics());
+
+    var ranges = adapter.getSelectionRanges(path,
+        List.of(new Position(4, 6), new Position(3, 4), new Position(8, 0)));
+    assertEquals(3, ranges.size());
+
+    // x in the block, the block, the method, the class
+    var r = ranges.get(0);
+    assertRange(4, 6, 4, 7, r.getRange());
+    assertRange(3, 9, 4, 9, r.getParent().getRange());
+    assertRange(1, 2, 5, 3, r.getParent().getParent().getRange());
+    assertRange(0, 0, 7, 1, r.getParent().getParent().getParent().getRange());
+    assertNull(r.getParent().getParent().getParent().getParent());
+
+    // a in the method, the method, the class
+    r = ranges.get(1);
+    assertRange(3, 4, 3, 5, r.getRange());
+    assertRange(1, 2, 5, 3, r.getParent().getRange());
+    assertRange(0, 0, 7, 1, r.getParent().getParent().getRange());
+    assertNull(r.getParent().getParent().getParent());
+
+    // outside of the class, just the position
+    r = ranges.get(2);
+    assertRange(8, 0, 8, 0, r.getRange());
+    assertNull(r.getParent());
+  }
+
+  @Test
+  public void testSemanticTokensRange() {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    var structures = adapter.parse("Hello = (\n"
+        + "  run = ( ^ 1 )\n"
+        + "  other: a = ( ^ a )\n"
+        + ")\n", path);
+
+    assertNull(structures.getDiagnostics());
+
+    var tokens = adapter.getSemanticTokensRange(path,
+        new Range(new Position(2, 0), new Position(2, 100)));
+
+    // other:, a, and a, relative to the start of the document
+    assertEquals(3 * 5, tokens.size());
+    assertEquals(2, (int) tokens.get(0));
+    assertEquals(2, (int) tokens.get(1));
+    assertEquals("other:".length(), (int) tokens.get(2));
+    assertEquals(0, (int) tokens.get(5));
+    assertEquals(0, (int) tokens.get(10));
+  }
+
+  private static SomAdapter parseCallHierarchyExample() {
+    var adapter = new SomAdapter();
+    adapter.parse("Hello1 = (\n"
+        + "  helper: x = ( ^ x )\n"
+        + "  run = (\n"
+        + "    self helper: 1.\n"
+        + "    #(1 2) do: [:e | self helper: e ]\n"
+        + "  )\n"
+        + ")\n", "file:" + SomAdapter.CORE_LIB_PATH + "/Hello1.som");
+    adapter.parse("Hello2 = (\n"
+        + "  helper: y = ( ^ y )\n"
+        + "  main = ( ^ Hello1 new helper: 3 )\n"
+        + ")\n", "file:" + SomAdapter.CORE_LIB_PATH + "/Hello2.som");
+    // without any references
+    adapter.parse("Hello3 = ()\n", "file:" + SomAdapter.CORE_LIB_PATH + "/Hello3.som");
+    return adapter;
+  }
+
+  @Test
+  public void testPrepareCallHierarchy() {
+    var adapter = parseCallHierarchyExample();
+    String path1 = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello1.som";
+    String path2 = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello2.som";
+
+    // on the definition, only the definition
+    var items = adapter.prepareCallHierarchy(path1, new Position(1, 2));
+    assertEquals(1, items.size());
+    assertEquals("helper:", items.get(0).getName());
+    assertEquals(path1, items.get(0).getUri());
+
+    // on a call, all methods with the selector
+    items = adapter.prepareCallHierarchy(path1, new Position(3, 9));
+    assertEquals(2, items.size());
+    var uris = List.of(items.get(0).getUri(), items.get(1).getUri());
+    assertTrue(uris.contains(path1));
+    assertTrue(uris.contains(path2));
+
+    // not a method
+    assertNull(adapter.prepareCallHierarchy(path1, new Position(1, 19)));
+  }
+
+  @Test
+  public void testIncomingCalls() {
+    var adapter = parseCallHierarchyExample();
+    String path1 = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello1.som";
+    String path2 = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello2.som";
+
+    var helper = adapter.prepareCallHierarchy(path1, new Position(1, 2)).get(0);
+    var calls = adapter.getIncomingCalls(helper);
+    assertEquals(2, calls.size());
+
+    var fromRun = calls.stream().filter(c -> c.getFrom().getName().equals("run")).findFirst();
+    assertTrue(fromRun.isPresent());
+    assertEquals(path1, fromRun.get().getFrom().getUri());
+    // the call in the block is attributed to the method
+    assertEquals(2, fromRun.get().getFromRanges().size());
+    assertRange(3, 9, 3, 16, fromRun.get().getFromRanges().get(0));
+    assertRange(4, 26, 4, 33, fromRun.get().getFromRanges().get(1));
+
+    var fromMain = calls.stream().filter(c -> c.getFrom().getName().equals("main")).findFirst();
+    assertTrue(fromMain.isPresent());
+    assertEquals(path2, fromMain.get().getFrom().getUri());
+    assertEquals(1, fromMain.get().getFromRanges().size());
+  }
+
+  @Test
+  public void testOutgoingCalls() {
+    var adapter = parseCallHierarchyExample();
+    String path1 = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello1.som";
+
+    var run = adapter.prepareCallHierarchy(path1, new Position(2, 2)).get(0);
+    assertEquals("run", run.getName());
+
+    var helperCalls = adapter.getOutgoingCalls(run).stream()
+                             .filter(c -> c.getTo().getName().equals("helper:")).toList();
+
+    // one for each definition, both with the two calls in run
+    assertEquals(2, helperCalls.size());
+    for (var c : helperCalls) {
+      assertEquals(2, c.getFromRanges().size());
+      assertRange(3, 9, 3, 16, c.getFromRanges().get(0));
+      assertRange(4, 26, 4, 33, c.getFromRanges().get(1));
+    }
+  }
+
+  @Test
+  public void testTypeHierarchy() {
+    var adapter = new SomAdapter();
+    String shape = "file:" + SomAdapter.CORE_LIB_PATH + "/Shape.som";
+    String circle = "file:" + SomAdapter.CORE_LIB_PATH + "/Circle.som";
+    String square = "file:" + SomAdapter.CORE_LIB_PATH + "/Square.som";
+    // the core-lib is only loaded by the first adapter, so define Object here
+    adapter.parse("Object = nil ()\n", "file:" + SomAdapter.CORE_LIB_PATH + "/Object.som");
+    adapter.parse("Shape = (\n  area = ( ^ 0 )\n)\n", shape);
+    adapter.parse("Circle = Shape (\n  area = ( ^ 3 )\n)\n", circle);
+    adapter.parse("Square = Shape ()\n", square);
+
+    var items = adapter.prepareTypeHierarchy(circle, new Position(0, 0));
+    assertEquals(1, items.size());
+    var circleItem = items.get(0);
+    assertEquals("Circle", circleItem.getName());
+
+    var supertypes = adapter.getSupertypes(circleItem);
+    assertEquals(1, supertypes.size());
+    var shapeItem = supertypes.get(0);
+    assertEquals("Shape", shapeItem.getName());
+    assertEquals(shape, shapeItem.getUri());
+
+    // without explicit superclass, it is Object, which has no superclass
+    supertypes = adapter.getSupertypes(shapeItem);
+    assertEquals(1, supertypes.size());
+    assertEquals("Object", supertypes.get(0).getName());
+    assertTrue(adapter.getSupertypes(supertypes.get(0)).isEmpty());
+
+    var subtypes = adapter.getSubtypes(shapeItem);
+    assertEquals(2, subtypes.size());
+    var names = List.of(subtypes.get(0).getName(), subtypes.get(1).getName());
+    assertTrue(names.contains("Circle"));
+    assertTrue(names.contains("Square"));
+
+    assertTrue(adapter.getSubtypes(circleItem).isEmpty());
+  }
+
+  private static final String RENAME_EXAMPLE = "Hello = (\n"
+      + "  | field |\n"
+      + "  run: arg = (\n"
+      + "    | a |\n"
+      + "    a := arg.\n"
+      + "    ^ [:x | a + x + arg ]\n"
+      + "  )\n"
+      + ")\n";
+
+  /** Apply the edits, which must not overlap, to the text. */
+  private static String applyEdits(final String text, final List<TextEdit> edits) {
+    var lines = new ArrayList<>(List.of(text.split("\n", -1)));
+    var sorted = new ArrayList<>(edits);
+    sorted.sort((a, b) -> {
+      int line = b.getRange().getStart().getLine() - a.getRange().getStart().getLine();
+      return line != 0 ? line
+          : b.getRange().getStart().getCharacter() - a.getRange().getStart().getCharacter();
+    });
+    for (var e : sorted) {
+      var r = e.getRange();
+      assertEquals(r.getStart().getLine(), r.getEnd().getLine());
+      String l = lines.get(r.getStart().getLine());
+      lines.set(r.getStart().getLine(), l.substring(0, r.getStart().getCharacter())
+          + e.getNewText() + l.substring(r.getEnd().getCharacter()));
+    }
+    return String.join("\n", lines);
+  }
+
+  @Test
+  public void testPrepareRename() {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    assertNull(adapter.parse(RENAME_EXAMPLE, path).getDiagnostics());
+
+    assertRange(3, 6, 3, 7, adapter.prepareRename(path, new Position(3, 6)));
+    assertRange(5, 20, 5, 23, adapter.prepareRename(path, new Position(5, 21)));
+
+    // fields and methods can't be renamed
+    assertNull(adapter.prepareRename(path, new Position(1, 4)));
+    assertNull(adapter.prepareRename(path, new Position(2, 2)));
+  }
+
+  @Test
+  public void testRenameLocal() {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    assertNull(adapter.parse(RENAME_EXAMPLE, path).getDiagnostics());
+
+    // from the use in the block
+    var edit = adapter.rename(path, new Position(5, 12), "b");
+    var edits = edit.getChanges().get(path);
+    assertEquals(3, edits.size());
+
+    String renamed = applyEdits(RENAME_EXAMPLE, edits);
+    assertEquals(RENAME_EXAMPLE.replace("| a |", "| b |").replace("a := arg", "b := arg")
+                               .replace("| a + x", "| b + x"),
+        renamed);
+    assertNull(adapter.parse(renamed, path).getDiagnostics());
+  }
+
+  @Test
+  public void testRenameArgument() {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    assertNull(adapter.parse(RENAME_EXAMPLE, path).getDiagnostics());
+
+    // from the definition
+    var edits = adapter.rename(path, new Position(2, 7), "param").getChanges().get(path);
+    assertEquals(3, edits.size());
+
+    String renamed = applyEdits(RENAME_EXAMPLE, edits);
+    assertEquals(RENAME_EXAMPLE.replace("arg", "param"), renamed);
+    assertNull(adapter.parse(renamed, path).getDiagnostics());
+  }
+
+  @Test
+  public void testRenameRejectsInvalidNames() {
+    var adapter = new SomAdapter();
+    String path = "file:" + SomAdapter.CORE_LIB_PATH + "/Hello.som";
+    assertNull(adapter.parse(RENAME_EXAMPLE, path).getDiagnostics());
+
+    for (String name : List.of("1a", "a-b", "self", "nil", "")) {
+      try {
+        adapter.rename(path, new Position(3, 6), name);
+        fail("Expected an error for " + name);
+      } catch (ResponseErrorException e) {
+        assertTrue(e.getMessage().contains("not a valid name"));
+      }
+    }
   }
 
   @Test
@@ -711,7 +1086,7 @@ public class SomTests {
     var diag = structures.getDiagnostics();
     assertEquals(1, diag.size());
 
-    assertTrue(diag.get(0).getMessage().contains("Unexpected symbol."));
+    assertTrue(diag.get(0).getMessage().getLeft().contains("Unexpected symbol."));
     assertEquals(3, diag.get(0).getRange().getStart().getLine());
     assertEquals(0, diag.get(0).getRange().getStart().getCharacter());
   }

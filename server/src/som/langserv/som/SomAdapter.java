@@ -9,21 +9,24 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.eclipse.lsp4j.SymbolKind;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Context.Builder;
 
 import com.oracle.truffle.api.source.Source;
 
-import bdt.basic.ProgramDefinitionError;
-import bdt.source.SourceCoordinate;
-import bdt.tools.structure.StructuralProbe;
+import trufflesom.bdt.basic.ProgramDefinitionError;
+import trufflesom.bdt.source.SourceCoordinate;
+import trufflesom.bdt.tools.structure.StructuralProbe;
 import som.langserv.LanguageAdapter;
 import som.langserv.lint.FileLinter;
 import som.langserv.lint.LintEndsWithNewline;
@@ -31,6 +34,8 @@ import som.langserv.lint.LintFileHasNSEnding;
 import som.langserv.lint.LintUseNeedsDefine;
 import som.langserv.lint.WorkspaceLinter;
 import som.langserv.structure.DocumentStructures;
+import som.langserv.structure.LanguageElement;
+import som.langserv.structure.LanguageElementId;
 import trufflesom.compiler.Field;
 import trufflesom.compiler.Parser;
 import trufflesom.compiler.Parser.ParseError;
@@ -39,6 +44,7 @@ import trufflesom.compiler.Variable;
 import trufflesom.interpreter.SomLanguage;
 import trufflesom.vm.Classes;
 import trufflesom.vm.Globals;
+import trufflesom.Launcher;
 import trufflesom.vm.Universe;
 import trufflesom.vmobjects.SClass;
 import trufflesom.vmobjects.SInvokable;
@@ -74,6 +80,36 @@ public class SomAdapter extends LanguageAdapter {
     return ".som";
   }
 
+  private static final Set<String> RESERVED =
+      Set.of("self", "super", "nil", "true", "false", "primitive");
+
+  /**
+   * Only variables and arguments can be renamed, since their references are all in the
+   * same document. Classes would also need to rename the file, and superclass names are not
+   * referenced. Field identity is not specific to a class.
+   */
+  @Override
+  protected boolean isRenamable(final LanguageElementId id) {
+    return id instanceof VariableId && !RESERVED.contains(id.getName());
+  }
+
+  @Override
+  protected boolean isValidName(final String name) {
+    return name.matches("[A-Za-z][A-Za-z0-9_]*") && !RESERVED.contains(name);
+  }
+
+  /** The class side is a class, too, but it is not part of the type hierarchy. */
+  @Override
+  protected boolean isType(final LanguageElement e) {
+    return e.getKind() == SymbolKind.Class && !e.getName().equals("class");
+  }
+
+  /** Blocks are functions, too, but we only consider methods in the call hierarchy. */
+  @Override
+  protected boolean isCallable(final LanguageElement e) {
+    return e.getKind() == SymbolKind.Method;
+  }
+
   private void initializePolyglot() {
     if (CORE_LIB_PATH == null) {
       throw new IllegalArgumentException(
@@ -83,7 +119,7 @@ public class SomAdapter extends LanguageAdapter {
     String[] args = new String[] {"-cp", CORE_LIB_PATH + "/Smalltalk"};
 
     Universe.setSourceCompiler(somCompiler, true);
-    Builder builder = Universe.createContextBuilder();
+    Builder builder = Launcher.createContextBuilder();
     builder.arguments(SomLanguage.LANG_ID, args);
     context = builder.build();
 
@@ -138,7 +174,11 @@ public class SomAdapter extends LanguageAdapter {
   }
 
   private void findClassPathFolders(final File root, final List<File> allFolders) {
-    for (File f : root.listFiles()) {
+    // listFiles() has no guaranteed order, but with duplicate class names
+    // the order decides which class is found, so make it deterministic
+    File[] files = root.listFiles();
+    Arrays.sort(files);
+    for (File f : files) {
       if (f.isDirectory()) {
         allFolders.add(f);
         findClassPathFolders(f, allFolders);

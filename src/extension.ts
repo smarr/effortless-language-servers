@@ -5,7 +5,8 @@ import { Socket } from 'net';
 
 import { workspace, window, ExtensionContext } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, StreamInfo } from 'vscode-languageclient/node';
-import { getCommandLine, isJavaAvailableAndCompatible } from './command-line';
+import { getCommandLine } from './command-line';
+import { findJava, MIN_JAVA_VERSION } from './java-discovery';
 import { activateDebuggerFeatures } from './debugger-config';
 
 const LSPort = 8123;  // TODO: make configurable
@@ -19,12 +20,12 @@ export const CLIENT_OPTION: LanguageClientOptions = {
 
 type PathConverter = (path: string) => string;
 
-let client: LanguageClient = null;
-let serverProcess: ChildProcess = null;
+let client: LanguageClient | null = null;
+let serverProcess: ChildProcess | null = null;
 
-function getServerOptions(asAbsolutePath: PathConverter, enableDebug:
-	  boolean, enableTcp: boolean): ServerOptions {
-	const cmdLine = getCommandLine(configuration.get('javaHome'), asAbsolutePath, enableDebug, enableTcp);
+function getServerOptions(asAbsolutePath: PathConverter, javaHome: unknown,
+	  enableDebug: boolean, enableTcp: boolean): ServerOptions {
+	const cmdLine = getCommandLine(javaHome, asAbsolutePath, enableDebug, enableTcp);
 
 	return {
 		run:   cmdLine,
@@ -33,10 +34,10 @@ function getServerOptions(asAbsolutePath: PathConverter, enableDebug:
 }
 
 function startLanguageServerAndConnectTCP(context: ExtensionContext,
-													   resolve: (value?: StreamInfo | PromiseLike<StreamInfo>) => void,
+													   resolve: (value: StreamInfo | PromiseLike<StreamInfo>) => void,
 														 reject: (reason?: any) => void): void {
-	const serverOptions: any = getServerOptions(context.asAbsolutePath, true, true);
-	const lsProc = spawn(serverOptions.run.command, serverOptions.run.args, {shell: true});
+	const serverOptions: any = getServerOptions(context.asAbsolutePath, configuration.get('javaHome'), true, true);
+	const lsProc = spawn(serverOptions.run.command, serverOptions.run.args);
 	let sawServerStarted = false;
 	lsProc.stdout.on('data', data => {
 		if (!sawServerStarted && data.toString().includes('Server started and waiting')) {
@@ -54,14 +55,16 @@ function startLanguageServerAndConnectTCP(context: ExtensionContext,
 	serverProcess = lsProc;
 }
 
+/** Without javaHome, it uses the `java` on the PATH. */
 export function startLanguageServer(asAbsolutePath: PathConverter,
-													   resolve: (value?: StreamInfo | PromiseLike<StreamInfo>) => void,
-														 reject: (reason?: any) => void): void {
-	const serverOptions: any = getServerOptions(asAbsolutePath, EnableExtensionDebugging, false);
+													   resolve: (value: StreamInfo | PromiseLike<StreamInfo>) => void,
+														 reject: (reason?: any) => void,
+														 javaHome?: string): void {
+	const serverOptions: any = getServerOptions(asAbsolutePath, javaHome, EnableExtensionDebugging, false);
 
 	const cmd = `${serverOptions.run.command} ${serverOptions.run.args.join(" ")}`;
 	console.log(`[SOM-EXT] spawn '${cmd}'`);
-	const lsProc = spawn(serverOptions.run.command, serverOptions.run.args, {shell: true});
+	const lsProc = spawn(serverOptions.run.command, serverOptions.run.args);
 
 	let stderr = '';
 
@@ -86,7 +89,7 @@ export function startLanguageServer(asAbsolutePath: PathConverter,
 	serverProcess = lsProc;
 }
 
-export function connectToLanguageServer(resolve: (value?: StreamInfo | PromiseLike<StreamInfo>) => void,
+export function connectToLanguageServer(resolve: (value: StreamInfo | PromiseLike<StreamInfo>) => void,
 														     reject: (reason?: any) => void) {
 	console.log("[SOM-EXT] Create socket to connect to SOM Language Server");
 	const clientSocket = new Socket();
@@ -105,18 +108,25 @@ export function connectToLanguageServer(resolve: (value?: StreamInfo | PromiseLi
 
 export async function activate(context: ExtensionContext) {
 	function createLSPServer() : Promise<StreamInfo> {
-		return new Promise((resolve, reject) => {
-			if (EnableExtensionDebugging) {
-				window.showInformationMessage("SOMns Debug Mode: Trying to connect to Language Server on port " + LSPort);
-				connectToLanguageServer(resolve, reject);
-			} else {
-				if (!isJavaAvailableAndCompatible(configuration.get('javaHome'))) {
-					window.showErrorMessage('Java 17 or new was not found. Please configure it in the settings under the `els.javaHome` key.');
-				}
-				// window.showInformationMessage("SOMns Starting Language Server");
-				startLanguageServer(context.asAbsolutePath, resolve, reject);
-			}
-		});
+		if (EnableExtensionDebugging) {
+			window.showInformationMessage("SOMns Debug Mode: Trying to connect to Language Server on port " + LSPort);
+			return new Promise((resolve, reject) => connectToLanguageServer(resolve, reject));
+		}
+
+		const java = findJava({
+			elsJavaHome: configuration.get('javaHome'),
+			javaExtensionHome: workspace.getConfiguration('java').get('jdt.ls.java.home')
+		}, message => window.showWarningMessage(message));
+
+		if (java) {
+			console.log(`[SOM-EXT] Using Java ${java.major} from ${java.source}: ${java.javaHome ?? 'java'}`);
+		} else {
+			window.showErrorMessage(`Java ${MIN_JAVA_VERSION} or newer was not found. ` +
+				'Please install it, set JAVA_HOME, or configure it in the settings under the `els.javaHome` key.');
+		}
+
+		return new Promise((resolve, reject) =>
+			startLanguageServer(context.asAbsolutePath, resolve, reject, java?.javaHome));
 	}
 
 	// Create the language client and start the client.

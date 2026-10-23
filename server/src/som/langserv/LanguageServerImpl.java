@@ -5,13 +5,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import org.eclipse.lsp4j.CodeActionKind;
+import org.eclipse.lsp4j.CodeActionOptions;
 import org.eclipse.lsp4j.CodeLensOptions;
 import org.eclipse.lsp4j.CompletionOptions;
-import org.eclipse.lsp4j.ExecuteCommandOptions;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
+import org.eclipse.lsp4j.RenameOptions;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensServerFull;
 import org.eclipse.lsp4j.SemanticTokensWithRegistrationOptions;
@@ -25,10 +27,6 @@ import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
 
-import com.google.common.collect.Lists;
-
-import som.langserv.lens.Minitest;
-import som.langserv.newspeak.NewspeakAdapter;
 import som.langserv.simple.SimpleAdapter;
 import som.langserv.som.SomAdapter;
 import som.langserv.structure.SemanticTokenModifier;
@@ -45,8 +43,10 @@ public class LanguageServerImpl implements LanguageServer, LanguageClientAware {
   private final DocumentServiceImpl documentService;
 
   public LanguageServerImpl() {
-    adapters = new LanguageAdapter[] {
-        new NewspeakAdapter(), new SomAdapter(), new SimpleAdapter()};
+    // SOMns support is currently disabled, because it needs to be updated
+    // to the same Truffle version as TruffleSOM.
+    // To enable it again, add `new NewspeakAdapter()` as the first adapter.
+    adapters = new LanguageAdapter[] {new SomAdapter(), new SimpleAdapter()};
 
     workspace = new WorkspaceImpl(adapters);
     this.documentService = new DocumentServiceImpl(adapters);
@@ -68,11 +68,19 @@ public class LanguageServerImpl implements LanguageServer, LanguageClientAware {
     cap.setDocumentHighlightProvider(true);
     cap.setReferencesProvider(true);
     cap.setHoverProvider(true);
+    cap.setFoldingRangeProvider(true);
+    cap.setSelectionRangeProvider(true);
+    cap.setCallHierarchyProvider(true);
+    cap.setTypeHierarchyProvider(true);
+    cap.setRenameProvider(new RenameOptions(true));
+    cap.setCodeActionProvider(new CodeActionOptions(List.of(CodeActionKind.QuickFix)));
 
     cap.setTextDocumentSync(TextDocumentSyncKind.Full);
 
-    cap.setExecuteCommandProvider(
-        new ExecuteCommandOptions(Lists.newArrayList(Minitest.COMMAND)));
+    // SOMns support is currently disabled, and with it the Minitest command,
+    // which is the only command we provide:
+    // cap.setExecuteCommandProvider(
+    // new ExecuteCommandOptions(Lists.newArrayList(Minitest.COMMAND)));
 
     result.setCapabilities(cap);
 
@@ -133,7 +141,7 @@ public class LanguageServerImpl implements LanguageServer, LanguageClientAware {
     SemanticTokensLegend legend = new SemanticTokensLegend(tokenTypes, tokenModifiers);
 
     semanticTokens.setLegend(legend);
-    semanticTokens.setRange(false);
+    semanticTokens.setRange(true);
 
     SemanticTokensServerFull serverFull = new SemanticTokensServerFull();
 

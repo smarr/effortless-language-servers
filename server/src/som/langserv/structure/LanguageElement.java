@@ -14,7 +14,6 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SignatureInformation;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
-import org.eclipse.xtext.xbase.lib.Pure;
 
 
 public final class LanguageElement extends DocumentSymbol implements WithRange {
@@ -26,6 +25,9 @@ public final class LanguageElement extends DocumentSymbol implements WithRange {
   protected transient List<LanguageElement> allChildren;
 
   private transient SignatureInformation signature;
+
+  /** For types, the identifiers of the direct supertypes. */
+  private transient List<LanguageElementId> supertypes;
 
   /**
    * If true, this element will be listed as a symbol on document and workspace symbol
@@ -106,6 +108,17 @@ public final class LanguageElement extends DocumentSymbol implements WithRange {
 
   public void setSignature(final SignatureInformation sig) {
     signature = sig;
+  }
+
+  public void addSupertype(final LanguageElementId supertype) {
+    if (supertypes == null) {
+      supertypes = new ArrayList<>(1);
+    }
+    supertypes.add(supertype);
+  }
+
+  public List<LanguageElementId> getSupertypes() {
+    return supertypes;
   }
 
   public SymbolInformation createSymbolInfo(final String containerUri) {
@@ -220,7 +233,6 @@ public final class LanguageElement extends DocumentSymbol implements WithRange {
   }
 
   @Override
-  @Pure
   public int hashCode() {
     if (stableHash != 0) {
       return stableHash;

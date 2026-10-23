@@ -1,8 +1,8 @@
 import { resolve as resolvePath } from "path";
-import { LanguageClient, StreamInfo, Disposable, ErrorHandler, ErrorAction, CloseAction } from "vscode-languageclient/node";
+import { LanguageClient, LanguageClientOptions, ServerOptions, StreamInfo, Disposable, ErrorHandler, ErrorAction, CloseAction } from "vscode-languageclient/node";
 import { startLanguageServer, CLIENT_OPTION, deactivate } from "../src/extension";
 import * as vscode from "vscode";
-import { Message } from "vscode-languageserver-protocol";
+import { Message, PublishDiagnosticsParams } from "vscode-languageserver-protocol";
 import { readFileSync } from "fs";
 import { expect } from "chai";
 
@@ -17,14 +17,17 @@ function createLSPServer(): Promise<StreamInfo> {
   });
 }
 
-class TestLanguageClient extends LanguageClient {
-  private oneShotDiagnosticsHandler;
+type DiagnosticsHandler = (params: PublishDiagnosticsParams) => void;
 
-  constructor(name: string, serverOptions, clientOptions, forceDebug?: boolean) {
+class TestLanguageClient extends LanguageClient {
+  private oneShotDiagnosticsHandler: DiagnosticsHandler[];
+
+  constructor(name: string, serverOptions: ServerOptions,
+      clientOptions: LanguageClientOptions, forceDebug?: boolean) {
     super(name, serverOptions, clientOptions, forceDebug);
 
     const hd = (<any>this).handleDiagnostics;
-    (<any>this).handleDiagnostics = (params) => {
+    (<any>this).handleDiagnostics = (params: PublishDiagnosticsParams) => {
       hd.call(this, params);
       this.handleDiag(params);
     }
@@ -32,11 +35,11 @@ class TestLanguageClient extends LanguageClient {
     this.oneShotDiagnosticsHandler = [];
   }
 
-  public addDiagnosticsHandler(handler) {
+  public addDiagnosticsHandler(handler: DiagnosticsHandler) {
     this.oneShotDiagnosticsHandler.push(handler);
   }
 
-  protected handleDiag(params) {
+  protected handleDiag(params: PublishDiagnosticsParams) {
     const handler = this.oneShotDiagnosticsHandler.pop();
     if (handler === undefined) {
       console.error("Unexpected diagnostics", params);
@@ -72,7 +75,8 @@ describe("Basic Tests", () => {
     return client.start();
   });
 
-  it("Load SOMns Hello World and expect diagnostics", done => {
+  // SOMns support is currently disabled in the language server
+  it.skip("Load SOMns Hello World and expect diagnostics", done => {
     const content = readFileSync(examplesPath + '/Hello.ns').toString();
     client.sendNotification("textDocument/didChange", {
       textDocument: {
@@ -84,7 +88,7 @@ describe("Basic Tests", () => {
       }]
     });
 
-    client.addDiagnosticsHandler(function (params) {
+    client.addDiagnosticsHandler(function (params: PublishDiagnosticsParams) {
       try {
         expect(params.uri).to.equal(examplesUri.toString() + '/Hello.ns');
         expect(params.diagnostics).to.have.lengthOf(0);
@@ -107,7 +111,7 @@ describe("Basic Tests", () => {
       }]
     });
 
-    client.addDiagnosticsHandler(function (params) {
+    client.addDiagnosticsHandler(function (params: PublishDiagnosticsParams) {
       try {
         expect(params.uri).to.equal(examplesUri.toString() + '/Hello.som');
         expect(params.diagnostics).to.have.lengthOf(1);
@@ -130,7 +134,7 @@ describe("Basic Tests", () => {
       }]
     });
 
-    client.addDiagnosticsHandler(function (params) {
+    client.addDiagnosticsHandler(function (params: PublishDiagnosticsParams) {
       try {
         console.log(params);
         expect(params.uri).to.equal(examplesUri.toString() + '/HelloWithError.som');

@@ -14,7 +14,7 @@ public class VariableId extends LanguageElementId {
 
   @Override
   public String getName() {
-    return var.getName().getString();
+    return var.getName();
   }
 
   @Override
@@ -34,6 +34,8 @@ public class VariableId extends LanguageElementId {
       return false;
     }
     VariableId other = (VariableId) obj;
-    return var.equals(other.var);
+    // Variable.equals() asserts that names are identical when the coords are,
+    // but names are not interned anymore, and we compare variables across files
+    return var.coord == other.var.coord && var.getName().equals(other.var.getName());
   }
 }

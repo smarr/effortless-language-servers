@@ -6,17 +6,20 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.DocumentHighlight;
+import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SelectionRange;
 import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SignatureHelpContext;
 import org.eclipse.lsp4j.SignatureInformation;
@@ -287,6 +290,170 @@ public class DocumentStructures {
       return createHover(ref, similar);
     } else {
       throw new RuntimeException("Not yet implemented for " + symbol.getClass());
+    }
+  }
+
+  public List<FoldingRange> getFoldingRanges() {
+    List<FoldingRange> result = new ArrayList<>();
+    collectFoldingRanges(rootSymbols, result);
+    return result;
+  }
+
+  private static void collectFoldingRanges(final List<LanguageElement> elements,
+      final List<FoldingRange> result) {
+    if (elements == null) {
+      return;
+    }
+
+    for (var e : elements) {
+      Range r = e.getRange();
+      // keep the last line visible, since it usually has the closing parenthesis
+      if (r != null && r.getEnd().getLine() - 1 > r.getStart().getLine()) {
+        result.add(new FoldingRange(r.getStart().getLine(), r.getEnd().getLine() - 1));
+      }
+      collectFoldingRanges(e.getAllChildren(), result);
+    }
+  }
+
+  /**
+   * Returns the innermost selection range, which links to the enclosing ones,
+   * for instance from a variable reference, to its block, method, and class.
+   */
+  public SelectionRange getSelectionRange(final Position position) {
+    SelectionRange current = null;
+    LanguageElement innermost = null;
+
+    List<LanguageElement> elements = rootSymbols;
+    while (elements != null) {
+      LanguageElement enclosing = null;
+      for (var e : elements) {
+        if (e.getRange() != null && isIn(position, e)) {
+          enclosing = e;
+          break;
+        }
+      }
+
+      if (enclosing == null) {
+        break;
+      }
+
+      current = createSelectionRange(enclosing.getRange(), current);
+      innermost = enclosing;
+      elements = enclosing.getAllChildren();
+    }
+
+    if (innermost != null && innermost.getReferences() != null) {
+      for (var ref : innermost.getReferences()) {
+        if (isIn(position, ref)) {
+          current = createSelectionRange(ref.getRange(), current);
+          break;
+        }
+      }
+    }
+
+    if (current == null) {
+      // the protocol requires a result for each position
+      return new SelectionRange(new Range(position, position), null);
+    }
+    return current;
+  }
+
+  private static SelectionRange createSelectionRange(final Range range,
+      final SelectionRange parent) {
+    if (parent != null && parent.getRange().equals(range)) {
+      return parent;
+    }
+    return new SelectionRange(range, parent);
+  }
+
+  /** The element with the given selection range that satisfies the predicate. */
+  public LanguageElement findElement(final Range selectionRange,
+      final Predicate<LanguageElement> predicate) {
+    return findElement(rootSymbols, selectionRange, predicate);
+  }
+
+  private static LanguageElement findElement(final List<LanguageElement> elements,
+      final Range selectionRange, final Predicate<LanguageElement> predicate) {
+    if (elements == null) {
+      return null;
+    }
+
+    for (var e : elements) {
+      if (selectionRange.equals(e.getSelectionRange()) && predicate.test(e)) {
+        return e;
+      }
+
+      var found = findElement(e.getAllChildren(), selectionRange, predicate);
+      if (found != null) {
+        return found;
+      }
+    }
+    return null;
+  }
+
+  /** All elements that satisfy the predicate. */
+  public void collectElements(final Predicate<LanguageElement> predicate,
+      final List<LanguageElement> result) {
+    collectElements(rootSymbols, predicate, result);
+  }
+
+  private static void collectElements(final List<LanguageElement> elements,
+      final Predicate<LanguageElement> predicate, final List<LanguageElement> result) {
+    if (elements == null) {
+      return;
+    }
+
+    for (var e : elements) {
+      if (predicate.test(e)) {
+        result.add(e);
+      }
+      collectElements(e.getAllChildren(), predicate, result);
+    }
+  }
+
+  /** The innermost element around the position that satisfies the predicate. */
+  public LanguageElement findEnclosing(final Position position,
+      final Predicate<LanguageElement> predicate) {
+    LanguageElement result = null;
+
+    List<LanguageElement> elements = rootSymbols;
+    while (elements != null) {
+      LanguageElement enclosing = null;
+      for (var e : elements) {
+        if (e.getRange() != null && isIn(position, e)) {
+          enclosing = e;
+          break;
+        }
+      }
+
+      if (enclosing == null) {
+        break;
+      }
+
+      if (predicate.test(enclosing)) {
+        result = enclosing;
+      }
+      elements = enclosing.getAllChildren();
+    }
+    return result;
+  }
+
+  /**
+   * The references within the element, including nested elements, except the
+   * ones that satisfy the predicate, for instance nested methods.
+   */
+  public static void collectReferences(final LanguageElement element,
+      final Predicate<LanguageElement> exclude, final List<Reference> result) {
+    if (element.getReferences() != null) {
+      result.addAll(element.getReferences());
+    }
+
+    if (element.getAllChildren() != null) {
+      for (var child : element.getAllChildren()) {
+        if (!exclude.test(child)) {
+          collectReferences(child, exclude, result);
+        }
+      }
     }
   }
 

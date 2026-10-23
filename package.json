@@ -7,7 +7,7 @@
 	"version": "0.8.1",
 	"publisher": "MetaConcProject",
 	"engines": {
-		"vscode": "^1.74.0"
+		"vscode": "^1.140.0"
 	},
 	"categories": [
 		"Debuggers",
@@ -91,7 +91,7 @@
 				"els.javaHome": {
 					"type": "string",
 					"default": null,
-					"description": "Path to the Java 17 or later installation. On macOS, it might be /Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home. On Linux perhaps /usr/lib/jvm/java-17-openjdk-amd64"
+					"description": "Optional path to a Java 25 or later installation. Without it, the Java extension's java.jdt.ls.java.home setting, JDK_HOME, JAVA_HOME, and the java on the PATH are searched. On macOS, it might be /Library/Java/JavaVirtualMachines/temurin-25.jdk/Contents/Home. On Linux perhaps /usr/lib/jvm/java-25-openjdk-amd64"
 				},
 				"els.somnsExecutable": {
 					"type": "string",
@@ -238,25 +238,28 @@
 		"prerun": "npm run compile && npm run esbuild-base -- --sourcemap",
 		"postinstall": "npm run compile:server",
 		"test": "node ./out/test/runTest.js",
+		"package": "vsce package",
 		"create-server-shell-script": "npx run-func out/src/command-line.js getShellScript false false > out/server/start.sh; chmod +x out/server/start.sh"
 	},
 	"devDependencies": {
-		"@types/chai": "4.3.11",
-		"@types/mocha": "10.0.6",
-		"@types/node": "20.10.0",
-		"@types/vscode": "1.84.2",
-		"@vscode/test-electron": "2.3.8",
-		"chai": "4.3.10",
-		"esbuild": "0.19.8",
-		"mocha": "10.2.0",
+		"@types/chai": "5.2.3",
+		"@types/mocha": "10.0.10",
+		"@types/node": "24.19.2",
+		"@types/vscode": "1.140.0",
+		"@types/ws": "8.18.2",
+		"@vscode/test-electron": "3.1.0",
+		"@vscode/vsce": "4.0.0",
+		"chai": "6.3.0",
+		"esbuild": "0.28.2",
+		"mocha": "12.0.3",
 		"run-func": "3.0.0",
-		"typescript": "5.3.2"
+		"typescript": "7.0.2"
 	},
 	"dependencies": {
-		"@vscode/debugadapter": "1.64.0",
-		"@vscode/debugprotocol": "1.64.0",
-		"vscode-languageclient": "9.0.1",
-		"vscode-languageserver-protocol": "3.17.5",
-		"ws": "8.14.2"
+		"@vscode/debugadapter": "1.68.0",
+		"@vscode/debugprotocol": "1.68.0",
+		"vscode-languageclient": "11.0.0",
+		"vscode-languageserver-protocol": "3.18.5",
+		"ws": "8.22.0"
 	}
 }

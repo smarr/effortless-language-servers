@@ -5,7 +5,7 @@ import { BreakpointEvent, DebugSession, Handles, InitializedEvent, Scope,
   Source as VSSource, StackFrame, StoppedEvent, OutputEvent,
   TerminatedEvent } from '@vscode/debugadapter';
 import { DebugProtocol } from '@vscode/debugprotocol';
-import { WebSocket } from 'ws';
+import { WebSocket, type MessageEvent } from 'ws';
 
 import { BreakpointData, Source as WDSource, Respond,
   InitializeConnection, SourceMessage, IdMap, StoppedMessage,
@@ -47,8 +47,8 @@ interface BreakpointPair {
 }
 
 export class SomDebugSession extends DebugSession {
-  private socket: WebSocket;
-  private somProc: ChildProcess;
+  private socket: WebSocket | null;
+  private somProc?: ChildProcess;
 
   private breakpoints: IdMap<IdMap<BreakpointPair>>;
   private nextBreakpointId: number;
@@ -91,10 +91,13 @@ export class SomDebugSession extends DebugSession {
       args: DebugProtocol.InitializeRequestArguments): void {
     this.sendEvent(new InitializedEvent());
 
-    response.body.supportsConfigurationDoneRequest = true;
-    response.body.supportsEvaluateForHovers = true;
-    response.body.supportsRestartFrame = true;
-    response.body.supportsStepBack = false; // TODO: figure out how to support
+    response.body = {
+      ...response.body,
+      supportsConfigurationDoneRequest: true,
+      supportsEvaluateForHovers: true,
+      supportsRestartFrame: true,
+      supportsStepBack: false // TODO: figure out how to support
+    };
 
     // TODO: https://github.com/Microsoft/vscode-debugadapter-node/pull/44
     // response.body.supportsStepInTargetsRequest
@@ -104,6 +107,11 @@ export class SomDebugSession extends DebugSession {
 
   protected launchRequest(response: DebugProtocol.LaunchResponse,
       args: LaunchRequestArguments): void {
+    if (!args.runtime) {
+      this.sendErrorResponse(response, 1, 'No SOMns interpreter configured as `runtime`.');
+      return;
+    }
+
     const options = {cwd: args.cwd};
     let somArgs = ['-G'];
 
@@ -121,12 +129,13 @@ export class SomDebugSession extends DebugSession {
     const cmdStr = args.runtime + ' ' + somArgs.join(' ');
     this.sendEvent(new OutputEvent(`cmd: ${cmdStr}`, 'console'));
 
-    this.somProc = spawn(args.runtime, somArgs, options);
+    const somProc = spawn(args.runtime, somArgs, options);
+    this.somProc = somProc;
 
     let connecting = false;
     const ports = {msg: 0, trace: 0};
 
-    this.somProc.stdout.on('data', (data) => {
+    somProc.stdout.on('data', (data) => {
       const str = data.toString();
       this.sendEvent(new OutputEvent(str, 'stdout'));
       if (!args.noDebug) {
@@ -136,11 +145,11 @@ export class SomDebugSession extends DebugSession {
         }
       }
     });
-    this.somProc.stderr.on('data', (data) => {
+    somProc.stderr.on('data', (data) => {
       const str = data.toString();
       this.sendEvent(new OutputEvent(str, 'stderr'));
     });
-    this.somProc.on('close', code => {
+    somProc.on('close', code => {
       this.sendEvent(new TerminatedEvent());
     });
   }
@@ -152,7 +161,8 @@ export class SomDebugSession extends DebugSession {
 
   protected disconnectRequest(response: DebugProtocol.DisconnectResponse,
     args: DebugProtocol.DisconnectArguments): void {
-    this.somProc.kill();
+    // there is no process to kill when we attached to an interpreter
+    this.somProc?.kill();
     this.sendResponse(response);
   }
 
@@ -169,8 +179,8 @@ export class SomDebugSession extends DebugSession {
     this.sendResponse(response);
   }
 
-  private onWDMessage(event): void {
-    const data = JSON.parse(event.data);
+  private onWDMessage(event: MessageEvent): void {
+    const data = JSON.parse(event.data.toString());
 
     switch (data.type) {
       case "source":
@@ -256,7 +266,7 @@ export class SomDebugSession extends DebugSession {
       args: DebugProtocol.SetBreakpointsArguments): void {
     const connected = this.socket != null;
     const uri = 'file:' + args.source.path;
-    const breakpoints = [];
+    const breakpoints: DebugProtocol.Breakpoint[] = [];
     response.body = {breakpoints: breakpoints};
 
     // the `args` contain the latest list of line breakpoints for a uri
@@ -267,7 +277,7 @@ export class SomDebugSession extends DebugSession {
     const currentBPs = this.breakpoints[uri];
     const removedBPs = Object.assign({}, currentBPs);
 
-    for (let bp of args.breakpoints) {
+    for (let bp of args.breakpoints ?? []) {
       if (currentBPs[bp.line]) {
         // already exists, so, it is unchanged and not the removed list
         delete removedBPs[bp.line];
@@ -324,7 +334,7 @@ export class SomDebugSession extends DebugSession {
   }
 
   protected threadsRequest(response: DebugProtocol.ThreadsResponse): void {
-    const threads = [];
+    const threads: DebugProtocol.Thread[] = [];
     this.knownActivities.forEach(v => threads.push(v));
 
     response.body = { threads: threads };
@@ -338,7 +348,7 @@ export class SomDebugSession extends DebugSession {
     if (s) {
       source = new VSSource(s.name, s.uri.substring("file:".length));
     } else {
-      source = new VSSource('vmMirror', null, undefined, 'internal module');
+      source = new VSSource('vmMirror', undefined, undefined, 'internal module');
     }
     return source;
   }
@@ -367,8 +377,9 @@ export class SomDebugSession extends DebugSession {
     const request: StackTraceRequest = {
       action: "StackTraceRequest",
       activityId: args.threadId,
-      startFrame: args.startFrame,
-      levels:     args.levels,
+      // SOMns reads these as int, so a missing value was already treated as 0
+      startFrame: args.startFrame ?? 0,
+      levels:     args.levels ?? 0,
       requestId:  this.nextRequestId};
 
     this.requests[this.nextRequestId] = response;
@@ -431,7 +442,8 @@ export class SomDebugSession extends DebugSession {
     this.sendResponse(response);
   }
 
-  private sendStep(stepType: string, response, args) {
+  private sendStep(stepType: string, response: DebugProtocol.Response,
+      args: {threadId: number}) {
     const step: StepMessage = {
       action: "StepMessage", activityId: args.threadId, step: stepType};
     this.send(step);

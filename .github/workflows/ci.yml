@@ -4,17 +4,38 @@ on: [push, pull_request]
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-20.04 # ubuntu-latest
+    runs-on: ubuntu-26.04 # ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: true
+        uses: actions/checkout@v7
 
-      - uses: actions/setup-java@v3
+      # SOMns support is currently disabled. We only need its debugger
+      # protocol, which src/ links to, so skip SOMns' own submodules.
+      - name: Checkout Submodules
+        run: |
+          git submodule update --init server/libs/SOMns
+          git submodule update --init server/libs/TruffleSOM
+          (cd server/libs/TruffleSOM && git submodule update --init)
+
+      - uses: actions/setup-java@v6
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '25'
+
+      # Node 24 matches VS Code 1.140, and the test tools need at least Node 22
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      # TruffleSOM expects mx and graal next to it, i.e., in server/libs
+      - name: Setup MX, LabsJDK, and Graal
+        run: |
+          cd server/libs/TruffleSOM
+          ./som --setup mx
+          echo "$(pwd)/../mx" >> "$GITHUB_PATH"
+          export PATH=$PATH:$(pwd)/../mx
+          source .github/ci.sh
+          ensure_labsjdk_and_graal_version
 
       - name: NPM Install
         run: |
@@ -28,6 +49,10 @@ jobs:
         run: |
           sudo apt-get install xvfb
           xvfb-run --auto-servernum npm test
+
+      - name: Package Extension
+        run: |
+          npm run package
 
       # - name: CheckStyle
       #   run: |

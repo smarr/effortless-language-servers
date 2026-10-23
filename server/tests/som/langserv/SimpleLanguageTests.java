@@ -508,7 +508,7 @@ public class SimpleLanguageTests {
     // since we don't bail on parsing errors, there will be multiple
     assertEquals(3, diag.size());
 
-    assertEquals("missing ';' at '('", diag.get(0).getMessage());
+    assertEquals("missing ';' at '('", diag.get(0).getMessage().getLeft());
     assertEquals(2, diag.get(0).getRange().getStart().getLine());
     assertEquals(9, diag.get(0).getRange().getStart().getCharacter());
   }

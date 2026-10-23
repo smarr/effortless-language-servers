@@ -9,26 +9,45 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.BiFunction;
+import java.util.function.Predicate;
 
+import org.eclipse.lsp4j.CallHierarchyIncomingCall;
+import org.eclipse.lsp4j.CallHierarchyItem;
+import org.eclipse.lsp4j.CallHierarchyOutgoingCall;
+import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DocumentHighlight;
+import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SelectionRange;
 import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SignatureHelpContext;
 import org.eclipse.lsp4j.SymbolInformation;
+import org.eclipse.lsp4j.SymbolKind;
+import org.eclipse.lsp4j.TextEdit;
+import org.eclipse.lsp4j.TypeHierarchyItem;
+import org.eclipse.lsp4j.WorkspaceEdit;
+import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
+import org.eclipse.lsp4j.jsonrpc.messages.ResponseError;
+import org.eclipse.lsp4j.jsonrpc.messages.ResponseErrorCode;
 import org.eclipse.lsp4j.services.LanguageClient;
 
 import som.langserv.lens.FileLens;
@@ -36,8 +55,10 @@ import som.langserv.lint.FileLinter;
 import som.langserv.lint.WorkspaceLinter;
 import som.langserv.structure.DocumentStructures;
 import som.langserv.structure.LanguageElement;
+import som.langserv.structure.LanguageElementId;
 import som.langserv.structure.Pair;
 import som.langserv.structure.ParseContextKind;
+import som.langserv.structure.Reference;
 import som.langserv.structure.SemanticTokens;
 import util.ArrayListSet;
 
@@ -147,7 +168,11 @@ public abstract class LanguageAdapter {
   }
 
   public void loadFolder(final File folder) {
-    for (File f : folder.listFiles()) {
+    // listFiles() has no guaranteed order, but files may define classes
+    // with the same name, so make the loading order deterministic
+    File[] files = folder.listFiles();
+    Arrays.sort(files);
+    for (File f : files) {
       if (f.isDirectory()) {
         loadFolder(f);
       } else if (f.getName().endsWith(getFileEnding())) {
@@ -247,6 +272,303 @@ public abstract class LanguageAdapter {
     }
 
     return doc.getHover(position);
+  }
+
+  public final List<FoldingRange> getFoldingRanges(final String uri) {
+    DocumentStructures doc = getStructures(uri);
+    if (doc == null) {
+      return null;
+    }
+
+    return doc.getFoldingRanges();
+  }
+
+  /** Whether the element can be called, and is thus part of a call hierarchy. */
+  protected boolean isCallable(final LanguageElement e) {
+    return e.getKind() == SymbolKind.Method || e.getKind() == SymbolKind.Function;
+  }
+
+  private static CallHierarchyItem createCallHierarchyItem(final LanguageElement e,
+      final String uri) {
+    var item = new CallHierarchyItem(
+        e.getName(), e.getKind(), uri, e.getRange(), e.getSelectionRange());
+    item.setDetail(e.getDetail());
+    return item;
+  }
+
+  /** All definitions of the element that satisfy the predicate, in all documents. */
+  private <T> List<T> findDefinitions(final LanguageElementId id,
+      final Predicate<LanguageElement> predicate,
+      final BiFunction<LanguageElement, String, T> create) {
+    List<T> result = new ArrayList<>();
+    for (DocumentStructures d : getDocuments()) {
+      var allDefs = d.getAllDefinitions();
+      var defs = allDefs == null ? null : allDefs.get(id);
+      if (defs != null) {
+        for (var e : defs) {
+          if (predicate.test(e)) {
+            result.add(create.apply(e, d.getUri()));
+          }
+        }
+      }
+    }
+    return result;
+  }
+
+  private List<CallHierarchyItem> findCallables(final LanguageElementId id) {
+    return findDefinitions(id, this::isCallable, LanguageAdapter::createCallHierarchyItem);
+  }
+
+  public final List<CallHierarchyItem> prepareCallHierarchy(final String uri,
+      final Position position) {
+    DocumentStructures doc = getStructures(uri);
+    if (doc == null) {
+      return null;
+    }
+
+    var element = doc.getElement(position);
+    if (element == null || element.v1 == null) {
+      return null;
+    }
+
+    // on a definition, it's only this one, otherwise all with the same name
+    var definition = doc.findElement(element.v2, e -> isCallable(e));
+    if (definition != null) {
+      return List.of(createCallHierarchyItem(definition, doc.getUri()));
+    }
+
+    var result = findCallables(element.v1);
+    return result.isEmpty() ? null : result;
+  }
+
+  private LanguageElement getCallable(final CallHierarchyItem item) {
+    DocumentStructures doc = getStructures(item.getUri());
+    if (doc == null) {
+      return null;
+    }
+    return doc.findElement(item.getSelectionRange(), e -> isCallable(e));
+  }
+
+  public final List<CallHierarchyIncomingCall> getIncomingCalls(
+      final CallHierarchyItem item) {
+    var callee = getCallable(item);
+    if (callee == null) {
+      return List.of();
+    }
+
+    List<CallHierarchyIncomingCall> result = new ArrayList<>();
+    for (DocumentStructures d : getDocuments()) {
+      var allRefs = d.getAllReferences();
+      var refs = allRefs == null ? null : allRefs.get(callee.getId());
+      if (refs == null) {
+        continue;
+      }
+
+      Map<LanguageElement, List<Range>> callers = new LinkedHashMap<>();
+      for (var ref : refs) {
+        var caller = d.findEnclosing(ref.getRange().getStart(), e -> isCallable(e));
+        if (caller != null) {
+          callers.computeIfAbsent(caller, k -> new ArrayList<>()).add(ref.getRange());
+        }
+      }
+
+      for (var c : callers.entrySet()) {
+        result.add(new CallHierarchyIncomingCall(
+            createCallHierarchyItem(c.getKey(), d.getUri()), c.getValue()));
+      }
+    }
+    return result;
+  }
+
+  public final List<CallHierarchyOutgoingCall> getOutgoingCalls(
+      final CallHierarchyItem item) {
+    var caller = getCallable(item);
+    if (caller == null) {
+      return List.of();
+    }
+
+    // nested callables make their own calls
+    List<Reference> refs = new ArrayList<>();
+    DocumentStructures.collectReferences(caller, e -> e != caller && isCallable(e), refs);
+
+    Map<LanguageElementId, List<Range>> calls = new LinkedHashMap<>();
+    for (var ref : refs) {
+      calls.computeIfAbsent(ref.getId(), k -> new ArrayList<>()).add(ref.getRange());
+    }
+
+    List<CallHierarchyOutgoingCall> result = new ArrayList<>();
+    for (var c : calls.entrySet()) {
+      for (var callee : findCallables(c.getKey())) {
+        result.add(new CallHierarchyOutgoingCall(callee, c.getValue()));
+      }
+    }
+    return result;
+  }
+
+  /** Whether the element is a type, and is thus part of a type hierarchy. */
+  protected boolean isType(final LanguageElement e) {
+    return e.getKind() == SymbolKind.Class || e.getKind() == SymbolKind.Interface;
+  }
+
+  private static TypeHierarchyItem createTypeHierarchyItem(final LanguageElement e,
+      final String uri) {
+    var item = new TypeHierarchyItem(
+        e.getName(), e.getKind(), uri, e.getRange(), e.getSelectionRange());
+    item.setDetail(e.getDetail());
+    return item;
+  }
+
+  private List<TypeHierarchyItem> findTypes(final LanguageElementId id) {
+    return findDefinitions(id, this::isType, LanguageAdapter::createTypeHierarchyItem);
+  }
+
+  public final List<TypeHierarchyItem> prepareTypeHierarchy(final String uri,
+      final Position position) {
+    DocumentStructures doc = getStructures(uri);
+    if (doc == null) {
+      return null;
+    }
+
+    var element = doc.getElement(position);
+    if (element == null || element.v1 == null) {
+      return null;
+    }
+
+    // on a definition, it's only this one, otherwise all with the same name
+    var definition = doc.findElement(element.v2, e -> isType(e));
+    if (definition != null) {
+      return List.of(createTypeHierarchyItem(definition, doc.getUri()));
+    }
+
+    var result = findTypes(element.v1);
+    return result.isEmpty() ? null : result;
+  }
+
+  private LanguageElement getType(final TypeHierarchyItem item) {
+    DocumentStructures doc = getStructures(item.getUri());
+    if (doc == null) {
+      return null;
+    }
+    return doc.findElement(item.getSelectionRange(), e -> isType(e));
+  }
+
+  public final List<TypeHierarchyItem> getSupertypes(final TypeHierarchyItem item) {
+    var type = getType(item);
+    if (type == null || type.getSupertypes() == null) {
+      return List.of();
+    }
+
+    List<TypeHierarchyItem> result = new ArrayList<>();
+    for (var id : type.getSupertypes()) {
+      result.addAll(findTypes(id));
+    }
+    return result;
+  }
+
+  public final List<TypeHierarchyItem> getSubtypes(final TypeHierarchyItem item) {
+    var type = getType(item);
+    if (type == null) {
+      return List.of();
+    }
+
+    List<TypeHierarchyItem> result = new ArrayList<>();
+    for (DocumentStructures d : getDocuments()) {
+      List<LanguageElement> subtypes = new ArrayList<>();
+      d.collectElements(e -> isType(e) && e.getSupertypes() != null
+          && e.getSupertypes().contains(type.getId()), subtypes);
+
+      for (var e : subtypes) {
+        result.add(createTypeHierarchyItem(e, d.getUri()));
+      }
+    }
+    return result;
+  }
+
+  /** Whether the element can be renamed. Renaming changes only its document. */
+  protected boolean isRenamable(final LanguageElementId id) {
+    return false;
+  }
+
+  /** Whether the name can be used as new name for a renamed element. */
+  protected boolean isValidName(final String name) {
+    return false;
+  }
+
+  public final Range prepareRename(final String uri, final Position position) {
+    DocumentStructures doc = getStructures(uri);
+    if (doc == null) {
+      return null;
+    }
+
+    var element = doc.getElement(position);
+    if (element == null || element.v1 == null || !isRenamable(element.v1)) {
+      return null;
+    }
+    return element.v2;
+  }
+
+  public final WorkspaceEdit rename(final String uri, final Position position,
+      final String newName) {
+    DocumentStructures doc = getStructures(uri);
+    if (doc == null) {
+      return null;
+    }
+
+    var element = doc.getElement(position);
+    if (element == null || element.v1 == null || !isRenamable(element.v1)) {
+      return null;
+    }
+
+    if (!isValidName(newName)) {
+      throw new ResponseErrorException(new ResponseError(ResponseErrorCode.InvalidParams,
+          "'" + newName + "' is not a valid name", null));
+    }
+
+    Set<Range> ranges = new LinkedHashSet<>();
+    var defs = doc.getAllDefinitions() == null ? null : doc.getAllDefinitions().get(element.v1);
+    if (defs != null) {
+      for (var e : defs) {
+        ranges.add(e.getSelectionRange());
+      }
+    }
+
+    var refs = doc.getAllReferences() == null ? null : doc.getAllReferences().get(element.v1);
+    if (refs != null) {
+      for (var r : refs) {
+        ranges.add(r.getRange());
+      }
+    }
+
+    List<TextEdit> edits = new ArrayList<>(ranges.size());
+    for (var r : ranges) {
+      edits.add(new TextEdit(r, newName));
+    }
+    return new WorkspaceEdit(Map.of(uri, edits));
+  }
+
+  public final List<CodeAction> getCodeActions(final String uri,
+      final List<Diagnostic> diagnostics) {
+    List<CodeAction> result = new ArrayList<>();
+    for (Diagnostic d : diagnostics) {
+      for (FileLinter linter : fileLinters) {
+        result.addAll(linter.getQuickFixes(uri, d));
+      }
+    }
+    return result;
+  }
+
+  public final List<SelectionRange> getSelectionRanges(final String uri,
+      final List<Position> positions) {
+    DocumentStructures doc = getStructures(uri);
+    if (doc == null) {
+      return null;
+    }
+
+    List<SelectionRange> result = new ArrayList<>(positions.size());
+    for (Position p : positions) {
+      result.add(doc.getSelectionRange(p));
+    }
+    return result;
   }
 
   public final SignatureHelp signatureHelp(final String uri, final Position position,
@@ -353,6 +675,23 @@ public abstract class LanguageAdapter {
   }
 
   public final List<Integer> getSemanticTokensFull(final String uri) {
+    List<int[]> tokens = getAbsoluteSemanticTokens(uri);
+    if (tokens == null) {
+      return null;
+    }
+    return SemanticTokens.makeRelativeTo00(tokens);
+  }
+
+  public final List<Integer> getSemanticTokensRange(final String uri, final Range range) {
+    List<int[]> tokens = getAbsoluteSemanticTokens(uri);
+    if (tokens == null) {
+      return null;
+    }
+    return SemanticTokens.makeRelativeTo00(SemanticTokens.inRange(tokens, range));
+  }
+
+  /** Tokens with absolute positions, using the previous ones for an erroneous line. */
+  private List<int[]> getAbsoluteSemanticTokens(final String uri) {
     DocumentStructures doc = getStructures(uri);
     if (doc == null) {
       return null;
@@ -363,7 +702,7 @@ public abstract class LanguageAdapter {
     Diagnostic error = doc.getFirstErrorOrNull();
     if (error == null) {
       semanticTokenCache.put(uri, tokens);
-      return SemanticTokens.makeRelativeTo00(tokens);
+      return tokens;
     }
 
     List<int[]> prevTokens = semanticTokenCache.get(uri);
@@ -371,9 +710,7 @@ public abstract class LanguageAdapter {
       return null;
     }
 
-    List<int[]> withOldAndWithoutError =
-        combineTokensRemovingErroneousLine(
-            error.getRange().getStart(), prevTokens, tokens);
-    return SemanticTokens.makeRelativeTo00(withOldAndWithoutError);
+    return combineTokensRemovingErroneousLine(
+        error.getRange().getStart(), prevTokens, tokens);
   }
 }

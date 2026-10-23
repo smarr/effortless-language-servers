@@ -1,5 +1,5 @@
-import * as Mocha from 'mocha';
-import * as glob from 'glob';
+import Mocha from 'mocha';
+import { readdirSync } from 'fs';
 import * as path from 'path';
 
 export function run(): Promise<void> {
@@ -13,27 +13,23 @@ export function run(): Promise<void> {
 	const testsRoot = __dirname;
 
 	return new Promise((resolve, reject) => {
-		glob('**.test.js', { cwd: testsRoot }, (err, files) => {
-			if (err) {
-				return reject(err);
-			}
+		const files = readdirSync(testsRoot).filter(f => f.endsWith('.test.js'));
 
-			// Add files to the test suite
-			files.forEach(f => mocha.addFile(path.resolve(testsRoot, f)));
+		// Add files to the test suite
+		files.forEach(f => mocha.addFile(path.resolve(testsRoot, f)));
 
-			try {
-				// Run the mocha test
-				mocha.run(failures => {
-					if (failures > 0) {
-						reject(new Error(`${failures} tests failed.`));
-					} else {
-						resolve();
-					}
-				});
-			} catch (err) {
-				console.error(err);
-				reject(err);
-			}
-		});
+		try {
+			// Run the mocha test
+			mocha.run(failures => {
+				if (failures > 0) {
+					reject(new Error(`${failures} tests failed.`));
+				} else {
+					resolve();
+				}
+			});
+		} catch (err) {
+			console.error(err);
+			reject(err);
+		}
 	});
 }
