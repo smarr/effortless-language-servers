@@ -16,6 +16,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
@@ -263,6 +264,17 @@ public abstract class LanguageAdapter {
     }
 
     return doc.getFoldingRanges();
+  }
+
+  public final List<CodeAction> getCodeActions(final String uri,
+      final List<Diagnostic> diagnostics) {
+    List<CodeAction> result = new ArrayList<>();
+    for (Diagnostic d : diagnostics) {
+      for (FileLinter linter : fileLinters) {
+        result.addAll(linter.getQuickFixes(uri, d));
+      }
+    }
+    return result;
   }
 
   public final List<SelectionRange> getSelectionRanges(final String uri,

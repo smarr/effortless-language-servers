@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import org.eclipse.lsp4j.CodeActionKind;
+import org.eclipse.lsp4j.CodeActionOptions;
 import org.eclipse.lsp4j.CodeLensOptions;
 import org.eclipse.lsp4j.CompletionOptions;
 import org.eclipse.lsp4j.InitializeParams;
@@ -67,6 +69,7 @@ public class LanguageServerImpl implements LanguageServer, LanguageClientAware {
     cap.setHoverProvider(true);
     cap.setFoldingRangeProvider(true);
     cap.setSelectionRangeProvider(true);
+    cap.setCodeActionProvider(new CodeActionOptions(List.of(CodeActionKind.QuickFix)));
 
     cap.setTextDocumentSync(TextDocumentSyncKind.Full);
 

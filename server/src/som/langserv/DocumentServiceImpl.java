@@ -6,8 +6,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensParams;
+import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
@@ -229,6 +232,22 @@ public class DocumentServiceImpl implements TextDocumentService {
     if (adapter != null) {
       String uri = params.getTextDocument().getUri();
       List<FoldingRange> result = adapter.getFoldingRanges(uri);
+      return CompletableFuture.completedFuture(result);
+    }
+
+    return CompletableFuture.completedFuture(null);
+  }
+
+  @Override
+  public CompletableFuture<List<Either<Command, CodeAction>>> codeAction(
+      final CodeActionParams params) {
+    var adapter = getResponsibleAdapter(params.getTextDocument());
+    if (adapter != null) {
+      String uri = params.getTextDocument().getUri();
+      List<Either<Command, CodeAction>> result = new ArrayList<>();
+      for (CodeAction a : adapter.getCodeActions(uri, params.getContext().getDiagnostics())) {
+        result.add(Either.forRight(a));
+      }
       return CompletableFuture.completedFuture(result);
     }
 
