@@ -16,8 +16,6 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 
-import com.google.common.collect.Lists;
-
 import som.langserv.LanguageAdapter;
 import som.langserv.newspeak.NewspeakAdapter;
 import som.langserv.structure.DocumentStructures;
@@ -126,13 +124,13 @@ public class Minitest implements FileLens {
     cmd.setTitle(title);
 
     cmd.setArguments(
-        Lists.newArrayList(
+        new ArrayList<>(List.of(
             documentUri,
             testName,
             select.getStart().getLine(),
             select.getStart().getCharacter(),
             select.getEnd().getLine(),
-            select.getEnd().getCharacter()));
+            select.getEnd().getCharacter())));
 
     lens.setCommand(cmd);
     lens.setRange(select);
